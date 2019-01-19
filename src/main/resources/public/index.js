@@ -75,6 +75,7 @@ const dialog = new Vue({
             ).then(r => {
                 console.log(r.status);
                 that.dialog = false;
+                window.location.reload(); // TODO actually update content
             }).catch(e => console.log(e));
         },
         clear () {
