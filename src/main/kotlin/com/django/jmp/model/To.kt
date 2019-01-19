@@ -14,29 +14,8 @@
  *    limitations under the License.
  */
 
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+package com.django.jmp.model
 
-plugins {
-    kotlin("jvm") version "1.3.20-eap-52"
-}
+import java.util.*
 
-group = "com.django"
-version = "1.0-SNAPSHOT"
-
-apply(plugin = "java")
-
-repositories {
-    maven { setUrl("https://dl.bintray.com/kotlin/kotlin-eap") }
-    mavenCentral()
-}
-
-dependencies {
-    implementation(kotlin("stdlib-jdk8"))
-    implementation("io.javalin:javalin:2.6.0")
-    implementation("org.slf4j:slf4j-simple:1.7.25")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.8.4")
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
-}
+data class To(val id: UUID = UUID.randomUUID(), val title: String = "", val location: String = "")
