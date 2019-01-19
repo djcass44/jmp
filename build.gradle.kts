@@ -32,6 +32,7 @@ repositories {
     maven { setUrl("https://dl.bintray.com/kotlin/kotlin-eap") }
     maven(url = "https://dl.bintray.com/kotlin/exposed")
     maven(url = "https://jitpack.io")
+    jcenter()
     mavenCentral()
 }
 
@@ -43,6 +44,7 @@ dependencies {
     implementation("io.javalin:javalin:2.6.0")
     implementation("org.slf4j:slf4j-simple:1.7.25")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.8")
+    implementation("com.beust:klaxon:5.0.1")
 
     implementation("org.jetbrains.exposed:exposed:0.11.2")
     runtimeOnly("org.xerial:sqlite-jdbc:3.25.2")

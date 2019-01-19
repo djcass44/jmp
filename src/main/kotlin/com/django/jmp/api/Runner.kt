@@ -1,5 +1,6 @@
 package com.django.jmp.api
 
+import com.django.jmp.db.Config
 import com.django.jmp.db.Jump
 import com.django.jmp.db.JumpJson
 import com.django.jmp.db.Jumps
@@ -21,20 +22,22 @@ import java.util.*
 // TODO get by config.yml or environment variables
 const val version = "v1"
 
-const val dbClass = "jdbc:sqlite:"
-const val dbDriver = "org.sqlite.JDBC"
-
 class Runner
 
 fun main(args: Array<String>) {
     Log.v(Runner::class.java, Arrays.toString(args))
-    val dbLocation = if(args.size == 2 && args[0] == "using") {
+    val configLocation = if(args.size == 2 && args[0] == "using") {
         args[1]
     }
     else
-        "/tmp/jmp.db"
-    Log.i(Runner::class.java, "Using database path: $dbLocation")
-    Database.connect(dbClass + dbLocation, dbDriver)
+        "env"
+    Log.i(Runner::class.java, "Using database path: $configLocation")
+    val store = if(configLocation.isNotBlank() && configLocation != "env")
+        Config().load(configLocation)
+    else
+        Config().loadEnv()
+    Log.v(Runner::class.java, "Database config: [${store.url}, ${store.driver}]")
+    Database.connect(store.url, store.driver)
     TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE // Fix required for SQLite
     
     val app = Javalin.create().apply {
