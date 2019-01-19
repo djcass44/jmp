@@ -107,7 +107,9 @@ const dialog = new Vue({
             });
         },
         clear () {
-            this.$refs.form.reset()
+            this.name = '';
+            this.location = '';
+            this.$refs.form.reset();
         }
     }
 });
