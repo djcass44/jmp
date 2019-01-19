@@ -27,14 +27,22 @@ apply(plugin = "java")
 
 repositories {
     maven { setUrl("https://dl.bintray.com/kotlin/kotlin-eap") }
+    maven(url = "https://dl.bintray.com/kotlin/exposed")
+    maven(url = "https://jitpack.io")
     mavenCentral()
 }
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
+
+    implementation("com.gitlab.django-sandbox:log2:8b941edd1a")
+
     implementation("io.javalin:javalin:2.6.0")
     implementation("org.slf4j:slf4j-simple:1.7.25")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.8.4")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.8")
+
+    implementation("org.jetbrains.exposed:exposed:0.11.2")
+    runtimeOnly("org.xerial:sqlite-jdbc:3.25.2")
 }
 
 tasks.withType<KotlinCompile> {

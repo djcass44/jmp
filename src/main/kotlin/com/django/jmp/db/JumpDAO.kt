@@ -14,8 +14,25 @@
  *    limitations under the License.
  */
 
-package com.django.jmp.model
+package com.django.jmp.db
 
+import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.UUIDEntity
+import org.jetbrains.exposed.dao.UUIDEntityClass
+import org.jetbrains.exposed.dao.UUIDTable
 import java.util.*
 
-data class To(val id: UUID = UUID.randomUUID(), val title: String = "", val location: String = "")
+object Jumps : UUIDTable() {
+    val name = varchar("name", 50).uniqueIndex()
+    val location = varchar("location", 2083).index()
+}
+
+class Jump(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<Jump>(Jumps)
+
+    var name by Jumps.name
+    var location by Jumps.location
+}
+data class JumpJson(val name: String, val location: String) {
+    constructor(jump: Jump): this(jump.name, jump.location)
+}
