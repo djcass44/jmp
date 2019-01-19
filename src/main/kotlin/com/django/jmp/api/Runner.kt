@@ -14,15 +14,25 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.Connection
+import java.util.*
 
 // TODO get by config.yml or environment variables
 const val version = "v1"
 
-const val dbClass = "jdbc:sqlite:/tmp/jmp.db"
+const val dbClass = "jdbc:sqlite:"
 const val dbDriver = "org.sqlite.JDBC"
 
-fun main() {
-    Database.connect(dbClass, dbDriver)
+class Runner
+
+fun main(args: Array<String>) {
+    Log.v(Runner::class.java, Arrays.toString(args))
+    val dbLocation = if(args.size == 2 && args[0] == "using") {
+        args[1]
+    }
+    else
+        "/tmp/jmp.db"
+    Log.i(Runner::class.java, "Using database path: $dbLocation")
+    Database.connect(dbClass + dbLocation, dbDriver)
     TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE // Fix required for SQLite
 
     transaction {
@@ -47,7 +57,7 @@ fun main() {
         // List all items in Json format
         get("/$version/jumps") { ctx ->
             val items = arrayListOf<JumpJson>()
-            Log.i(Javalin::class.java, "API:GET -> ${ctx.path()}")
+            Log.i(Runner::class.java, "API:GET -> ${ctx.path()}")
             transaction {
                 Log.d(javaClass, Jump.all().count().toString())
                 Jump.all().forEach {
@@ -62,14 +72,14 @@ fun main() {
                 val target = ctx.pathParam("target")
                 if(target.isBlank())
                     throw EmptyPathException()
-                Log.d(Javalin::class.java, "Target: $target")
+                Log.d(Runner::class.java, "Target: $target")
                 transaction {
                     val dbtarget = Jump.find {
                         Jumps.name.lowerCase() eq target.toLowerCase()
                     }
                     if(!dbtarget.empty()) {
                         val location = dbtarget.elementAt(0).location
-                        Log.v(Javalin::class.java, "Redirecting to $location")
+                        Log.v(javaClass::class.java, "Redirecting to $location")
                         ctx.redirect(location, HttpStatus.FOUND_302)
                     }
                     else
@@ -77,11 +87,11 @@ fun main() {
                 }
             }
             catch (e: IndexOutOfBoundsException) {
-                Log.e(Javalin::class.java, "Invalid target: ${ctx.path()}")
+                Log.e(Runner::class.java, "Invalid target: ${ctx.path()}")
                 throw BadRequestResponse()
             }
             catch (e: EmptyPathException) {
-                Log.e(Javalin::class.java, "Empty target")
+                Log.e(Runner::class.java, "Empty target")
                 throw NotFoundResponse()
             }
         }

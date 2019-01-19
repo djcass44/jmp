@@ -14,10 +14,13 @@
  *    limitations under the License.
  */
 
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.3.20-eap-52"
+    id("com.github.johnrengelman.shadow") version "4.0.3"
+    application
 }
 
 group = "com.django"
@@ -45,6 +48,14 @@ dependencies {
     runtimeOnly("org.xerial:sqlite-jdbc:3.25.2")
 }
 
+application {
+    mainClassName = "com.django.jmp.api.RunnerKt"
+}
+
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
+}
+
+tasks.withType<ShadowJar> {
+    archiveName = "jmp-$version.$extension"
 }
