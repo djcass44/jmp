@@ -23,6 +23,17 @@ const jumps = new Vue({
             items: []
         }
     },
+    methods: {
+        remove(index) {
+            let item = this.items[index];
+            const url = endpoint + 'jumps/rm/' + item.name;
+            let that = this;
+            axios.delete(url).then(r => {
+                console.log(r.status);
+                that.items.splice(index); // Delete the item, making vue update
+            }).catch(e => console.log(e));
+        }
+    },
     created() {
         const url = endpoint + 'jumps';
         let items = this.items;
@@ -79,7 +90,14 @@ const dialog = new Vue({
             ).then(r => {
                 console.log(r.status);
                 that.dialog = false;
-                window.location.reload(); // TODO actually update content
+                jumps.$data.items.push({
+                    name: that.name,
+                    location: that.location}
+                );
+                setTimeout(function() {
+                    componentHandler.upgradeDom();
+                    componentHandler.upgradeAllRegistered();
+                }, 0);
             }).catch(e => console.log(e));
         },
         clear () {
