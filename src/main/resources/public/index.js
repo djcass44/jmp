@@ -14,3 +14,12 @@
  *    limitations under the License.
  */
 
+const items = new Vue({
+    el: '#main-list',
+    data: {
+        items: [
+            { name: 'Google' },
+            { name: 'Reddit' }
+        ]
+    }
+});
