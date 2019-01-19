@@ -87,7 +87,7 @@ const dialog = new Vue({
             let that = this;
             axios.put(
                 url,
-                '{ "name": "' + this.name + '", "location": "' + this.location + '" }',
+                `{ "name": "${this.name}", "location": "${this.location}" }`,
                 {headers: {"Content-Type": "application/json"}}
             ).then(r => {
                 console.log(r.status);
@@ -100,7 +100,11 @@ const dialog = new Vue({
                     componentHandler.upgradeDom();
                     componentHandler.upgradeAllRegistered();
                 }, 0);
-            }).catch(e => console.log(e));
+                bus.$emit('snackbar', true, `Added ${that.name}`)
+            }).catch(e => {
+                console.log(e);
+                bus.$emit('snackbar', true, `Failed to add ${that.name}`);
+            });
         },
         clear () {
             this.$refs.form.reset()
@@ -115,4 +119,21 @@ new Vue({
                 bus.$emit('dialog', true)
         }
     }
+});
+new Vue({
+    el: "#snackbar",
+    data () {
+        return {
+            snackbar: false,
+            timeout: 6000,
+            text: 'Hello, I\'m a snackbar'
+        }
+    },
+    created () {
+        const vm = this;
+        bus.$on('snackbar', function (value, text) {
+            vm.snackbar = value;
+            vm.text = text;
+        })
+    },
 });

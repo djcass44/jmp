@@ -126,6 +126,22 @@
         </v-layout>
     </v-app>
 </div>
+<div id="snackbar">
+    <v-snackbar
+            v-model="snackbar"
+            :left="true"
+            :timeout="timeout"
+    >
+        {{ text }}
+        <v-btn
+                color="pink"
+                flat
+                @click="snackbar = false"
+        >
+            Close
+        </v-btn>
+    </v-snackbar>
+</div>
 
 <!--Must be below all content-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
