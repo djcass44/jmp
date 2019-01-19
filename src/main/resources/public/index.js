@@ -14,20 +14,23 @@
  *    limitations under the License.
  */
 
-const items = new Vue({
+const app = new Vue({
     el: '#main-list',
-    data: {
-        items: [
-            {
-                id: 0,
-                name: "Google",
-                location: "https://google.com"
-            },
-            {
-                id: 1,
-                name: "Reddit",
-                location: "https://reddit.com"
-            }
-        ]
+    data() {
+        return {
+            items: []
+        }
+    },
+    created() {
+        const url = 'http://localhost:7000/v1/jumps';
+        let items = this.items;
+        axios.get(url).then(function(response) {
+            console.log("Loaded items: " + response.data.length);
+            response.data.map(item => {
+                items.push(item)
+            });
+        }).catch(function(error) {
+            console.log(error);
+        });
     }
 });
