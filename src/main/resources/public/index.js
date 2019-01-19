@@ -14,9 +14,3 @@
  *    limitations under the License.
  */
 
-var app = new Vue({
-    el: '#app',
-    data: {
-        message: 'Hello, World!'
-    }
-});
