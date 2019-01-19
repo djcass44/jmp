@@ -95,6 +95,7 @@ fun main(args: Array<String>) {
                 throw NotFoundResponse()
             }
         }
+        // Add a jump point
         put("/$version/jumps/add") { ctx ->
             val add = ctx.bodyAsClass(Jump::class.java)
             transaction {
@@ -105,6 +106,21 @@ fun main(args: Array<String>) {
             }
             ctx.status(HttpStatus.CREATED_201)
         }
+        // Edit a jump point
+        patch("/$version/jumps/edit") { ctx ->
+            val update = ctx.bodyAsClass(Jump::class.java)
+            transaction {
+                val existing = Jump.findById(update.id)
+                if(existing != null) {
+                    existing.name = update.name
+                    existing.location = update.location
+                    ctx.status(HttpStatus.NO_CONTENT_204)
+                }
+                else
+                    throw NotFoundResponse()
+            }
+        }
+        // Delete a jump point
         delete("/$version/jumps/rm/:name") { ctx ->
             val name = ctx.pathParam("name")
             transaction {
