@@ -6,6 +6,7 @@ import com.django.jmp.db.Jumps
 import com.django.jmp.except.EmptyPathException
 import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
+import io.javalin.ConflictResponse
 import io.javalin.Javalin
 import io.javalin.NotFoundResponse
 import io.javalin.apibuilder.ApiBuilder.*
@@ -22,7 +23,16 @@ const val version = "v1"
 const val dbClass = "jdbc:sqlite:"
 const val dbDriver = "org.sqlite.JDBC"
 
-class Runner
+object Runner {
+    fun jumpExists(name: String): Boolean {
+        return transaction {
+            val existing = Jump.find {
+                Jumps.name.lowerCase() eq name.toLowerCase()
+            }
+            return@transaction !existing.empty()
+        }
+    }
+}
 
 fun main(args: Array<String>) {
     Log.v(Runner::class.java, Arrays.toString(args))
@@ -97,14 +107,18 @@ fun main(args: Array<String>) {
         }
         // Add a jump point
         put("/$version/jumps/add") { ctx ->
-            val add = ctx.bodyAsClass(Jump::class.java)
-            transaction {
-                Jump.new {
-                    name = add.name
-                    location = add.location
+            val add = ctx.bodyAsClass(JumpJson::class.java)
+            if(!Runner.jumpExists(add.name)) {
+                transaction {
+                    Jump.new {
+                        name = add.name
+                        location = add.location
+                    }
                 }
+                ctx.status(HttpStatus.CREATED_201)
             }
-            ctx.status(HttpStatus.CREATED_201)
+            else
+                throw ConflictResponse()
         }
         // Edit a jump point
         patch("/$version/jumps/edit") { ctx ->

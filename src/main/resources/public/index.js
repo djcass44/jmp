@@ -13,6 +13,8 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+const endpoint = "http://localhost:7000/v1/";
+
 
 const jumps = new Vue({
     el: '#main-list',
@@ -22,7 +24,7 @@ const jumps = new Vue({
         }
     },
     created() {
-        const url = 'http://localhost:7000/v1/jumps';
+        const url = endpoint + 'jumps';
         let items = this.items;
         axios.get(url).then(function(response) {
             console.log("Loaded items: " + response.data.length);
@@ -63,7 +65,17 @@ const dialog = new Vue({
     },
     methods: {
         submit () {
-            this.$refs.form.validate()
+            this.$refs.form.validate();
+            const url = endpoint + 'jumps/add';
+            let that = this;
+            axios.put(
+                url,
+                '{ "name": "' + this.name + '", "location": "' + this.location + '" }',
+                {headers: {"Content-Type": "application/json"}}
+            ).then(r => {
+                console.log(r.status);
+                that.dialog = false;
+            }).catch(e => console.log(e));
         },
         clear () {
             this.$refs.form.reset()
