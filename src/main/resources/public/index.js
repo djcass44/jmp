@@ -30,7 +30,7 @@ const jumps = new Vue({
             let that = this;
             axios.delete(url).then(r => {
                 console.log(r.status);
-                that.items.splice(index); // Delete the item, making vue update
+                that.items.splice(index, 1); // Delete the item, making vue update
             }).catch(e => console.log(e));
         }
     },
