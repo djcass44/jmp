@@ -27,10 +27,12 @@
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vue-material/1.0.0/vue-material.min.css" />
+
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="custom.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
 </head>
 <body>
 
@@ -55,7 +57,7 @@
                 </div>
             </div>
             <!-- Accent-colored raised button with ripple -->
-            <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
+            <button id="create-button" v-on:click="openDialog" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
                 Create
             </button>
         </div>
@@ -86,9 +88,42 @@
         </div>
     </main>
 </div>
+<div id="create-dialog">
+    <v-app id="inspire">
+        <v-layout row justify-center>
+            <v-dialog v-model="dialog" persistent max-width="600px">
+                <v-card>
+                    <v-card-title>
+                        <span class="strong-title headline">New jump point</span>
+                    </v-card-title>
+                    <v-card-text>
+                        <v-container grid-list-md>
+                            <v-layout wrap>
+                                <v-flex xs12>
+                                    <v-text-field outline label="Name*" counter="50" required></v-text-field>
+                                </v-flex>
+                                <v-flex xs12>
+                                    <v-text-field outline append-icon="link" label="Location*" counter="2083" required></v-text-field>
+                                </v-flex>
+                            </v-layout>
+                        </v-container>
+                        <small>*indicates required field</small>
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn color="pink" flat @click="dialog = false">Discard</v-btn>
+                        <v-btn color="pink" flat @click="dialog = false">Create</v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+        </v-layout>
+    </v-app>
+</div>
 
 <!--Must be below all content-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
 <script src="index.js"></script>
 <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
 

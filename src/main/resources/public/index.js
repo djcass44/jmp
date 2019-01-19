@@ -34,3 +34,25 @@ const jumps = new Vue({
         });
     }
 });
+const bus = new Vue();
+const dialog = new Vue({
+    el: '#create-dialog',
+    data: () => ({
+        dialog: false
+    }),
+    created () {
+        const vm = this;
+        bus.$on('dialog', function (value) {
+            vm.dialog = value
+        })
+    }
+});
+new Vue({
+    el: "#create-button",
+    methods: {
+        openDialog: function (event) {
+            if(event)
+                bus.$emit('dialog', true)
+        }
+    }
+});
