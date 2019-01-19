@@ -51,7 +51,8 @@ const jumps = new Vue({
         });
     }
 });
-const regex = new RegExp('https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)')
+const urlRegex = new RegExp('https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)');
+const nameRegex= new RegExp('^[a-zA-Z0-9_.-]*$');
 const bus = new Vue();
 const dialog = new Vue({
     el: '#create-dialog',
@@ -62,12 +63,13 @@ const dialog = new Vue({
             name: '',
             nameRules: [
                 (v) => !!v || 'This is a required field.',
+                (v) => nameRegex.exec(v) || 'Name must not contain special characters',
                 (v) => v && v.length < 50 || 'Name must be less than 50 characters'
             ],
             location: '',
             locationRules: [
                 (v) => !!v || 'This is a required field.',
-                (v) => regex.exec(v) || 'URL must be valid.',
+                (v) => urlRegex.exec(v) || 'URL must be valid.',
                 (v) => v && v.length < 2083 || 'Location must be less than 2083 characters'
             ]
         }
