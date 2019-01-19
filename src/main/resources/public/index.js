@@ -34,17 +34,40 @@ const jumps = new Vue({
         });
     }
 });
+const regex = new RegExp('https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)')
 const bus = new Vue();
 const dialog = new Vue({
     el: '#create-dialog',
-    data: () => ({
-        dialog: false
-    }),
+    data () {
+        return {
+            dialog: false,
+            valid: false,
+            name: '',
+            nameRules: [
+                (v) => !!v || 'This is a required field.',
+                (v) => v && v.length < 50 || 'Name must be less than 50 characters'
+            ],
+            location: '',
+            locationRules: [
+                (v) => !!v || 'This is a required field.',
+                (v) => regex.exec(v) || 'URL must be valid.',
+                (v) => v && v.length < 2083 || 'Location must be less than 2083 characters'
+            ]
+        }
+    },
     created () {
         const vm = this;
         bus.$on('dialog', function (value) {
             vm.dialog = value
         })
+    },
+    methods: {
+        submit () {
+            this.$refs.form.validate()
+        },
+        clear () {
+            this.$refs.form.reset()
+        }
     }
 });
 new Vue({
