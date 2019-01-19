@@ -32,7 +32,8 @@ const jumps = new Vue({
                 items.push(item);
             });
             setTimeout(function() {
-                componentHandler.upgradeDom('MaterialMenu', 'mdl-menu');
+                componentHandler.upgradeDom();
+                componentHandler.upgradeAllRegistered();
             }, 0);
         }).catch(function(error) {
             console.log(error);
