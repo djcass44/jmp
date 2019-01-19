@@ -19,16 +19,17 @@
 <head>
     <meta charset="UTF-8">
     <title>JMP</title>
-    <link rel="stylesheet" href="custom.css">
     <!--VUE-->
     <!-- development version, includes helpful console warnings -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Roboto|Material+Icons" rel="stylesheet">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vue-material/1.0.0/vue-material.min.css" />
 
+    <link rel="stylesheet" href="custom.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
@@ -39,7 +40,7 @@
         <div class="mdl-layout__header-row">
             <!-- Title -->
             <i class="material-icons">wrap_text</i>
-            <span class="mdl-layout-title">JMP</span>
+            <span class="mdl-layout-title title">JMP</span>
             <!-- Add spacer, to align navigation to the right -->
             <div class="mdl-layout-spacer"></div>
             <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable
@@ -66,8 +67,8 @@
                 <li v-for='item in items' class="mdl-list__item mdl-list__item--two-line mdl-shadow--2dp">
                     <span class="mdl-list__item-primary-content">
                       <i class="material-icons mdl-list__item-avatar">wb_cloudy</i>
-                      <span>{{ item.name }}</span>
-                      <span class="mdl-list__item-sub-title">{{ item.location }}</span>
+                      <span class="strong-title">{{ item.name }}</span>
+                      <span class="sub-text mdl-list__item-sub-title">{{ item.location }}</span>
                     </span>
                     <span class="mdl-list__item-secondary-content">
                         <!-- Right aligned menu below button -->

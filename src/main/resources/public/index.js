@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-const app = new Vue({
+const jumps = new Vue({
     el: '#main-list',
     data() {
         return {

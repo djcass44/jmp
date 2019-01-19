@@ -13,6 +13,36 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+@font-face {
+    font-family: "Manrope";
+    src: url("fonts/manrope-semibold.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 600;
+}
+@font-face {
+    font-family: "Manrope";
+    src: url("fonts/manrope-medium.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 500;
+}
+@font-face {
+    font-family: "Manrope";
+    src: url("fonts/manrope-regular.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 400;
+}
 .main-list {
     width: 650px;
+}
+.sub-text {
+    font-family: Roboto, 'Helvetica', 'Arial', sans-serif;
+}
+
+.title {
+    font-family: Manrope, Roboto, serif;
+    font-weight: 400;
+}
+.strong-title {
+    font-family: Manrope, Roboto, serif;
+    font-weight: 600;
 }
