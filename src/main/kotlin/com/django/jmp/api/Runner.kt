@@ -11,9 +11,7 @@ import io.javalin.Javalin
 import io.javalin.NotFoundResponse
 import io.javalin.apibuilder.ApiBuilder.*
 import org.eclipse.jetty.http.HttpStatus
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.lowerCase
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.Connection
@@ -46,7 +44,11 @@ fun main(args: Array<String>) {
     Log.i(Runner::class.java, "Using database path: $dbLocation")
     Database.connect(dbClass + dbLocation, dbDriver)
     TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE // Fix required for SQLite
-    
+
+    transaction {
+        addLogger(StdOutSqlLogger)
+        SchemaUtils.create(Jumps) // Ensure that the 'Jumps' table is created
+    }
     val app = Javalin.create().apply {
         port(7000)
         enableStaticFiles("/public")
