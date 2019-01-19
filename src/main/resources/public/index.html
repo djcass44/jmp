@@ -15,7 +15,7 @@
   -->
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
     <title>JMP</title>
@@ -42,7 +42,7 @@
         <div class="mdl-layout__header-row">
             <!-- Title -->
             <i class="material-icons">wrap_text</i>
-            <span class="mdl-layout-title title">JMP</span>
+            <span class="mdl-layout-title strong-title">JumpPoints</span>
             <!-- Add spacer, to align navigation to the right -->
             <div class="mdl-layout-spacer"></div>
             <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable
@@ -97,7 +97,7 @@
                         <span class="strong-title headline">New jump point</span>
                     </v-card-title>
                     <v-card-text>
-                        <v-form v-model="valid" ref="form">
+                        <v-form v-model="valid" ref="form"></v-form>
                         <v-container grid-list-md>
                             <v-layout wrap>
                                 <v-flex xs12>

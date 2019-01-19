@@ -32,6 +32,6 @@ class Jump(id: EntityID<Int>) : IntEntity(id) {
     var name by Jumps.name
     var location by Jumps.location
 }
-data class JumpJson(val name: String, val location: String) {
-    constructor(jump: Jump): this(jump.name, jump.location)
+data class JumpJson(val id: Int? = null, val name: String, val location: String) {
+    constructor(jump: Jump): this(jump.id.value, jump.name, jump.location)
 }

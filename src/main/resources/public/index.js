@@ -29,8 +29,11 @@ const jumps = new Vue({
         axios.get(url).then(function(response) {
             console.log("Loaded items: " + response.data.length);
             response.data.map(item => {
-                items.push(item)
+                items.push(item);
             });
+            setTimeout(function() {
+                componentHandler.upgradeDom('MaterialMenu', 'mdl-menu');
+            }, 0);
         }).catch(function(error) {
             console.log(error);
         });
