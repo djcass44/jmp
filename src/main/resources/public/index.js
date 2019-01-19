@@ -18,8 +18,16 @@ const items = new Vue({
     el: '#main-list',
     data: {
         items: [
-            { name: 'Google' },
-            { name: 'Reddit' }
+            {
+                id: 0,
+                name: "Google",
+                location: "https://google.com"
+            },
+            {
+                id: 1,
+                name: "Reddit",
+                location: "https://reddit.com"
+            }
         ]
     }
 });
