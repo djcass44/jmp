@@ -50,7 +50,7 @@ fun main(args: Array<String>) {
     }
     val app = Javalin.create().apply {
         port(7000)
-//        enableStaticFiles("/public")
+        enableStaticFiles("/public")
         enableCaseSensitiveUrls()
     }.start()
     app.routes {
