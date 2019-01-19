@@ -57,9 +57,9 @@ fun main() {
             ctx.json(items)
         }
         // Redirect to $location (if it exists)
-        get("/$version/jump/*") { ctx ->
+        get("/$version/jump/:target") { ctx ->
             try {
-                val target = ctx.path().split("/$version/jump/")[1]
+                val target = ctx.pathParam("target")
                 if(target.isBlank())
                     throw EmptyPathException()
                 Log.d(Javalin::class.java, "Target: $target")
@@ -85,7 +85,7 @@ fun main() {
                 throw NotFoundResponse()
             }
         }
-        put("/$version/jumpAdd") { ctx ->
+        put("/$version/jumps/add") { ctx ->
             val add = ctx.bodyAsClass(Jump::class.java)
             transaction {
                 Jump.new {
@@ -93,13 +93,14 @@ fun main() {
                     location = add.location
                 }
             }
-            ctx.status(204)
+            ctx.status(HttpStatus.CREATED_201)
         }
-        delete("/$version/jumpDel") { ctx ->
-            val rm = ctx.bodyAsClass(Jump::class.java) // TODO remove by name/id
+        delete("/$version/jumps/rm/:name") { ctx ->
+            val name = ctx.pathParam("name")
             transaction {
-                rm.delete()
+                Jumps.deleteWhere { Jumps.name eq name }
             }
+            ctx.status(HttpStatus.NO_CONTENT_204)
         }
     }
 }

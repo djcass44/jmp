@@ -17,18 +17,17 @@
 package com.django.jmp.db
 
 import org.jetbrains.exposed.dao.EntityID
-import org.jetbrains.exposed.dao.UUIDEntity
-import org.jetbrains.exposed.dao.UUIDEntityClass
-import org.jetbrains.exposed.dao.UUIDTable
-import java.util.*
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.IntIdTable
 
-object Jumps : UUIDTable() {
+object Jumps : IntIdTable() {
     val name = varchar("name", 50).uniqueIndex()
     val location = varchar("location", 2083).index()
 }
 
-class Jump(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<Jump>(Jumps)
+class Jump(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<Jump>(Jumps)
 
     var name by Jumps.name
     var location by Jumps.location
