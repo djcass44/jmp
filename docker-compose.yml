@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  jmp:
+    image: jmp:1
+    ports:
+      - "7000:7000"
+    volumes:
+      - data:/data
+    environment:
+      - DRIVER_URL=jdbc:sqlite:/data/jmp.db
+      - DRIVER_CLASS=org.sqlite.JDBC
