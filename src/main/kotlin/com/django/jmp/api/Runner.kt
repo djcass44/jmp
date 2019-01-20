@@ -121,7 +121,7 @@ fun main(args: Array<String>) {
                 }
                 else {
                     val existing = Jump.find {
-                        Jumps.name.lowerCase() eq update.lastName.toLowerCase()
+                        Jumps.name eq update.lastName
                     }
                     if(!existing.empty()) {
                         val item = existing.elementAt(0)

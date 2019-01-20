@@ -113,8 +113,8 @@ const dialog = new Vue({
             ).then(r => {
                 console.log(r.status);
                 that.dialog = false;
-                jumps.$data = Object.assign({}, jumps.$data);
                 setTimeout(function() {
+                    jumps.$data.items = Object.assign({}, jumps.$data.items);
                     componentHandler.upgradeDom();
                     componentHandler.upgradeAllRegistered();
                 }, 0);
