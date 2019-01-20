@@ -49,6 +49,13 @@
 p {
     color: #757575;
 }
+.text-light {
+    color: #bdbdbd;
+}
+.text-http {
+    color: #b71c1c;
+    text-decoration-line: line-through;
+}
 
 [v-cloak] .v-cloak--block {
     display: block;

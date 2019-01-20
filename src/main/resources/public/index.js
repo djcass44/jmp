@@ -38,6 +38,14 @@ const jumps = new Vue({
         edit(index) {
             let item = this.items[index];
             bus.$emit('dialog', true, 'Edit jump point', 'Update', true, item.name, item.location, index);
+        },
+        highlight(text) {
+            return text.replace(new RegExp("https?:\\/\\/(www\\.)?"), match => {
+                if(text.startsWith("https"))
+                    return `<span class="text-light">${match}</span>`;
+                else
+                    return `<span class="text-http">${match}</span>`;
+            });
         }
     },
     created() {
