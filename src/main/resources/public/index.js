@@ -110,8 +110,10 @@ const dialog = new Vue({
             }
             if(location)
                 vm.location = location;
-            if(index)
+            if(index !== undefined)
                 vm.index = index;
+            else
+                vm.index = -1;
         })
     },
     methods: {
