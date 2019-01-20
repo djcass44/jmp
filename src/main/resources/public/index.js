@@ -37,7 +37,7 @@ const jumps = new Vue({
         },
         edit(index) {
             let item = this.items[index];
-            bus.$emit('dialog', true, 'Edit jump point', 'Update', true, item.name, item.location);
+            bus.$emit('dialog', true, 'Edit jump point', 'Update', true, item.name, item.location, index);
         }
     },
     created() {
@@ -80,25 +80,30 @@ const dialog = new Vue({
                 (v) => !!v || 'This is a required field.',
                 (v) => urlRegex.exec(v) || 'URL must be valid.',
                 (v) => v && v.length < 2083 || 'Location must be less than 2083 characters'
-            ]
+            ],
+            index: -1
         }
     },
     created () {
         const vm = this;
-        bus.$on('dialog', function (value, title, action, edit, name, location) {
+        bus.$on('dialog', function (value, title, action, edit, name, location, index) {
+            if(edit)
+                vm.edit = edit;
+            else {
+                vm.edit = false;
+                vm.$refs.form.reset();
+            }
             vm.dialog = value;
             vm.title = title;
             vm.action = action;
-            if(edit)
-                vm.edit = edit;
-            else
-                vm.edit = false;
             if(name) {
                 vm.name = name;
                 vm.lastName = name;
             }
             if(location)
                 vm.location = location;
+            if(index)
+                vm.index = index;
         })
     },
     methods: {
@@ -113,8 +118,11 @@ const dialog = new Vue({
             ).then(r => {
                 console.log(r.status);
                 that.dialog = false;
+                // jumps.$data.items = Object.assign({}, jumps.$data.items);
+                console.log(that.index);
+                console.log(this.index);
+                Vue.set(jumps.$data.items, that.index, { name: this.name, location: this.location });
                 setTimeout(function() {
-                    jumps.$data.items = Object.assign({}, jumps.$data.items);
                     componentHandler.upgradeDom();
                     componentHandler.upgradeAllRegistered();
                 }, 0);
