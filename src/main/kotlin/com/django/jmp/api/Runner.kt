@@ -124,8 +124,9 @@ fun main(args: Array<String>) {
                         Jumps.name.lowerCase() eq update.lastName.toLowerCase()
                     }
                     if(!existing.empty()) {
-                        existing.elementAt(0).name = update.name
-                        existing.elementAt(0).location = update.location
+                        val item = existing.elementAt(0)
+                        item.name = update.name
+                        item.location = update.location
                         ctx.status(HttpStatus.NO_CONTENT_204)
                     }
                     else

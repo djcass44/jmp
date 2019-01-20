@@ -37,7 +37,7 @@ const jumps = new Vue({
         },
         edit(index) {
             let item = this.items[index];
-            bus.$emit('dialog', true);
+            bus.$emit('dialog', true, 'Edit jump point', 'Update', true, item.name, item.location);
         }
     },
     created() {
@@ -65,6 +65,10 @@ const dialog = new Vue({
         return {
             dialog: false,
             valid: false,
+            edit: false,
+            title: 'New jump point',
+            action: 'Create',
+            lastName: '',
             name: '',
             nameRules: [
                 (v) => !!v || 'This is a required field.',
@@ -81,8 +85,20 @@ const dialog = new Vue({
     },
     created () {
         const vm = this;
-        bus.$on('dialog', function (value) {
-            vm.dialog = value
+        bus.$on('dialog', function (value, title, action, edit, name, location) {
+            vm.dialog = value;
+            vm.title = title;
+            vm.action = action;
+            if(edit)
+                vm.edit = edit;
+            else
+                vm.edit = false;
+            if(name) {
+                vm.name = name;
+                vm.lastName = name;
+            }
+            if(location)
+                vm.location = location;
         })
     },
     methods: {
@@ -92,7 +108,7 @@ const dialog = new Vue({
             let that = this;
             axios.patch(
                 url,
-                `{ "name": "${this.name}", "location": "${this.location}" }`,
+                `{ "name": "${this.name}", "location": "${this.location}", "lastName": "${this.lastName}" }`,
                 {headers: {"Content-Type": "application/json"}}
             ).then(r => {
                 console.log(r.status);
@@ -145,7 +161,7 @@ new Vue({
     methods: {
         openDialog: function (event) {
             if(event)
-                bus.$emit('dialog', true)
+                bus.$emit('dialog', true, 'New jump point', 'Create')
         }
     }
 });

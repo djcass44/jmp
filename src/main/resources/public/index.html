@@ -108,7 +108,7 @@
             <v-dialog v-model="dialog" persistent max-width="600px">
                 <v-card>
                     <v-card-title>
-                        <span class="strong-title headline">New jump point</span>
+                        <span class="strong-title headline">{{ title }}</span>
                     </v-card-title>
                     <v-card-text>
                         <v-form v-model="valid" ref="form"></v-form>
@@ -128,7 +128,7 @@
                         <v-btn color="pink" flat @click="clear">Clear</v-btn>
                         <v-spacer></v-spacer>
                         <v-btn color="pink" flat @click="dialog = false">Cancel</v-btn>
-                        <v-btn color="pink" flat :disabled="!valid" @click="submit">Create</v-btn>
+                        <v-btn color="pink" flat :disabled="!valid" @click="edit ? update() : submit()">{{ action }}</v-btn>
                     </v-card-actions>
                 </v-card>
             </v-dialog>
