@@ -2,6 +2,7 @@ package com.django.jmp.api
 
 import com.django.jmp.db.Jump
 import com.django.jmp.db.JumpJson
+import com.django.jmp.db.EditJumpJson
 import com.django.jmp.db.Jumps
 import com.django.jmp.except.EmptyPathException
 import com.django.log2.logging.Log
@@ -113,16 +114,23 @@ fun main(args: Array<String>) {
         }
         // Edit a jump point
         patch("/$version/jumps/edit") { ctx ->
-            val update = ctx.bodyAsClass(Jump::class.java)
+            val update = ctx.bodyAsClass(EditJumpJson::class.java)
             transaction {
-                val existing = Jump.findById(update.id)
-                if(existing != null) {
-                    existing.name = update.name
-                    existing.location = update.location
-                    ctx.status(HttpStatus.NO_CONTENT_204)
+                if(Runner.jumpExists(update.name)) {
+                    throw ConflictResponse()
                 }
-                else
-                    throw NotFoundResponse()
+                else {
+                    val existing = Jump.find {
+                        Jumps.name.lowerCase() eq update.lastName.toLowerCase()
+                    }
+                    if(!existing.empty()) {
+                        existing.elementAt(0).name = update.name
+                        existing.elementAt(0).location = update.location
+                        ctx.status(HttpStatus.NO_CONTENT_204)
+                    }
+                    else
+                        throw NotFoundResponse()
+                }
             }
         }
         // Delete a jump point

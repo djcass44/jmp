@@ -15,7 +15,7 @@
   -->
 
 <!DOCTYPE html>
-<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>JMP</title>
@@ -63,45 +63,42 @@
         </div>
     </header>
     <main class="mdl-layout__content">
-        <div class="page-content mdl-grid">
-            <div class="mdl-layout-spacer"></div>
-            <ul id="main-list" class="main-list mdl-list">
-                <li v-for='(item, index) in items' :key="index" class="mdl-list__item mdl-list__item--two-line mdl-shadow--2dp">
-                    <span class="mdl-list__item-primary-content">
-                      <i class="material-icons mdl-list__item-avatar">wb_cloudy</i>
-                      <span class="strong-title">{{ item.name }}</span>
-                      <span class="sub-text mdl-list__item-sub-title">{{ item.location }}</span>
-                    </span>
-                        <span class="mdl-list__item-secondary-content">
-                        <!-- Right aligned menu below button -->
-                        <button :id="item.name" class="mdl-button mdl-js-button mdl-button--icon">
-                          <i class="material-icons">more_vert</i>
-                        </button>
-                    </span>
-                    <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect" :for="item.name">
-                        <li class="mdl-menu__item">Edit</li>
-                        <li @click="remove(index)" class="mdl-menu__item">Delete</li>
-                    </ul>
-                </li>
-                <div v-if="items.length === 0">
-                    <div class="mdl-grid">
-                        <div class="mdl-layout-spacer title"></div>
-                        <h1 class="mdl-color-text--grey-800">Nothing to see here!</h1>
-                        <div class="mdl-layout-spacer title"></div>
+        <div v-cloak>
+            <div class="page-content mdl-grid">
+                <div class="mdl-layout-spacer"></div>
+                <ul id="main-list" class="main-list mdl-list">
+                    <li v-for='(item, index) in items' :key="index" class="mdl-list__item mdl-list__item--two-line mdl-shadow--2dp">
+                        <span class="mdl-list__item-primary-content">
+                          <i class="material-icons mdl-list__item-avatar">wb_cloudy</i>
+                          <span class="strong-title">{{ item.name }}</span>
+                          <span class="sub-text mdl-list__item-sub-title">{{ item.location }}</span>
+                        </span>
+                            <span class="mdl-list__item-secondary-content">
+                            <!-- Right aligned menu below button -->
+                            <button :id="item.name" class="mdl-button mdl-js-button mdl-button--icon">
+                              <i class="material-icons">more_vert</i>
+                            </button>
+                        </span>
+                        <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect" :for="item.name">
+                            <li @click="edit(index)" class="mdl-menu__item">Edit</li>
+                            <li @click="remove(index)" class="mdl-menu__item">Delete</li>
+                        </ul>
+                    </li>
+                    <div v-if="items.length === 0">
+                        <div v-cloak class="mdl-grid">
+                            <div class="mdl-layout-spacer title"></div>
+                            <h1 class="mdl-color-text--grey-800">Nothing to see here!</h1>
+                            <div class="mdl-layout-spacer title"></div>
+                        </div>
                     </div>
-                    <div class="mdl-grid">
-                        <div class="mdl-layout-spacer title"></div>
-                        <h6 class="mdl-color-text--grey-600">Click 'Create' to get started</h6>
-                        <div class="mdl-layout-spacer title"></div>
-                    </div>
-                </div>
-            </ul>
-            <div class="mdl-layout-spacer"></div>
-        </div>
-        <div class="mdl-grid">
-            <div class="mdl-layout-spacer title"></div>
-            <p>Created by Django Cass, 2019</p>
-            <div class="mdl-layout-spacer title"></div>
+                </ul>
+                <div class="mdl-layout-spacer"></div>
+            </div>
+            <div class="mdl-grid">
+                <div class="mdl-layout-spacer title"></div>
+                <p>Created by Django Cass, 2019</p>
+                <div class="mdl-layout-spacer title"></div>
+            </div>
         </div>
     </main>
 </div>

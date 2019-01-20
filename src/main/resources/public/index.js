@@ -15,6 +15,8 @@
  */
 const endpoint = "http://localhost:7000/v1/";
 
+// Used for triggering actions between Vue instances
+const bus = new Vue();
 
 const jumps = new Vue({
     el: '#main-list',
@@ -32,6 +34,10 @@ const jumps = new Vue({
                 console.log(r.status);
                 that.items.splice(index, 1); // Delete the item, making vue update
             }).catch(e => console.log(e));
+        },
+        edit(index) {
+            let item = this.items[index];
+            bus.$emit('dialog', true);
         }
     },
     created() {
@@ -53,7 +59,6 @@ const jumps = new Vue({
 });
 const urlRegex = new RegExp('https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)');
 const nameRegex= new RegExp('^[a-zA-Z0-9_.-]*$');
-const bus = new Vue();
 const dialog = new Vue({
     el: '#create-dialog',
     data () {
@@ -81,6 +86,28 @@ const dialog = new Vue({
         })
     },
     methods: {
+        update () {
+            this.$refs.form.validate();
+            const url = endpoint + 'jumps/edit';
+            let that = this;
+            axios.patch(
+                url,
+                `{ "name": "${this.name}", "location": "${this.location}" }`,
+                {headers: {"Content-Type": "application/json"}}
+            ).then(r => {
+                console.log(r.status);
+                that.dialog = false;
+                jumps.$data = Object.assign({}, jumps.$data);
+                setTimeout(function() {
+                    componentHandler.upgradeDom();
+                    componentHandler.upgradeAllRegistered();
+                }, 0);
+                bus.$emit('snackbar', true, `Updated ${that.name}`);
+            }).catch(e => {
+                console.log(e);
+                bus.$emit('snackbar', true, `Failed to update ${that.name}`);
+            });
+        },
         submit () {
             this.$refs.form.validate();
             const url = endpoint + 'jumps/add';
