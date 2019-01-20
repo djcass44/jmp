@@ -35,3 +35,4 @@ class Jump(id: EntityID<Int>) : IntEntity(id) {
 data class JumpJson(val name: String, val location: String) {
     constructor(jump: Jump): this(jump.name, jump.location)
 }
+data class EditJumpJson(val name: String, val location: String, val lastName: String)
