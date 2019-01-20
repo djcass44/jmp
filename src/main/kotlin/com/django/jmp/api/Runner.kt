@@ -1,8 +1,8 @@
 package com.django.jmp.api
 
+import com.django.jmp.db.EditJumpJson
 import com.django.jmp.db.Jump
 import com.django.jmp.db.JumpJson
-import com.django.jmp.db.EditJumpJson
 import com.django.jmp.db.Jumps
 import com.django.jmp.except.EmptyPathException
 import com.django.log2.logging.Log
@@ -116,7 +116,7 @@ fun main(args: Array<String>) {
         patch("/$version/jumps/edit") { ctx ->
             val update = ctx.bodyAsClass(EditJumpJson::class.java)
             transaction {
-                if(Runner.jumpExists(update.name)) {
+                if(update.lastName != update.name && Runner.jumpExists(update.name)) {
                     throw ConflictResponse()
                 }
                 else {
