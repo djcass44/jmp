@@ -9,4 +9,4 @@ EXPOSE 7000
 VOLUME ["/data"]
 
 ENTRYPOINT ["java", "-jar", "build/libs/jmp-1.0-SNAPSHOT.jar"]
-CMD ["using", "/data/jmp.db"]
+CMD ["using", "config.json"]

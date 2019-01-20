@@ -1,10 +1,6 @@
 package com.django.jmp.api
 
-import com.django.jmp.db.Config
-import com.django.jmp.db.EditJumpJson
-import com.django.jmp.db.Jump
-import com.django.jmp.db.JumpJson
-import com.django.jmp.db.Jumps
+import com.django.jmp.db.*
 import com.django.jmp.except.EmptyPathException
 import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
@@ -21,9 +17,6 @@ import java.util.*
 
 // TODO get by config.yml or environment variables
 const val version = "v1"
-
-const val dbClass = "jdbc:sqlite:"
-const val dbDriver = "org.sqlite.JDBC"
 
 object Runner {
     fun jumpExists(name: String): Boolean {

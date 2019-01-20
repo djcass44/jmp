@@ -13,7 +13,9 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-const endpoint = "http://localhost:7000/v1/";
+const BASE_URL="http://localhost:7000";
+const endpoint = `${BASE_URL}/v1/`;
+console.log(`endpoint: ${endpoint}`);
 
 // Used for triggering actions between Vue instances
 const bus = new Vue();

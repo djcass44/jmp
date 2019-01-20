@@ -1,0 +1,15 @@
+FROM openjdk:11.0.1-slim-stretch
+
+WORKDIR /app
+COPY . /app
+
+# replace localhost with the actual application url
+RUN awk 'NR==FNR{rep=(NR>1?rep RS:"") $0; next} {gsub(/BASE_URL="http:\/\/localhost:7000"/,rep)}1' env src/main/resources/public/index.js > src/main/resources/public/index.js.tmp
+RUN mv src/main/resources/public/index.js.tmp src/main/resources/public/index.js
+RUN ./gradlew shadowJar
+
+EXPOSE 7000
+VOLUME ["/data"]
+
+ENTRYPOINT ["java", "-jar", "build/libs/jmp-1.0-SNAPSHOT.jar"]
+CMD ["using", "env"]
