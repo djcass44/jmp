@@ -1,12 +1,12 @@
-version: '3'
+version: '2'
 
 services:
   jmp:
-    image: jmp:1
+    image: docker.dev-apps.info/jmp:latest
     ports:
       - "7000:7000"
     volumes:
-      - data:/data
+      - ./data:/data
     environment:
       - DRIVER_URL=jdbc:sqlite:/data/jmp.db
       - DRIVER_CLASS=org.sqlite.JDBC

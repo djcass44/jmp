@@ -44,7 +44,7 @@ const jumps = new Vue({
         highlight(text) {
             return text.replace(new RegExp("https?:\\/\\/(www\\.)?"), match => {
                 if(text.startsWith("https"))
-                    return `<span class="text-light">${match}</span>`;
+                    return `<span class="text-https">${match}</span>`;
                 else
                     return `<span class="text-http">${match}</span>`;
             });
