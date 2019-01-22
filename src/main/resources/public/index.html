@@ -65,10 +65,10 @@
         </div>
     </header>
     <main class="mdl-layout__content">
-        <div v-cloak>
+        <div>
             <div class="page-content mdl-grid">
                 <div class="mdl-layout-spacer"></div>
-                <ul id="main-list" class="main-list mdl-list">
+                <ul id="main-list" class="main-list mdl-list" v-cloak>
                     <li v-for='(item, index) in items' :key="index" class="mdl-list__item mdl-list__item--two-line mdl-shadow--2dp">
                         <span class="mdl-list__item-primary-content">
                           <i class="material-icons mdl-list__item-avatar">wb_cloudy</i>
@@ -86,8 +86,8 @@
                             <li @click="remove(index)" class="mdl-menu__item">Delete</li>
                         </ul>
                     </li>
-                    <div v-if="items.length === 0">
-                        <div v-cloak class="mdl-grid">
+                    <div v-if="showZero === true">
+                        <div class="mdl-grid">
                             <div class="mdl-layout-spacer title"></div>
                             <h1 class="mdl-color-text--grey-800">Nothing to see here!</h1>
                             <div class="mdl-layout-spacer title"></div>
@@ -104,7 +104,7 @@
         </div>
     </main>
 </div>
-<div id="create-dialog">
+<div id="create-dialog" v-cloak>
     <v-app id="inspire">
         <v-layout row justify-center>
             <v-dialog v-model="dialog" persistent max-width="600px">
@@ -138,7 +138,7 @@
         </v-layout>
     </v-app>
 </div>
-<div id="snackbar">
+<div id="snackbar" v-cloak>
     <v-snackbar
             v-model="snackbar"
             :left="true"

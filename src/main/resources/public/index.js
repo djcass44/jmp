@@ -24,10 +24,14 @@ const jumps = new Vue({
     el: '#main-list',
     data() {
         return {
+            showZero: false,
             items: []
         }
     },
     methods: {
+        checkItemsLength() {
+            this.showZero = this.items.length === 0;
+        },
         remove(index) {
             let item = this.items[index];
             const url = endpoint + 'jumps/rm/' + item.name;
@@ -35,6 +39,7 @@ const jumps = new Vue({
             axios.delete(url).then(r => {
                 console.log(r.status);
                 that.items.splice(index, 1); // Delete the item, making vue update
+                that.checkItemsLength();
             }).catch(e => console.log(e));
         },
         edit(index) {
@@ -58,6 +63,7 @@ const jumps = new Vue({
             response.data.map(item => {
                 items.push(item);
             });
+            jumps.checkItemsLength();
             setTimeout(function() {
                 componentHandler.upgradeDom();
                 componentHandler.upgradeAllRegistered();
@@ -159,6 +165,7 @@ const dialog = new Vue({
                     name: that.name,
                     location: that.location}
                 );
+                jumps.checkItemsLength();
                 setTimeout(function() {
                     componentHandler.upgradeDom();
                     componentHandler.upgradeAllRegistered();
