@@ -15,8 +15,6 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.Connection
 import java.util.*
 
-// TODO get by config.yml or environment variables
-const val version = "v1"
 
 object Runner {
     fun jumpExists(name: String): Boolean {
@@ -56,7 +54,7 @@ fun main(args: Array<String>) {
     }.start()
     app.routes {
         // List all items in Json format
-        get("/$version/jumps") { ctx ->
+        get("/v1/jumps") { ctx ->
             val items = arrayListOf<JumpJson>()
             Log.i(Runner::class.java, "API:GET -> ${ctx.path()}")
             transaction {
@@ -68,7 +66,7 @@ fun main(args: Array<String>) {
             ctx.json(items)
         }
         // Redirect to $location (if it exists)
-        get("/$version/jump/:target") { ctx ->
+        get("/v1/jump/:target") { ctx ->
             try {
                 val target = ctx.pathParam("target")
                 if(target.isBlank())
@@ -97,7 +95,7 @@ fun main(args: Array<String>) {
             }
         }
         // Add a jump point
-        put("/$version/jumps/add") { ctx ->
+        put("/v1/jumps/add") { ctx ->
             val add = ctx.bodyAsClass(JumpJson::class.java)
             if(!Runner.jumpExists(add.name)) {
                 transaction {
@@ -112,7 +110,7 @@ fun main(args: Array<String>) {
                 throw ConflictResponse()
         }
         // Edit a jump point
-        patch("/$version/jumps/edit") { ctx ->
+        patch("/v1/jumps/edit") { ctx ->
             val update = ctx.bodyAsClass(EditJumpJson::class.java)
             transaction {
                 if(update.lastName != update.name && Runner.jumpExists(update.name)) {
@@ -134,7 +132,7 @@ fun main(args: Array<String>) {
             }
         }
         // Delete a jump point
-        delete("/$version/jumps/rm/:name") { ctx ->
+        delete("/v1/jumps/rm/:name") { ctx ->
             val name = ctx.pathParam("name")
             transaction {
                 Jumps.deleteWhere { Jumps.name eq name }
