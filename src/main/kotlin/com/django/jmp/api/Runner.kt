@@ -82,7 +82,7 @@ fun main(args: Array<String>) {
                         ctx.redirect(location, HttpStatus.FOUND_302)
                     }
                     else
-                        throw NotFoundResponse()
+                        ctx.redirect("/v2/similar/$target")
                 }
             }
             catch (e: IndexOutOfBoundsException) {
