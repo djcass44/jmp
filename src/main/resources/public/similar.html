@@ -59,7 +59,7 @@
             <div v-for="item in items" :key="item" class="mdl-cell">
                 <!-- Contact Chip -->
                 <button type="button" class="mdl-chip mdl-chip--contact" v-on:click="open(item)">
-                    <span class="mdl-chip__contact mdl-color--blue mdl-color-text--white">G</span>
+                    <span class="mdl-chip__contact mdl-color--blue mdl-color-text--white">{{ item.substring(0, 1).toUpperCase() }}</span>
                     <span class="mdl-chip__text">{{ item }}</span>
                 </button>
             </div>
