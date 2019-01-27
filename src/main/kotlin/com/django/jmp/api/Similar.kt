@@ -35,7 +35,8 @@ class Similar(private val query: String, private val dict: ArrayList<String>, pr
                 best_i = metric
                 best = s
             }
-            Log.v(javaClass, "s: $s, metric: $metric")
+            if(metric > 0)
+                Log.v(javaClass, "s: $s, metric: $metric")
         }
         return if(similarities.size == 0 && best.isNotBlank())
             arrayListOf(best)
