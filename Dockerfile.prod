@@ -3,9 +3,14 @@ FROM openjdk:11.0.1-slim-stretch
 WORKDIR /app
 COPY . /app
 
-# replace localhost with the actual application url
+# replace localhost with the actual application url in index.js
 RUN awk 'NR==FNR{rep=(NR>1?rep RS:"") $0; next} {gsub(/BASE_URL="http:\/\/localhost:7000"/,rep)}1' env src/main/resources/public/index.js > src/main/resources/public/index.js.tmp
 RUN mv src/main/resources/public/index.js.tmp src/main/resources/public/index.js
+
+# replace localhost with the actual application url in similar.js
+RUN awk 'NR==FNR{rep=(NR>1?rep RS:"") $0; next} {gsub(/BASE_URL="http:\/\/localhost:7000"/,rep)}1' env src/main/resources/public/similar.js > src/main/resources/public/similar.js.tmp
+RUN mv src/main/resources/public/similar.js.tmp src/main/resources/public/similar.js
+
 RUN ./gradlew shadowJar
 
 EXPOSE 7000
