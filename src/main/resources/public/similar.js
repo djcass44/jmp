@@ -21,6 +21,7 @@ const chips = new Vue({
     el: '#main-list',
     data() {
         return {
+            status: '',
             items: []
         }
     },
@@ -33,15 +34,22 @@ const chips = new Vue({
         let url = new URL(window.location.href);
         if(url.searchParams.has("query")) {
             let query = url.searchParams.get("query");
-            let items = this.items;
+            let that = this;
             axios.get(`${BASE_URL}/v2/similar/${query}`).then(function (response) {
                 console.log(`Loaded ${response.data.length} item(s)`);
                 response.data.map(item => {
-                    items.push(item);
+                    that.items.push(item);
                 });
+                if(that.items.length === 0)
+                    that.status = "No similar jumps could be found.";
+                else
+                    that.status = `Found ${that.items.length} similar jumps...`
+
             }).catch(function (error) {
                 console.log(error);
             });
         }
+        else
+            this.status = "No query specified!"
     }
 });

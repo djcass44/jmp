@@ -31,13 +31,13 @@ class Similar(private val query: String, private val dict: ArrayList<String>, pr
             val metric = jw.similarity(query, s)
             if(metric > threshold)
                 similarities.add(s)
-            if(metric > best_i) {
+            if(metric > 0.65 && metric > best_i) {
                 best_i = metric
                 best = s
             }
             Log.v(javaClass, "s: $s, metric: $metric")
         }
-        return if(similarities.size == 0)
+        return if(similarities.size == 0 && best.isNotBlank())
             arrayListOf(best)
         else
             similarities
