@@ -139,5 +139,25 @@ fun main(args: Array<String>) {
             }
             ctx.status(HttpStatus.NO_CONTENT_204)
         }
+        // Find similar jumps
+        get("/v2/similar/:query") { ctx ->
+            try {
+                val query = ctx.pathParam("query")
+                if (query.isBlank())
+                    throw EmptyPathException()
+                val names = arrayListOf<String>()
+                transaction {
+                    Jump.all().forEach {
+                        names.add(it.name)
+                    }
+                }
+                val similar = Similar(query, names)
+                ctx.json(similar.compute())
+            }
+            catch (e: EmptyPathException) {
+                Log.e(Runner::class.java, "Empty target")
+                throw NotFoundResponse()
+            }
+        }
     }
 }
