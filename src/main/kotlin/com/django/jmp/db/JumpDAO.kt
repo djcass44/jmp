@@ -36,3 +36,16 @@ data class JumpJson(val name: String, val location: String) {
     constructor(jump: Jump): this(jump.name, jump.location)
 }
 data class EditJumpJson(val name: String, val location: String, val lastName: String)
+
+object Users: IntIdTable() {
+    val username = varchar("username", 36).uniqueIndex()
+    val hash = text("hash")
+    val token = varchar("token", 128).nullable()
+}
+class User(id: EntityID<Int>): IntEntity(id) {
+    companion object : IntEntityClass<User>(Users)
+
+    var username by Users.username
+    var hash by Users.hash
+    var token by Users.token
+}

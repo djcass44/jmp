@@ -159,5 +159,17 @@ fun main(args: Array<String>) {
                 throw NotFoundResponse()
             }
         }
+        // Add a user
+        put("/v2/user/add") { ctx ->
+            val credentials = ctx.bodyAsClass(Auth.BasicAuth::class.java)
+            val auth = Auth()
+            auth.createUser(credentials.username, credentials.password)
+        }
+        // Get a users token
+        get("/v2/user/auth") { ctx ->
+            val credentials = ctx.bodyAsClass(Auth.BasicAuth::class.java)
+            val auth = Auth()
+            ctx.json(auth.getUserToken(credentials.username, credentials.password) ?: "ERR_INVALID")
+        }
     }
 }

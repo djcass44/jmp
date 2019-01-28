@@ -46,6 +46,7 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.8")
     implementation("com.beust:klaxon:5.0.1")
     implementation("info.debatty:java-string-similarity:1.1.0")
+    implementation("com.amdelamar:jhash:2.1.0")
 
 
     implementation("org.jetbrains.exposed:exposed:0.11.2")
