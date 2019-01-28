@@ -172,13 +172,16 @@ fun main(args: Array<String>) {
         // Find similar jumps
         get("/v2/similar/:query") { ctx ->
             try {
+                val token = ctx.queryParam("token", "")
+                val tokenUUID = if(token != null && token.isNotBlank()) UUID.fromString(token) else null
                 val query = ctx.pathParam("query")
                 if (query.isBlank())
                     throw EmptyPathException()
                 val names = arrayListOf<String>()
                 transaction {
                     Jump.all().forEach {
-                        names.add(it.name)
+                        if(it.token == null || it.token == tokenUUID)
+                            names.add(it.name)
                     }
                 }
                 val similar = Similar(query, names)
