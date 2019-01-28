@@ -3,6 +3,8 @@ FROM openjdk:11.0.1-slim-stretch
 WORKDIR /app
 COPY . /app
 
+#  The below is really bad and needs to be replaced
+
 # replace localhost with the actual application url in index.js
 RUN awk 'NR==FNR{rep=(NR>1?rep RS:"") $0; next} {gsub(/BASE_URL="http:\/\/localhost:7000"/,rep)}1' env src/main/resources/public/index.js > src/main/resources/public/index.js.tmp
 RUN mv src/main/resources/public/index.js.tmp src/main/resources/public/index.js
@@ -10,6 +12,10 @@ RUN mv src/main/resources/public/index.js.tmp src/main/resources/public/index.js
 # replace localhost with the actual application url in similar.js
 RUN awk 'NR==FNR{rep=(NR>1?rep RS:"") $0; next} {gsub(/BASE_URL="http:\/\/localhost:7000"/,rep)}1' env src/main/resources/public/similar.js > src/main/resources/public/similar.js.tmp
 RUN mv src/main/resources/public/similar.js.tmp src/main/resources/public/similar.js
+
+# replace localhost with the actual application url in tokcheck.html
+RUN awk 'NR==FNR{rep=(NR>1?rep RS:"") $0; next} {gsub(/BASE_URL="http:\/\/localhost:7000"/,rep)}1' env src/main/resources/public/tokcheck.html > src/main/resources/public/tokcheck.html.tmp
+RUN mv src/main/resources/public/tokcheck.html.tmp src/main/resources/public/tokcheck.html
 
 RUN ./gradlew shadowJar
 
