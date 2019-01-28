@@ -76,8 +76,13 @@ fun main(args: Array<String>) {
                     throw EmptyPathException()
                 Log.d(Runner::class.java, "Target: $target")
                 val token = ctx.queryParam("token", "")
+                if(token == null || token.isBlank()) {
+                    ctx.redirect("/tokcheck.html?query=$target")
+                    ctx.status(HttpStatus.FOUND_302)
+                    return@get
+                }
                 var foundV2 = false
-                if(token != null && token.isNotBlank()) { // Request has a token, search user-jumps first
+                if(token.isNotBlank() && token != "global") { // Request has a token, search user-jumps first
                     val tokenUUID = UUID.fromString(token)
                     transaction {
                         val dbtarget = Jump.find {
@@ -95,7 +100,7 @@ fun main(args: Array<String>) {
                     return@get
                 transaction {
                     val dbtarget = Jump.find {
-                        Jumps.name.lowerCase() eq target.toLowerCase()
+                        Jumps.name.lowerCase() eq target.toLowerCase() and Jumps.token.isNull()
                     }
                     if(!dbtarget.empty()) {
                         val location = dbtarget.elementAt(0).location
@@ -125,7 +130,8 @@ fun main(args: Array<String>) {
                     Jump.new {
                         name = add.name
                         location = add.location
-                        this.token = tokenUUID
+                        if(tokenUUID != null)
+                            this.token = tokenUUID
                     }
                 }
                 ctx.status(HttpStatus.CREATED_201)
