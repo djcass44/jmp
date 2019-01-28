@@ -20,6 +20,26 @@ console.log(`endpoint: ${endpoint}`);
 // Used for triggering actions between Vue instances
 const bus = new Vue();
 
+const authCheck = new Vue({
+    el: '#auth-check',
+    data() {
+        return {
+            username: ''
+        }
+    },
+    methods: {
+        getAuth() {
+            console.log(localStorage.getItem("username"));
+            if(localStorage.getItem("username") !== null)
+                this.username = `Currently authenticated as ${localStorage.getItem("username")}`;
+            else
+                this.username = "Not authenticated.";
+        }
+    },
+    created() {
+        this.getAuth();
+    }
+});
 const jumps = new Vue({
     el: '#main-list',
     data() {
@@ -263,6 +283,8 @@ const dialog_auth = new Vue({
                 that.dialog = false;
                 console.log(r.data);
                 localStorage.setItem("token", r.data);
+                localStorage.setItem("username", that.name);
+                authCheck.getAuth();
             }).catch(e => {
                 console.log(e);
                 if(e.code === '404')
