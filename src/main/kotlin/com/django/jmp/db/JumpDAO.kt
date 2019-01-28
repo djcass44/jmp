@@ -24,6 +24,7 @@ import org.jetbrains.exposed.dao.IntIdTable
 object Jumps : IntIdTable() {
     val name = varchar("name", 50).uniqueIndex()
     val location = varchar("location", 2083).index()
+    val token = uuid("token").nullable()
 }
 
 class Jump(id: EntityID<Int>) : IntEntity(id) {
@@ -31,6 +32,7 @@ class Jump(id: EntityID<Int>) : IntEntity(id) {
 
     var name by Jumps.name
     var location by Jumps.location
+    var token by Jumps.token
 }
 data class JumpJson(val name: String, val location: String) {
     constructor(jump: Jump): this(jump.name, jump.location)

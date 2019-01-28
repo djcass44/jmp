@@ -56,7 +56,9 @@ const jumps = new Vue({
         }
     },
     created() {
-        const url = endpoint + 'jumps';
+        let url = endpoint + 'jumps';
+        if(this.select === this.items[1] && localStorage.getItem("token") !== null)
+            url += '?token=' + localStorage.getItem("token");
         let items = this.items;
         axios.get(url).then(function(response) {
             console.log("Loaded items: " + response.data.length);
@@ -97,6 +99,11 @@ const dialog = new Vue({
                 (v) => urlRegex.exec(v) || 'URL must be valid.',
                 (v) => v && v.length < 2083 || 'Location must be less than 2083 characters'
             ],
+            select: null,
+            items: [
+                "Global",
+                "Personal"
+            ],
             index: -1
         }
     },
@@ -127,7 +134,9 @@ const dialog = new Vue({
     methods: {
         update () {
             this.$refs.form.validate();
-            const url = endpoint + 'jumps/edit';
+            let url = endpoint + 'jumps/edit';
+            if(localStorage.getItem("token") === null)
+                url += '?token=' + localStorage.getItem("token");
             let that = this;
             axios.patch(
                 url,
@@ -152,7 +161,9 @@ const dialog = new Vue({
         },
         submit () {
             this.$refs.form.validate();
-            const url = endpoint + 'jumps/add';
+            let url = endpoint + 'jumps/add';
+            if(this.select === this.items[1] && localStorage.getItem("token") !== null)
+                url += '?token=' + localStorage.getItem("token");
             let that = this;
             axios.put(
                 url,
@@ -183,12 +194,100 @@ const dialog = new Vue({
         }
     }
 });
+const dialog_auth = new Vue({
+    el: '#auth-dialog',
+    data () {
+        return {
+            dialog: false,
+            valid: false,
+            name: '',
+            nameRules: [
+                (v) => !!v || 'This is a required field.',
+                (v) => nameRegex.exec(v) || 'Username must not contain special characters',
+                (v) => v && v.length < 37 || 'Username must be less than 37 characters'
+            ],
+            password: '',
+            passwordRules: [
+                (v) => !!v || 'This is a required field.'
+            ],
+            title: 'Authenticate',
+            action: 'Login',
+            create: false
+        }
+    },
+    created () {
+        const vm = this;
+        bus.$on('auth-dialog', function (value, create) {
+            vm.dialog = value;
+            vm.$refs.form.reset();
+            if(create) {
+                vm.create = create;
+                vm.title = "Add user";
+                vm.action = "Create";
+            }
+            else {
+                vm.create = false;
+                vm.title = "Authenticate";
+                vm.action = "Login";
+            }
+        })
+    },
+    methods: {
+        onCreate() {
+            this.$refs.form.validate();
+            const url = `${BASE_URL}/v2/user/add`;
+            let that = this;
+            axios.put(
+                url,
+                `{ "username": "${this.name}", "password": "${this.password}" }`,
+                {headers: {"Content-Type": "application/json"}}
+            ).then(r => {
+                console.log(r.status);
+                that.dialog = false;
+                bus.$emit('snackbar', true, `Created user ${that.name}`);
+            }).catch(e => {
+                console.log(e);
+                bus.$emit('snackbar', true, `Failed to create user ${that.name}`);
+            });
+        },
+        submit () {
+            this.$refs.form.validate();
+            const url = `${BASE_URL}/v2/user/auth`;
+            let that = this;
+            axios.post(
+                url,
+                `{ "username": "${this.name}", "password": "${this.password}" }`,
+                {headers: {"Content-Type": "application/json"}}
+            ).then(r => {
+                console.log(r.status);
+                that.dialog = false;
+                console.log(r.data);
+                localStorage.setItem("token", r.data);
+            }).catch(e => {
+                console.log(e);
+                if(e.code === '404')
+                    bus.$emit('snackbar', true, "Password incorrect or user doesn't exist");
+                else
+                    bus.$emit('snackbar', true, `Failed to get token for ${that.name}`);
+            });
+        }
+    }
+});
 new Vue({
     el: "#create-button",
     methods: {
         openDialog: function (event) {
             if(event)
                 bus.$emit('dialog', true, 'New jump point', 'Create')
+        }
+    }
+});
+new Vue({
+    el: "#auth-button",
+    methods: {
+        openDialog: function (event) {
+            if(event)
+                bus.$emit('auth-dialog', true)
         }
     }
 });

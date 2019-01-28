@@ -26,7 +26,8 @@ import java.util.*
 
 class Auth {
     class BasicAuth(val username: String, val password: CharArray) {
-        constructor(username: String, password: String): this(username, password.toCharArray())
+        constructor(insecure: Insecure): this(insecure.username, insecure.password.toCharArray())
+        class Insecure(val username: String, val password: String)
     }
 
     @Deprecated(message = "Do not use strings when dealing with passwords.")

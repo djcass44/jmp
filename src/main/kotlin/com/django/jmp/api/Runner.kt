@@ -45,7 +45,7 @@ fun main(args: Array<String>) {
 
     transaction {
         addLogger(StdOutSqlLogger)
-        SchemaUtils.create(Jumps) // Ensure that the 'Jumps' table is created
+        SchemaUtils.create(Jumps, Users) // Ensure that the 'Jumps' table is created
     }
     val app = Javalin.create().apply {
         port(7000)
@@ -57,10 +57,13 @@ fun main(args: Array<String>) {
         get("/v1/jumps") { ctx ->
             val items = arrayListOf<JumpJson>()
             Log.i(Runner::class.java, "API:GET -> ${ctx.path()}")
+            val token = ctx.queryParam("token", "")
+            val tokenUUID = if(token != null && token.isNotBlank()) UUID.fromString(token) else null
             transaction {
                 Log.d(javaClass, Jump.all().count().toString())
                 Jump.all().forEach {
-                    items.add(JumpJson(it))
+                    if(it.token == null || it.token!! == tokenUUID)
+                        items.add(JumpJson(it))
                 }
             }
             ctx.json(items)
@@ -72,13 +75,31 @@ fun main(args: Array<String>) {
                 if(target.isBlank())
                     throw EmptyPathException()
                 Log.d(Runner::class.java, "Target: $target")
+                val token = ctx.queryParam("token", "")
+                var foundV2 = false
+                if(token != null && token.isNotBlank()) { // Request has a token, search user-jumps first
+                    val tokenUUID = UUID.fromString(token)
+                    transaction {
+                        val dbtarget = Jump.find {
+                            Jumps.name.lowerCase() eq target.toLowerCase() and Jumps.token.isNotNull() and Jumps.token.eq(tokenUUID)
+                        }
+                        if(!dbtarget.empty()) {
+                            val location = dbtarget.elementAt(0).location
+                            Log.v(javaClass, "v2: moving to user point: $location")
+                            foundV2 = true
+                            ctx.redirect(location, HttpStatus.FOUND_302)
+                        }
+                    }
+                }
+                if(foundV2) // Jump was found in personal collection, don't need to check global
+                    return@get
                 transaction {
                     val dbtarget = Jump.find {
                         Jumps.name.lowerCase() eq target.toLowerCase()
                     }
                     if(!dbtarget.empty()) {
                         val location = dbtarget.elementAt(0).location
-                        Log.v(javaClass::class.java, "Redirecting to $location")
+                        Log.v(javaClass, "Redirecting to $location")
                         ctx.redirect(location, HttpStatus.FOUND_302)
                     }
                     else
@@ -97,11 +118,14 @@ fun main(args: Array<String>) {
         // Add a jump point
         put("/v1/jumps/add") { ctx ->
             val add = ctx.bodyAsClass(JumpJson::class.java)
+            val token = ctx.queryParam("token", "")
+            val tokenUUID = if(token != null && token.isNotBlank()) UUID.fromString(token) else null
             if(!Runner.jumpExists(add.name)) {
                 transaction {
                     Jump.new {
                         name = add.name
                         location = add.location
+                        this.token = tokenUUID
                     }
                 }
                 ctx.status(HttpStatus.CREATED_201)
@@ -161,15 +185,19 @@ fun main(args: Array<String>) {
         }
         // Add a user
         put("/v2/user/add") { ctx ->
-            val credentials = ctx.bodyAsClass(Auth.BasicAuth::class.java)
+            val credentials = Auth.BasicAuth(ctx.bodyAsClass(Auth.BasicAuth.Insecure::class.java))
             val auth = Auth()
             auth.createUser(credentials.username, credentials.password)
         }
         // Get a users token
-        get("/v2/user/auth") { ctx ->
-            val credentials = ctx.bodyAsClass(Auth.BasicAuth::class.java)
+        post("/v2/user/auth") { ctx ->
+            val credentials = Auth.BasicAuth(ctx.bodyAsClass(Auth.BasicAuth.Insecure::class.java))
             val auth = Auth()
-            ctx.json(auth.getUserToken(credentials.username, credentials.password) ?: "ERR_INVALID")
+            val token = auth.getUserToken(credentials.username, credentials.password)
+            if(token != null)
+                ctx.json(token)
+            else
+                throw NotFoundResponse()
         }
     }
 }
