@@ -51,7 +51,7 @@ class Auth {
                 User.new {
                     this.username = username
                     this.hash = hash
-                    this.token = null
+                    this.token = UUID.randomUUID() // Generate an initial token
                 }
             }
         }
@@ -67,7 +67,7 @@ class Auth {
             val user = existing.elementAtOrNull(0)
             // Only return if hashes match (and user was found)
             return@transaction if(user != null && hashMatches(password, user.hash))
-                user.token
+                user.token.toString()
             else
                 null
         }
@@ -80,7 +80,7 @@ class Auth {
                 Users.username.lowerCase() eq username.toLowerCase()
             }
             val user = existing.elementAtOrNull(0)
-            user?.token = UUID.randomUUID().toString() // Chance of collision is extremely low
+            user?.token = UUID.randomUUID() // Chance of collision is extremely low
         }
     }
 

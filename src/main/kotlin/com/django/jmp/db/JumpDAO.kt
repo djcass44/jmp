@@ -40,7 +40,7 @@ data class EditJumpJson(val name: String, val location: String, val lastName: St
 object Users: IntIdTable() {
     val username = varchar("username", 36).uniqueIndex()
     val hash = text("hash")
-    val token = varchar("token", 128).nullable()
+    val token = uuid("token")
 }
 class User(id: EntityID<Int>): IntEntity(id) {
     companion object : IntEntityClass<User>(Users)
