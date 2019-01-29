@@ -50,7 +50,8 @@ p {
     color: #757575;
 }
 .text-light {
-    color: #bdbdbd;
+    font-family: Roboto, 'Helvetica', 'Arial', sans-serif;
+    color: #616161;
 }
 .text-http {
     color: #b71c1c;

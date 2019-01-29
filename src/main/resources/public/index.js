@@ -34,6 +34,9 @@ const authCheck = new Vue({
                 this.username = `Currently authenticated as ${localStorage.getItem("username")}`;
             else
                 this.username = "Not authenticated.";
+        },
+        showAuth() {
+            bus.$emit('auth-dialog', true);
         }
     },
     created() {
