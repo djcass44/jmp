@@ -29,7 +29,7 @@ const authCheck = new Vue({
     },
     methods: {
         getAuth() {
-            console.log(localStorage.getItem("username"));
+            // console.log(localStorage.getItem("username"));
             if(localStorage.getItem("username") !== null)
                 this.username = `Currently authenticated as ${localStorage.getItem("username")}`;
             else
@@ -73,26 +73,30 @@ const jumps = new Vue({
                 else
                     return `<span class="text-http">${match}</span>`;
             });
+        },
+        loadItems() {
+            let url = endpoint + 'jumps';
+            if(localStorage.getItem("token") !== null)
+                url += '?token=' + localStorage.getItem("token");
+            let items = this.items;
+            items.length = 0; // Reset in case this is being called later (e.g. from auth)
+            axios.get(url).then(function(response) {
+                console.log("Loaded items: " + response.data.length);
+                response.data.map(item => {
+                    items.push(item);
+                });
+                jumps.checkItemsLength();
+                setTimeout(function() {
+                    componentHandler.upgradeDom();
+                    componentHandler.upgradeAllRegistered();
+                }, 0);
+            }).catch(function(error) {
+                console.log(error);
+            });
         }
     },
     created() {
-        let url = endpoint + 'jumps';
-        if(this.select === this.items[1] && localStorage.getItem("token") !== null)
-            url += '?token=' + localStorage.getItem("token");
-        let items = this.items;
-        axios.get(url).then(function(response) {
-            console.log("Loaded items: " + response.data.length);
-            response.data.map(item => {
-                items.push(item);
-            });
-            jumps.checkItemsLength();
-            setTimeout(function() {
-                componentHandler.upgradeDom();
-                componentHandler.upgradeAllRegistered();
-            }, 0);
-        }).catch(function(error) {
-            console.log(error);
-        });
+        this.loadItems();
     }
 });
 const urlRegex = new RegExp('https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)');
@@ -281,16 +285,17 @@ const dialog_auth = new Vue({
             ).then(r => {
                 console.log(r.status);
                 that.dialog = false;
-                console.log(r.data);
+                // console.log(r.data);
                 localStorage.setItem("token", r.data);
                 localStorage.setItem("username", that.name);
                 authCheck.getAuth();
-            }).catch(e => {
+                jumps.loadItems();
+            }).catch(function(e) {
                 console.log(e);
-                if(e.code === '404')
+                if(e.response.status === 404)
                     bus.$emit('snackbar', true, "Password incorrect or user doesn't exist");
                 else
-                    bus.$emit('snackbar', true, `Failed to get token for ${that.name}`);
+                    bus.$emit('snackbar', true, `Failed to authenticate ${that.name}`);
             });
         }
     }
