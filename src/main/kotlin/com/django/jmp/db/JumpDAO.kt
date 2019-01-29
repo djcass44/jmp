@@ -22,8 +22,8 @@ import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.IntIdTable
 
 object Jumps : IntIdTable() {
-    val name = varchar("name", 50).uniqueIndex()
-    val location = varchar("location", 2083).index()
+    val name = varchar("name", 50)
+    val location = varchar("location", 2083)
     val token = uuid("token").nullable()
 }
 

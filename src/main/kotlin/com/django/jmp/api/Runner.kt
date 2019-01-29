@@ -20,9 +20,19 @@ object Runner {
     fun jumpExists(name: String): Boolean {
         return transaction {
             val existing = Jump.find {
-                Jumps.name.lowerCase() eq name.toLowerCase()
+                Jumps.name.lowerCase() eq name.toLowerCase() and Jumps.token.isNull()
             }
             return@transaction !existing.empty()
+        }
+    }
+    fun jumpExists(name: String, token: UUID?): Boolean {
+        if(token == null)
+            return jumpExists(name) // Fall back to v1 without a token
+        return transaction {
+            val existing = Jump.find {
+                Jumps.name.lowerCase() eq name.toLowerCase() and Jumps.token.eq(token)
+            }
+            return@transaction if(existing.empty()) jumpExists(name) else !existing.empty() // Fall back to v1 if nothing found in v2
         }
     }
 }
@@ -125,7 +135,7 @@ fun main(args: Array<String>) {
             val add = ctx.bodyAsClass(JumpJson::class.java)
             val token = ctx.queryParam("token", "")
             val tokenUUID = if(token != null && token.isNotBlank()) UUID.fromString(token) else null
-            if(!Runner.jumpExists(add.name)) {
+            if(!Runner.jumpExists(add.name, tokenUUID)) {
                 transaction {
                     Jump.new {
                         name = add.name
