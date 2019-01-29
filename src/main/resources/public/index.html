@@ -58,13 +58,17 @@
                            id="fixed-header-drawer-exp">
                 </div>
             </div>
-            <button id="auth-button" v-on:click="openDialog" class="mdl-button mdl-js-button mdl-button--flat mdl-js-ripple-effect mdl-button--white">
-                <i class="material-icons">account_circle</i>
+            <button id="create-button" v-on:click="openDialog" class="mdl-button mdl-js-button mdl-button--icon">
+                <i class="material-icons">add</i>
             </button>
-            <!-- Accent-colored raised button with ripple -->
-            <button id="create-button" v-on:click="openDialog" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
-                Create
+            <!-- Right aligned menu below button -->
+            <button id="auth-button" class="mdl-button mdl-js-button mdl-button--icon">
+                <i class="material-icons">more_vert</i>
             </button>
+            <ul id="toolbar-overflow" class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="auth-button">
+                <li v-on:click="openDialog" class="mdl-menu__item">Authenticate</li>
+                <li v-on:click="openCreateDialog" class="mdl-menu__item">Add user</li>
+            </ul>
         </div>
     </header>
     <main class="mdl-layout__content">

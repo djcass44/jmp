@@ -305,11 +305,15 @@ new Vue({
     }
 });
 new Vue({
-    el: "#auth-button",
+    el: "#toolbar-overflow",
     methods: {
         openDialog: function (event) {
             if(event)
                 bus.$emit('auth-dialog', true)
+        },
+        openCreateDialog: function (event) {
+            if(event)
+                bus.$emit('auth-dialog', true, true)
         }
     }
 });
