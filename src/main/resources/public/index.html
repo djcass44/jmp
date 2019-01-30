@@ -78,9 +78,10 @@
                 <ul id="main-list" class="main-list mdl-list" v-cloak>
                     <li v-for='(item, index) in items' :key="index" class="mdl-list__item mdl-list__item--two-line mdl-shadow--2dp">
                         <span class="mdl-list__item-primary-content">
-                          <i class="material-icons mdl-list__item-avatar">wb_cloudy</i>
-                          <span class="strong-title">{{ item.name }}</span>
-                          <span v-html="highlight(item.location)" class="sub-text mdl-list__item-sub-title">{{ item.location }}</span>
+                            <i v-if="item.personal === false" class="material-icons mdl-list__item-avatar">public</i>
+                            <i v-if="item.personal === true" class="material-icons mdl-list__item-avatar">account_circle</i>
+                            <span class="strong-title">{{ item.name }}</span>
+                            <span v-html="highlight(item.location)" class="sub-text mdl-list__item-sub-title">{{ item.location }}</span>
                         </span>
                             <span class="mdl-list__item-secondary-content">
                             <!-- Right aligned menu below button -->
@@ -103,17 +104,12 @@
                 </ul>
                 <div class="mdl-layout-spacer"></div>
             </div>
-            <div class="mdl-grid" v-if="showZero !== true">
-                <div class="mdl-layout-spacer title"></div>
-                <p>v1 &bull; Created by Django Cass, 2019</p>
-                <div class="mdl-layout-spacer title"></div>
-            </div>
             <div class="mdl-grid" id="auth-check" v-cloak>
                 <div class="mdl-layout-spacer title"></div>
                 <button class="mdl-button mdl-js-button mdl-button--icon" v-on:click="showAuth">
                     <i class="material-icons" style="color: #616161;">account_circle</i>
                 </button>
-                <span class="text-light" style="height: 32px; line-height: 32px;">{{ username }}</span>
+                <span class="text-light" style="height: 32px; line-height: 32px;">{{ username }}&nbsp;&bull;&nbsp;v1.1</span>
                 <div class="mdl-layout-spacer title"></div>
             </div>
         </div>

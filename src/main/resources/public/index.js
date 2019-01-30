@@ -194,7 +194,7 @@ const dialog = new Vue({
             let that = this;
             axios.put(
                 url,
-                `{ "name": "${this.name}", "location": "${this.location}" }`,
+                `{ "name": "${this.name}", "location": "${this.location}", "personal": "${localStorage.getItem("token") !== null}" }`,
                 {headers: {"Content-Type": "application/json"}}
             ).then(r => {
                 console.log(r.status);
