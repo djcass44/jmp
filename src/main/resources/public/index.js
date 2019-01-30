@@ -178,7 +178,7 @@ const dialog = new Vue({
                 // jumps.$data.items = Object.assign({}, jumps.$data.items);
                 console.log(that.index);
                 console.log(this.index);
-                Vue.set(jumps.$data.items, that.index, { name: this.name, location: this.location });
+                Vue.set(jumps.$data.items, that.index, { name: this.name, location: this.location, personal: this.select === this.items[1] });
                 setTimeout(function() {
                     componentHandler.upgradeDom();
                     componentHandler.upgradeAllRegistered();

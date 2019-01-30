@@ -134,7 +134,7 @@
                                         <v-text-field outline append-icon="link" label="Location*" v-model="location" :rules="locationRules" :counter="2083" required autocomplete="url"></v-text-field>
                                     </v-flex>
                                     <v-flex xs12>
-                                        <v-select v-model="select" :items="items" :rules="[v => !!v || 'Type is required.']" label="Type" required></v-select>
+                                        <v-select v-if="edit === false" v-model="select" :items="items" :rules="[v => !!v || 'Type is required.']" label="Type" required></v-select>
                                     </v-flex>
                                 </v-layout>
                             </v-container>
