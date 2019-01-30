@@ -17,6 +17,9 @@ const BASE_URL="http://localhost:7000";
 const endpoint = `${BASE_URL}/v1/`;
 console.log(`endpoint: ${endpoint}`);
 
+const storageToken = "token";
+const storageID = "username";
+
 // Used for triggering actions between Vue instances
 const bus = new Vue();
 
@@ -30,8 +33,8 @@ const authCheck = new Vue({
     methods: {
         getAuth() {
             // console.log(localStorage.getItem("username"));
-            if(localStorage.getItem("username") !== null)
-                this.username = `Currently authenticated as ${localStorage.getItem("username")}`;
+            if(localStorage.getItem(storageID) !== null)
+                this.username = `Currently authenticated as ${localStorage.getItem(storageID)}`;
             else
                 this.username = "Not authenticated.";
         },
@@ -79,8 +82,8 @@ const jumps = new Vue({
         },
         loadItems() {
             let url = endpoint + 'jumps';
-            if(localStorage.getItem("token") !== null)
-                url += '?token=' + localStorage.getItem("token");
+            if(localStorage.getItem(storageToken) !== null)
+                url += '?token=' + localStorage.getItem(storageToken);
             let items = this.items;
             items.length = 0; // Reset in case this is being called later (e.g. from auth)
             axios.get(url).then(function(response) {
@@ -162,8 +165,8 @@ const dialog = new Vue({
         update () {
             this.$refs.form.validate();
             let url = endpoint + 'jumps/edit';
-            if(localStorage.getItem("token") === null)
-                url += '?token=' + localStorage.getItem("token");
+            if(localStorage.getItem(storageToken) === null)
+                url += '?token=' + localStorage.getItem(storageToken);
             let that = this;
             axios.patch(
                 url,
@@ -189,19 +192,22 @@ const dialog = new Vue({
         submit () {
             this.$refs.form.validate();
             let url = endpoint + 'jumps/add';
-            if(this.select === this.items[1] && localStorage.getItem("token") !== null)
-                url += '?token=' + localStorage.getItem("token");
+            const localToken = localStorage.getItem(storageToken);
+            const personalJump = this.select === this.items[1];
+            if(personalJump && localToken !== null)
+                url += '?token=' + localToken;
             let that = this;
             axios.put(
                 url,
-                `{ "name": "${this.name}", "location": "${this.location}", "personal": "${localStorage.getItem("token") !== null}" }`,
+                `{ "name": "${this.name}", "location": "${this.location}", "personal": "${personalJump}" }`,
                 {headers: {"Content-Type": "application/json"}}
             ).then(r => {
                 console.log(r.status);
                 that.dialog = false;
                 jumps.$data.items.push({
                     name: that.name,
-                    location: that.location}
+                    location: that.location,
+                    personal: personalJump}
                 );
                 jumps.checkItemsLength();
                 setTimeout(function() {
