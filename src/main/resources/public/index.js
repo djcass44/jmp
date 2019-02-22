@@ -97,7 +97,9 @@ const jumps = new Vue({
                     componentHandler.upgradeAllRegistered();
                 }, 0);
             }).catch(function(error) {
-                console.log(error);
+                console.log(error); // API is probably unreachable
+                jumps.checkItemsLength();
+                bus.$emit('snackbar', true, `Failed to load jumps`);
             });
         }
     },
