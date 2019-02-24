@@ -33,10 +33,23 @@ const authCheck = new Vue({
     methods: {
         getAuth() {
             // console.log(localStorage.getItem("username"));
-            if(localStorage.getItem(storageID) !== null)
+            let username = null;
+            if(localStorage.getItem(storageID) !== null) {
                 this.username = `Currently authenticated as ${localStorage.getItem(storageID)}`;
+                username = localStorage.getItem(storageID);
+            }
             else
                 this.username = "Not authenticated.";
+            const url = `${BASE_URL}/v2/user/${username}`;
+            axios.get(url).then(r => {
+                console.log("UVALID: " + r.status);
+            }).catch(e => {
+                console.log(e);
+                this.username = "Not authenticated.";
+                // User verification failed, nuke local storage
+                localStorage.removeItem(storageID);
+                localStorage.removeItem(storageToken);
+            })
         },
         showAuth() {
             bus.$emit('auth-dialog', true);

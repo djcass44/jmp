@@ -56,6 +56,7 @@ fun main(args: Array<String>) {
     transaction {
         addLogger(StdOutSqlLogger)
         SchemaUtils.create(Jumps, Users) // Ensure that the 'Jumps' table is created
+        Init(store.super_name, store.super_key.toCharArray()) // Ensure that the default admin is created
     }
     val app = Javalin.create().apply {
         port(7000)
@@ -217,6 +218,25 @@ fun main(args: Array<String>) {
                 ctx.json(token)
             else
                 throw NotFoundResponse()
+        }
+        // Verify a user still exists
+        get("/v2/user/:name") { ctx ->
+            val name = ctx.pathParam("name")
+            if(name.isBlank())
+                throw BadRequestResponse()
+            transaction {
+                val results = User.find {
+                    Users.username eq name
+                }
+                if(results.empty()) {
+                    Log.w(javaClass, "User: $name failed verification from ${ctx.ip()} [UA: ${ctx.userAgent()}]")
+                    throw NotFoundResponse()
+                }
+                else {
+                    ctx.status(HttpStatus.OK_200)
+                    ctx.result(name)
+                }
+            }
         }
     }
 }

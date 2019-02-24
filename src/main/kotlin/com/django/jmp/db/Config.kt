@@ -19,15 +19,19 @@ package com.django.jmp.db
 import com.beust.klaxon.Klaxon
 import com.django.log2.logging.Log
 
-data class ConfigStore(val url: String, val driver: String)
+data class ConfigStore(val url: String, val driver: String, val super_name: String, val super_key: String)
 
 class Config {
     companion object {
         private const val defaultUrl = "jdbc:sqlite:jmp.db"
         private const val defaultDriver = "org.sqlite.JDBC"
+        private const val defaultSuperName = "admin"
+        private const val defaultSuperKey = "password" // Holy insecure Batman!
 
         private const val envUrl = "DRIVER_URL"
         private const val envDriver = "DRIVER_CLASS"
+        private const val envSuperName = "ADMIN_NAME"
+        private const val envSuperKey = "ADMIN_PASSWORD"
     }
     fun load(name: String): ConfigStore {
         val fileContent = Config::class.java.getResource("/$name").readText()
@@ -43,6 +47,11 @@ class Config {
     }
     fun loadEnv(): ConfigStore {
         Log.w(javaClass, "Trying to use ENV for database configuration (default SQLite)")
-        return ConfigStore(Util.getEnv(envUrl, defaultUrl), Util.getEnv(envDriver, defaultDriver))
+        return ConfigStore(
+            Util.getEnv(envUrl, defaultUrl),
+            Util.getEnv(envDriver, defaultDriver),
+            Util.getEnv(envSuperName, defaultSuperName),
+            Util.getEnv(envSuperKey, defaultSuperKey)
+        )
     }
 }
