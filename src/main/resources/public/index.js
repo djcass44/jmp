@@ -47,12 +47,15 @@ const authCheck = new Vue({
                 console.log(e);
                 this.username = "Not authenticated.";
                 // User verification failed, nuke local storage
-                localStorage.removeItem(storageID);
-                localStorage.removeItem(storageToken);
+                this.invalidate();
             })
         },
         showAuth() {
             bus.$emit('auth-dialog', true);
+        },
+        invalidate() {
+            localStorage.removeItem(storageID);
+            localStorage.removeItem(storageToken);
         }
     },
     created() {
@@ -343,6 +346,12 @@ new Vue({
         openCreateDialog: function (event) {
             if(event)
                 bus.$emit('auth-dialog', true, true)
+        },
+        logout: function (event) {
+            if(event) {
+                authCheck.invalidate();
+                authCheck.getAuth();
+            }
         }
     }
 });

@@ -222,7 +222,7 @@ fun main(args: Array<String>) {
         // Verify a user still exists
         get("/v2/user/:name") { ctx ->
             val name = ctx.pathParam("name")
-            if(name.isBlank())
+            if(name.isBlank() || name == "null") // TODO never send 'null'
                 throw BadRequestResponse()
             transaction {
                 val results = User.find {
