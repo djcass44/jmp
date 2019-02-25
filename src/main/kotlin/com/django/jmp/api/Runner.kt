@@ -222,15 +222,17 @@ fun main(args: Array<String>) {
         // Verify a user still exists
         get("/v2/user/:name") { ctx ->
             val name = ctx.pathParam("name")
-            if(name.isBlank() || name == "null") // TODO never send 'null'
+            if(name.isBlank()) { // TODO never send 'null'
+                Log.v(Runner::class.java, "User made null/empty request")
                 throw BadRequestResponse()
+            }
             transaction {
                 val results = User.find {
                     Users.username eq name
                 }
                 if(results.empty()) {
                     Log.w(javaClass, "User: $name failed verification from ${ctx.ip()} [UA: ${ctx.userAgent()}]")
-                    throw NotFoundResponse()
+                    throw BadRequestResponse()
                 }
                 else {
                     ctx.status(HttpStatus.OK_200)

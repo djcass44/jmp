@@ -31,9 +31,14 @@ const authCheck = new Vue({
         }
     },
     methods: {
+        hasLocalAuth() {
+            let username = '';
+            if(localStorage.getItem(storageID) !== null)
+                username = localStorage.getItem(storageID);
+        },
         getAuth() {
             // console.log(localStorage.getItem("username"));
-            let username = null;
+            let username = '';
             if(localStorage.getItem(storageID) !== null) {
                 this.username = `Currently authenticated as ${localStorage.getItem(storageID)}`;
                 username = localStorage.getItem(storageID);
@@ -43,8 +48,8 @@ const authCheck = new Vue({
             const url = `${BASE_URL}/v2/user/${username}`;
             axios.get(url).then(r => {
                 console.log("UVALID: " + r.status);
-            }).catch(e => {
-                console.log(e);
+            }).catch(() => {
+                console.log("User credential verification failed (this is okay if not yet authenticated)");
                 this.username = "Not authenticated.";
                 // User verification failed, nuke local storage
                 this.invalidate();
@@ -349,9 +354,16 @@ new Vue({
         },
         logout: function (event) {
             if(event) {
+                // probably should just reload page
                 authCheck.invalidate();
                 authCheck.getAuth();
             }
+        },
+        checkAuthStatus: function(event) {
+            if(event) {
+                return !!authCheck.hasLocalAuth();
+            }
+            return false;
         }
     }
 });
