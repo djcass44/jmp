@@ -20,6 +20,7 @@ import com.amdelamar.jhash.Hash
 import com.django.jmp.db.User
 import com.django.jmp.db.Users
 import io.javalin.ConflictResponse
+import io.javalin.security.Role
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -28,6 +29,9 @@ class Auth {
     class BasicAuth(val username: String, val password: CharArray) {
         constructor(insecure: Insecure): this(insecure.username, insecure.password.toCharArray())
         class Insecure(val username: String, val password: String)
+    }
+    enum class BasicRoles: Role {
+        USER, ADMIN
     }
 
     @Deprecated(message = "Do not use strings when dealing with passwords.")
@@ -41,7 +45,7 @@ class Auth {
     fun hashMatches(password: String, expectedHash: String): Boolean {
         return hashMatches(password.toCharArray(), expectedHash)
     }
-    fun hashMatches(password: CharArray, expectedHash: String): Boolean {
+    private fun hashMatches(password: CharArray, expectedHash: String): Boolean {
         return Hash.password(password).verify(expectedHash)
     }
 
@@ -92,5 +96,10 @@ class Auth {
             }
             return@transaction !existing.empty()
         }
+    }
+
+    // Determine role based on request
+    fun getUserRole(): Role {
+        return BasicRoles.ADMIN // TODO DO NOT ALLOW IN PRODUCTION
     }
 }

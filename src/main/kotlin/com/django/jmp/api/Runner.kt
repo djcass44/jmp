@@ -8,6 +8,7 @@ import io.javalin.ConflictResponse
 import io.javalin.Javalin
 import io.javalin.NotFoundResponse
 import io.javalin.apibuilder.ApiBuilder.*
+import io.javalin.security.SecurityUtil.roles
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -58,17 +59,26 @@ fun main(args: Array<String>) {
         SchemaUtils.create(Jumps, Users) // Ensure that the 'Jumps' table is created
         Init(store.super_name, store.super_key.toCharArray()) // Ensure that the default admin is created
     }
+    val auth = Auth()
     val app = Javalin.create().apply {
         port(7000)
         enableStaticFiles("/public")
         enableCaseSensitiveUrls()
+        accessManager { handler, ctx, permittedRoles ->
+            val userRole = auth.getUserRole() // returns ADMIN by default
+            if(permittedRoles.contains(userRole))
+                handler.handle(ctx)
+            else
+                ctx.status(HttpStatus.UNAUTHORIZED_401).result("Unauthorised")
+        }
     }.start()
     app.routes {
         // List all items in Json format
-        get("/v1/jumps") { ctx ->
+        get("/v1/jumps", { ctx ->
             val items = arrayListOf<JumpJson>()
             Log.i(Runner::class.java, "API:GET -> ${ctx.path()}")
-            val token = ctx.queryParam("token", "")
+            val token: String? = ctx.header("X-Auth-Token")
+            Log.d(Runner::class.java, "Token: $token")
             val tokenUUID = if(token != null && token.isNotBlank()) UUID.fromString(token) else null
             transaction {
                 Log.d(javaClass, Jump.all().count().toString())
@@ -78,15 +88,15 @@ fun main(args: Array<String>) {
                 }
             }
             ctx.json(items)
-        }
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Redirect to $location (if it exists)
-        get("/v1/jump/:target") { ctx ->
+        get("/v1/jump/:target", { ctx ->
             try {
                 val target = ctx.pathParam("target")
                 if(target.isBlank())
                     throw EmptyPathException()
                 Log.d(Runner::class.java, "Target: $target")
-                val token = ctx.queryParam("token", "")
+                val token: String? = ctx.header("X-Auth-Token")
                 if(token == null || token.isBlank()) {
                     ctx.redirect("/tokcheck.html?query=$target")
                     ctx.status(HttpStatus.FOUND_302)
@@ -130,11 +140,11 @@ fun main(args: Array<String>) {
                 Log.e(Runner::class.java, "Empty target")
                 throw NotFoundResponse()
             }
-        }
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Add a jump point
-        put("/v1/jumps/add") { ctx ->
+        put("/v1/jumps/add", { ctx ->
             val add = ctx.bodyAsClass(JumpJson::class.java)
-            val token = ctx.queryParam("token", "")
+            val token: String? = ctx.header("X-Auth-Token")
             val tokenUUID = if(token != null && token.isNotBlank()) UUID.fromString(token) else null
             if(!Runner.jumpExists(add.name, tokenUUID)) {
                 transaction {
@@ -149,9 +159,9 @@ fun main(args: Array<String>) {
             }
             else
                 throw ConflictResponse()
-        }
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Edit a jump point
-        patch("/v1/jumps/edit") { ctx ->
+        patch("/v1/jumps/edit", { ctx ->
             val update = ctx.bodyAsClass(EditJumpJson::class.java)
             transaction {
                 if(update.lastName != update.name && Runner.jumpExists(update.name)) {
@@ -171,19 +181,19 @@ fun main(args: Array<String>) {
                         throw NotFoundResponse()
                 }
             }
-        }
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Delete a jump point
-        delete("/v1/jumps/rm/:name") { ctx ->
+        delete("/v1/jumps/rm/:name", { ctx ->
             val name = ctx.pathParam("name")
             transaction {
                 Jumps.deleteWhere { Jumps.name eq name }
             }
             ctx.status(HttpStatus.NO_CONTENT_204)
-        }
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Find similar jumps
-        get("/v2/similar/:query") { ctx ->
+        get("/v2/similar/:query", { ctx ->
             try {
-                val token = ctx.queryParam("token", "")
+                val token: String? = ctx.header("X-Auth-Token")
                 val tokenUUID = if(token != null && token.isNotBlank()) UUID.fromString(token) else null
                 val query = ctx.pathParam("query")
                 if (query.isBlank())
@@ -202,25 +212,23 @@ fun main(args: Array<String>) {
                 Log.e(Runner::class.java, "Empty target")
                 throw NotFoundResponse()
             }
-        }
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Add a user
-        put("/v2/user/add") { ctx ->
+        put("/v2/user/add", { ctx ->
             val credentials = Auth.BasicAuth(ctx.bodyAsClass(Auth.BasicAuth.Insecure::class.java))
-            val auth = Auth()
             auth.createUser(credentials.username, credentials.password)
-        }
+        }, roles(Auth.BasicRoles.ADMIN))
         // Get a users token
-        post("/v2/user/auth") { ctx ->
+        post("/v2/user/auth", { ctx ->
             val credentials = Auth.BasicAuth(ctx.bodyAsClass(Auth.BasicAuth.Insecure::class.java))
-            val auth = Auth()
             val token = auth.getUserToken(credentials.username, credentials.password)
             if(token != null)
                 ctx.json(token)
             else
                 throw NotFoundResponse()
-        }
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Verify a user still exists
-        get("/v2/user/:name") { ctx ->
+        get("/v2/user/:name", { ctx ->
             val name = ctx.pathParam("name")
             if(name.isBlank()) { // TODO never send 'null'
                 Log.v(Runner::class.java, "User made null/empty request")
@@ -239,6 +247,6 @@ fun main(args: Array<String>) {
                     ctx.result(name)
                 }
             }
-        }
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
     }
 }

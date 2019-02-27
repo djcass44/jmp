@@ -20,6 +20,8 @@ console.log(`endpoint: ${endpoint}`);
 const storageToken = "token";
 const storageID = "username";
 
+const headerToken = "X-Auth-Token";
+
 // Used for triggering actions between Vue instances
 const bus = new Vue();
 
@@ -107,7 +109,7 @@ const jumps = new Vue({
                 url += '?token=' + localStorage.getItem(storageToken);
             let items = this.items;
             items.length = 0; // Reset in case this is being called later (e.g. from auth)
-            axios.get(url).then(function(response) {
+            axios.get(url, { headers: { headerToken: localStorage.getItem(storageToken)}}).then(function(response) {
                 console.log("Loaded items: " + response.data.length);
                 response.data.map(item => {
                     items.push(item);
@@ -194,7 +196,7 @@ const dialog = new Vue({
             axios.patch(
                 url,
                 `{ "name": "${this.name}", "location": "${this.location}", "lastName": "${this.lastName}" }`,
-                {headers: {"Content-Type": "application/json"}}
+                {headers: {"Content-Type": "application/json", headerToken: localStorage.getItem(storageToken)}}
             ).then(r => {
                 console.log(r.status);
                 that.dialog = false;
@@ -223,7 +225,7 @@ const dialog = new Vue({
             axios.put(
                 url,
                 `{ "name": "${this.name}", "location": "${this.location}", "personal": "${personalJump}" }`,
-                {headers: {"Content-Type": "application/json"}}
+                {headers: {"Content-Type": "application/json", headerToken: localToken}}
             ).then(r => {
                 console.log(r.status);
                 that.dialog = false;
