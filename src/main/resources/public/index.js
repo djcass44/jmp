@@ -20,8 +20,6 @@ console.log(`endpoint: ${endpoint}`);
 const storageToken = "token";
 const storageID = "username";
 
-const headerToken = "X-Auth-Token";
-
 // Used for triggering actions between Vue instances
 const bus = new Vue();
 
@@ -110,11 +108,9 @@ const jumps = new Vue({
         },
         loadItems() {
             let url = endpoint + 'jumps';
-            if(localStorage.getItem(storageToken) !== null)
-                url += '?token=' + localStorage.getItem(storageToken);
             let items = this.items;
             items.length = 0; // Reset in case this is being called later (e.g. from auth)
-            axios.get(url, { headers: { headerToken: localStorage.getItem(storageToken)}}).then(function(response) {
+            axios.get(url, { headers: { "X-Auth-Token": localStorage.getItem(storageToken)}}).then(function(response) {
                 console.log("Loaded items: " + response.data.length);
                 response.data.map(item => {
                     items.push(item);
@@ -195,13 +191,11 @@ const dialog = new Vue({
         update () {
             this.$refs.form.validate();
             let url = endpoint + 'jumps/edit';
-            if(localStorage.getItem(storageToken) === null)
-                url += '?token=' + localStorage.getItem(storageToken);
             let that = this;
             axios.patch(
                 url,
                 `{ "name": "${this.name}", "location": "${this.location}", "lastName": "${this.lastName}" }`,
-                {headers: {"Content-Type": "application/json", headerToken: localStorage.getItem(storageToken)}}
+                {headers: {"Content-Type": "application/json", "X-Auth-Token": localStorage.getItem(storageToken)}}
             ).then(r => {
                 console.log(r.status);
                 that.dialog = false;
@@ -223,14 +217,17 @@ const dialog = new Vue({
             this.$refs.form.validate();
             let url = endpoint + 'jumps/add';
             const localToken = localStorage.getItem(storageToken);
-            const personalJump = this.select === this.items[1];
-            if(personalJump && localToken !== null)
-                url += '?token=' + localToken;
+            let personalJump = this.select === this.items[1];
+            if(localToken === null && personalJump === true) {
+                // User cannot create personal tokens if not auth'd
+                bus.$emit('snackbar', true, "Login to create personal jumps!");
+                return;
+            }
             let that = this;
             axios.put(
                 url,
                 `{ "name": "${this.name}", "location": "${this.location}", "personal": "${personalJump}" }`,
-                {headers: {"Content-Type": "application/json", headerToken: localToken}}
+                {headers: {"Content-Type": "application/json", "X-Auth-Token": localToken}}
             ).then(r => {
                 console.log(r.status);
                 that.dialog = false;
