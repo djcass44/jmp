@@ -29,7 +29,8 @@ const authCheck = new Vue({
     el: '#auth-check',
     data() {
         return {
-            username: ''
+            username: '',
+            version: ''
         }
     },
     methods: {
@@ -46,13 +47,13 @@ const authCheck = new Vue({
                 username = localStorage.getItem(storageID);
             }
             else
-                this.username = "Not authenticated.";
+                this.username = "Not authenticated";
             const url = `${BASE_URL}/v2/user/${username}`;
             axios.get(url).then(r => {
                 console.log("UVALID: " + r.status);
             }).catch(() => {
                 console.log("User credential verification failed (this is okay if not yet authenticated)");
-                this.username = "Not authenticated.";
+                this.username = "Not authenticated";
                 // User verification failed, nuke local storage
                 this.invalidate();
             })
@@ -67,6 +68,10 @@ const authCheck = new Vue({
     },
     created() {
         this.getAuth();
+        let that = this;
+        axios.get(`${BASE_URL}/v2/info`).then(r => {
+            that.version = r.data;
+        })
     }
 });
 const jumps = new Vue({

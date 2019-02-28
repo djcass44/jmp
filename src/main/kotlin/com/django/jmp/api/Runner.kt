@@ -73,6 +73,11 @@ fun main(args: Array<String>) {
         }
     }.start()
     app.routes {
+        // Version/info
+        get("/v2/info", { ctx ->
+            ctx.result("v2.0")
+            ctx.status(HttpStatus.OK_200)
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // List all items in Json format
         get("/v1/jumps", { ctx ->
             val items = arrayListOf<JumpJson>()
