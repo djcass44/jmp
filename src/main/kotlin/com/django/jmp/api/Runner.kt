@@ -3,10 +3,7 @@ package com.django.jmp.api
 import com.django.jmp.db.*
 import com.django.jmp.except.EmptyPathException
 import com.django.log2.logging.Log
-import io.javalin.BadRequestResponse
-import io.javalin.ConflictResponse
-import io.javalin.Javalin
-import io.javalin.NotFoundResponse
+import io.javalin.*
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.security.SecurityUtil.roles
 import org.eclipse.jetty.http.HttpStatus
@@ -65,7 +62,7 @@ fun main(args: Array<String>) {
         enableStaticFiles("/public")
         enableCaseSensitiveUrls()
         accessManager { handler, ctx, permittedRoles ->
-            val userRole = auth.getUserRole() // returns ADMIN by default
+            val userRole = auth.getUserRole(ctx.header(Auth.headerUser))
             if(permittedRoles.contains(userRole))
                 handler.handle(ctx)
             else
@@ -151,12 +148,14 @@ fun main(args: Array<String>) {
             val add = ctx.bodyAsClass(JumpJson::class.java)
             val token: String? = ctx.header(Auth.headerToken)
             val tokenUUID = if(token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
+            // Block valid users with invalid tokens
+            if(tokenUUID != null && !auth.validateUserToken(tokenUUID)) throw UnauthorizedResponse()
             if(!Runner.jumpExists(add.name, tokenUUID)) {
                 transaction {
                     Jump.new {
                         name = add.name
                         location = add.location
-                        if(tokenUUID != null)
+                        if(tokenUUID != null && add.personal)
                             this.token = tokenUUID
                     }
                 }
@@ -251,16 +250,22 @@ fun main(args: Array<String>) {
                 throw BadRequestResponse()
             }
             transaction {
-                val results = User.find {
+                val result = User.find {
                     Users.username eq name
-                }
-                if(results.empty()) {
-                    Log.w(javaClass, "User: $name failed verification from ${ctx.ip()} [UA: ${ctx.userAgent()}]")
+                }.elementAtOrNull(0)
+                if(result == null) {
+                    Log.w(javaClass, "User: $name failed verification [IP: ${ctx.ip()}, UA: ${ctx.userAgent()}]")
                     throw BadRequestResponse()
                 }
                 else {
-                    ctx.status(HttpStatus.OK_200)
-                    ctx.result(name)
+                    if(auth.validateUserToken(result.token)) {
+                        ctx.status(HttpStatus.OK_200)
+                        ctx.result(name)
+                    }
+                    else {
+                        Log.w(javaClass, "User: $name exists, however their token is invalid [IP: ${ctx.ip()}, UA: ${ctx.userAgent()}")
+                        throw BadRequestResponse()
+                    }
                 }
             }
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))

@@ -17,6 +17,7 @@
 package com.django.jmp.api
 
 import com.amdelamar.jhash.Hash
+import com.django.jmp.db.Roles
 import com.django.jmp.db.User
 import com.django.jmp.db.Users
 import io.javalin.ConflictResponse
@@ -35,6 +36,7 @@ class Auth {
     }
     companion object {
         const val headerToken = "X-Auth-Token"
+        const val headerUser = "X-Auth-User"
     }
 
     @Deprecated(message = "Do not use strings when dealing with passwords.")
@@ -52,7 +54,7 @@ class Auth {
         return Hash.password(password).verify(expectedHash)
     }
 
-    fun createUser(username: String, password: CharArray) {
+    fun createUser(username: String, password: CharArray, admin: Boolean = false) {
         val hash = computeHash(password)
         if(!userExists(username)) { // Assume the user hasn't been added
             transaction {
@@ -60,6 +62,7 @@ class Auth {
                     this.username = username
                     this.hash = hash
                     this.token = UUID.randomUUID() // Generate an initial token
+                    this.role = if(admin) getDAOAdminRole() else getDAOUserRole()
                 }
             }
         }
@@ -110,8 +113,41 @@ class Auth {
         }
     }
 
+    private fun getUser(username: String): User? {
+        return transaction {
+            return@transaction User.find {
+                Users.username eq username
+            }.elementAtOrNull(0)
+        }
+    }
+
     // Determine role based on request
-    fun getUserRole(): Role {
-        return BasicRoles.ADMIN // TODO DO NOT ALLOW IN PRODUCTION
+    fun getUserRole(username: String? = null): Role {
+        if(username == null)
+            return BasicRoles.USER
+        val user = getUser(username) ?: return BasicRoles.USER
+        return transaction {
+            when (user.role.name) {
+                BasicRoles.ADMIN.name -> BasicRoles.ADMIN
+                BasicRoles.USER.name -> BasicRoles.USER
+                else -> BasicRoles.USER
+            }
+        }
+    }
+    private fun getDAOUserRole(): com.django.jmp.db.Role {
+        return getDAORole(BasicRoles.USER)
+    }
+    private fun getDAOAdminRole(): com.django.jmp.db.Role {
+        return getDAORole(BasicRoles.ADMIN)
+    }
+    private fun getDAORole(role: BasicRoles): com.django.jmp.db.Role {
+        return transaction {
+            return@transaction com.django.jmp.db.Role.find {
+                Roles.name eq role.name
+            }.elementAtOrNull(0)?: // If role is null, create it
+            com.django.jmp.db.Role.new {
+                name = role.name
+            }
+        }
     }
 }

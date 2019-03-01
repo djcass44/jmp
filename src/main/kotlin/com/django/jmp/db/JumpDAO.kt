@@ -43,6 +43,7 @@ object Users: IntIdTable() {
     val username = varchar("username", 36).uniqueIndex()
     val hash = text("hash")
     val token = uuid("token")
+    val role = reference("role", Roles)
 }
 class User(id: EntityID<Int>): IntEntity(id) {
     companion object : IntEntityClass<User>(Users)
@@ -50,4 +51,13 @@ class User(id: EntityID<Int>): IntEntity(id) {
     var username by Users.username
     var hash by Users.hash
     var token by Users.token
+    var role by Role referencedOn Users.role
+}
+object Roles: IntIdTable() {
+    val name = varchar("name", 12).uniqueIndex()
+}
+class Role(id: EntityID<Int>): IntEntity(id) {
+    companion object: IntEntityClass<Role>(Roles)
+
+    var name by Roles.name
 }

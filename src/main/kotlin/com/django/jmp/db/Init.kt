@@ -17,12 +17,23 @@
 package com.django.jmp.db
 
 import com.django.jmp.api.Auth
+import com.django.log2.logging.Log
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class Init(private val superName: String, private val superPassword: CharArray) {
     init {
         transaction {
-            if(User.all().empty()) Auth().createUser(superName, superPassword)
+            if(User.all().empty()) {
+                Auth().createUser(superName, superPassword, true)
+                Log.w(javaClass, "Created superuser with access: [username: $superName, password: $superPassword]\nPlease change this password ASAP")
+            }
+            if(Role.all().empty()) {
+                for (r in Auth.BasicRoles.values()) {
+                    Role.new {
+                        name = r.name
+                    }
+                }
+            }
         }
     }
 }

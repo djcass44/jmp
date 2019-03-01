@@ -115,7 +115,7 @@ const jumps = new Vue({
             let url = endpoint + 'jumps';
             let items = this.items;
             items.length = 0; // Reset in case this is being called later (e.g. from auth)
-            axios.get(url, { headers: { "X-Auth-Token": localStorage.getItem(storageToken)}}).then(function(response) {
+            axios.get(url, { headers: { "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageID)}}).then(function(response) {
                 console.log("Loaded items: " + response.data.length);
                 response.data.map(item => {
                     items.push(item);
@@ -200,7 +200,7 @@ const dialog = new Vue({
             axios.patch(
                 url,
                 `{ "name": "${this.name}", "location": "${this.location}", "lastName": "${this.lastName}" }`,
-                {headers: {"Content-Type": "application/json", "X-Auth-Token": localStorage.getItem(storageToken)}}
+                {headers: {"Content-Type": "application/json", "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageID)}}
             ).then(r => {
                 console.log(r.status);
                 that.dialog = false;
@@ -232,7 +232,7 @@ const dialog = new Vue({
             axios.put(
                 url,
                 `{ "name": "${this.name}", "location": "${this.location}", "personal": "${personalJump}" }`,
-                {headers: {"Content-Type": "application/json", "X-Auth-Token": localToken}}
+                {headers: {"Content-Type": "application/json", "X-Auth-Token": localToken, "X-Auth-User": localStorage.getItem(storageID)}}
             ).then(r => {
                 console.log(r.status);
                 that.dialog = false;
@@ -305,7 +305,7 @@ const dialog_auth = new Vue({
             axios.put(
                 url,
                 `{ "username": "${this.name}", "password": "${this.password}" }`,
-                {headers: {"Content-Type": "application/json"}}
+                {headers: {"Content-Type": "application/json", "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageID)}}
             ).then(r => {
                 console.log(r.status);
                 that.dialog = false;
