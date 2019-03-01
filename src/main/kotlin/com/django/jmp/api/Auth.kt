@@ -104,7 +104,7 @@ class Auth {
         }
     }
 
-    private fun userExists(username: String): Boolean {
+    fun userExists(username: String): Boolean {
         return transaction {
             val existing = User.find {
                 Users.username.lowerCase() eq username.toLowerCase()

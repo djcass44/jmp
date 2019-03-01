@@ -222,6 +222,32 @@ fun main(args: Array<String>) {
             val credentials = Auth.BasicAuth(ctx.bodyAsClass(Auth.BasicAuth.Insecure::class.java))
             auth.createUser(credentials.username, credentials.password)
         }, roles(Auth.BasicRoles.ADMIN))
+        // Get information about the current user
+        get("/v2/user", { ctx ->
+            val user = ctx.header(Auth.headerUser)
+            val token = ctx.header(Auth.headerToken)
+            Log.d(Runner::class.java, "/v2/user -> user: $user, token: $token")
+            if(user == null || token == null)
+                throw BadRequestResponse()
+            val tokenUUID = try {
+                UUID.fromString(token)
+            }
+            catch (e: Exception) {
+                Log.e(Runner::class.java, "User: $user provided malformed token [IP: ${ctx.ip()}, UA: ${ctx.userAgent()}]")
+                throw BadRequestResponse()
+            }
+            if(!auth.userExists(user)) {
+                ctx.result("NONE")
+                ctx.status(HttpStatus.OK_200)
+                return@get // User doesn't exist, stop here
+            }
+            if(auth.validateUserToken(tokenUUID)) {
+                val role = auth.getUserRole(user)
+                ctx.result(role.toString())
+                ctx.status(HttpStatus.OK_200)
+            }
+            else throw UnauthorizedResponse()
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Get a users token
         post("/v2/user/auth", { ctx ->
             val credentials = Auth.BasicAuth(ctx.bodyAsClass(Auth.BasicAuth.Insecure::class.java))
@@ -263,7 +289,7 @@ fun main(args: Array<String>) {
                         ctx.result(name)
                     }
                     else {
-                        Log.w(javaClass, "User: $name exists, however their token is invalid [IP: ${ctx.ip()}, UA: ${ctx.userAgent()}")
+                        Log.w(javaClass, "User: $name exists, however their token is invalid [IP: ${ctx.ip()}, UA: ${ctx.userAgent()}]")
                         throw BadRequestResponse()
                     }
                 }
