@@ -30,11 +30,6 @@ const authCheck = new Vue({
         }
     },
     methods: {
-        hasLocalAuth() {
-            let username = '';
-            if(localStorage.getItem(storageUser) !== null)
-                username = localStorage.getItem(storageUser);
-        },
         getAuth() {
             console.log(localStorage.getItem(storageUser));
             let username = '';
@@ -123,11 +118,11 @@ const jumps = new Vue({
         },
         remove(index) {
             let item = this.items[index];
-            bus.$emit('dialog-delete', true, item.name, index);
+            bus.$emit('dialog-delete', true, item.username, index);
         },
         doRemove(index) {
             let item = this.items[index];
-            const url = `${BASE_URL}/v2/user/rm/${item.name}`;
+            const url = `${BASE_URL}/v2/user/rm/${item.username}`;
             let that = this;
             axios.delete(url, { headers: { "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}).then(r => {
                 console.log(r.status);
@@ -138,13 +133,27 @@ const jumps = new Vue({
                 bus.$emit('snackbar', true, `Failed to delete: ${e.response.status}`);
             });
         },
-        highlight(text) {
-            return text.replace(new RegExp("https?:\\/\\/(www\\.)?"), match => {
-                if(text.startsWith("https"))
-                    return `<span class="text-https">${match}</span>`;
-                else
-                    return `<span class="text-http">${match}</span>`;
-            });
+        makeAdmin(index) {
+            this.setState(index, "ADMIN");
+        },
+        makeUser(index) {
+            this.setState(index, "USER");
+        },
+        setState(index, role) {
+            let item = this.items[index];
+            let that = this;
+            axios.patch(`${BASE_URL}/v2/user/permission`, `{ "username": "${item.username}", "role": "${role}", "lastRole": "${item.role}" }`, { headers: { "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}).then(function(response) {
+                console.log(response.status);
+                Vue.set(jumps.$data.items, index, { username: item.username, role: role });
+                setTimeout(function() {
+                    componentHandler.upgradeDom();
+                    componentHandler.upgradeAllRegistered();
+                }, 0);
+                bus.$emit('snackbar', true, `${item.username} is now a ${role.toLowerCase()}!`);
+            }).catch((err) => {
+                console.log(err);
+                bus.$emit('snackbar', true, `Failed to add ${item.username} as ${role.toLowerCase()}: ${err.response.status}`);
+            })
         },
         loadItems() {
             let url = `${BASE_URL}/v2/users`;

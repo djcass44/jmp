@@ -82,7 +82,7 @@ class User(private val auth: Auth): EndpointGroup {
         patch("/v2/user/permission", { ctx ->
             val updated = ctx.bodyAsClass(EditUserData::class.java)
             // Block dropping the superuser from admin
-            if(updated.username == "admin") throw BadRequestResponse()
+            if(updated.username == "admin") throw UnauthorizedResponse()
             // Block the user from changing their own permissions
             if(updated.username == ctx.header(Auth.headerUser)) throw UnauthorizedResponse()
             transaction {
@@ -99,9 +99,16 @@ class User(private val auth: Auth): EndpointGroup {
         // Delete a user
         delete("/v2/user/rm/:name", { ctx ->
             val name = ctx.pathParam("name")
-            if(name == "admin") throw UnauthorizedResponse() // Block deleting the superuser
             val user = ctx.header(Auth.headerUser)
-            if(name == user) throw UnauthorizedResponse() // Stop the users deleting themselves
+            Log.i(javaClass, "[$user] is removing $name")
+            if(name == "admin") {
+                Log.w(javaClass, "[$user] is attempting to remove the superuser")
+                throw UnauthorizedResponse()
+            } // Block deleting the superuser
+            if(name == user) {
+                Log.w(javaClass, "[$user] is attempting to remove themselves")
+                throw UnauthorizedResponse()
+            } // Stop the users deleting themselves
             transaction {
                 Users.deleteWhere {
                     Users.username eq name

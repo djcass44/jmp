@@ -72,7 +72,7 @@
             </button>
             <ul id="toolbar-overflow" class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="auth-button">
                 <li v-on:click="openDialog" v-if="!loggedIn" class="mdl-menu__item">Login</li>
-                <li v-on:click="openCreateDialog" v-if="isAdmin" class="mdl-menu__item">Add user</li>
+                <li v-on:click="openAdmin" v-if="isAdmin" class="mdl-menu__item">Admin settings</li>
                 <li v-on:click="logout" v-if="loggedIn" class="mdl-menu__item">Logout</li>
             </ul>
         </div>

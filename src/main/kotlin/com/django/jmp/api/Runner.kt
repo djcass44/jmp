@@ -70,6 +70,9 @@ fun main(args: Array<String>) {
         get("/v2/info", { ctx ->
             ctx.status(HttpStatus.OK_200).result("v2.0")
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        get("/users", { ctx ->
+            ctx.redirect("/users.html")
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         Jump(auth).addEndpoints()
         Similar().addEndpoints()
         User(auth).addEndpoints()

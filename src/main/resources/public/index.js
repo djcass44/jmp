@@ -409,6 +409,10 @@ new Vue({
             if(event)
                 bus.$emit('auth-dialog', true, true)
         },
+        openAdmin: function (event) {
+            if(event)
+                location.href='/users'
+        },
         logout: function (event) {
             if(event) {
                 // probably should just reload page

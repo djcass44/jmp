@@ -84,7 +84,8 @@
                             </button>
                         </span>
                         <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect" :for="user.username">
-                            <li @click="edit(index)" class="mdl-menu__item">Make admin</li>
+                            <li v-if="user.role === 'USER'" @click="makeAdmin(index)" class="mdl-menu__item">Make admin</li>
+                            <li v-if="user.role === 'ADMIN'" @click="makeUser(index)" class="mdl-menu__item">Make user</li>
                             <li @click="remove(index)" class="mdl-menu__item">Delete</li>
                         </ul>
                     </li>
