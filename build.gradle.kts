@@ -47,7 +47,8 @@ dependencies {
     implementation("com.beust:klaxon:5.0.1")
     implementation("info.debatty:java-string-similarity:1.1.0")
     implementation("com.amdelamar:jhash:2.1.0")
-
+    implementation("io.github.rybalkinsd:kohttp:0.7.1")
+    implementation("com.google.code.gson:gson:2.8.5")
 
     implementation("org.jetbrains.exposed:exposed:0.11.2")
     runtimeOnly("org.xerial:sqlite-jdbc:3.25.2")

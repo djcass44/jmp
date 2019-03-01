@@ -25,6 +25,7 @@ object Jumps : IntIdTable() {
     val name = varchar("name", 50)
     val location = varchar("location", 2083)
     val token = uuid("token").nullable()
+    val image = varchar("image", 2083).nullable()
 }
 
 class Jump(id: EntityID<Int>) : IntEntity(id) {
@@ -33,9 +34,10 @@ class Jump(id: EntityID<Int>) : IntEntity(id) {
     var name by Jumps.name
     var location by Jumps.location
     var token by Jumps.token
+    var image by Jumps.image
 }
-data class JumpJson(val name: String, val location: String, val personal: Boolean = false) {
-    constructor(jump: Jump): this(jump.name, jump.location, jump.token != null)
+data class JumpJson(val name: String, val location: String, val personal: Boolean = false, val image: String? = null) {
+    constructor(jump: Jump): this(jump.name, jump.location, jump.token != null, jump.image)
 }
 data class EditJumpJson(val name: String, val location: String, val lastName: String)
 

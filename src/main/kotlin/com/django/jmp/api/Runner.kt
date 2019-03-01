@@ -1,5 +1,6 @@
 package com.django.jmp.api
 
+import com.django.jmp.api.actions.ImageAction
 import com.django.jmp.db.*
 import com.django.jmp.except.EmptyPathException
 import com.django.log2.logging.Log
@@ -78,12 +79,9 @@ fun main(args: Array<String>) {
         // List all items in Json format
         get("/v1/jumps", { ctx ->
             val items = arrayListOf<JumpJson>()
-            Log.i(Runner::class.java, "API:GET -> ${ctx.path()}")
             val token: String? = ctx.header(Auth.headerToken)
-            Log.d(Runner::class.java, "Token: $token")
             val tokenUUID = if(token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
             transaction {
-                Log.d(javaClass, Jump.all().count().toString())
                 Jump.all().forEach {
                     if(it.token == null || it.token!! == tokenUUID)
                         items.add(JumpJson(it))
@@ -166,6 +164,7 @@ fun main(args: Array<String>) {
                         if(tokenUUID != null && add.personal)
                             this.token = tokenUUID
                     }
+                    ImageAction(add.location).get()
                 }
                 ctx.status(HttpStatus.CREATED_201)
             }
@@ -190,6 +189,7 @@ fun main(args: Array<String>) {
                         if(item.token == null && user != null && auth.getUserRole(user) != Auth.BasicRoles.ADMIN) throw UnauthorizedResponse()
                         item.name = update.name
                         item.location = update.location
+                        ImageAction(update.location).get()
                         ctx.status(HttpStatus.NO_CONTENT_204)
                         ctx.json(update)
                     }
@@ -251,7 +251,6 @@ fun main(args: Array<String>) {
         get("/v2/user", { ctx ->
             val user = ctx.header(Auth.headerUser)
             val token = ctx.header(Auth.headerToken)
-            Log.d(Runner::class.java, "/v2/user -> user: $user, token: $token")
             if(user == null || token == null)
                 throw BadRequestResponse()
             val tokenUUID = try {

@@ -34,7 +34,7 @@
     <link rel="stylesheet" href="custom.css">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
 
-    <link rel="search" type="application/opensearchdescription+xml" title="JMP" href="jmp-search.xml">
+    <link rel="search" type="application/opensearchdescription+xml" title="jmp" href="jmp-search.xml">
 
     <meta name="theme-color" content="#3F51B5">
     <meta name="msapplication-navbutton-color" content="#3F51B5">
@@ -84,8 +84,11 @@
                 <ul id="main-list" class="main-list mdl-list" v-cloak>
                     <li v-for='(item, index) in items' :key="index" class="mdl-list__item mdl-list__item--two-line mdl-shadow--2dp">
                         <span class="mdl-list__item-primary-content">
-                            <i v-if="item.personal === false" class="material-icons mdl-list__item-avatar">public</i>
-                            <i v-if="item.personal === true" class="material-icons mdl-list__item-avatar">account_circle</i>
+                            <div v-if="item.image == null || item.image === ''">
+                                <i v-if="item.personal === false" class="material-icons mdl-list__item-avatar">public</i>
+                                <i v-if="item.personal === true" class="material-icons mdl-list__item-avatar">account_circle</i>
+                            </div>
+                            <img v-if="item.image != null && item.image !== ''" :src="item.image" class="mdl-list__item-avatar">
                             <span class="strong-title">{{ item.name }}</span>
                             <span v-html="highlight(item.location)" class="sub-text mdl-list__item-sub-title">{{ item.location }}</span>
                         </span>
@@ -197,8 +200,8 @@
                 <v-card-text>Are you sure? This action is immediate and cannot be undone. If you are an admin, be aware that this change may impact functionality for users.</v-card-text>
                 <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn color="green darken-1" flat="flat" @click="dialog = false">Cancel</v-btn>
-                    <v-btn color="green darken-1" flat="flat" @click="remove()">Delete</v-btn>
+                    <v-btn color="pink" flat="flat" @click="dialog = false">Cancel</v-btn>
+                    <v-btn color="pink" flat="flat" @click="remove()">Delete</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
