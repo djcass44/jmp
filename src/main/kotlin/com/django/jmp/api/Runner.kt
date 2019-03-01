@@ -98,8 +98,13 @@ fun main(args: Array<String>) {
                 if(target.isBlank())
                     throw EmptyPathException()
                 Log.d(Runner::class.java, "Target: $target")
-                val token: String? = ctx.header(Auth.headerToken)
-                if(token == null || token.isBlank()) {
+                /**
+                 * 1. Try to get token from X-Auth-Token header
+                 * 2. Try to get token from ?token=...
+                 * 3. Assume no token, redirect to checker
+                 */
+                val token = ctx.header(Auth.headerToken) ?: ctx.queryParam("token", "") ?: ""
+                if(token.isBlank()) {
                     ctx.redirect("/tokcheck.html?query=$target")
                     ctx.status(HttpStatus.FOUND_302)
                     return@get

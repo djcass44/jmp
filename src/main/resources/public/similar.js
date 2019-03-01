@@ -17,6 +17,9 @@
 const BASE_URL="http://localhost:7000";
 const endpoint = `${BASE_URL}/v1/`;
 
+const storageToken = "jmp-token";
+const storageUser = "jmp-user";
+
 const chips = new Vue({
     el: '#main-list',
     data() {
@@ -35,7 +38,7 @@ const chips = new Vue({
         if(url.searchParams.has("query")) {
             let query = url.searchParams.get("query");
             let that = this;
-            axios.get(`${BASE_URL}/v2/similar/${query}`).then(function (response) {
+            axios.get(`${BASE_URL}/v2/similar/${query}`, { headers: { "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}).then(function (response) {
                 console.log(`Loaded ${response.data.length} item(s)`);
                 response.data.map(item => {
                     that.items.push(item);

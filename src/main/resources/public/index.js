@@ -15,8 +15,8 @@
  */
 const BASE_URL="http://localhost:7000";
 
-const storageToken = "token";
-const storageUser = "username";
+const storageToken = "jmp-token";
+const storageUser = "jmp-user";
 
 // Used for triggering actions between Vue instances
 const bus = new Vue();
@@ -36,7 +36,7 @@ const authCheck = new Vue({
                 username = localStorage.getItem(storageUser);
         },
         getAuth() {
-            // console.log(localStorage.getItem("username"));
+            console.log(localStorage.getItem(storageUser));
             let username = '';
             if(localStorage.getItem(storageUser) !== null) {
                 this.username = `Currently authenticated as ${localStorage.getItem(storageUser)}`;
@@ -46,6 +46,7 @@ const authCheck = new Vue({
                 this.username = "Not authenticated";
                 bus.$emit('authChanged', false);
             }
+            console.log(`username: ${username}`)
             const url = `${BASE_URL}/v2/verify/user/${username}`;
             axios.get(url).then(r => {
                 console.log("UVALID: " + r.status);
@@ -58,7 +59,8 @@ const authCheck = new Vue({
                     console.log(err);
                     bus.$emit('authChanged', true, false);
                 });
-            }).catch(() => {
+            }).catch((err) => {
+                console.log(err);
                 console.log("User credential verification failed (this is okay if not yet authenticated)");
                 this.username = "Not authenticated";
                 // User verification failed, nuke local storage
@@ -332,8 +334,8 @@ const dialog_auth = new Vue({
                 console.log(r.status);
                 that.dialog = false;
                 // console.log(r.data);
-                localStorage.setItem("token", r.data);
-                localStorage.setItem("username", that.name);
+                localStorage.setItem(storageToken, r.data);
+                localStorage.setItem(storageUser, that.name);
                 authCheck.getAuth();
                 jumps.loadItems();
             }).catch(function(e) {

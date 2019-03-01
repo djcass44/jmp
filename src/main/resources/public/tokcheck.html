@@ -28,13 +28,15 @@
     const BASE_URL="http://localhost:7000";
     const endpoint = `${BASE_URL}/v1/`;
 
+    const storageToken = "jmp-token";
+    const storageUser = "jmp-user";
 
     let url = new URL(window.location.href);
     if(url.searchParams.has("query")) {
         let query = url.searchParams.get("query");
         let redirect = `${endpoint}jump/${query}?token=`;
-        if(localStorage.getItem("token") !== null)
-            redirect += localStorage.getItem("token");
+        if(localStorage.getItem(storageToken) !== null)
+            redirect += localStorage.getItem(storageToken);
         else
             redirect += "global";
         window.location.replace(redirect);
