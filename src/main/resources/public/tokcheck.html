@@ -22,7 +22,30 @@
 </head>
 <body>
 
-<p>Jumping</p>
+<style media="screen">
+    .content {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        -webkit-transform: translate(-50%, -50%);
+        transform: translate(-50%, -50%);
+    }
+    .loader {
+        border: 8px solid #f3f3f3; /* Light grey */
+        border-top: 8px solid #3F51B5; /* Blue */
+        border-radius: 50%;
+        width: 96px;
+        height: 96px;
+        animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+
+<div class="content"><div class="loader"></div></div>
 
 <script>
     const BASE_URL="http://localhost:7000";
