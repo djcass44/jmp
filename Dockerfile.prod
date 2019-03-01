@@ -21,6 +21,10 @@ RUN mv src/main/resources/public/similar.js.tmp src/main/resources/public/simila
 RUN awk 'NR==FNR{rep=(NR>1?rep RS:"") $0; next} {gsub(/BASE_URL="http:\/\/localhost:7000"/,rep)}1' env src/main/resources/public/tokcheck.html > src/main/resources/public/tokcheck.html.tmp
 RUN mv src/main/resources/public/tokcheck.html.tmp src/main/resources/public/tokcheck.html
 
+# replace localhost with the actual application url in users.js
+RUN awk 'NR==FNR{rep=(NR>1?rep RS:"") $0; next} {gsub(/BASE_URL="http:\/\/localhost:7000"/,rep)}1' env src/main/resources/public/users.js > src/main/resources/public/users.js.tmp
+RUN mv src/main/resources/public/users.js.tmp src/main/resources/public/users.js
+
 RUN ./gradlew shadowJar
 
 EXPOSE 7000
