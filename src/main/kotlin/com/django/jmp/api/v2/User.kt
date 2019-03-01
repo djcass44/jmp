@@ -28,6 +28,7 @@ import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.security.SecurityUtil.roles
 import org.eclipse.jetty.http.HttpStatus
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
@@ -41,7 +42,7 @@ class User(private val auth: Auth): EndpointGroup {
                 }
             }
             ctx.json(users).status(HttpStatus.OK_200)
-        }, roles(Auth.BasicRoles.ADMIN, Auth.BasicRoles.USER))
+        }, roles(Auth.BasicRoles.ADMIN))
         // Add a user
         put("/v2/user/add", { ctx ->
             val credentials = Auth.BasicAuth(ctx.bodyAsClass(Auth.BasicAuth.Insecure::class.java))
@@ -94,6 +95,19 @@ class User(private val auth: Auth): EndpointGroup {
                 user.role = role
                 ctx.status(HttpStatus.NO_CONTENT_204).json(updated)
             }
+        }, roles(Auth.BasicRoles.ADMIN))
+        // Delete a user
+        delete("/v2/user/rm/:name", { ctx ->
+            val name = ctx.pathParam("name")
+            if(name == "admin") throw UnauthorizedResponse() // Block deleting the superuser
+            val user = ctx.header(Auth.headerUser)
+            if(name == user) throw UnauthorizedResponse() // Stop the users deleting themselves
+            transaction {
+                Users.deleteWhere {
+                    Users.username eq name
+                }
+            }
+            ctx.status(HttpStatus.NO_CONTENT_204)
         }, roles(Auth.BasicRoles.ADMIN))
     }
 }

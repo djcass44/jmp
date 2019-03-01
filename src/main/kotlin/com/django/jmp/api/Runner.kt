@@ -55,11 +55,10 @@ fun main(args: Array<String>) {
             val user = ctx.header(Auth.headerUser)
             val token = ctx.header(Auth.headerToken)
             val tokenUUID = if (token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
-            if(tokenUUID == null || user == null) {
-                ctx.status(HttpStatus.UNAUTHORIZED_401).result("Unauthorised")
-                return@accessManager
+            val userRole = if(tokenUUID != null && user != null) {
+                auth.getUserRole(user, tokenUUID)
             }
-            val userRole = auth.getUserRole(user, tokenUUID)
+            else auth.getUserRole(user)
             if(permittedRoles.contains(userRole))
                 handler.handle(ctx)
             else
