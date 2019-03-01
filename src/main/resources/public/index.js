@@ -100,11 +100,14 @@ const jumps = new Vue({
             let item = this.items[index];
             const url = `${BASE_URL}/v1/jumps/rm/${item.name}`;
             let that = this;
-            axios.delete(url).then(r => {
+            axios.delete(url, { headers: { "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}).then(r => {
                 console.log(r.status);
                 that.items.splice(index, 1); // Delete the item, making vue update
                 that.checkItemsLength();
-            }).catch(e => console.log(e));
+            }).catch(e => {
+                console.log(e);
+                bus.$emit('snackbar', true, `Failed to delete: ${e.response.status}`);
+            });
         },
         edit(index) {
             let item = this.items[index];
@@ -135,7 +138,7 @@ const jumps = new Vue({
             }).catch(function(error) {
                 console.log(error); // API is probably unreachable
                 jumps.checkItemsLength();
-                bus.$emit('snackbar', true, `Failed to load jumps`);
+                bus.$emit('snackbar', true, `Failed to load jumps: ${e.response.status}`);
             });
         }
     },
@@ -222,7 +225,7 @@ const dialog = new Vue({
                 bus.$emit('snackbar', true, `Updated ${that.name}`);
             }).catch(e => {
                 console.log(e);
-                bus.$emit('snackbar', true, `Failed to update ${that.name}`);
+                bus.$emit('snackbar', true, `Failed to update: ${e.response.status}`);
             });
         },
         submit () {
@@ -256,7 +259,7 @@ const dialog = new Vue({
                 bus.$emit('snackbar', true, `Added ${that.name}`)
             }).catch(e => {
                 console.log(e);
-                bus.$emit('snackbar', true, `Failed to add ${that.name}`);
+                bus.$emit('snackbar', true, `Failed to add: ${e.response.status}`);
             });
         },
         clear () {
@@ -319,7 +322,7 @@ const dialog_auth = new Vue({
                 bus.$emit('snackbar', true, `Created user ${that.name}`);
             }).catch(e => {
                 console.log(e);
-                bus.$emit('snackbar', true, `Failed to create user ${that.name}`);
+                bus.$emit('snackbar', true, `Failed to create user: ${e.response.status}`);
             });
         },
         submit () {
@@ -343,7 +346,7 @@ const dialog_auth = new Vue({
                 if(e.response.status === 404)
                     bus.$emit('snackbar', true, "Password incorrect or user doesn't exist");
                 else
-                    bus.$emit('snackbar', true, `Failed to authenticate ${that.name}`);
+                    bus.$emit('snackbar', true, `Failed to authenticate: ${e.response.status}`);
             });
         }
     }

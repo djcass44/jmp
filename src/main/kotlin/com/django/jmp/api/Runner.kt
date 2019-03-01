@@ -155,6 +155,9 @@ fun main(args: Array<String>) {
             val tokenUUID = if(token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
             // Block valid users with invalid tokens
             if(tokenUUID != null && !auth.validateUserToken(tokenUUID)) throw UnauthorizedResponse()
+            // Block non-admin user from adding global jumps
+            val user = ctx.header(Auth.headerUser)
+            if(!add.personal && user != null && auth.getUserRole(user) != Auth.BasicRoles.ADMIN) throw UnauthorizedResponse()
             if(!Runner.jumpExists(add.name, tokenUUID)) {
                 transaction {
                     Jump.new {
@@ -172,6 +175,7 @@ fun main(args: Array<String>) {
         // Edit a jump point
         patch("/v1/jumps/edit", { ctx ->
             val update = ctx.bodyAsClass(EditJumpJson::class.java)
+            val user = ctx.header(Auth.headerUser)
             transaction {
                 if(update.lastName != update.name && Runner.jumpExists(update.name)) {
                     throw ConflictResponse()
@@ -182,9 +186,12 @@ fun main(args: Array<String>) {
                     }
                     if(!existing.empty()) {
                         val item = existing.elementAt(0)
+                        // Block non-admin user from editing global jumps
+                        if(item.token == null && user != null && auth.getUserRole(user) != Auth.BasicRoles.ADMIN) throw UnauthorizedResponse()
                         item.name = update.name
                         item.location = update.location
                         ctx.status(HttpStatus.NO_CONTENT_204)
+                        ctx.json(update)
                     }
                     else
                         throw NotFoundResponse()
@@ -194,8 +201,21 @@ fun main(args: Array<String>) {
         // Delete a jump point
         delete("/v1/jumps/rm/:name", { ctx ->
             val name = ctx.pathParam("name")
+            val user = ctx.header(Auth.headerUser)
+            val token: String? = ctx.header(Auth.headerToken)
+            val tokenUUID = if(token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
+            val role = auth.getUserRole(user)
             transaction {
-                Jumps.deleteWhere { Jumps.name eq name }
+                val result = Jump.find {
+                    Jumps.name eq name
+                }.elementAtOrNull(0) ?: throw BadRequestResponse()
+                // 401 if jump is global and user ISN'T admin
+                if(result.token == null && role != Auth.BasicRoles.ADMIN) throw UnauthorizedResponse()
+                // 401 if jump is personal and tokens don't match
+                if(result.token != null && result.token != tokenUUID) throw UnauthorizedResponse()
+                Jumps.deleteWhere {
+                    Jumps.id eq result.id
+                }
             }
             ctx.status(HttpStatus.NO_CONTENT_204)
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
