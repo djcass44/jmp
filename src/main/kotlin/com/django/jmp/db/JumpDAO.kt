@@ -36,10 +36,10 @@ class Jump(id: EntityID<Int>) : IntEntity(id) {
     var token by Jumps.token
     var image by Jumps.image
 }
-data class JumpJson(val name: String, val location: String, val personal: Boolean = false, val image: String? = null) {
+data class JumpData(val name: String, val location: String, val personal: Boolean = false, val image: String? = null) {
     constructor(jump: Jump): this(jump.name, jump.location, jump.token != null, jump.image)
 }
-data class EditJumpJson(val name: String, val location: String, val lastName: String)
+data class EditJumpData(val name: String, val location: String, val lastName: String)
 
 object Users: IntIdTable() {
     val username = varchar("username", 36).uniqueIndex()
@@ -55,6 +55,10 @@ class User(id: EntityID<Int>): IntEntity(id) {
     var token by Users.token
     var role by Role referencedOn Users.role
 }
+data class UserData(val username: String, val role: String) {
+    constructor(user: User): this(user.username, user.role.name)
+}
+
 object Roles: IntIdTable() {
     val name = varchar("name", 12).uniqueIndex()
 }

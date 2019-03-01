@@ -1,40 +1,29 @@
 package com.django.jmp.api
 
-import com.django.jmp.api.actions.ImageAction
-import com.django.jmp.db.*
-import com.django.jmp.except.EmptyPathException
+import com.django.jmp.api.v1.Jump
+import com.django.jmp.api.v2.Similar
+import com.django.jmp.api.v2.User
+import com.django.jmp.api.v2.Verify
+import com.django.jmp.db.Config
+import com.django.jmp.db.Init
+import com.django.jmp.db.Jumps
+import com.django.jmp.db.Users
 import com.django.log2.logging.Log
-import io.javalin.*
-import io.javalin.apibuilder.ApiBuilder.*
+import io.javalin.Javalin
+import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.security.SecurityUtil.roles
 import org.eclipse.jetty.http.HttpStatus
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.Connection
 import java.util.*
 
 
-object Runner {
-    fun jumpExists(name: String): Boolean {
-        return transaction {
-            val existing = Jump.find {
-                Jumps.name.lowerCase() eq name.toLowerCase() and Jumps.token.isNull()
-            }
-            return@transaction !existing.empty()
-        }
-    }
-    fun jumpExists(name: String, token: UUID?): Boolean {
-        if(token == null)
-            return jumpExists(name) // Fall back to v1 without a token
-        return transaction {
-            val existing = Jump.find {
-                Jumps.name.lowerCase() eq name.toLowerCase() and Jumps.token.eq(token)
-            }
-            return@transaction if(existing.empty()) jumpExists(name) else !existing.empty() // Fall back to v1 if nothing found in v2
-        }
-    }
-}
+object Runner
 
 fun main(args: Array<String>) {
     Log.v(Runner::class.java, Arrays.toString(args))
@@ -76,248 +65,9 @@ fun main(args: Array<String>) {
             ctx.result("v2.0")
             ctx.status(HttpStatus.OK_200)
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
-        // List all items in Json format
-        get("/v1/jumps", { ctx ->
-            val items = arrayListOf<JumpJson>()
-            val token: String? = ctx.header(Auth.headerToken)
-            val tokenUUID = if(token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
-            transaction {
-                Jump.all().forEach {
-                    if(it.token == null || it.token!! == tokenUUID)
-                        items.add(JumpJson(it))
-                }
-            }
-            ctx.json(items)
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
-        // Redirect to $location (if it exists)
-        get("/v1/jump/:target", { ctx ->
-            try {
-                val target = ctx.pathParam("target")
-                if(target.isBlank())
-                    throw EmptyPathException()
-                Log.d(Runner::class.java, "Target: $target")
-                /**
-                 * 1. Try to get token from X-Auth-Token header
-                 * 2. Try to get token from ?token=...
-                 * 3. Assume no token, redirect to checker
-                 */
-                val token = ctx.header(Auth.headerToken) ?: ctx.queryParam("token", "") ?: ""
-                if(token.isBlank()) {
-                    ctx.redirect("/tokcheck.html?query=$target")
-                    ctx.status(HttpStatus.FOUND_302)
-                    return@get
-                }
-                var foundV2 = false
-                if(token.isNotBlank() && token != "global" && token != "null") { // Request has a token, search user-jumps first
-                    val tokenUUID = UUID.fromString(token)
-                    transaction {
-                        val dbtarget = Jump.find {
-                            Jumps.name.lowerCase() eq target.toLowerCase() and Jumps.token.isNotNull() and Jumps.token.eq(tokenUUID)
-                        }
-                        if(!dbtarget.empty()) {
-                            val location = dbtarget.elementAt(0).location
-                            Log.v(javaClass, "v2: moving to user point: $location")
-                            foundV2 = true
-                            ctx.redirect(location, HttpStatus.FOUND_302)
-                        }
-                    }
-                }
-                if(foundV2) // Jump was found in personal collection, don't need to check global
-                    return@get
-                transaction {
-                    val dbtarget = Jump.find {
-                        Jumps.name.lowerCase() eq target.toLowerCase() and Jumps.token.isNull()
-                    }
-                    if(!dbtarget.empty()) {
-                        val location = dbtarget.elementAt(0).location
-                        Log.v(javaClass, "Redirecting to $location")
-                        ctx.redirect(location, HttpStatus.FOUND_302)
-                    }
-                    else
-                        ctx.redirect("/similar.html?query=$target")
-                }
-            }
-            catch (e: IndexOutOfBoundsException) {
-                Log.e(Runner::class.java, "Invalid target: ${ctx.path()}")
-                throw BadRequestResponse()
-            }
-            catch (e: EmptyPathException) {
-                Log.e(Runner::class.java, "Empty target")
-                throw NotFoundResponse()
-            }
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
-        // Add a jump point
-        put("/v1/jumps/add", { ctx ->
-            val add = ctx.bodyAsClass(JumpJson::class.java)
-            val token: String? = ctx.header(Auth.headerToken)
-            val tokenUUID = if(token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
-            // Block valid users with invalid tokens
-            if(tokenUUID != null && !auth.validateUserToken(tokenUUID)) throw UnauthorizedResponse()
-            // Block non-admin user from adding global jumps
-            val user = ctx.header(Auth.headerUser)
-            if(!add.personal && user != null && auth.getUserRole(user) != Auth.BasicRoles.ADMIN) throw UnauthorizedResponse()
-            if(!Runner.jumpExists(add.name, tokenUUID)) {
-                transaction {
-                    Jump.new {
-                        name = add.name
-                        location = add.location
-                        if(tokenUUID != null && add.personal)
-                            this.token = tokenUUID
-                    }
-                    ImageAction(add.location).get()
-                }
-                ctx.status(HttpStatus.CREATED_201)
-            }
-            else
-                throw ConflictResponse()
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
-        // Edit a jump point
-        patch("/v1/jumps/edit", { ctx ->
-            val update = ctx.bodyAsClass(EditJumpJson::class.java)
-            val user = ctx.header(Auth.headerUser)
-            transaction {
-                if(update.lastName != update.name && Runner.jumpExists(update.name)) {
-                    throw ConflictResponse()
-                }
-                else {
-                    val existing = Jump.find {
-                        Jumps.name eq update.lastName
-                    }
-                    if(!existing.empty()) {
-                        val item = existing.elementAt(0)
-                        // Block non-admin user from editing global jumps
-                        if(item.token == null && user != null && auth.getUserRole(user) != Auth.BasicRoles.ADMIN) throw UnauthorizedResponse()
-                        item.name = update.name
-                        item.location = update.location
-                        ImageAction(update.location).get()
-                        ctx.status(HttpStatus.NO_CONTENT_204)
-                        ctx.json(update)
-                    }
-                    else
-                        throw NotFoundResponse()
-                }
-            }
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
-        // Delete a jump point
-        delete("/v1/jumps/rm/:name", { ctx ->
-            val name = ctx.pathParam("name")
-            val user = ctx.header(Auth.headerUser)
-            val token: String? = ctx.header(Auth.headerToken)
-            val tokenUUID = if(token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
-            val role = auth.getUserRole(user)
-            transaction {
-                val result = Jump.find {
-                    Jumps.name eq name
-                }.elementAtOrNull(0) ?: throw BadRequestResponse()
-                // 401 if jump is global and user ISN'T admin
-                if(result.token == null && role != Auth.BasicRoles.ADMIN) throw UnauthorizedResponse()
-                // 401 if jump is personal and tokens don't match
-                if(result.token != null && result.token != tokenUUID) throw UnauthorizedResponse()
-                Jumps.deleteWhere {
-                    Jumps.id eq result.id
-                }
-            }
-            ctx.status(HttpStatus.NO_CONTENT_204)
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
-        // Find similar jumps
-        get("/v2/similar/:query", { ctx ->
-            try {
-                val token: String? = ctx.header(Auth.headerToken)
-                val tokenUUID = if(token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
-                val query = ctx.pathParam("query")
-                if (query.isBlank())
-                    throw EmptyPathException()
-                val names = arrayListOf<String>()
-                transaction {
-                    Jump.all().forEach {
-                        if(it.token == null || it.token == tokenUUID)
-                            names.add(it.name)
-                    }
-                }
-                val similar = Similar(query, names)
-                ctx.json(similar.compute())
-            }
-            catch (e: EmptyPathException) {
-                Log.e(Runner::class.java, "Empty target")
-                throw NotFoundResponse()
-            }
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
-        // Add a user
-        put("/v2/user/add", { ctx ->
-            val credentials = Auth.BasicAuth(ctx.bodyAsClass(Auth.BasicAuth.Insecure::class.java))
-            auth.createUser(credentials.username, credentials.password)
-        }, roles(Auth.BasicRoles.ADMIN))
-        // Get information about the current user
-        get("/v2/user", { ctx ->
-            val user = ctx.header(Auth.headerUser)
-            val token = ctx.header(Auth.headerToken)
-            if(user == null || token == null)
-                throw BadRequestResponse()
-            val tokenUUID = try {
-                UUID.fromString(token)
-            }
-            catch (e: Exception) {
-                Log.e(Runner::class.java, "User: $user provided malformed token [IP: ${ctx.ip()}, UA: ${ctx.userAgent()}]")
-                throw BadRequestResponse()
-            }
-            if(!auth.userExists(user)) {
-                ctx.result("NONE")
-                ctx.status(HttpStatus.OK_200)
-                return@get // User doesn't exist, stop here
-            }
-            if(auth.validateUserToken(tokenUUID)) {
-                val role = auth.getUserRole(user)
-                ctx.result(role.toString())
-                ctx.status(HttpStatus.OK_200)
-            }
-            else throw UnauthorizedResponse()
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
-        // Get a users token
-        post("/v2/user/auth", { ctx ->
-            val credentials = Auth.BasicAuth(ctx.bodyAsClass(Auth.BasicAuth.Insecure::class.java))
-            val token = auth.getUserToken(credentials.username, credentials.password)
-            if(token != null)
-                ctx.json(token)
-            else
-                throw NotFoundResponse()
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
-        // Verify a users token is still valid
-        get("/v2/verify/token", { ctx ->
-            val token: String? = ctx.header(Auth.headerToken)
-            val tokenUUID = if(token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
-            if(tokenUUID == null)
-                throw BadRequestResponse()
-            else {
-                ctx.result(auth.validateUserToken(tokenUUID).toString())
-                ctx.status(HttpStatus.OK_200)
-            }
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
-        // Verify a user still exists
-        get("/v2/verify/user/:name", { ctx ->
-            val name = ctx.pathParam("name")
-            if(name.isBlank()) { // TODO never send 'null'
-                Log.v(Runner::class.java, "User made null/empty request")
-                throw BadRequestResponse()
-            }
-            transaction {
-                val result = User.find {
-                    Users.username eq name
-                }.elementAtOrNull(0)
-                if(result == null) {
-                    Log.w(javaClass, "User: $name failed verification [IP: ${ctx.ip()}, UA: ${ctx.userAgent()}]")
-                    throw BadRequestResponse()
-                }
-                else {
-                    if(auth.validateUserToken(result.token)) {
-                        ctx.status(HttpStatus.OK_200)
-                        ctx.result(name)
-                    }
-                    else {
-                        Log.w(javaClass, "User: $name exists, however their token is invalid [IP: ${ctx.ip()}, UA: ${ctx.userAgent()}]")
-                        throw BadRequestResponse()
-                    }
-                }
-            }
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        Jump(auth).addEndpoints()
+        Similar().addEndpoints()
+        User(auth).addEndpoints()
+        Verify(auth).addEndpoints()
     }
 }
