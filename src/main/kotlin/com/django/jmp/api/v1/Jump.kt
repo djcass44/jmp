@@ -71,7 +71,7 @@ class Jump(private val auth: Auth): EndpointGroup {
                         items.add(JumpData(it))
                 }
             }
-            ctx.json(items)
+            ctx.json(items).status(HttpStatus.OK_200)
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Redirect to $location (if it exists)
         ApiBuilder.get("/v1/jump/:target", { ctx ->
@@ -171,8 +171,7 @@ class Jump(private val auth: Auth): EndpointGroup {
                         item.name = update.name
                         item.location = update.location
                         ImageAction(update.location).get()
-                        ctx.status(HttpStatus.NO_CONTENT_204)
-                        ctx.json(update)
+                        ctx.status(HttpStatus.NO_CONTENT_204).json(update)
                     } else
                         throw NotFoundResponse()
                 }

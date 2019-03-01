@@ -26,6 +26,7 @@ import io.javalin.NotFoundResponse
 import io.javalin.apibuilder.ApiBuilder
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.security.SecurityUtil
+import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
@@ -48,7 +49,7 @@ class Similar: EndpointGroup {
                     }
                 }
                 val similar = Similar(query, names)
-                ctx.json(similar.compute())
+                ctx.json(similar.compute()).status(HttpStatus.OK_200)
             } catch (e: EmptyPathException) {
                 Log.e(Runner::class.java, "Empty target")
                 throw NotFoundResponse()

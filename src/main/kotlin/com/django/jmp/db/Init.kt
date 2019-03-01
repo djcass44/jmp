@@ -20,8 +20,9 @@ import com.django.jmp.api.Auth
 import com.django.log2.logging.Log
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class Init(private val superName: String, private val superPassword: CharArray) {
+class Init(private val superPassword: CharArray) {
     init {
+        val superName = "admin"
         transaction {
             if(User.all().empty()) {
                 Auth().createUser(superName, superPassword, true)

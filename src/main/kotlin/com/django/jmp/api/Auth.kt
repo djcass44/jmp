@@ -20,6 +20,7 @@ import com.amdelamar.jhash.Hash
 import com.django.jmp.db.Roles
 import com.django.jmp.db.User
 import com.django.jmp.db.Users
+import com.django.log2.logging.Log
 import io.javalin.ConflictResponse
 import io.javalin.security.Role
 import org.jetbrains.exposed.sql.lowerCase
@@ -126,6 +127,21 @@ class Auth {
         if(username == null)
             return BasicRoles.USER
         val user = getUser(username) ?: return BasicRoles.USER
+        return transaction {
+            when (user.role.name) {
+                BasicRoles.ADMIN.name -> BasicRoles.ADMIN
+                BasicRoles.USER.name -> BasicRoles.USER
+                else -> BasicRoles.USER
+            }
+        }
+    }
+    // Determine role based on request
+    fun getUserRole(username: String, token: UUID): Role {
+        val user = getUser(username) ?: return BasicRoles.USER
+        if(user.token != token) {
+            Log.w(javaClass, "getUserRole -> $user provided invalid token")
+            return BasicRoles.USER
+        }
         return transaction {
             when (user.role.name) {
                 BasicRoles.ADMIN.name -> BasicRoles.ADMIN

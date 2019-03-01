@@ -44,7 +44,7 @@ fun main(args: Array<String>) {
     transaction {
         addLogger(StdOutSqlLogger)
         SchemaUtils.create(Jumps, Users) // Ensure that the 'Jumps' table is created
-        Init(store.super_name, store.super_key.toCharArray()) // Ensure that the default admin is created
+        Init(store.super_key.toCharArray()) // Ensure that the default admin is created
     }
     val auth = Auth()
     val app = Javalin.create().apply {
@@ -52,7 +52,14 @@ fun main(args: Array<String>) {
         enableStaticFiles("/public")
         enableCaseSensitiveUrls()
         accessManager { handler, ctx, permittedRoles ->
-            val userRole = auth.getUserRole(ctx.header(Auth.headerUser))
+            val user = ctx.header(Auth.headerUser)
+            val token = ctx.header(Auth.headerToken)
+            val tokenUUID = if (token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
+            if(tokenUUID == null || user == null) {
+                ctx.status(HttpStatus.UNAUTHORIZED_401).result("Unauthorised")
+                return@accessManager
+            }
+            val userRole = auth.getUserRole(user, tokenUUID)
             if(permittedRoles.contains(userRole))
                 handler.handle(ctx)
             else
@@ -62,8 +69,7 @@ fun main(args: Array<String>) {
     app.routes {
         // Version/info
         get("/v2/info", { ctx ->
-            ctx.result("v2.0")
-            ctx.status(HttpStatus.OK_200)
+            ctx.status(HttpStatus.OK_200).result("v2.0")
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         Jump(auth).addEndpoints()
         Similar().addEndpoints()

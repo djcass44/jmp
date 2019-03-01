@@ -58,6 +58,7 @@ class User(id: EntityID<Int>): IntEntity(id) {
 data class UserData(val username: String, val role: String) {
     constructor(user: User): this(user.username, user.role.name)
 }
+data class EditUserData(val username: String, val role: String, val lastRole: String)
 
 object Roles: IntIdTable() {
     val name = varchar("name", 12).uniqueIndex()

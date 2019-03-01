@@ -18,38 +18,37 @@ package com.django.jmp.api.v2
 
 import com.django.jmp.api.Auth
 import com.django.jmp.api.Runner
+import com.django.jmp.db.*
 import com.django.jmp.db.User
-import com.django.jmp.db.UserData
 import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
 import io.javalin.NotFoundResponse
 import io.javalin.UnauthorizedResponse
-import io.javalin.apibuilder.ApiBuilder
+import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
-import io.javalin.security.SecurityUtil
+import io.javalin.security.SecurityUtil.roles
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 class User(private val auth: Auth): EndpointGroup {
     override fun addEndpoints() {
-        ApiBuilder.get("/v2/users", { ctx ->
+        get("/v2/users", { ctx ->
             val users = arrayListOf<UserData>()
             transaction {
                 User.all().forEach {
                     users.add(UserData(it))
                 }
             }
-            ctx.json(users)
-            ctx.status(HttpStatus.OK_200)
-        }, SecurityUtil.roles(Auth.BasicRoles.ADMIN, Auth.BasicRoles.USER))
+            ctx.json(users).status(HttpStatus.OK_200)
+        }, roles(Auth.BasicRoles.ADMIN, Auth.BasicRoles.USER))
         // Add a user
-        ApiBuilder.put("/v2/user/add", { ctx ->
+        put("/v2/user/add", { ctx ->
             val credentials = Auth.BasicAuth(ctx.bodyAsClass(Auth.BasicAuth.Insecure::class.java))
             auth.createUser(credentials.username, credentials.password)
-        }, SecurityUtil.roles(Auth.BasicRoles.ADMIN))
+        }, roles(Auth.BasicRoles.ADMIN))
         // Get information about the current user
-        ApiBuilder.get("/v2/user", { ctx ->
+        get("/v2/user", { ctx ->
             val user = ctx.header(Auth.headerUser)
             val token = ctx.header(Auth.headerToken)
             if (user == null || token == null)
@@ -57,31 +56,44 @@ class User(private val auth: Auth): EndpointGroup {
             val tokenUUID = try {
                 UUID.fromString(token)
             } catch (e: Exception) {
-                Log.e(
-                    Runner::class.java,
-                    "User: $user provided malformed token [IP: ${ctx.ip()}, UA: ${ctx.userAgent()}]"
-                )
+                Log.e(Runner::class.java, "User: $user provided malformed token [IP: ${ctx.ip()}, UA: ${ctx.userAgent()}]")
                 throw BadRequestResponse()
             }
             if (!auth.userExists(user)) {
-                ctx.result("NONE")
-                ctx.status(HttpStatus.OK_200)
+                ctx.result("NONE").status(HttpStatus.OK_200)
                 return@get // User doesn't exist, stop here
             }
             if (auth.validateUserToken(tokenUUID)) {
                 val role = auth.getUserRole(user)
-                ctx.result(role.toString())
-                ctx.status(HttpStatus.OK_200)
+                ctx.result(role.toString()).status(HttpStatus.OK_200)
             } else throw UnauthorizedResponse()
-        }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Get a users token
-        ApiBuilder.post("/v2/user/auth", { ctx ->
+        post("/v2/user/auth", { ctx ->
             val credentials = Auth.BasicAuth(ctx.bodyAsClass(Auth.BasicAuth.Insecure::class.java))
             val token = auth.getUserToken(credentials.username, credentials.password)
             if (token != null)
                 ctx.json(token)
             else
                 throw NotFoundResponse()
-        }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        // Change the role of a user
+        patch("/v2/user/permission", { ctx ->
+            val updated = ctx.bodyAsClass(EditUserData::class.java)
+            // Block dropping the superuser from admin
+            if(updated.username == "admin") throw BadRequestResponse()
+            // Block the user from changing their own permissions
+            if(updated.username == ctx.header(Auth.headerUser)) throw UnauthorizedResponse()
+            transaction {
+                val role = Role.find {
+                    Roles.name eq updated.role
+                }.elementAtOrNull(0) ?: throw BadRequestResponse()
+                val user = User.find {
+                    Users.username eq updated.username
+                }.elementAtOrNull(0) ?: throw BadRequestResponse()
+                user.role = role
+                ctx.status(HttpStatus.NO_CONTENT_204).json(updated)
+            }
+        }, roles(Auth.BasicRoles.ADMIN))
     }
 }
