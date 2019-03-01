@@ -354,7 +354,8 @@ new Vue({
     el: "#toolbar-overflow",
     data () {
         return {
-            loggedIn: false
+            loggedIn: false,
+            isAdmin: false
         }
     },
     methods: {
@@ -383,9 +384,13 @@ new Vue({
     },
     created() {
         const that = this;
-        bus.$on('authChanged', function (login) {
+        bus.$on('authChanged', function (login, admin) {
             that.loggedIn = login;
-        })
+            if(admin)
+                that.isAdmin = admin;
+            else
+                that.isAdmin = false;
+        });
     }
 });
 new Vue({
