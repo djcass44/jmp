@@ -84,6 +84,34 @@ const authCheck = new Vue({
         })
     }
 });
+new Vue({
+    el: '#dialog-delete',
+    data() {
+        return {
+            dialog: false,
+            name: '',
+            index: -1
+        }
+    },
+    methods: {
+        remove() {
+            if(this.name === '')
+                return;
+            if(this.index <= -1)
+                return;
+            jumps.doRemove(this.index);
+            this.dialog = false;
+        }
+    },
+    created() {
+        let that = this;
+        bus.$on('dialog-delete', function(show, name, index) {
+            that.dialog = show;
+            that.name = name;
+            that.index = index;
+        });
+    }
+});
 const jumps = new Vue({
     el: '#main-list',
     data() {
@@ -97,6 +125,10 @@ const jumps = new Vue({
             this.showZero = this.items.length === 0;
         },
         remove(index) {
+            let item = this.items[index];
+            bus.$emit('dialog-delete', true, item.name, index);
+        },
+        doRemove(index) {
             let item = this.items[index];
             const url = `${BASE_URL}/v1/jumps/rm/${item.name}`;
             let that = this;
