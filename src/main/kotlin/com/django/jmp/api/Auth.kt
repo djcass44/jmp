@@ -33,6 +33,9 @@ class Auth {
     enum class BasicRoles: Role {
         USER, ADMIN
     }
+    companion object {
+        const val headerToken = "X-Auth-Token"
+    }
 
     @Deprecated(message = "Do not use strings when dealing with passwords.")
     fun computeHash(password: String): String {
@@ -63,6 +66,15 @@ class Auth {
         else
             throw ConflictResponse()
     }
+    fun validateUserToken(token: UUID): Boolean {
+        return transaction {
+            val existing = User.find {
+                Users.token eq token
+            }.elementAtOrNull(0)
+            return@transaction existing != null
+        }
+    }
+
     fun getUserToken(username: String, password: CharArray): String? {
         assert(userExists(username))
         return transaction {

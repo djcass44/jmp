@@ -82,9 +82,9 @@ fun main(args: Array<String>) {
         get("/v1/jumps", { ctx ->
             val items = arrayListOf<JumpJson>()
             Log.i(Runner::class.java, "API:GET -> ${ctx.path()}")
-            val token: String? = ctx.header("X-Auth-Token")
+            val token: String? = ctx.header(Auth.headerToken)
             Log.d(Runner::class.java, "Token: $token")
-            val tokenUUID = if(token != null && token.isNotBlank()) UUID.fromString(token) else null
+            val tokenUUID = if(token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
             transaction {
                 Log.d(javaClass, Jump.all().count().toString())
                 Jump.all().forEach {
@@ -101,14 +101,14 @@ fun main(args: Array<String>) {
                 if(target.isBlank())
                     throw EmptyPathException()
                 Log.d(Runner::class.java, "Target: $target")
-                val token: String? = ctx.header("X-Auth-Token")
+                val token: String? = ctx.header(Auth.headerToken)
                 if(token == null || token.isBlank()) {
                     ctx.redirect("/tokcheck.html?query=$target")
                     ctx.status(HttpStatus.FOUND_302)
                     return@get
                 }
                 var foundV2 = false
-                if(token.isNotBlank() && token != "global") { // Request has a token, search user-jumps first
+                if(token.isNotBlank() && token != "global" && token != "null") { // Request has a token, search user-jumps first
                     val tokenUUID = UUID.fromString(token)
                     transaction {
                         val dbtarget = Jump.find {
@@ -149,8 +149,8 @@ fun main(args: Array<String>) {
         // Add a jump point
         put("/v1/jumps/add", { ctx ->
             val add = ctx.bodyAsClass(JumpJson::class.java)
-            val token: String? = ctx.header("X-Auth-Token")
-            val tokenUUID = if(token != null && token.isNotBlank()) UUID.fromString(token) else null
+            val token: String? = ctx.header(Auth.headerToken)
+            val tokenUUID = if(token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
             if(!Runner.jumpExists(add.name, tokenUUID)) {
                 transaction {
                     Jump.new {
@@ -198,8 +198,8 @@ fun main(args: Array<String>) {
         // Find similar jumps
         get("/v2/similar/:query", { ctx ->
             try {
-                val token: String? = ctx.header("X-Auth-Token")
-                val tokenUUID = if(token != null && token.isNotBlank()) UUID.fromString(token) else null
+                val token: String? = ctx.header(Auth.headerToken)
+                val tokenUUID = if(token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
                 val query = ctx.pathParam("query")
                 if (query.isBlank())
                     throw EmptyPathException()
@@ -232,8 +232,19 @@ fun main(args: Array<String>) {
             else
                 throw NotFoundResponse()
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        // Verify a users token is still valid
+        get("/v2/verify/token", { ctx ->
+            val token: String? = ctx.header(Auth.headerToken)
+            val tokenUUID = if(token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
+            if(tokenUUID == null)
+                throw BadRequestResponse()
+            else {
+                ctx.result(auth.validateUserToken(tokenUUID).toString())
+                ctx.status(HttpStatus.OK_200)
+            }
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Verify a user still exists
-        get("/v2/user/:name", { ctx ->
+        get("/v2/verify/user/:name", { ctx ->
             val name = ctx.pathParam("name")
             if(name.isBlank()) { // TODO never send 'null'
                 Log.v(Runner::class.java, "User made null/empty request")

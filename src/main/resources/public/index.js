@@ -44,17 +44,22 @@ const authCheck = new Vue({
                 this.username = `Currently authenticated as ${localStorage.getItem(storageID)}`;
                 username = localStorage.getItem(storageID);
             }
-            else
+            else {
                 this.username = "Not authenticated";
-            const url = `${BASE_URL}/v2/user/${username}`;
+                bus.$emit('authChanged', false);
+            }
+            const url = `${BASE_URL}/v2/verify/user/${username}`;
             axios.get(url).then(r => {
                 console.log("UVALID: " + r.status);
+                bus.$emit('authChanged', true);
+                // axios.post(`${BASE_URL}/v2/verify/token`)
             }).catch(() => {
                 console.log("User credential verification failed (this is okay if not yet authenticated)");
                 this.username = "Not authenticated";
                 // User verification failed, nuke local storage
                 this.invalidate();
-            })
+                bus.$emit('authChanged', false);
+            });
         },
         showAuth() {
             bus.$emit('auth-dialog', true);
@@ -347,6 +352,11 @@ new Vue({
 });
 new Vue({
     el: "#toolbar-overflow",
+    data () {
+        return {
+            loggedIn: false
+        }
+    },
     methods: {
         openDialog: function (event) {
             if(event)
@@ -361,6 +371,7 @@ new Vue({
                 // probably should just reload page
                 authCheck.invalidate();
                 authCheck.getAuth();
+                jumps.loadItems();
             }
         },
         checkAuthStatus: function(event) {
@@ -369,6 +380,12 @@ new Vue({
             }
             return false;
         }
+    },
+    created() {
+        const that = this;
+        bus.$on('authChanged', function (login) {
+            that.loggedIn = login;
+        })
     }
 });
 new Vue({

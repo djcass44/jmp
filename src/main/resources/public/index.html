@@ -71,9 +71,9 @@
                 <i class="material-icons">more_vert</i>
             </button>
             <ul id="toolbar-overflow" class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="auth-button">
-                <li v-on:click="openDialog" class="mdl-menu__item">Authenticate</li>
+                <li v-on:click="openDialog" class="mdl-menu__item">Login</li>
                 <li v-on:click="openCreateDialog" class="mdl-menu__item">Add user</li>
-                <li v-on:click="logout" v-if="checkAuthStatus" class="mdl-menu__item">Logout</li>
+                <li v-on:click="logout" v-if="loggedIn" class="mdl-menu__item">Logout</li>
             </ul>
         </div>
     </header>
