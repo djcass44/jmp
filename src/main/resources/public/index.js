@@ -116,6 +116,7 @@ const jumps = new Vue({
     el: '#main-list',
     data() {
         return {
+            loggedIn: false,
             showZero: false,
             items: []
         }
@@ -386,15 +387,6 @@ const dialog_auth = new Vue({
     }
 });
 new Vue({
-    el: "#create-button",
-    methods: {
-        openDialog: function (event) {
-            if(event)
-                bus.$emit('dialog', true, 'New jump point', 'Create')
-        }
-    }
-});
-new Vue({
     el: "#toolbar-overflow",
     data () {
         return {
@@ -403,6 +395,10 @@ new Vue({
         }
     },
     methods: {
+        openJumpDialog: function (event) {
+            if(event)
+                bus.$emit('dialog', true, 'New jump point', 'Create')
+        },
         openDialog: function (event) {
             if(event)
                 bus.$emit('auth-dialog', true)
@@ -434,6 +430,7 @@ new Vue({
         const that = this;
         bus.$on('authChanged', function (login, admin) {
             that.loggedIn = login;
+            jumps.loggedIn = login;
             if(admin)
                 that.isAdmin = admin;
             else

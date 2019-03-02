@@ -45,7 +45,7 @@
 <!-- Always shows a header, even in smaller screens. -->
 <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
     <header class="mdl-layout__header">
-        <div class="mdl-layout__header-row">
+        <div class="mdl-layout__header-row" id="toolbar-overflow">
             <!-- Title -->
             <!--<i class="material-icons">wrap_text</i>-->
             <img src="assets/ic_launcher.png" width="32" height="32">
@@ -63,14 +63,14 @@
                            id="fixed-header-drawer-exp">
                 </div>
             </div>
-            <button id="create-button" v-on:click="openDialog" class="mdl-button mdl-js-button mdl-button--icon">
+            <button v-on:click="openJumpDialog" v-if="loggedIn" class="mdl-button mdl-js-button mdl-button--icon">
                 <i class="material-icons">add</i>
             </button>
             <!-- Right aligned menu below button -->
             <button id="auth-button" class="mdl-button mdl-js-button mdl-button--icon">
                 <i class="material-icons">more_vert</i>
             </button>
-            <ul id="toolbar-overflow" class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="auth-button">
+            <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="auth-button">
                 <li v-on:click="openDialog" v-if="!loggedIn" class="mdl-menu__item">Login</li>
                 <li v-on:click="openAdmin" v-if="isAdmin" class="mdl-menu__item">Admin settings</li>
                 <li v-on:click="logout" v-if="loggedIn" class="mdl-menu__item">Logout</li>
