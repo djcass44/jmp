@@ -4,6 +4,7 @@ import com.django.jmp.api.v1.Jump
 import com.django.jmp.api.v2.Similar
 import com.django.jmp.api.v2.User
 import com.django.jmp.api.v2.Verify
+import com.django.jmp.audit.Logger
 import com.django.jmp.db.Config
 import com.django.jmp.db.Init
 import com.django.jmp.db.Jumps
@@ -44,9 +45,10 @@ fun main(args: Array<String>) {
     transaction {
         addLogger(StdOutSqlLogger)
         SchemaUtils.create(Jumps, Users) // Ensure that the 'Jumps' table is created
-        Init(store.super_key.toCharArray()) // Ensure that the default admin is created
+        Init() // Ensure that the default admin is created
     }
     val auth = Auth()
+    val logger = Logger(store.logRequestDir)
     val app = Javalin.create().apply {
         port(7000)
         enableStaticFiles("/public")
@@ -63,6 +65,9 @@ fun main(args: Array<String>) {
                 handler.handle(ctx)
             else
                 ctx.status(HttpStatus.UNAUTHORIZED_401).result("Unauthorised")
+        }
+        requestLogger { ctx, timeMs ->
+            logger.add("${ctx.method()} ${ctx.path()} took $timeMs ms")
         }
     }.start()
     app.routes {

@@ -18,15 +18,17 @@ package com.django.jmp.db
 
 import com.django.jmp.api.Auth
 import com.django.log2.logging.Log
+import com.django.securepass3.PasswordGenerator
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class Init(private val superPassword: CharArray) {
+class Init {
     init {
         val superName = "admin"
         transaction {
             if(User.all().empty()) {
-                Auth().createUser(superName, superPassword, true)
-                Log.w(javaClass, "Created superuser with access: [username: $superName, password: $superPassword]\nPlease change this password ASAP")
+                val password = PasswordGenerator().get(16)
+                Auth().createUser(superName, password, true)
+                Log.w(javaClass, "Created superuser with access: [username: $superName, password: $password]\nPlease change this ASAP!")
             }
             if(Role.all().empty()) {
                 for (r in Auth.BasicRoles.values()) {

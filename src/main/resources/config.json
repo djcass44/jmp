@@ -1,6 +1,5 @@
 {
   "url": "jdbc:sqlite:/tmp/jmp.db",
   "driver": "org.sqlite.JDBC",
-  "super_name": "admin",
-  "super_key": "password"
+  "logRequestDir": "."
 }
