@@ -38,7 +38,7 @@ class Verify(private val auth: Auth): EndpointGroup {
             if (tokenUUID == null)
                 throw BadRequestResponse()
             else {
-                ctx.result(auth.validateUserToken(tokenUUID).toString()).status(HttpStatus.OK_200)
+                ctx.status(HttpStatus.OK_200).result(auth.validateUserToken(tokenUUID).toString())
             }
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Verify a user still exists

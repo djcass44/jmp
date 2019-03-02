@@ -34,8 +34,8 @@ import io.javalin.apibuilder.EndpointGroup
 import io.javalin.security.SecurityUtil
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.lowerCase
+import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
@@ -43,17 +43,18 @@ class Jump(private val auth: Auth): EndpointGroup {
     private fun jumpExists(name: String): Boolean {
         return transaction {
             val existing = Jump.find {
-                Jumps.name.lowerCase() eq name.toLowerCase() and Jumps.token.isNull()
+                Jumps.name.lowerCase() eq name.toLowerCase() and Jumps.owner.isNull()
             }
             return@transaction !existing.empty()
         }
     }
-    private fun jumpExists(name: String, token: UUID?): Boolean {
+    private fun jumpExists(name: String, user: String?, token: UUID?): Boolean {
         if(token == null)
             return jumpExists(name) // Fall back to v1 without a token
         return transaction {
+            val userObject = auth.getUser(user, token)
             val existing = Jump.find {
-                Jumps.name.lowerCase() eq name.toLowerCase() and Jumps.token.eq(token)
+                Jumps.name.lowerCase() eq name.toLowerCase() and Jumps.owner.eq(userObject?.id)
             }
             return@transaction if(existing.empty()) jumpExists(name) else !existing.empty() // Fall back to v1 if nothing found in v2
         }
@@ -63,12 +64,16 @@ class Jump(private val auth: Auth): EndpointGroup {
         // List all items in Json format
         ApiBuilder.get("/v1/jumps", { ctx ->
             val items = arrayListOf<JumpData>()
+            val user = ctx.header(Auth.headerUser)
             val token: String? = ctx.header(Auth.headerToken)
             val tokenUUID = if (token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
             transaction {
-                Jump.all().forEach {
-                    if (it.token == null || it.token!! == tokenUUID)
-                        items.add(JumpData(it))
+                val owner = auth.getUser(user, tokenUUID)
+                val res = Jump.find {
+                    Jumps.owner.isNull() or Jumps.owner.eq(owner?.id)
+                }
+                res.forEach {
+                    items.add(JumpData(it))
                 }
             }
             ctx.json(items).status(HttpStatus.OK_200)
@@ -85,41 +90,27 @@ class Jump(private val auth: Auth): EndpointGroup {
                  * 2. Try to get token from ?token=...
                  * 3. Assume no token, redirect to checker
                  */
+                val user = ctx.header(Auth.headerUser) ?: ctx.queryParam("user", "") ?: ""
                 val token = ctx.header(Auth.headerToken) ?: ctx.queryParam("token", "") ?: ""
                 if (token.isBlank()) {
-                    ctx.redirect("/tokcheck.html?query=$target")
-                    ctx.status(HttpStatus.FOUND_302)
+                    Log.d(javaClass, "User has no token, redirecting for check...")
+                    ctx.status(HttpStatus.FOUND_302).redirect("/tokcheck.html?query=$target")
                     return@get
                 }
-                var foundV2 = false
-                if (token.isNotBlank() && token != "global" && token != "null") { // Request has a token, search user-jumps first
-                    val tokenUUID = UUID.fromString(token)
-                    transaction {
-                        val dbtarget = Jump.find {
-                            Jumps.name.lowerCase() eq target.toLowerCase() and Jumps.token.isNotNull() and Jumps.token.eq(
-                                tokenUUID
-                            )
-                        }
-                        if (!dbtarget.empty()) {
-                            val location = dbtarget.elementAt(0).location
-                            Log.v(javaClass, "v2: moving to user point: $location")
-                            foundV2 = true
-                            ctx.redirect(location, HttpStatus.FOUND_302)
-                        }
-                    }
-                }
-                if (foundV2) // Jump was found in personal collection, don't need to check global
-                    return@get
+                val tokenUUID = if (token.isNotBlank() && token != "null") UUID.fromString(token) else null
                 transaction {
-                    val dbtarget = Jump.find {
-                        Jumps.name.lowerCase() eq target.toLowerCase() and Jumps.token.isNull()
+                    Log.d(javaClass, "User information: [name: $user, token: $token]")
+                    val owner = auth.getUser(user, tokenUUID)
+                    Log.d(javaClass, "Found user: ${owner != null}")
+                    val res = Jump.find {
+                        Jumps.name.lowerCase().eq(target.toLowerCase()) and (Jumps.owner.isNull() or Jumps.owner.eq(owner?.id))
                     }
-                    if (!dbtarget.empty()) {
-                        val location = dbtarget.elementAt(0).location
-                        Log.v(javaClass, "Redirecting to $location")
+                    if(!res.empty()) {
+                        val location = res.elementAt(0).location
+                        Log.v(javaClass, "v2: moving to point: $location")
                         ctx.redirect(location, HttpStatus.FOUND_302)
-                    } else
-                        ctx.redirect("/similar.html?query=$target")
+                    }
+                    else ctx.redirect("/similar.html?query=$target")
                 }
             } catch (e: IndexOutOfBoundsException) {
                 Log.e(Runner::class.java, "Invalid target: ${ctx.path()}")
@@ -139,13 +130,15 @@ class Jump(private val auth: Auth): EndpointGroup {
             // Block non-admin user from adding global jumps
             val user = ctx.header(Auth.headerUser)
             if (!add.personal && user != null && auth.getUserRole(user) != Auth.BasicRoles.ADMIN) throw UnauthorizedResponse()
-            if (!jumpExists(add.name, tokenUUID)) {
+            if (!jumpExists(add.name, user, tokenUUID)) {
                 transaction {
+                    val userObject = auth.getUser(user, tokenUUID)
                     Jump.new {
                         name = add.name
                         location = add.location
-                        if (tokenUUID != null && add.personal)
-                            this.token = tokenUUID
+                        this.owner = if (userObject != null && add.personal)
+                            userObject
+                        else null
                     }
                     ImageAction(add.location).get()
                 }
@@ -157,44 +150,40 @@ class Jump(private val auth: Auth): EndpointGroup {
         ApiBuilder.patch("/v1/jumps/edit", { ctx ->
             val update = ctx.bodyAsClass(EditJumpData::class.java)
             val user = ctx.header(Auth.headerUser)
+            val token: String? = ctx.header(Auth.headerToken)
+            val tokenUUID = if (token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
             transaction {
-                if (update.lastName != update.name && jumpExists(update.name)) {
-                    throw ConflictResponse()
-                } else {
-                    val existing = Jump.find {
-                        Jumps.name eq update.lastName
+                val owner = auth.getUser(user, tokenUUID)
+                val existing = Jump.findById(update.id) ?: throw NotFoundResponse()
+
+                if(owner == null)
+                    throw UnauthorizedResponse()
+                // User can change personal jumps
+                if(existing.owner == owner || owner.role.name == Auth.BasicRoles.ADMIN.name) {
+                    existing.apply {
+                        this.name = update.name
+                        this.location = update.location
                     }
-                    if (!existing.empty()) {
-                        val item = existing.elementAt(0)
-                        // Block non-admin user from editing global jumps
-                        if (item.token == null && user != null && auth.getUserRole(user) != Auth.BasicRoles.ADMIN) throw UnauthorizedResponse()
-                        item.name = update.name
-                        item.location = update.location
-                        ImageAction(update.location).get()
-                        ctx.status(HttpStatus.NO_CONTENT_204).json(update)
-                    } else
-                        throw NotFoundResponse()
+                    ImageAction(update.location).get()
+                    ctx.status(HttpStatus.NO_CONTENT_204).json(update)
                 }
+                else throw UnauthorizedResponse()
             }
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Delete a jump point
-        ApiBuilder.delete("/v1/jumps/rm/:name", { ctx ->
-            val name = ctx.pathParam("name")
+        ApiBuilder.delete("/v1/jumps/rm/:id", { ctx ->
+            val id = ctx.pathParam("id").toIntOrNull() ?: throw BadRequestResponse()
             val user = ctx.header(Auth.headerUser)
             val token: String? = ctx.header(Auth.headerToken)
             val tokenUUID = if (token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
             val role = auth.getUserRole(user)
             transaction {
-                val result = Jump.find {
-                    Jumps.name eq name
-                }.elementAtOrNull(0) ?: throw BadRequestResponse()
+                val result = Jump.findById(id) ?: throw NotFoundResponse()
                 // 401 if jump is global and user ISN'T admin
-                if (result.token == null && role != Auth.BasicRoles.ADMIN) throw UnauthorizedResponse()
+                if (result.owner == null && role != Auth.BasicRoles.ADMIN) throw UnauthorizedResponse()
                 // 401 if jump is personal and tokens don't match
-                if (result.token != null && result.token != tokenUUID) throw UnauthorizedResponse()
-                Jumps.deleteWhere {
-                    Jumps.id eq result.id
-                }
+                if (result.owner != null && result.owner!!.token != tokenUUID) throw UnauthorizedResponse()
+                result.delete()
             }
             ctx.status(HttpStatus.NO_CONTENT_204)
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))

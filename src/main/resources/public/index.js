@@ -130,7 +130,7 @@ const jumps = new Vue({
         },
         doRemove(index) {
             let item = this.items[index];
-            const url = `${BASE_URL}/v1/jumps/rm/${item.name}`;
+            const url = `${BASE_URL}/v1/jumps/rm/${item.id}`;
             let that = this;
             axios.delete(url, { headers: { "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}).then(r => {
                 console.log(r.status);
@@ -143,7 +143,7 @@ const jumps = new Vue({
         },
         edit(index) {
             let item = this.items[index];
-            bus.$emit('dialog', true, 'Edit jump point', 'Update', true, item.name, item.location, index);
+            bus.$emit('dialog', true, 'Edit jump point', 'Update', true, item.id, item.name, item.location, index);
         },
         highlight(text) {
             return text.replace(new RegExp("https?:\\/\\/(www\\.)?"), match => {
@@ -189,7 +189,7 @@ const dialog = new Vue({
             edit: false,
             title: 'New jump point',
             action: 'Create',
-            lastName: '',
+            id: -1,
             name: '',
             nameRules: [
                 (v) => !!v || 'This is a required field.',
@@ -212,7 +212,7 @@ const dialog = new Vue({
     },
     created () {
         const vm = this;
-        bus.$on('dialog', function (value, title, action, edit, name, location, index) {
+        bus.$on('dialog', function (value, title, action, edit, id, name, location, index) {
             if(edit)
                 vm.edit = edit;
             else {
@@ -222,9 +222,11 @@ const dialog = new Vue({
             vm.dialog = value;
             vm.title = title;
             vm.action = action;
+            if(id) {
+                vm.id = id;
+            }
             if(name) {
                 vm.name = name;
-                vm.lastName = name;
             }
             if(location)
                 vm.location = location;
@@ -241,7 +243,7 @@ const dialog = new Vue({
             let that = this;
             axios.patch(
                 url,
-                `{ "name": "${this.name}", "location": "${this.location}", "lastName": "${this.lastName}" }`,
+                `{ "id": ${this.id}, "name": "${this.name}", "location": "${this.location}" }`,
                 {headers: {"Content-Type": "application/json", "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}
             ).then(r => {
                 console.log(r.status);

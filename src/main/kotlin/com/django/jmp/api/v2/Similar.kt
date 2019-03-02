@@ -20,39 +20,43 @@ import com.django.jmp.api.Auth
 import com.django.jmp.api.Runner
 import com.django.jmp.api.Similar
 import com.django.jmp.db.Jump
+import com.django.jmp.db.Jumps
 import com.django.jmp.except.EmptyPathException
 import com.django.log2.logging.Log
-import io.javalin.NotFoundResponse
+import io.javalin.BadRequestResponse
 import io.javalin.apibuilder.ApiBuilder
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.security.SecurityUtil
 import org.eclipse.jetty.http.HttpStatus
+import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
-class Similar: EndpointGroup {
+class Similar(private val auth: Auth): EndpointGroup {
     override fun addEndpoints() {
         // Find similar jumps
         ApiBuilder.get("/v2/similar/:query", { ctx ->
             try {
+                val user = ctx.header(Auth.headerUser)
                 val token: String? = ctx.header(Auth.headerToken)
-                val tokenUUID =
-                    if (token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
+                val tokenUUID = if (token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
                 val query = ctx.pathParam("query")
                 if (query.isBlank())
                     throw EmptyPathException()
                 val names = arrayListOf<String>()
                 transaction {
-                    Jump.all().forEach {
-                        if (it.token == null || it.token == tokenUUID)
-                            names.add(it.name)
+                    val owner = auth.getUser(user, tokenUUID)
+                    val res = Jump.find {
+                        Jumps.owner.isNull() or Jumps.owner.eq(owner?.id)
                     }
+                    res.forEach { names.add(it.name) }
                 }
                 val similar = Similar(query, names)
-                ctx.json(similar.compute()).status(HttpStatus.OK_200)
-            } catch (e: EmptyPathException) {
+                ctx.status(HttpStatus.OK_200).json(similar.compute())
+            }
+            catch (e: EmptyPathException) {
                 Log.e(Runner::class.java, "Empty target")
-                throw NotFoundResponse()
+                throw BadRequestResponse()
             }
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
     }

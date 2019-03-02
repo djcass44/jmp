@@ -23,6 +23,7 @@ import com.django.jmp.db.Users
 import com.django.log2.logging.Log
 import io.javalin.ConflictResponse
 import io.javalin.security.Role
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -118,6 +119,15 @@ class Auth {
         return transaction {
             return@transaction User.find {
                 Users.username eq username
+            }.elementAtOrNull(0)
+        }
+    }
+    fun getUser(username: String?, token: UUID?): User? {
+        if(username == null || token == null)
+            return null
+        return transaction {
+            return@transaction User.find {
+                Users.username eq username and Users.token.eq(token)
             }.elementAtOrNull(0)
         }
     }

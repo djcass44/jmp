@@ -24,7 +24,7 @@ import org.jetbrains.exposed.dao.IntIdTable
 object Jumps : IntIdTable() {
     val name = varchar("name", 50)
     val location = varchar("location", 2083)
-    val token = uuid("token").nullable()
+    val owner = reference("owner", Users).nullable()
     val image = varchar("image", 2083).nullable()
 }
 
@@ -33,13 +33,13 @@ class Jump(id: EntityID<Int>) : IntEntity(id) {
 
     var name by Jumps.name
     var location by Jumps.location
-    var token by Jumps.token
+    var owner by User optionalReferencedOn Jumps.owner
     var image by Jumps.image
 }
-data class JumpData(val name: String, val location: String, val personal: Boolean = false, val image: String? = null) {
-    constructor(jump: Jump): this(jump.name, jump.location, jump.token != null, jump.image)
+data class JumpData(val id: Int, val name: String, val location: String, val personal: Boolean = false, val image: String? = null) {
+    constructor(jump: Jump): this(jump.id.value, jump.name, jump.location, jump.owner != null, jump.image)
 }
-data class EditJumpData(val name: String, val location: String, val lastName: String)
+data class EditJumpData(val id: Int, val name: String, val location: String)
 
 object Users: IntIdTable() {
     val username = varchar("username", 36).uniqueIndex()

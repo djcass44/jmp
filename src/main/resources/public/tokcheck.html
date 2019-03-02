@@ -59,7 +59,7 @@
         let query = url.searchParams.get("query");
         let redirect = `${endpoint}jump/${query}?token=`;
         if(localStorage.getItem(storageToken) !== null)
-            redirect += localStorage.getItem(storageToken);
+            redirect += `${localStorage.getItem(storageToken)}&user=${localStorage.getItem(storageUser)}`;
         else
             redirect += "global";
         window.location.replace(redirect);

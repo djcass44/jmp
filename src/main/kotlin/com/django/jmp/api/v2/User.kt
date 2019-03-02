@@ -41,7 +41,7 @@ class User(private val auth: Auth): EndpointGroup {
                     users.add(UserData(it))
                 }
             }
-            ctx.json(users).status(HttpStatus.OK_200)
+            ctx.status(HttpStatus.OK_200).json(users)
         }, roles(Auth.BasicRoles.ADMIN))
         // Add a user
         put("/v2/user/add", { ctx ->
@@ -61,12 +61,12 @@ class User(private val auth: Auth): EndpointGroup {
                 throw BadRequestResponse()
             }
             if (!auth.userExists(user)) {
-                ctx.result("NONE").status(HttpStatus.OK_200)
+                ctx.status(HttpStatus.OK_200).result("NONE")
                 return@get // User doesn't exist, stop here
             }
             if (auth.validateUserToken(tokenUUID)) {
                 val role = auth.getUserRole(user)
-                ctx.result(role.toString()).status(HttpStatus.OK_200)
+                ctx.status(HttpStatus.OK_200).result(role.toString())
             } else throw UnauthorizedResponse()
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Get a users token

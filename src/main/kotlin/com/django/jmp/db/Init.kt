@@ -28,7 +28,10 @@ class Init {
             if(User.all().empty()) {
                 val password = PasswordGenerator().get(16)
                 Auth().createUser(superName, password, true)
-                Log.w(javaClass, "Created superuser with access: [username: $superName, password: $password]\nPlease change this ASAP!")
+                Log.w(javaClass, "Created superuser with access: [username: $superName]\nPlease change this ASAP!")
+                for (c in password)
+                    print(c)
+                println()
             }
             if(Role.all().empty()) {
                 for (r in Auth.BasicRoles.values()) {

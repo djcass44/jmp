@@ -5,10 +5,7 @@ import com.django.jmp.api.v2.Similar
 import com.django.jmp.api.v2.User
 import com.django.jmp.api.v2.Verify
 import com.django.jmp.audit.Logger
-import com.django.jmp.db.Config
-import com.django.jmp.db.Init
-import com.django.jmp.db.Jumps
-import com.django.jmp.db.Users
+import com.django.jmp.db.*
 import com.django.log2.logging.Log
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.get
@@ -44,7 +41,7 @@ fun main(args: Array<String>) {
 
     transaction {
         addLogger(StdOutSqlLogger)
-        SchemaUtils.create(Jumps, Users) // Ensure that the 'Jumps' table is created
+        SchemaUtils.create(Jumps, Users, Roles) // Ensure that the 'Jumps' table is created
         Init() // Ensure that the default admin is created
     }
     val auth = Auth()
@@ -79,7 +76,7 @@ fun main(args: Array<String>) {
             ctx.redirect("/users.html")
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         Jump(auth).addEndpoints()
-        Similar().addEndpoints()
+        Similar(auth).addEndpoints()
         User(auth).addEndpoints()
         Verify(auth).addEndpoints()
     }
