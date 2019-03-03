@@ -29,6 +29,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 class Auth {
+    @Deprecated(message = "Use 'Authorization' headers instead", level = DeprecationLevel.ERROR)
     class BasicAuth(val username: String, val password: CharArray) {
         constructor(insecure: Insecure): this(insecure.username, insecure.password.toCharArray())
         class Insecure(val username: String, val password: String)
@@ -84,8 +85,8 @@ class Auth {
         assert(userExists(username))
         return transaction {
             val existing = User.find {
-                Users.username.lowerCase() eq username.toLowerCase()
-            }
+                Users.username eq username
+            }.limit(1)
             val user = existing.elementAtOrNull(0)
             // Only return if hashes match (and user was found)
             return@transaction if(user != null && hashMatches(password, user.hash))

@@ -45,8 +45,8 @@ class User(private val auth: Auth): EndpointGroup {
         }, roles(Auth.BasicRoles.ADMIN))
         // Add a user
         put("/v2/user/add", { ctx ->
-            val credentials = Auth.BasicAuth(ctx.bodyAsClass(Auth.BasicAuth.Insecure::class.java))
-            auth.createUser(credentials.username, credentials.password)
+            val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
+            auth.createUser(basicAuth.username, basicAuth.password.toCharArray())
         }, roles(Auth.BasicRoles.ADMIN))
         // Get information about the current user
         get("/v2/user", { ctx ->
@@ -71,8 +71,8 @@ class User(private val auth: Auth): EndpointGroup {
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Get a users token
         post("/v2/user/auth", { ctx ->
-            val credentials = Auth.BasicAuth(ctx.bodyAsClass(Auth.BasicAuth.Insecure::class.java))
-            val token = auth.getUserToken(credentials.username, credentials.password)
+            val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
+            val token = auth.getUserToken(basicAuth.username, basicAuth.password.toCharArray())
             if (token != null)
                 ctx.json(token)
             else

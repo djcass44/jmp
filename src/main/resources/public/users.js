@@ -214,10 +214,11 @@ const dialog_auth = new Vue({
             this.$refs.form.validate();
             const url = `${BASE_URL}/v2/user/add`;
             let that = this;
+            let data = window.btoa(`${this.name}:${this.password}`);
             axios.put(
                 url,
-                `{ "username": "${this.name}", "password": "${this.password}" }`,
-                {headers: {"Content-Type": "application/json", "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}
+                {},
+                {headers: { 'Authorization': 'Basic ' + data, "Content-Type": "application/json", "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}
             ).then(r => {
                 console.log(r.status);
                 that.dialog = false;

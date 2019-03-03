@@ -126,7 +126,7 @@ const jumps = new Vue({
     },
     methods: {
         checkItemsLength() {
-            this.showZero = this.items.length === 0;
+            this.showZero = this.filtered.length === 0;
         },
         indexFromId(id) {
             for(let i = 0; i < this.items.length; i++) {
@@ -147,8 +147,8 @@ const jumps = new Vue({
             axios.delete(url, { headers: { "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}).then(r => {
                 console.log(r.status);
                 that.items.splice(index, 1); // Delete the item, making vue update
-                that.checkItemsLength();
                 that.filterItems();
+                that.checkItemsLength();
             }).catch(e => {
                 console.log(e);
                 bus.$emit('snackbar', true, `Failed to delete: ${e.response.status}`);
@@ -193,16 +193,16 @@ const jumps = new Vue({
                 response.data.map(item => {
                     items.push(item);
                 });
-                jumps.checkItemsLength();
                 jumps.filterItems();
+                jumps.checkItemsLength();
                 setTimeout(function() {
                     componentHandler.upgradeDom();
                     componentHandler.upgradeAllRegistered();
                 }, 0);
             }).catch(function(error) {
                 console.log(error); // API is probably unreachable
-                jumps.checkItemsLength();
                 jumps.filterItems();
+                jumps.checkItemsLength();
                 bus.$emit('snackbar', true, `Failed to load jumps: ${e.response.status}`);
             });
         }
@@ -318,8 +318,8 @@ const dialog = new Vue({
                     location: that.location,
                     personal: personalJump}
                 );
-                jumps.checkItemsLength();
                 jumps.filterItems();
+                jumps.checkItemsLength();
                 setTimeout(function() {
                     componentHandler.upgradeDom();
                     componentHandler.upgradeAllRegistered();
@@ -380,10 +380,11 @@ const dialog_auth = new Vue({
             this.$refs.form.validate();
             const url = `${BASE_URL}/v2/user/add`;
             let that = this;
+            let data = window.btoa(`${this.name}:${this.password}`);
             axios.put(
                 url,
-                `{ "username": "${this.name}", "password": "${this.password}" }`,
-                {headers: {"Content-Type": "application/json", "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}
+                {},
+                {headers: { 'Authorization': 'Basic ' + data, "Content-Type": "application/json", "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}
             ).then(r => {
                 console.log(r.status);
                 that.dialog = false;
@@ -397,10 +398,11 @@ const dialog_auth = new Vue({
             this.$refs.form.validate();
             const url = `${BASE_URL}/v2/user/auth`;
             let that = this;
+            let data = window.btoa(`${this.name}:${this.password}`);
             axios.post(
                 url,
-                `{ "username": "${this.name}", "password": "${this.password}" }`,
-                {headers: {"Content-Type": "application/json"}}
+                {},
+                {headers: { 'Authorization': 'Basic ' + data, "Content-Type": "application/json"}}
             ).then(r => {
                 console.log(r.status);
                 that.dialog = false;
