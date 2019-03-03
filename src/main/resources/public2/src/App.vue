@@ -11,7 +11,8 @@
                     @snackbar="snackbar"
                     @loadItems="jumpsLoadItems"
                     @authInvalidate="authInvalidate"
-                    @authGet="authGet">
+                    @authGet="authGet"
+                    @init="toolbarCheckState">
                 </Toolbar>
             </header>
             <main class="mdl-layout__content">
@@ -81,7 +82,7 @@ export default {
             this.$refs.dialogauth.setVisible(visible, create);
         },
         dialogCreate(visible, title, action, edit, id, name, location, index) {
-            if(this.$refs.jumps.$options.name === "Users")
+            if(this.isSlashUsers())
                 this.$refs.dialogauth.setVisible(visible, true);
             else
                 this.$refs.dialogjump.setVisible(visible, title, action, edit, id, name, location, index);
@@ -113,11 +114,17 @@ export default {
         toolbarAuthChanged(login, admin) {
             this.$refs.toolbar.authChanged(login, admin);
         },
+        toolbarCheckState() {
+            this.$refs.toolbar.setSlashUsers(this.isSlashUsers());
+        },
         authGet() {
             this.$refs.auth.getAuth();
         },
         authInvalidate() {
             this.$refs.auth.invalidate();
+        },
+        isSlashUsers() {
+            return this.$refs.jumps.$options.name === "Users";
         }
     }
 }

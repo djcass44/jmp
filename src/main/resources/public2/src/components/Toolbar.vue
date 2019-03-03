@@ -21,7 +21,7 @@
             <i class="material-icons">add</i>
         </button>
         <!-- Right aligned menu below button -->
-        <button id="auth-button" class="mdl-button mdl-js-button mdl-button--icon">
+        <button id="auth-button" v-if="!slashUsers" class="mdl-button mdl-js-button mdl-button--icon">
             <i class="material-icons">more_vert</i>
         </button>
         <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="auth-button">
@@ -37,12 +37,22 @@
 export default {
     data () {
         return {
+            slashUsers: false,
             searchQuery: '',
             loggedIn: false,
             isAdmin: false
         }
     },
+    created() {
+        let that = this;
+        setTimeout(function() {
+            that.$emit('init');
+        }, 10);
+    },
     methods: {
+        setSlashUsers(slashUsers) {
+            this.slashUsers = slashUsers;
+        },
         textChanged() {
             this.$emit('jumpsSetFilter', this.searchQuery);
         },
