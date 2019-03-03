@@ -88,10 +88,10 @@ export default {
                 {headers: { 'Authorization': 'Basic ' + data, "Content-Type": "application/json", "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}
             ).then(r => {
                 that.dialog = false;
-                this.$emit('snackbar', true, `Created user ${that.name}`);
+                that.$emit('snackbar', true, `Created user ${that.name}`);
             }).catch(e => {
                 console.log(e);
-                this.$emit('snackbar', true, `Failed to create user: ${e.response.status}`);
+                that.$emit('snackbar', true, `Failed to create user: ${e.response.status}`);
             });
         },
         submit () {
@@ -108,14 +108,14 @@ export default {
                 // console.log(r.data);
                 localStorage.setItem(storageToken, r.data);
                 localStorage.setItem(storageUser, that.name);
-                this.$emit('getAuth');
-                this.$emit('loadItems');
+                that.$emit('getAuth');
+                that.$emit('loadItems');
             }).catch(function(e) {
                 console.log(e);
                 if(e.response.status === 404)
-                    this.$emit('snackbar', true, "Password incorrect or user doesn't exist");
+                    that.$emit('snackbar', true, "Password incorrect or user doesn't exist");
                 else
-                    this.$emit('snackbar', true, `Failed to authenticate: ${e.response.status}`);
+                    that.$emit('snackbar', true, `Failed to authenticate: ${e.response.status}`);
             });
         }
     }

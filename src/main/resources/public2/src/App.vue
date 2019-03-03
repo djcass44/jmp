@@ -1,6 +1,6 @@
 <template>
     <div id="app">
-    <!-- Always shows a header, even in smaller screens. -->
+        <!-- Always shows a header, even in smaller screens. -->
         <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
             <header class="mdl-layout__header">
                 <Toolbar ref="toolbar"
@@ -15,11 +15,16 @@
                 </Toolbar>
             </header>
             <main class="mdl-layout__content">
-                <Jumps ref="jumps"
+                <!-- <Jumps ref="jumps"
                     @snackbar="snackbar"
                     @dialog-create="dialogCreate"
                     @dialog-delete="dialogDelete">
-                </Jumps>
+                </Jumps> -->
+                <router-view ref="jumps"
+                    @snackbar="snackbar"
+                    @dialog-create="dialogCreate"
+                    @dialog-delete="dialogDelete">
+                </router-view>
                 <Auth ref="auth"
                     @dialog-auth="dialogAuth"
                     @toolbarAuthChanged="toolbarAuthChanged">
@@ -45,7 +50,10 @@
 
 <script>
 import Auth from './components/Auth.vue';
+
 import Jumps from './components/Jumps.vue';
+import Users from './components/Users.vue';
+
 import Toolbar from './components/Toolbar.vue';
 
 import AuthDialog from './components/dialog/AuthDialog.vue';
@@ -55,10 +63,12 @@ import JumpDialog from './components/dialog/JumpDialog.vue';
 import Snackbar from './components/widget/Snackbar.vue';
 
 export default {
+    props: ['comp'],
     name: 'App',
     components: {
         Auth,
         Jumps,
+        Users,
         Toolbar,
         AuthDialog,
         DeleteDialog,
@@ -71,7 +81,10 @@ export default {
             this.$refs.dialogauth.setVisible(visible, create);
         },
         dialogCreate(visible, title, action, edit, id, name, location, index) {
-            this.$refs.dialogjump.setVisible(visible, title, action, edit, id, name, location, index);
+            if(this.$refs.jumps.$options.name === "Users")
+                this.$refs.dialogauth.setVisible(visible, true);
+            else
+                this.$refs.dialogjump.setVisible(visible, title, action, edit, id, name, location, index);
         },
         dialogDelete(visible, name, index) {
             this.$refs.dialogrm.setVisible(visible, name, index);

@@ -28,7 +28,6 @@ import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.security.SecurityUtil.roles
 import org.eclipse.jetty.http.HttpStatus
-import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
@@ -81,38 +80,35 @@ class User(private val auth: Auth): EndpointGroup {
         // Change the role of a user
         patch("/v2/user/permission", { ctx ->
             val updated = ctx.bodyAsClass(EditUserData::class.java)
-            // Block dropping the superuser from admin
-            if(updated.username == "admin") throw UnauthorizedResponse()
-            // Block the user from changing their own permissions
-            if(updated.username == ctx.header(Auth.headerUser)) throw UnauthorizedResponse()
             transaction {
+                val user = User.findById(updated.id) ?: throw BadRequestResponse()
+                // Block dropping the superuser from admin
+                if(user.username == "admin") throw UnauthorizedResponse()
+                // Block the user from changing their own permissions
+                if(user.username == ctx.header(Auth.headerUser)) throw UnauthorizedResponse()
                 val role = Role.find {
                     Roles.name eq updated.role
-                }.elementAtOrNull(0) ?: throw BadRequestResponse()
-                val user = User.find {
-                    Users.username eq updated.username
                 }.elementAtOrNull(0) ?: throw BadRequestResponse()
                 user.role = role
                 ctx.status(HttpStatus.NO_CONTENT_204).json(updated)
             }
         }, roles(Auth.BasicRoles.ADMIN))
         // Delete a user
-        delete("/v2/user/rm/:name", { ctx ->
-            val name = ctx.pathParam("name")
+        delete("/v2/user/rm/:id", { ctx ->
+            val id = ctx.validatedPathParam("id").asInt().getOrThrow()
             val user = ctx.header(Auth.headerUser)
-            Log.i(javaClass, "[$user] is removing $name")
-            if(name == "admin") {
-                Log.w(javaClass, "[$user] is attempting to remove the superuser")
-                throw UnauthorizedResponse()
-            } // Block deleting the superuser
-            if(name == user) {
-                Log.w(javaClass, "[$user] is attempting to remove themselves")
-                throw UnauthorizedResponse()
-            } // Stop the users deleting themselves
             transaction {
-                Users.deleteWhere {
-                    Users.username eq name
-                }
+                val target = User.findById(id) ?: throw BadRequestResponse()
+                Log.i(javaClass, "[$user] is removing ${target.username}")
+                if(target.username == "admin") {
+                    Log.w(javaClass, "[$user] is attempting to remove the superuser")
+                    throw UnauthorizedResponse()
+                } // Block deleting the superuser
+                if(target.username == user) {
+                    Log.w(javaClass, "[$user] is attempting to remove themselves")
+                    throw UnauthorizedResponse()
+                } // Stop the users deleting themselves
+                target.delete()
             }
             ctx.status(HttpStatus.NO_CONTENT_204)
         }, roles(Auth.BasicRoles.ADMIN))

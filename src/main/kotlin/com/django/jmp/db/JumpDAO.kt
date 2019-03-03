@@ -55,10 +55,10 @@ class User(id: EntityID<Int>): IntEntity(id) {
     var token by Users.token
     var role by Role referencedOn Users.role
 }
-data class UserData(val username: String, val role: String) {
-    constructor(user: User): this(user.username, user.role.name)
+data class UserData(val id: Int, val username: String, val role: String) {
+    constructor(user: User): this(user.id.value, user.username, user.role.name)
 }
-data class EditUserData(val username: String, val role: String, val lastRole: String)
+data class EditUserData(val id: Int, val role: String)
 
 object Roles: IntIdTable() {
     val name = varchar("name", 12).uniqueIndex()

@@ -109,15 +109,15 @@ export default {
                 {headers: {"Content-Type": "application/json", "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}
             ).then(r => {
                 that.dialog = false;
-                this.$emit('jumpsSetItem', { name: this.name, location: this.location, personal: this.select === this.items[1] }, that.index);
+                that.$emit('jumpsSetItem', { name: this.name, location: this.location, personal: this.select === this.items[1] }, that.index);
                 setTimeout(function() {
                     componentHandler.upgradeDom();
                     componentHandler.upgradeAllRegistered();
                 }, 0);
-                this.$emit('snackbar', true, `Updated ${that.name}`);
+                that.$emit('snackbar', true, `Updated ${that.name}`);
             }).catch(e => {
                 console.log(e);
-                this.$emit('snackbar', true, `Failed to update: ${e.response.status}`);
+                that.$emit('snackbar', true, `Failed to update: ${e.response.status}`);
             });
         },
         submit () {
@@ -137,7 +137,7 @@ export default {
                 {headers: {"Content-Type": "application/json", "X-Auth-Token": localToken, "X-Auth-User": localStorage.getItem(storageUser)}}
             ).then(r => {
                 that.dialog = false;
-                this.$emit('jumpsPushItem', {
+                that.$emit('jumpsPushItem', {
                     name: that.name,
                     location: that.location,
                     personal: personalJump
@@ -146,10 +146,10 @@ export default {
                     componentHandler.upgradeDom();
                     componentHandler.upgradeAllRegistered();
                 }, 0);
-                this.$emit('snackbar', true, `Added ${that.name}`)
+                that.$emit('snackbar', true, `Added ${that.name}`)
             }).catch(e => {
                 console.log(e);
-                this.$emit('snackbar', true, `Failed to add: ${e.response.status}`);
+                that.$emit('snackbar', true, `Failed to add: ${e.response.status}`);
             });
         },
         clear () {
