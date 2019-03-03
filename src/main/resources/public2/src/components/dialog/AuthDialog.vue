@@ -44,7 +44,7 @@ export default {
             name: '',
             nameRules: [
                 (v) => !!v || 'This is a required field.',
-                (v) => nameRegex.exec(v) || 'Username must not contain special characters',
+                (v) => nameRegex.test(v) || 'Username must not contain special characters',
                 (v) => v && v.length < 37 || 'Username must be less than 37 characters'
             ],
             password: '',

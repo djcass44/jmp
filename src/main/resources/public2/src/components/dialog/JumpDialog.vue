@@ -18,7 +18,7 @@
                                             <v-text-field outline append-icon="link" label="Location*" v-model="location" :rules="locationRules" :counter="2083" required autocomplete="url"></v-text-field>
                                         </v-flex>
                                         <v-flex xs12>
-                                            <v-select v-if="edit === false" v-model="select" :items="items" :rules="[v => !!v || 'Type is required.']" label="Type" required></v-select>
+                                            <v-select v-if="edit === false" v-model="select" :items="items" :rules="typeRules" label="Type" required></v-select>
                                         </v-flex>
                                     </v-layout>
                                 </v-container>
@@ -55,19 +55,22 @@ export default {
             name: '',
             nameRules: [
                 (v) => !!v || 'This is a required field.',
-                (v) => nameRegex.exec(v) || 'Name must not contain special characters',
+                (v) => nameRegex.test(v) || 'Name must not contain special characters',
                 (v) => v && v.length < 50 || 'Name must be less than 50 characters'
             ],
             location: '',
             locationRules: [
                 (v) => !!v || 'This is a required field.',
-                (v) => urlRegex.exec(v) || 'URL must be valid.',
+                (v) => urlRegex.test(v) || 'URL must be valid.',
                 (v) => v && v.length < 2083 || 'Location must be less than 2083 characters'
             ],
             select: null,
             items: [
                 "Global",
                 "Personal"
+            ],
+            typeRules: [
+                v => !!v || 'Type is required.'
             ],
             index: -1
         }
