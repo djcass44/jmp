@@ -25,7 +25,9 @@ object Runner
 
 fun main(args: Array<String>) {
     Log.v(Runner::class.java, Arrays.toString(args))
-    val configLocation = if(args.size == 2 && args[0] == "using") {
+    val enableCors = args.contains("--enable-cors")
+    if(enableCors) Log.w(Runner::class.java, "WARNING: CORS access is enable for ALL origins. DO NOT allow this in production: WARNING")
+    val configLocation = if(args.size >= 2 && args[0] == "using") {
         args[1]
     }
     else
@@ -48,7 +50,8 @@ fun main(args: Array<String>) {
     val logger = Logger(store.logRequestDir)
     val app = Javalin.create().apply {
         port(7000)
-        enableStaticFiles("/public")
+        enableStaticFiles("/public2/dist")
+        if(enableCors) enableCorsForAllOrigins()
         enableCaseSensitiveUrls()
         accessManager { handler, ctx, permittedRoles ->
             val user = ctx.header(Auth.headerUser)
