@@ -9,7 +9,7 @@
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable
               mdl-textfield--floating-label mdl-textfield--align-right">
             <label class="mdl-button mdl-js-button mdl-button--icon"
-                   for="fixed-header-drawer-exp">
+                   for="fixed-header-drawer-exp" v-if="!nullPage">
                 <i class="material-icons">search</i>
             </label>
             <div class="mdl-textfield__expandable-holder">
@@ -17,11 +17,11 @@
                        id="fixed-header-drawer-exp" v-model="searchQuery" v-on:input="textChanged">
             </div>
         </div>
-        <button v-on:click="openJumpDialog" v-if="loggedIn" class="mdl-button mdl-js-button mdl-button--icon">
+        <button v-on:click="openJumpDialog" v-if="loggedIn && !nullPage" class="mdl-button mdl-js-button mdl-button--icon">
             <i class="material-icons">add</i>
         </button>
         <!-- Right aligned menu below button -->
-        <button id="auth-button" v-if="!slashUsers" class="mdl-button mdl-js-button mdl-button--icon">
+        <button id="auth-button" v-if="!slashUsers && !nullPage" class="mdl-button mdl-js-button mdl-button--icon">
             <i class="material-icons">more_vert</i>
         </button>
         <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="auth-button">
@@ -37,6 +37,7 @@
 export default {
     data () {
         return {
+            nullPage: false,
             slashUsers: false,
             searchQuery: '',
             loggedIn: false,
@@ -50,6 +51,10 @@ export default {
         }, 10);
     },
     methods: {
+        setNullPage(nullPage) {
+            console.log(nullPage);
+            this.nullPage = nullPage;
+        },
         setSlashUsers(slashUsers) {
             this.slashUsers = slashUsers;
         },

@@ -54,6 +54,7 @@ import Auth from './components/Auth.vue';
 
 import Jumps from './components/Jumps.vue';
 import Users from './components/Users.vue';
+import NotFound from './components/error/NotFound.vue';
 
 import Toolbar from './components/Toolbar.vue';
 
@@ -74,7 +75,8 @@ export default {
         AuthDialog,
         DeleteDialog,
         JumpDialog,
-        Snackbar
+        Snackbar,
+        NotFound
     },
     // There has to be a better way!
     methods: {
@@ -115,7 +117,8 @@ export default {
             this.$refs.toolbar.authChanged(login, admin);
         },
         toolbarCheckState() {
-            this.$refs.toolbar.setSlashUsers(this.isSlashUsers());
+            this.$refs.toolbar.setSlashUsers(!this.isNotSlashUsers());
+            this.$refs.toolbar.setNullPage(!this.isNotSlashUsers() && !this.isSlashUsers());
         },
         authGet() {
             this.$refs.auth.getAuth();
@@ -125,6 +128,9 @@ export default {
         },
         isSlashUsers() {
             return this.$refs.jumps.$options.name === "Users";
+        },
+        isNotSlashUsers() {
+            return this.$refs.jumps.$options.name === "Jumps";
         }
     }
 }

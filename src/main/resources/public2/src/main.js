@@ -6,6 +6,7 @@ import App from "./App.vue";
 
 import Jumps from "./components/Jumps.vue";
 import Users from "./components/Users.vue";
+import NotFound from "./components/error/NotFound.vue";
 
 Vue.use(VueRouter);
 Vue.use(VueMdl);
@@ -16,12 +17,16 @@ const router = new VueRouter({
     mode: 'history',
     routes: [
         {
-            path: '*',
+            path: '/',
             component: Jumps
         },
         {
             path: '/users',
             component: Users
+        },
+        {
+            path: '*',
+            component: NotFound
         }
     ]
 });

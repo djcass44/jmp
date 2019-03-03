@@ -50,7 +50,7 @@ fun main(args: Array<String>) {
     val logger = Logger(store.logRequestDir)
     val app = Javalin.create().apply {
         port(7000)
-        enableStaticFiles("/public2/dist")
+        enableStaticFiles("/public")
         if(enableCors) enableCorsForAllOrigins()
         enableCaseSensitiveUrls()
         accessManager { handler, ctx, permittedRoles ->
@@ -74,9 +74,6 @@ fun main(args: Array<String>) {
         // Version/info
         get("/v2/info", { ctx ->
             ctx.status(HttpStatus.OK_200).result("v2.0")
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
-        get("/users", { ctx ->
-            ctx.redirect("/users.html")
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         Jump(auth).addEndpoints()
         Similar(auth).addEndpoints()

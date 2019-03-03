@@ -24,7 +24,7 @@ plugins {
 }
 
 group = "com.django"
-version = "1.0-SNAPSHOT"
+version = "2.0"
 
 apply(plugin = "java")
 
@@ -63,5 +63,5 @@ tasks.withType<KotlinCompile> {
 }
 
 tasks.withType<ShadowJar> {
-    archiveName = "jmp-$version.$extension"
+    archiveName = "jmp.$extension"
 }

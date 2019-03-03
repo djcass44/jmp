@@ -12,4 +12,4 @@ EXPOSE 7000
 VOLUME ["/data"]
 
 ENTRYPOINT ["java", "-jar", "build/libs/jmp.jar"]
-CMD ["using", "config.json"]
+CMD ["using", "config.json", "--enable-cors"]
