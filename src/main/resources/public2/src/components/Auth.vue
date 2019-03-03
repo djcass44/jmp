@@ -22,7 +22,6 @@ export default {
     },
     methods: {
         getAuth() {
-            console.log(localStorage.getItem(storageUser));
             let username = '';
             if(localStorage.getItem(storageUser) !== null) {
                 this.username = `Currently authenticated as ${localStorage.getItem(storageUser)}`;
@@ -32,13 +31,10 @@ export default {
                 this.username = "Not authenticated";
                 this.$emit('toolbarAuthChanged', false);
             }
-            console.log(`username: ${username}`)
             const url = `${process.env.VUE_APP_BASE_URL}/v2/verify/user/${username}`;
             axios.get(url).then(r => {
-                console.log("UVALID: " + r.status);
                 return axios.get(`${process.env.VUE_APP_BASE_URL}/v2/user`, { headers: { "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}).then((r2) => {
                     let role = r2.data;
-                    console.log(`User role: ${role}`);
                     this.$emit('toolbarAuthChanged', true, role === 'ADMIN');
                 }).catch((err) => {
                     console.log(err);

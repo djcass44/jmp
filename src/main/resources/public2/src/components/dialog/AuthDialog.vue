@@ -87,7 +87,6 @@ export default {
                 {},
                 {headers: { 'Authorization': 'Basic ' + data, "Content-Type": "application/json", "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}
             ).then(r => {
-                console.log(r.status);
                 that.dialog = false;
                 this.$emit('snackbar', true, `Created user ${that.name}`);
             }).catch(e => {
@@ -105,7 +104,6 @@ export default {
                 {},
                 {headers: { 'Authorization': 'Basic ' + data, "Content-Type": "application/json"}}
             ).then(r => {
-                console.log(r.status);
                 that.dialog = false;
                 // console.log(r.data);
                 localStorage.setItem(storageToken, r.data);

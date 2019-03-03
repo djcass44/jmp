@@ -105,10 +105,7 @@ export default {
                 `{ "id": ${this.id}, "name": "${this.name}", "location": "${this.location}" }`,
                 {headers: {"Content-Type": "application/json", "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}
             ).then(r => {
-                console.log(r.status);
                 that.dialog = false;
-                console.log(that.index);
-                console.log(this.index);
                 this.$emit('jumpsSetItem', { name: this.name, location: this.location, personal: this.select === this.items[1] }, that.index);
                 setTimeout(function() {
                     componentHandler.upgradeDom();
@@ -136,7 +133,6 @@ export default {
                 `{ "name": "${this.name}", "location": "${this.location}", "personal": "${personalJump}" }`,
                 {headers: {"Content-Type": "application/json", "X-Auth-Token": localToken, "X-Auth-User": localStorage.getItem(storageUser)}}
             ).then(r => {
-                console.log(r.status);
                 that.dialog = false;
                 this.$emit('jumpsPushItem', {
                     name: that.name,

@@ -78,7 +78,6 @@ export default {
             const url = `${process.env.VUE_APP_BASE_URL}/v1/jumps/rm/${item.id}`;
             let that = this;
             axios.delete(url, { headers: { "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}).then(r => {
-                console.log(r.status);
                 that.items.splice(index, 1); // Delete the item, making vue update
                 that.filterItems();
                 that.checkItemsLength();
