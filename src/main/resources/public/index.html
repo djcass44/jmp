@@ -14,7 +14,7 @@
   ~    limitations under the License.
   -->
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -54,13 +54,13 @@
             <div class="mdl-layout-spacer"></div>
             <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable
                   mdl-textfield--floating-label mdl-textfield--align-right">
-                <!--<label class="mdl-button mdl-js-button mdl-button&#45;&#45;icon"-->
-                       <!--for="fixed-header-drawer-exp">-->
-                    <!--<i class="material-icons">search</i>-->
-                <!--</label>-->
+                <label class="mdl-button mdl-js-button mdl-button--icon"
+                       for="fixed-header-drawer-exp">
+                    <i class="material-icons">search</i>
+                </label>
                 <div class="mdl-textfield__expandable-holder">
                     <input class="mdl-textfield__input" type="text" name="sample"
-                           id="fixed-header-drawer-exp">
+                           id="fixed-header-drawer-exp" v-model="searchQuery" v-on:input="textChanged">
                 </div>
             </div>
             <button v-on:click="openJumpDialog" v-if="loggedIn" class="mdl-button mdl-js-button mdl-button--icon">
@@ -78,11 +78,16 @@
         </div>
     </header>
     <main class="mdl-layout__content">
-        <div>
+        <div id="main-list" v-cloak>
+            <div class="mdl-grid" v-if="filter !== ''">
+                <div class="mdl-layout-spacer title"></div>
+                <p>Searching for '{{ filter }}' ({{ filterResults }} results)</p>
+                <div class="mdl-layout-spacer title"></div>
+            </div>
             <div class="page-content mdl-grid">
                 <div class="mdl-layout-spacer"></div>
-                <ul id="main-list" class="main-list mdl-list" v-cloak>
-                    <li v-for='(item, index) in items' :key="index" class="mdl-list__item mdl-list__item--two-line mdl-shadow--2dp">
+                <ul class="main-list mdl-list" v-cloak>
+                    <li v-for='item in filtered' :key="item.id" class="mdl-list__item mdl-list__item--two-line mdl-shadow--2dp">
                         <span class="mdl-list__item-primary-content">
                             <div v-if="item.image == null || item.image === ''">
                                 <i v-if="item.personal === false" class="material-icons mdl-list__item-avatar">public</i>
@@ -94,13 +99,13 @@
                         </span>
                             <span class="mdl-list__item-secondary-content">
                             <!-- Right aligned menu below button -->
-                            <button :id="item.name" class="mdl-button mdl-js-button mdl-button--icon">
+                            <button :id="item.id" class="mdl-button mdl-js-button mdl-button--icon">
                               <i class="material-icons">more_vert</i>
                             </button>
                         </span>
-                        <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect" :for="item.name">
-                            <li @click="edit(index)" class="mdl-menu__item">Edit</li>
-                            <li @click="remove(index)" class="mdl-menu__item">Delete</li>
+                        <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect" :for="item.id">
+                            <li @click="edit(item.id)" class="mdl-menu__item">Edit</li>
+                            <li @click="remove(item.id)" class="mdl-menu__item">Delete</li>
                         </ul>
                     </li>
                     <div v-if="showZero === true">
@@ -113,14 +118,14 @@
                 </ul>
                 <div class="mdl-layout-spacer"></div>
             </div>
-            <div class="mdl-grid" id="auth-check" v-cloak>
-                <div class="mdl-layout-spacer title"></div>
-                <button class="mdl-button mdl-js-button mdl-button--icon" v-on:click="showAuth">
-                    <i class="material-icons" style="color: #616161;">account_circle</i>
-                </button>
-                <span class="text-light" style="height: 32px; line-height: 32px;">{{ username }}&nbsp;&bull;&nbsp;{{ version }}</span>
-                <div class="mdl-layout-spacer title"></div>
-            </div>
+        </div>
+        <div class="mdl-grid" id="auth-check" v-cloak>
+            <div class="mdl-layout-spacer title"></div>
+            <button class="mdl-button mdl-js-button mdl-button--icon" v-on:click="showAuth">
+                <i class="material-icons" style="color: #616161;">account_circle</i>
+            </button>
+            <span class="text-light" style="height: 32px; line-height: 32px;">{{ username }}&nbsp;&bull;&nbsp;{{ version }}</span>
+            <div class="mdl-layout-spacer title"></div>
         </div>
     </main>
 </div>

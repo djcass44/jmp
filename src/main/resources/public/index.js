@@ -116,16 +116,27 @@ const jumps = new Vue({
     el: '#main-list',
     data() {
         return {
+            filter: '',
+            filterResults: 0,
             loggedIn: false,
             showZero: false,
-            items: []
+            items: [],
+            filtered: []
         }
     },
     methods: {
         checkItemsLength() {
             this.showZero = this.items.length === 0;
         },
-        remove(index) {
+        indexFromId(id) {
+            for(let i = 0; i < this.items.length; i++) {
+                if(this.items[i].id === id)
+                    return i;
+            }
+            return -1;
+        },
+        remove(id) {
+            let index = this.indexFromId(id);
             let item = this.items[index];
             bus.$emit('dialog-delete', true, item.name, index);
         },
@@ -137,12 +148,14 @@ const jumps = new Vue({
                 console.log(r.status);
                 that.items.splice(index, 1); // Delete the item, making vue update
                 that.checkItemsLength();
+                that.filterItems();
             }).catch(e => {
                 console.log(e);
                 bus.$emit('snackbar', true, `Failed to delete: ${e.response.status}`);
             });
         },
-        edit(index) {
+        edit(id) {
+            let index = this.indexFromId(id);
             let item = this.items[index];
             bus.$emit('dialog', true, 'Edit jump point', 'Update', true, item.id, item.name, item.location, index);
         },
@@ -154,6 +167,23 @@ const jumps = new Vue({
                     return `<span class="text-http">${match}</span>`;
             });
         },
+        setFilter(query) {
+            this.filter = query;
+        },
+        filterItems() {
+            if(this.filter === '')
+                this.filtered = this.items;
+            let that = this;
+            this.filtered = this.items.filter(function(item) {
+                let regex = new RegExp(`(${that.filter})`, 'i');
+                return item.name.match(regex);
+            });
+            this.filterResults = this.filtered.length;
+            setTimeout(function() {
+                componentHandler.upgradeDom();
+                componentHandler.upgradeAllRegistered();
+            }, 0);
+        },
         loadItems() {
             let url = `${BASE_URL}/v1/jumps`;
             let items = this.items;
@@ -164,6 +194,7 @@ const jumps = new Vue({
                     items.push(item);
                 });
                 jumps.checkItemsLength();
+                jumps.filterItems();
                 setTimeout(function() {
                     componentHandler.upgradeDom();
                     componentHandler.upgradeAllRegistered();
@@ -171,6 +202,7 @@ const jumps = new Vue({
             }).catch(function(error) {
                 console.log(error); // API is probably unreachable
                 jumps.checkItemsLength();
+                jumps.filterItems();
                 bus.$emit('snackbar', true, `Failed to load jumps: ${e.response.status}`);
             });
         }
@@ -287,6 +319,7 @@ const dialog = new Vue({
                     personal: personalJump}
                 );
                 jumps.checkItemsLength();
+                jumps.filterItems();
                 setTimeout(function() {
                     componentHandler.upgradeDom();
                     componentHandler.upgradeAllRegistered();
@@ -390,11 +423,16 @@ new Vue({
     el: "#toolbar-overflow",
     data () {
         return {
+            searchQuery: '',
             loggedIn: false,
             isAdmin: false
         }
     },
     methods: {
+        textChanged() {
+            jumps.setFilter(this.searchQuery);
+            jumps.filterItems();
+        },
         openJumpDialog: function (event) {
             if(event)
                 bus.$emit('dialog', true, 'New jump point', 'Create')
@@ -431,6 +469,10 @@ new Vue({
         bus.$on('authChanged', function (login, admin) {
             that.loggedIn = login;
             jumps.loggedIn = login;
+            // setTimeout(function() {
+            //     componentHandler.upgradeDom();
+            //     componentHandler.upgradeAllRegistered();
+            // }, 0);
             if(admin)
                 that.isAdmin = admin;
             else
