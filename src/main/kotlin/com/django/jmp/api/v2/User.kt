@@ -33,7 +33,7 @@ import java.util.*
 
 class User(private val auth: Auth): EndpointGroup {
     override fun addEndpoints() {
-        get("/v2/users", { ctx ->
+        get("${Runner.BASE}/v2/users", { ctx ->
             val users = arrayListOf<UserData>()
             transaction {
                 User.all().forEach {
@@ -43,12 +43,12 @@ class User(private val auth: Auth): EndpointGroup {
             ctx.status(HttpStatus.OK_200).json(users)
         }, roles(Auth.BasicRoles.ADMIN))
         // Add a user
-        put("/v2/user/add", { ctx ->
+        put("${Runner.BASE}/v2/user/add", { ctx ->
             val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
             auth.createUser(basicAuth.username, basicAuth.password.toCharArray())
         }, roles(Auth.BasicRoles.ADMIN))
         // Get information about the current user
-        get("/v2/user", { ctx ->
+        get("${Runner.BASE}/v2/user", { ctx ->
             val user = ctx.header(Auth.headerUser)
             val token = ctx.header(Auth.headerToken)
             if (user == null || token == null)
@@ -69,7 +69,7 @@ class User(private val auth: Auth): EndpointGroup {
             } else throw UnauthorizedResponse()
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Get a users token
-        post("/v2/user/auth", { ctx ->
+        post("${Runner.BASE}/v2/user/auth", { ctx ->
             val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
             val token = auth.getUserToken(basicAuth.username, basicAuth.password.toCharArray())
             if (token != null)
@@ -78,7 +78,7 @@ class User(private val auth: Auth): EndpointGroup {
                 throw NotFoundResponse()
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Change the role of a user
-        patch("/v2/user/permission", { ctx ->
+        patch("${Runner.BASE}/v2/user/permission", { ctx ->
             val updated = ctx.bodyAsClass(EditUserData::class.java)
             transaction {
                 val user = User.findById(updated.id) ?: throw BadRequestResponse()
@@ -94,7 +94,7 @@ class User(private val auth: Auth): EndpointGroup {
             }
         }, roles(Auth.BasicRoles.ADMIN))
         // Delete a user
-        delete("/v2/user/rm/:id", { ctx ->
+        delete("${Runner.BASE}/v2/user/rm/:id", { ctx ->
             val id = ctx.validatedPathParam("id").asInt().getOrThrow()
             val user = ctx.header(Auth.headerUser)
             transaction {

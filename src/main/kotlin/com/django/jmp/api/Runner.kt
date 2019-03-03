@@ -21,7 +21,9 @@ import java.sql.Connection
 import java.util.*
 
 
-object Runner
+object Runner {
+    const val BASE = "/api"
+}
 
 fun main(args: Array<String>) {
     Log.v(Runner::class.java, Arrays.toString(args))
@@ -72,7 +74,7 @@ fun main(args: Array<String>) {
     }.start()
     app.routes {
         // Version/info
-        get("/v2/info", { ctx ->
+        get("${Runner.BASE}/v2/info", { ctx ->
             ctx.status(HttpStatus.OK_200).result("v2.0")
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         Jump(auth).addEndpoints()

@@ -32,7 +32,7 @@ import java.util.*
 class Verify(private val auth: Auth): EndpointGroup {
     override fun addEndpoints() {
         // Verify a users token is still valid
-        ApiBuilder.get("/v2/verify/token", { ctx ->
+        ApiBuilder.get("${Runner.BASE}/v2/verify/token", { ctx ->
             val token: String? = ctx.header(Auth.headerToken)
             val tokenUUID = if (token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
             if (tokenUUID == null)
@@ -42,7 +42,7 @@ class Verify(private val auth: Auth): EndpointGroup {
             }
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Verify a user still exists
-        ApiBuilder.get("/v2/verify/user/:name", { ctx ->
+        ApiBuilder.get("${Runner.BASE}/v2/verify/user/:name", { ctx ->
             val name = ctx.pathParam("name")
             if (name.isBlank()) { // TODO never send 'null'
                 Log.v(Runner::class.java, "User made null/empty request")

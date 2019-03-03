@@ -35,7 +35,7 @@ import java.util.*
 class Similar(private val auth: Auth): EndpointGroup {
     override fun addEndpoints() {
         // Find similar jumps
-        ApiBuilder.get("/v2/similar/:query", { ctx ->
+        ApiBuilder.get("${Runner.BASE}/v2/similar/:query", { ctx ->
             try {
                 val user = ctx.header(Auth.headerUser)
                 val token: String? = ctx.header(Auth.headerToken)

@@ -62,7 +62,7 @@ class Jump(private val auth: Auth): EndpointGroup {
 
     override fun addEndpoints() {
         // List all items in Json format
-        ApiBuilder.get("/v1/jumps", { ctx ->
+        ApiBuilder.get("${Runner.BASE}/v1/jumps", { ctx ->
             val items = arrayListOf<JumpData>()
             val user = ctx.header(Auth.headerUser)
             val token: String? = ctx.header(Auth.headerToken)
@@ -79,7 +79,7 @@ class Jump(private val auth: Auth): EndpointGroup {
             ctx.json(items).status(HttpStatus.OK_200)
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Redirect to $location (if it exists)
-        ApiBuilder.get("/v1/jump/:target", { ctx ->
+        ApiBuilder.get("${Runner.BASE}/v1/jump/:target", { ctx ->
             try {
                 val target = ctx.pathParam("target")
                 if (target.isBlank())
@@ -121,7 +121,7 @@ class Jump(private val auth: Auth): EndpointGroup {
             }
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Add a jump point
-        ApiBuilder.put("/v1/jumps/add", { ctx ->
+        ApiBuilder.put("${Runner.BASE}/v1/jumps/add", { ctx ->
             val add = ctx.bodyAsClass(JumpData::class.java)
             val token: String? = ctx.header(Auth.headerToken)
             val tokenUUID = if (token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
@@ -147,7 +147,7 @@ class Jump(private val auth: Auth): EndpointGroup {
                 throw ConflictResponse()
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Edit a jump point
-        ApiBuilder.patch("/v1/jumps/edit", { ctx ->
+        ApiBuilder.patch("${Runner.BASE}/v1/jumps/edit", { ctx ->
             val update = ctx.bodyAsClass(EditJumpData::class.java)
             val user = ctx.header(Auth.headerUser)
             val token: String? = ctx.header(Auth.headerToken)
@@ -171,7 +171,7 @@ class Jump(private val auth: Auth): EndpointGroup {
             }
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Delete a jump point
-        ApiBuilder.delete("/v1/jumps/rm/:id", { ctx ->
+        ApiBuilder.delete("${Runner.BASE}/v1/jumps/rm/:id", { ctx ->
             val id = ctx.pathParam("id").toIntOrNull() ?: throw BadRequestResponse()
             val user = ctx.header(Auth.headerUser)
             val token: String? = ctx.header(Auth.headerToken)
