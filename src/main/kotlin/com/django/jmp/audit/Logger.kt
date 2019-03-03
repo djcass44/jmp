@@ -16,22 +16,47 @@
 
 package com.django.jmp.audit
 
+import com.django.jmp.io.NOutputStream
 import com.django.log2.logging.Log
 import java.io.File
+import java.io.FileOutputStream
+import java.io.PrintStream
 import java.nio.charset.StandardCharsets
 
 class Logger(logPath: String) {
     private val logDir = File(logPath, "logs")
 
     private val logRequest = File(logDir, "jmp.request.out")
+    private val logOut = File(logDir, "jmp.std.out")
+    private val logErr = File(logDir, "jmp.err.out")
+
     init {
         Log.v(javaClass, "Using context directory: ${logDir.absolutePath}")
         if(!logDir.exists()) {
             logDir.parentFile.mkdirs()
             logDir.mkdir()
         }
-        if(!logRequest.exists())
-            logRequest.createNewFile()
+        if(!logRequest.exists()) {
+            try {
+                logRequest.createNewFile()
+            }
+            catch (e: Exception) {
+                Log.e(javaClass, "Failed to setup log directory: $e")
+            }
+        }
+        if(logDir.exists() && logDir.isDirectory) {
+            // Copy content of STDOUT to file
+            val stream = NOutputStream()
+            stream.add(System.out)
+            stream.add(PrintStream(FileOutputStream(logOut, true)))
+            System.setOut(PrintStream(stream))
+            // Copy contents of STDERR to file
+            val errorStream = NOutputStream()
+            errorStream.add(System.err)
+            errorStream.add(PrintStream(FileOutputStream(logErr, true)))
+            System.setErr(PrintStream(errorStream))
+        }
+        else Log.f(javaClass, "Logging directory is invalid, logging will be disabled")
     }
     fun add(text: String) = try {
         logRequest.appendText("$text\n", StandardCharsets.UTF_8)
