@@ -15,7 +15,7 @@
  */
 
 const BASE_URL="http://localhost:7000";
-const endpoint = `${BASE_URL}/v1/`;
+const endpoint = `${BASE_URL}/api/v1/`;
 
 const storageToken = "jmp-token";
 const storageUser = "jmp-user";

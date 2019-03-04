@@ -94,10 +94,10 @@ class Jump(private val auth: Auth): EndpointGroup {
                 val token = ctx.header(Auth.headerToken) ?: ctx.queryParam("token", "") ?: ""
                 if (token.isBlank()) {
                     Log.d(javaClass, "User has no token, redirecting for check...")
-                    ctx.status(HttpStatus.FOUND_302).redirect("/tokcheck.html?query=$target")
+                    ctx.status(HttpStatus.FOUND_302).redirect("/api/tokcheck.html?query=$target")
                     return@get
                 }
-                val tokenUUID = if (token.isNotBlank() && token != "null") UUID.fromString(token) else null
+                val tokenUUID = if (token.isNotBlank() && token != "null" && token != "global") UUID.fromString(token) else null
                 transaction {
                     Log.d(javaClass, "User information: [name: $user, token: $token]")
                     val owner = auth.getUser(user, tokenUUID)
@@ -110,7 +110,7 @@ class Jump(private val auth: Auth): EndpointGroup {
                         Log.v(javaClass, "v2: moving to point: $location")
                         ctx.redirect(location, HttpStatus.FOUND_302)
                     }
-                    else ctx.redirect("/similar.html?query=$target")
+                    else ctx.redirect("/api/similar.html?query=$target")
                 }
             } catch (e: IndexOutOfBoundsException) {
                 Log.e(Runner::class.java, "Invalid target: ${ctx.path()}")
