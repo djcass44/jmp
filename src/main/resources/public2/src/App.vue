@@ -137,6 +137,9 @@ export default {
         isNotSlashUsers() {
             return this.$refs.jumps.$options.name === "Jumps";
         }
+    },
+    mounted: function() {
+        componentHandler.upgradeAllRegistered();
     }
 }
 </script>
