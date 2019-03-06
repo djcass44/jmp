@@ -4,25 +4,27 @@
     </div>
 </template>
 <script>
+import axios from "axios";
 import { storageUser, storageToken } from "../../var.js";
 
 export default {
     name: 'Token',
     methods: {
-        setLoggedIn(login) {
-            
+        setLoggedIn() {
+
         }
     },
     created() {
         let url = new URL(window.location.href);
         if(url.searchParams.has("query")) {
             let query = url.searchParams.get("query");
-            let redirect = `${process.env.VUE_APP_BASE_URL}/v1/jump/${query}?token=`;
-            if(localStorage.getItem(storageToken) !== null)
-                redirect += `${localStorage.getItem(storageToken)}&user=${localStorage.getItem(storageUser)}`;
-            else
-                redirect += "global";
-            window.location.replace(redirect);
+            axios.get(`${process.env.VUE_APP_BASE_URL}/v2/jump/${query}`, { headers: { "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}).then(r => {
+                let target = r.data;
+                window.location.replace(target);
+            }).catch(function(error) {
+                console.log(error);
+                that.$emit('snackbar', true, `Failed to load target: ${error.response.status}`);
+            });
         }
     }
 };

@@ -30,6 +30,7 @@ import io.javalin.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.security.SecurityUtil
+import io.javalin.security.SecurityUtil.roles
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.lowerCase
@@ -76,6 +77,48 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
             }
             ctx.json(items).status(HttpStatus.OK_200)
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        get("${Runner.BASE}/v2/jump/:target", { ctx ->
+            try {
+                val target = ctx.pathParam("target")
+                if(target.isBlank())
+                    throw EmptyPathException()
+                /**
+                 * 1. Try to get token from X-Auth-Token header
+                 * 2. Try to get token from ?token=...
+                 * 3. Assume no token, redirect to checker
+                 */
+                val user = ctx.header(Auth.headerUser) ?: ""
+                val token = ctx.header(Auth.headerToken) ?: ""
+                if (token.isBlank()) {
+                    Log.d(javaClass, "User has no token, redirecting for check...")
+                    ctx.status(HttpStatus.FOUND_302).redirect("${config.BASE_URL}/token?query=$target")
+                    return@get
+                }
+                val tokenUUID = if (token.isNotBlank() && token != "null" && token != "global") UUID.fromString(token) else null
+                transaction {
+                    Log.d(javaClass, "User information: [name: $user, token: $token]")
+                    val owner = auth.getUser(user, tokenUUID)
+                    Log.d(javaClass, "Found user: ${owner != null}")
+                    val res = Jump.find {
+                        Jumps.name.lowerCase().eq(target.toLowerCase()) and (Jumps.owner.isNull() or Jumps.owner.eq(owner?.id))
+                    }
+                    if(!res.empty()) {
+                        val location = res.elementAt(0).location
+                        Log.v(javaClass, "v2: moving to point: $location")
+                        ctx.status(HttpStatus.OK_200).result(location) // Send the user the result, don't redirect them
+                    }
+                    else ctx.status(HttpStatus.OK_200).result("${config.BASE_URL}/similar?query=$target")
+                }
+            }
+            catch (e: IndexOutOfBoundsException) {
+                Log.e(Runner::class.java, "Invalid target: ${ctx.path()}")
+                throw BadRequestResponse()
+            }
+            catch (e: EmptyPathException) {
+                Log.e(Runner::class.java, "Empty target")
+                throw NotFoundResponse()
+            }
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Redirect to $location (if it exists)
         get("${Runner.BASE}/v1/jump/:target", { ctx ->
             try {
