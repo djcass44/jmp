@@ -2,12 +2,12 @@
     <div id="main-list">
         <div class="mdl-grid">
             <div class="mdl-layout-spacer"></div>
-            <img src="/public/assets/ic_launcher.png">
+            <h1 class="mdl-h1">404</h1>
             <div class="mdl-layout-spacer"></div>
         </div>
         <div class="mdl-grid">
             <div class="mdl-layout-spacer"></div>
-            <h2 class="strong-title">That could not be found!</h2>
+            <p class="mdl-h5">That jump doesn't exist, or you don't have access!</p>
             <div class="mdl-layout-spacer"></div>
         </div>
         <div class="mdl-grid">
@@ -20,7 +20,7 @@
             <div v-cloak class="mdl-grid">
                 <div v-for="item in items" :key="item" class="mdl-cell">
                     <!-- Contact Chip -->
-                    <button type="button" class="mdl-chip mdl-chip--contact" v-on:click="open(item)">
+                    <button type="button" class="mdl-chip mdl-chip--contact mdl-chip-padding" v-on:click="open(item)">
                         <span class="mdl-chip__contact mdl-color--blue mdl-color-text--white">{{ item.substring(0, 1).toUpperCase() }}</span>
                         <span class="mdl-chip__text">{{ item }}</span>
                     </button>
@@ -74,5 +74,18 @@ export default {
 }
 </script>
 <style scoped>
-
+.mdl-chip-padding {
+    left: 4px;
+    right: 4px;
+}
+.mdl-h1 {
+    color: #616161;
+    font-size: 148px;
+    font-weight: 300;
+}
+.mdl-h5 {
+    color: #757575;
+    font-size: 32px;
+    font-weight: 400;
+}
 </style>
