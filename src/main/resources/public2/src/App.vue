@@ -33,7 +33,7 @@
             </main>
         </div>
         <AuthDialog ref="dialogauth"
-            @loadItems="jumpsLoadItems"
+            @pushItem="jumpsPushItem"
             @getAuth="authGet"
             @snackbar="snackbar">
         </AuthDialog>

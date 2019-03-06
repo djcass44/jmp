@@ -89,6 +89,7 @@ export default {
             ).then(r => {
                 that.dialog = false;
                 that.$emit('snackbar', true, `Created user ${that.name}`);
+                that.$emit("pushItem");
             }).catch(e => {
                 console.log(e);
                 that.$emit('snackbar', true, `Failed to create user: ${e.response.status}`);
@@ -109,7 +110,7 @@ export default {
                 localStorage.setItem(storageToken, r.data);
                 localStorage.setItem(storageUser, that.name);
                 that.$emit('getAuth');
-                that.$emit('loadItems');
+                that.$emit('pushItem');
             }).catch(function(e) {
                 console.log(e);
                 if(e.response.status === 404)
