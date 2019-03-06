@@ -64,6 +64,9 @@ import JumpDialog from './components/dialog/JumpDialog.vue';
 
 import Snackbar from './components/widget/Snackbar.vue';
 
+import Token from './components/Jump/Token.vue';
+import Similar from './components/Jump/Similar.vue';
+
 export default {
     props: ['comp'],
     name: 'App',
@@ -76,7 +79,9 @@ export default {
         DeleteDialog,
         JumpDialog,
         Snackbar,
-        NotFound
+        NotFound,
+        Token,
+        Similar
     },
     // There has to be a better way!
     methods: {

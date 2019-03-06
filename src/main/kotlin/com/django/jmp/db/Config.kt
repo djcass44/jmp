@@ -19,7 +19,7 @@ package com.django.jmp.db
 import com.beust.klaxon.Klaxon
 import com.django.log2.logging.Log
 
-data class ConfigStore(val url: String, val driver: String, val logRequestDir: String)
+data class ConfigStore(val url: String, val driver: String, val logRequestDir: String, val BASE_URL: String)
 
 class Config {
     companion object {
@@ -48,7 +48,8 @@ class Config {
         return ConfigStore(
             Util.getEnv(envUrl, defaultUrl),
             Util.getEnv(envDriver, defaultDriver),
-            Util.getEnv(logRequestDir, ".")
+            Util.getEnv(logRequestDir, "."),
+            Util.getEnv("BASE_URL", "http://localhost:8080")
         )
     }
 }

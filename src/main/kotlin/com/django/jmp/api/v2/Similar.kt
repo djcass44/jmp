@@ -24,7 +24,7 @@ import com.django.jmp.db.Jumps
 import com.django.jmp.except.EmptyPathException
 import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
-import io.javalin.apibuilder.ApiBuilder
+import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.security.SecurityUtil
 import org.eclipse.jetty.http.HttpStatus
@@ -35,7 +35,7 @@ import java.util.*
 class Similar(private val auth: Auth): EndpointGroup {
     override fun addEndpoints() {
         // Find similar jumps
-        ApiBuilder.get("${Runner.BASE}/v2/similar/:query", { ctx ->
+        get("${Runner.BASE}/v2/similar/:query", { ctx ->
             try {
                 val user = ctx.header(Auth.headerUser)
                 val token: String? = ctx.header(Auth.headerToken)

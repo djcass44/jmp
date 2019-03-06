@@ -19,17 +19,15 @@ package com.django.jmp.api.v1
 import com.django.jmp.api.Auth
 import com.django.jmp.api.Runner
 import com.django.jmp.api.actions.ImageAction
-import com.django.jmp.db.EditJumpData
+import com.django.jmp.db.*
 import com.django.jmp.db.Jump
-import com.django.jmp.db.JumpData
-import com.django.jmp.db.Jumps
 import com.django.jmp.except.EmptyPathException
 import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
 import io.javalin.ConflictResponse
 import io.javalin.NotFoundResponse
 import io.javalin.UnauthorizedResponse
-import io.javalin.apibuilder.ApiBuilder
+import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.security.SecurityUtil
 import org.eclipse.jetty.http.HttpStatus
@@ -39,7 +37,7 @@ import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
-class Jump(private val auth: Auth): EndpointGroup {
+class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGroup {
     private fun jumpExists(name: String): Boolean {
         return transaction {
             val existing = Jump.find {
@@ -62,7 +60,7 @@ class Jump(private val auth: Auth): EndpointGroup {
 
     override fun addEndpoints() {
         // List all items in Json format
-        ApiBuilder.get("${Runner.BASE}/v1/jumps", { ctx ->
+        get("${Runner.BASE}/v1/jumps", { ctx ->
             val items = arrayListOf<JumpData>()
             val user = ctx.header(Auth.headerUser)
             val token: String? = ctx.header(Auth.headerToken)
@@ -79,7 +77,7 @@ class Jump(private val auth: Auth): EndpointGroup {
             ctx.json(items).status(HttpStatus.OK_200)
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Redirect to $location (if it exists)
-        ApiBuilder.get("${Runner.BASE}/v1/jump/:target", { ctx ->
+        get("${Runner.BASE}/v1/jump/:target", { ctx ->
             try {
                 val target = ctx.pathParam("target")
                 if (target.isBlank())
@@ -94,7 +92,7 @@ class Jump(private val auth: Auth): EndpointGroup {
                 val token = ctx.header(Auth.headerToken) ?: ctx.queryParam("token", "") ?: ""
                 if (token.isBlank()) {
                     Log.d(javaClass, "User has no token, redirecting for check...")
-                    ctx.status(HttpStatus.FOUND_302).redirect("/api/tokcheck.html?query=$target")
+                    ctx.status(HttpStatus.FOUND_302).redirect("${config.BASE_URL}/token?query=$target")
                     return@get
                 }
                 val tokenUUID = if (token.isNotBlank() && token != "null" && token != "global") UUID.fromString(token) else null
@@ -110,7 +108,7 @@ class Jump(private val auth: Auth): EndpointGroup {
                         Log.v(javaClass, "v2: moving to point: $location")
                         ctx.redirect(location, HttpStatus.FOUND_302)
                     }
-                    else ctx.redirect("/api/similar.html?query=$target")
+                    else ctx.status(HttpStatus.FOUND_302).redirect("${config.BASE_URL}/similar?query=$target")
                 }
             } catch (e: IndexOutOfBoundsException) {
                 Log.e(Runner::class.java, "Invalid target: ${ctx.path()}")
@@ -121,7 +119,7 @@ class Jump(private val auth: Auth): EndpointGroup {
             }
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Add a jump point
-        ApiBuilder.put("${Runner.BASE}/v1/jumps/add", { ctx ->
+        put("${Runner.BASE}/v1/jumps/add", { ctx ->
             val add = ctx.bodyAsClass(JumpData::class.java)
             val token: String? = ctx.header(Auth.headerToken)
             val tokenUUID = if (token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
@@ -147,7 +145,7 @@ class Jump(private val auth: Auth): EndpointGroup {
                 throw ConflictResponse()
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Edit a jump point
-        ApiBuilder.patch("${Runner.BASE}/v1/jumps/edit", { ctx ->
+        patch("${Runner.BASE}/v1/jumps/edit", { ctx ->
             val update = ctx.bodyAsClass(EditJumpData::class.java)
             val user = ctx.header(Auth.headerUser)
             val token: String? = ctx.header(Auth.headerToken)
@@ -171,7 +169,7 @@ class Jump(private val auth: Auth): EndpointGroup {
             }
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Delete a jump point
-        ApiBuilder.delete("${Runner.BASE}/v1/jumps/rm/:id", { ctx ->
+        delete("${Runner.BASE}/v1/jumps/rm/:id", { ctx ->
             val id = ctx.pathParam("id").toIntOrNull() ?: throw BadRequestResponse()
             val user = ctx.header(Auth.headerUser)
             val token: String? = ctx.header(Auth.headerToken)

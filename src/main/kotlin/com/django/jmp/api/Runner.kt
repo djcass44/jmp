@@ -40,6 +40,7 @@ fun main(args: Array<String>) {
     else
         Config().loadEnv()
     Log.v(Runner::class.java, "Database config: [${store.url}, ${store.driver}]")
+    Log.v(Runner::class.java, "Application config: [${store.BASE_URL}, ${store.logRequestDir}]")
     Database.connect(store.url, store.driver)
     TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE // Fix required for SQLite
 
@@ -52,7 +53,6 @@ fun main(args: Array<String>) {
     val logger = Logger(store.logRequestDir)
     val app = Javalin.create().apply {
         port(7000)
-        enableStaticFiles("/public")
         if(enableCors) enableCorsForAllOrigins()
         enableCaseSensitiveUrls()
         accessManager { handler, ctx, permittedRoles ->
@@ -77,7 +77,7 @@ fun main(args: Array<String>) {
         get("${Runner.BASE}/v2/info", { ctx ->
             ctx.status(HttpStatus.OK_200).result("v2.0")
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
-        Jump(auth).addEndpoints()
+        Jump(auth, store).addEndpoints()
         Similar(auth).addEndpoints()
         User(auth).addEndpoints()
         Verify(auth).addEndpoints()

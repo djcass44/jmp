@@ -151,3 +151,4 @@ typings/
 .serverless
 
 src/main/resources/public2
+data

@@ -10,21 +10,16 @@ RUN ./gradlew build || return 0
 # Build & package app
 COPY . .
 
-# replace localhost with the actual application url in similar.js
-RUN awk 'NR==FNR{rep=(NR>1?rep RS:"") $0; next} {gsub(/BASE_URL="http:\/\/localhost:7000"/,rep)}1' env src/main/resources/public/api/similar.js > src/main/resources/public/api/similar.js.tmp
-RUN mv src/main/resources/public/api/similar.js.tmp src/main/resources/public/api/similar.js
-
-# replace localhost with the actual application url in tokcheck.html
-RUN awk 'NR==FNR{rep=(NR>1?rep RS:"") $0; next} {gsub(/BASE_URL="http:\/\/localhost:7000"/,rep)}1' env src/main/resources/public/api/tokcheck.html > src/main/resources/public/api/tokcheck.html.tmp
-RUN mv src/main/resources/public/api/tokcheck.html.tmp src/main/resources/public/api/tokcheck.html
-
-
 RUN ./gradlew shadowJar
 
 # STAGE 2 - RUN
 FROM openjdk:11.0.1-slim-stretch
-
 LABEL maintainer="dj.cass44@gmail.com"
+
+ENV DRIVER_URL="jdbc:sqlite:jmp.db"
+ENV DRIVER_CLASS="org.sqlite.JDBC"
+ENV ENV_LOG_REQUEST_DIRECTORY="."
+ENV BASE_URL="localhost:8080"
 
 WORKDIR /app
 COPY --from=GRADLE_CACHE /app/build/libs/jmp.jar .
@@ -33,4 +28,4 @@ EXPOSE 7000
 VOLUME ["/data"]
 
 ENTRYPOINT ["java", "-jar", "jmp.jar"]
-CMD ["using", "config.json"]
+CMD ["using", "env"]

@@ -23,6 +23,7 @@ import com.django.jmp.db.Users
 import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
 import io.javalin.apibuilder.ApiBuilder
+import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.security.SecurityUtil
 import org.eclipse.jetty.http.HttpStatus
@@ -32,7 +33,7 @@ import java.util.*
 class Verify(private val auth: Auth): EndpointGroup {
     override fun addEndpoints() {
         // Verify a users token is still valid
-        ApiBuilder.get("${Runner.BASE}/v2/verify/token", { ctx ->
+        get("${Runner.BASE}/v2/verify/token", { ctx ->
             val token: String? = ctx.header(Auth.headerToken)
             val tokenUUID = if (token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
             if (tokenUUID == null)
@@ -42,7 +43,7 @@ class Verify(private val auth: Auth): EndpointGroup {
             }
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Verify a user still exists
-        ApiBuilder.get("${Runner.BASE}/v2/verify/user/:name", { ctx ->
+        get("${Runner.BASE}/v2/verify/user/:name", { ctx ->
             val name = ctx.pathParam("name")
             if (name.isBlank()) { // TODO never send 'null'
                 Log.v(Runner::class.java, "User made null/empty request")

@@ -7,6 +7,8 @@ import App from "./App.vue";
 import Jumps from "./components/Jumps.vue";
 import Users from "./components/Users.vue";
 import NotFound from "./components/error/NotFound.vue";
+import Token from "./components/Jump/Token.vue";
+import Similar from "./components/Jump/Similar.vue";
 
 Vue.use(VueRouter);
 Vue.use(VueMdl);
@@ -23,6 +25,14 @@ const router = new VueRouter({
         {
             path: '/users',
             component: Users
+        },
+        {
+            path: '/jmp',
+            component: Token
+        },
+        {
+            path: '/similar',
+            component: Similar
         },
         {
             path: '*',

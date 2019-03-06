@@ -2,11 +2,14 @@ version: '2'
 
 services:
   jmp:
-    image: docker.dev-apps.info/jmp:latest
+    build: .
     ports:
       - "7000:7000"
     volumes:
       - ./data:/data
+    command: ["using", "env", "--enable-cors"]
     environment:
       - DRIVER_URL=jdbc:sqlite:/data/jmp.db
       - DRIVER_CLASS=org.sqlite.JDBC
+      - ENV_LOG_REQUEST_DIRECTORY="data/logs"
+      - BASE_URL=http://localhost:8080

@@ -1,5 +1,6 @@
 {
   "url": "jdbc:sqlite:/tmp/jmp.db",
   "driver": "org.sqlite.JDBC",
-  "logRequestDir": "."
+  "logRequestDir": ".",
+  "BASE_URL": "http://localhost:8080"
 }
