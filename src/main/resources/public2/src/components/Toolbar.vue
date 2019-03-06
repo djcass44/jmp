@@ -3,7 +3,7 @@
         <!-- Title -->
         <!--<i class="material-icons">wrap_text</i>-->
         <img src="assets/ic_launcher.png" width="32" height="32">
-        <span class="mdl-layout-title strong-title">JumpPoints</span>
+        <span v-on:click="openHome" class="mdl-layout-title strong-title">JumpPoints</span>
         <!-- Add spacer, to align navigation to the right -->
         <div class="mdl-layout-spacer"></div>
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable
@@ -76,6 +76,9 @@ export default {
         openAdmin: function (event) {
             if(event)
                 location.href='/users'
+        },
+        openHome: function(event) {
+            window.location.href = process.env.VUE_APP_FE_URL;
         },
         logout: function (event) {
             if(event) {
