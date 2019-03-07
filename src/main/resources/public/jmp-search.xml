@@ -3,9 +3,9 @@
   <Description>JMP</Description>
   <InputEncoding>UTF-8</InputEncoding>
   <Image width="16" height="16" type="image/png">assets/ic_launcher.png</Image>
-  <Url type="text/html" template="https://jmp.dev-apps.info/v1/jump/{searchTerms}">
+  <Url type="text/html" template="https://jmp.castive.dev/jmp?query={searchTerms}">
     <Param name="query" value="{searchTerms}"/>
   </Url>
-  <Url type="application/x-suggestions+json" template="https://jmp.dev-apps.info/v1/jumps"/>
-  <moz:SearchForm>https://jmp.dev-apps.info/v1/jump/{searchTerms}</moz:SearchForm>
+  <Url type="application/x-suggestions+json" template="https://jmp.castive.dev"/>
+  <moz:SearchForm>https://jmp.castive.dev/jmp?query={searchTerms}</moz:SearchForm>
 </OpenSearchDescription>
