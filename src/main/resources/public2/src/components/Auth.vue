@@ -60,7 +60,7 @@ export default {
     created() {
         this.getAuth();
         let that = this;
-        axios.get(`${process.env.VUE_APP_BASE_URL}/v2/info`).then(r => {
+        axios.get(`${process.env.VUE_APP_BASE_URL}/v2/version`).then(r => {
             that.version = r.data;
         });
     }

@@ -1,6 +1,7 @@
 package com.django.jmp.api
 
 import com.django.jmp.api.v1.Jump
+import com.django.jmp.api.v2.Info
 import com.django.jmp.api.v2.Similar
 import com.django.jmp.api.v2.User
 import com.django.jmp.api.v2.Verify
@@ -8,8 +9,6 @@ import com.django.jmp.audit.Logger
 import com.django.jmp.db.*
 import com.django.log2.logging.Log
 import io.javalin.Javalin
-import io.javalin.apibuilder.ApiBuilder.get
-import io.javalin.security.SecurityUtil.roles
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -73,10 +72,7 @@ fun main(args: Array<String>) {
         }
     }.start()
     app.routes {
-        // Version/info
-        get("${Runner.BASE}/v2/info", { ctx ->
-            ctx.status(HttpStatus.OK_200).result("v2.0")
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        Info().addEndpoints()
         Jump(auth, store).addEndpoints()
         Similar(auth).addEndpoints()
         User(auth).addEndpoints()
