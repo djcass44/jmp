@@ -17,6 +17,7 @@
 package com.django.jmp.api.actions
 
 import com.django.jmp.api.Runner
+import com.django.jmp.db.ConfigStore
 import com.django.jmp.db.Jump
 import com.django.jmp.db.Jumps
 import com.django.jmp.db.User
@@ -25,10 +26,11 @@ import java.lang.management.ManagementFactory
 import java.util.concurrent.TimeUnit
 
 class InfoAction {
-    data class SystemInfo(val osInfo: OSInfo, val cpus: Int, val javaInfo: JavaInfo, val memoryInfo: MemoryInfo)
-    data class AppInfo(val version: String, val users: Int, val jumpInfo: JumpInfo, val appUptime: String)
+    data class SystemInfo(val osInfo: OSInfo, val cpus: Int, val javaInfo: JavaInfo, val kotlinInfo: KotlinInfo, val memoryInfo: MemoryInfo)
+    data class AppInfo(val version: String, val users: Int, val jumpInfo: JumpInfo, val appUptime: String, val launchConfig: ConfigStore)
 
     data class JavaInfo(val name: String, val version: String, val vendor: String, val home: String, val uptime: String)
+    data class KotlinInfo(val major: Int, val minor: Int, val patch: Int)
     data class OSInfo(val name: String, val version: String, val arch: String)
     data class MemoryInfo(val total: String, val max: String, val used: String)
     fun getSystem(): SystemInfo {
@@ -46,12 +48,12 @@ class InfoAction {
             System.getProperty("java.vm.version"),
             System.getProperty("java.vm.vendor"),
             System.getProperty("java.home"), uptimeString)
-
+        val kotlinInfo = KotlinInfo(KotlinVersion.CURRENT.major, KotlinVersion.CURRENT.minor, KotlinVersion.CURRENT.patch)
         val totalMemory = getByteFormatted(Runtime.getRuntime().totalMemory())
         val maxMemory = getByteFormatted(Runtime.getRuntime().maxMemory())
         val usedMemory = getByteFormatted(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
         val memInfo = MemoryInfo(totalMemory, maxMemory, usedMemory)
-        return SystemInfo(osInfo, cpuCount, javaInfo, memInfo)
+        return SystemInfo(osInfo, cpuCount, javaInfo, kotlinInfo, memInfo)
     }
     data class JumpInfo(val total: Int, val global: Int, val personal: Int)
     /**
@@ -74,7 +76,7 @@ class InfoAction {
             TimeUnit.MILLISECONDS.toSeconds(uptime) -
                     TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(uptime))
         )
-        return@transaction AppInfo(version, users, jumpInfo, uptimeString)
+        return@transaction AppInfo(version, users, jumpInfo, uptimeString, Runner.store)
     }
 
     private fun getByteFormatted(bytes: Long, si: Boolean = true): String {

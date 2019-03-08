@@ -25,6 +25,7 @@ import java.util.*
 object Runner {
     const val BASE = "/api"
     var START_TIME = 0L
+    lateinit var store: ConfigStore
 }
 
 fun main(args: Array<String>) {
@@ -42,6 +43,7 @@ fun main(args: Array<String>) {
         Config().load(configLocation)
     else
         Config().loadEnv()
+    Runner.store = store
     Log.v(Runner::class.java, "Database config: [${store.url}, ${store.driver}]")
     Log.v(Runner::class.java, "Application config: [${store.BASE_URL}, ${store.logRequestDir}]")
     Database.connect(store.url, store.driver)
