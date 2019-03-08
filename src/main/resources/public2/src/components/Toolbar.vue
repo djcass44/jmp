@@ -1,35 +1,40 @@
 <template>
-    <div class="mdl-layout__header-row" id="toolbar-overflow">
-        <!-- Title -->
-        <!--<i class="material-icons">wrap_text</i>-->
+    <v-toolbar dark color="primary">
+        <!-- <v-toolbar-side-icon></v-toolbar-side-icon> -->
         <img src="assets/ic_launcher.png" width="32" height="32">
-        <span v-on:click="openHome" class="mdl-layout-title strong-title">JumpPoints</span>
-        <!-- Add spacer, to align navigation to the right -->
-        <div class="mdl-layout-spacer"></div>
-        <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable
-              mdl-textfield--floating-label mdl-textfield--align-right">
-            <label class="mdl-button mdl-js-button mdl-button--icon"
-                   for="fixed-header-drawer-exp" v-if="!nullPage">
-                <i class="material-icons">search</i>
-            </label>
-            <div class="mdl-textfield__expandable-holder">
-                <input class="mdl-textfield__input" type="text" name="sample"
-                       id="fixed-header-drawer-exp" v-model="searchQuery" v-on:input="textChanged">
-            </div>
-        </div>
-        <button v-on:click="openJumpDialog" v-if="loggedIn && !nullPage" class="mdl-button mdl-js-button mdl-button--icon">
-            <i class="material-icons">add</i>
-        </button>
-        <!-- Right aligned menu below button -->
-        <button id="auth-button" v-if="!slashUsers && !nullPage" class="mdl-button mdl-js-button mdl-button--icon">
-            <i class="material-icons">more_vert</i>
-        </button>
-        <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="auth-button">
-            <li v-on:click="openDialog" v-if="!loggedIn" class="mdl-menu__item">Login</li>
-            <li v-on:click="openAdmin" v-if="isAdmin" class="mdl-menu__item">Admin settings</li>
-            <li v-on:click="logout" v-if="loggedIn" class="mdl-menu__item">Logout</li>
-        </ul>
-    </div>
+        <v-toolbar-title v-ripple @click="openHome" class="white--text">JumpPoints</v-toolbar-title>
+
+        <v-spacer></v-spacer>
+
+        <v-text-field v-model="searchQuery" @input="textChanged" flat solo light clearable placeholder="Enter a name"></v-text-field>
+
+        <v-spacer></v-spacer>
+
+        <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+                <v-btn icon v-on="on" v-if="!nullPage"><v-icon>search</v-icon></v-btn>
+            </template>
+            <span>Search</span>
+        </v-tooltip>
+
+        <v-tooltip bottom v-if="loggedIn && !nullPage">
+            <template v-slot:activator="{ on }">
+                <v-btn icon v-on="on" @click="openJumpDialog"><v-icon>add</v-icon></v-btn>
+            </template>
+            <span>Add new</span>
+        </v-tooltip>
+
+        <v-menu bottom left offset-y origin="top right" transition="scale-transition" v-if="!slashUsers && !nullPage">
+            <template v-slot:activator="{ on }">
+                <v-btn icon v-on="on"><v-icon>more_vert</v-icon></v-btn>
+            </template>
+            <v-list>
+                <v-list-tile v-ripple v-if="!loggedIn" @click="openDialog"><v-list-tile-title>Login</v-list-tile-title></v-list-tile>
+                <v-list-tile v-ripple v-if="isAdmin" @click="openAdmin"><v-list-tile-title>Admin settings</v-list-tile-title></v-list-tile>
+                <v-list-tile v-ripple v-if="loggedIn" @click="logout"><v-list-tile-title>Logout</v-list-tile-title></v-list-tile>
+            </v-list>
+        </v-menu>
+    </v-toolbar>
 </template>
 
 <script>
