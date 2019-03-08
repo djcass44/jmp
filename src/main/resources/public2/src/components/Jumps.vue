@@ -10,41 +10,43 @@
                 <v-subheader inset v-if="filtered.length > 0">Jumps</v-subheader>
                 <v-card v-if="filtered.length > 0">
                     <v-list two-line subheader>
-                        <v-list-tile v-for="item in filtered" :key="item.id" avatar @click="">
-                            <v-list-tile-avatar color="indigo darken-2">
-                                <div v-if="item.image == null || item.image === ''">
-                                    <v-icon dark v-if="item.personal === false">public</v-icon>
-                                    <v-icon dark v-if="item.personal === true">account_circle</v-icon>
-                                </div>
-                                <v-img v-if="item.image != null && item.image !== ''" :src="item.image" :lazy-src="item.image" aspect-ratio="1" class="grey darken-2">
-                                    <template v-slot:placeholder>
-                                        <v-layout fill-height align-center justify-center ma-0>
-                                            <v-progress-circular indeterminate color="grey lighten-5"></v-progress-circular>
-                                        </v-layout>
-                                    </template>
-                                </v-img>
-                            </v-list-tile-avatar>
-                            <v-list-tile-content>
-                                <v-list-tile-title>{{ item.name }}</v-list-tile-title>
-                                <v-list-tile-sub-title><span v-html="highlight(item.location)">{{ item.location }}</span></v-list-tile-sub-title>
-                            </v-list-tile-content>
-                            <v-list-tile-action>
-                                <v-menu bottom left offset-y origin="top right" transition="scale-transition" min-width="150">
-                                    <template v-slot:activator="{ on }">
-                                        <v-btn ripple icon v-on="on">
-                                            <v-icon>more_vert</v-icon>
-                                        </v-btn>
-                                    </template>
-                                    <v-list>
-                                        <v-list-tile v-ripple v-clipboard:copy="item.location" v-clipboard:success="copySuccess" v-clipboard:error="copyFailed" @click="">
-                                            <v-list-tile-title>Copy URL</v-list-tile-title>
-                                        </v-list-tile>
-                                        <v-list-tile v-ripple @click="edit(item.id)"><v-list-tile-title>Edit</v-list-tile-title></v-list-tile>
-                                        <v-list-tile v-ripple @click="remove(item.id)"><v-list-tile-title>Delete</v-list-tile-title></v-list-tile>
-                                    </v-list>
-                                </v-menu>
-                            </v-list-tile-action>
-                        </v-list-tile>
+                        <v-slide-y-transition class="py-0" group>
+                            <v-list-tile v-for="item in filtered" :key="item.id" avatar @click="">
+                                <v-list-tile-avatar color="indigo darken-2">
+                                    <div v-if="item.image == null || item.image === ''">
+                                        <v-icon dark v-if="item.personal === false">public</v-icon>
+                                        <v-icon dark v-if="item.personal === true">account_circle</v-icon>
+                                    </div>
+                                    <v-img v-if="item.image != null && item.image !== ''" :src="item.image" :lazy-src="item.image" aspect-ratio="1" class="grey darken-2">
+                                        <template v-slot:placeholder>
+                                            <v-layout fill-height align-center justify-center ma-0>
+                                                <v-progress-circular indeterminate color="grey lighten-5"></v-progress-circular>
+                                            </v-layout>
+                                        </template>
+                                    </v-img>
+                                </v-list-tile-avatar>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>{{ item.name }}</v-list-tile-title>
+                                    <v-list-tile-sub-title><span v-html="highlight(item.location)">{{ item.location }}</span></v-list-tile-sub-title>
+                                </v-list-tile-content>
+                                <v-list-tile-action>
+                                    <v-menu bottom left offset-y origin="top right" transition="scale-transition" min-width="150">
+                                        <template v-slot:activator="{ on }">
+                                            <v-btn ripple icon v-on="on">
+                                                <v-icon>more_vert</v-icon>
+                                            </v-btn>
+                                        </template>
+                                        <v-list>
+                                            <v-list-tile v-ripple v-clipboard:copy="item.location" v-clipboard:success="copySuccess" v-clipboard:error="copyFailed" @click="">
+                                                <v-list-tile-title>Copy URL</v-list-tile-title>
+                                            </v-list-tile>
+                                            <v-list-tile v-ripple @click="edit(item.id)"><v-list-tile-title>Edit</v-list-tile-title></v-list-tile>
+                                            <v-list-tile v-ripple @click="remove(item.id)"><v-list-tile-title>Delete</v-list-tile-title></v-list-tile>
+                                        </v-list>
+                                    </v-menu>
+                                </v-list-tile-action>
+                            </v-list-tile>
+                        </v-slide-y-transition>
                     </v-list>
                 </v-card>
                 <div v-if="loading === true" class="text-xs-center pa-4">

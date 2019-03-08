@@ -10,29 +10,31 @@
                 <v-subheader inset v-if="filtered.length > 0">Users</v-subheader>
                 <v-card v-if="filtered.length > 0">
                     <v-list two-line subheader>
-                        <v-list-tile v-for="user in filtered" :key="user.id" avatar @click="">
-                            <v-list-tile-avatar :color="user.role === 'ADMIN' ? 'red darken-4' : 'blue darken-4'">
-                                <v-icon dark>account_circle</v-icon>
-                            </v-list-tile-avatar>
-                            <v-list-tile-content>
-                                <v-list-tile-title>{{ user.username }}</v-list-tile-title>
-                                <v-list-tile-sub-title>{{ capitalize(user.role.toLowerCase()) }}</v-list-tile-sub-title>
-                            </v-list-tile-content>
-                            <v-list-tile-action>
-                                <v-menu bottom left offset-y origin="top right" transition="scale-transition" min-width="150">
-                                    <template v-slot:activator="{ on }">
-                                        <v-btn ripple icon v-on="on">
-                                            <v-icon>more_vert</v-icon>
-                                        </v-btn>
-                                    </template>
-                                    <v-list>
-                                        <v-list-tile v-ripple v-if="user.role === 'USER'" @click="makeAdmin(user.id)"><v-list-tile-title>Promote to admin</v-list-tile-title></v-list-tile>
-                                        <v-list-tile v-ripple v-if="user.role === 'ADMIN'" @click="makeUser(user.id)"><v-list-tile-title>Demote to user</v-list-tile-title></v-list-tile>
-                                        <v-list-tile v-ripple @click="remove(user.id)"><v-list-tile-title>Delete</v-list-tile-title></v-list-tile>
-                                    </v-list>
-                                </v-menu>
-                            </v-list-tile-action>
-                        </v-list-tile>
+                        <v-slide-y-transition class="py-0" group>
+                            <v-list-tile v-for="user in filtered" :key="user.id" avatar @click="">
+                                <v-list-tile-avatar :color="user.role === 'ADMIN' ? 'red darken-4' : 'blue darken-4'">
+                                    <v-icon dark>account_circle</v-icon>
+                                </v-list-tile-avatar>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>{{ user.username }}</v-list-tile-title>
+                                    <v-list-tile-sub-title>{{ capitalize(user.role.toLowerCase()) }}</v-list-tile-sub-title>
+                                </v-list-tile-content>
+                                <v-list-tile-action>
+                                    <v-menu bottom left offset-y origin="top right" transition="scale-transition" min-width="150">
+                                        <template v-slot:activator="{ on }">
+                                            <v-btn ripple icon v-on="on">
+                                                <v-icon>more_vert</v-icon>
+                                            </v-btn>
+                                        </template>
+                                        <v-list>
+                                            <v-list-tile v-ripple v-if="user.role === 'USER'" @click="makeAdmin(user.id)"><v-list-tile-title>Promote to admin</v-list-tile-title></v-list-tile>
+                                            <v-list-tile v-ripple v-if="user.role === 'ADMIN'" @click="makeUser(user.id)"><v-list-tile-title>Demote to user</v-list-tile-title></v-list-tile>
+                                            <v-list-tile v-ripple @click="remove(user.id)"><v-list-tile-title>Delete</v-list-tile-title></v-list-tile>
+                                        </v-list>
+                                    </v-menu>
+                                </v-list-tile-action>
+                            </v-list-tile>
+                        </v-slide-y-transition>
                     </v-list>
                 </v-card>
                 <div v-if="loading === true" class="text-xs-center pa-4">
