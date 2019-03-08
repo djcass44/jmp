@@ -189,15 +189,3 @@ export default {
     }
 };
 </script>
-<style scoped>
-.mdl-h1 {
-    color: #616161;
-    font-size: 148px;
-    font-weight: 300;
-}
-.mdl-h5 {
-    color: #757575;
-    font-size: 32px;
-    font-weight: 400;
-}
-</style>

@@ -38,6 +38,10 @@
                 <div v-if="loading === true" class="text-xs-center pa-4">
                     <v-progress-circular :size="100" color="accent" indeterminate></v-progress-circular>
                 </div>
+                <div v-if="filtered.length === 0 && loading === false">
+                    <h1 class="mdl-h1 text-xs-center">204</h1>
+                    <h2 class="mdl-h5 text-xs-center" v-if="filtered.length === 0 && items.length > 0">No results.</h2>
+                </div>
                 <div v-if="systemInfo !== '' && appInfo !== ''">
                     <v-subheader inset>About</v-subheader>
                     <v-expansion-panel>
