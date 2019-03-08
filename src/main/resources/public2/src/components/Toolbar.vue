@@ -10,12 +10,12 @@
 
         <v-spacer></v-spacer>
 
-        <v-tooltip bottom>
+        <!-- <v-tooltip bottom>
             <template v-slot:activator="{ on }">
                 <v-btn icon v-on="on" v-if="!nullPage"><v-icon>search</v-icon></v-btn>
             </template>
             <span>Search</span>
-        </v-tooltip>
+        </v-tooltip> -->
 
         <v-tooltip bottom v-if="loggedIn && !nullPage">
             <template v-slot:activator="{ on }">
