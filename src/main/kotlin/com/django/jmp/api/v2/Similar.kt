@@ -19,6 +19,8 @@ package com.django.jmp.api.v2
 import com.django.jmp.api.Auth
 import com.django.jmp.api.Runner
 import com.django.jmp.api.Similar
+import com.django.jmp.auth.JWTContextMapper
+import com.django.jmp.auth.TokenProvider
 import com.django.jmp.db.Jump
 import com.django.jmp.db.Jumps
 import com.django.jmp.except.EmptyPathException
@@ -30,24 +32,21 @@ import io.javalin.security.SecurityUtil
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.util.*
 
-class Similar(private val auth: Auth): EndpointGroup {
+class Similar : EndpointGroup {
     override fun addEndpoints() {
         // Find similar jumps
         get("${Runner.BASE}/v2/similar/:query", { ctx ->
             try {
-                val user = ctx.header(Auth.headerUser)
-                val token: String? = ctx.header(Auth.headerToken)
-                val tokenUUID = if (token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
+                val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: ""
+                val user = if(jwt.isBlank()) null else TokenProvider.getInstance().verify(jwt)
                 val query = ctx.pathParam("query")
                 if (query.isBlank())
                     throw EmptyPathException()
                 val names = arrayListOf<String>()
                 transaction {
-                    val owner = auth.getUser(user, tokenUUID)
                     val res = Jump.find {
-                        Jumps.owner.isNull() or Jumps.owner.eq(owner?.id)
+                        Jumps.owner.isNull() or Jumps.owner.eq(user?.id)
                     }
                     res.forEach { names.add(it.name) }
                 }

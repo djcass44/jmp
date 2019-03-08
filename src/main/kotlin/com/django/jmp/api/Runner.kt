@@ -6,6 +6,8 @@ import com.django.jmp.api.v2.Similar
 import com.django.jmp.api.v2.User
 import com.django.jmp.api.v2.Verify
 import com.django.jmp.audit.Logger
+import com.django.jmp.auth.JWTContextMapper
+import com.django.jmp.auth.TokenProvider
 import com.django.jmp.db.*
 import com.django.log2.logging.Log
 import io.javalin.Javalin
@@ -55,13 +57,11 @@ fun main(args: Array<String>) {
         if(enableCors) enableCorsForAllOrigins()
         enableCaseSensitiveUrls()
         accessManager { handler, ctx, permittedRoles ->
-            val user = ctx.header(Auth.headerUser)
-            val token = ctx.header(Auth.headerToken)
-            val tokenUUID = if (token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
-            val userRole = if(tokenUUID != null && user != null) {
-                auth.getUserRole(user, tokenUUID)
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx)
+            val user = if(jwt != null && jwt.isNotBlank() && jwt != "null") TokenProvider.getInstance().verify(jwt) else null
+            val userRole = if(user == null) Auth.BasicRoles.USER else transaction {
+                Auth.BasicRoles.valueOf(user.role.name)
             }
-            else auth.getUserRole(user)
             if(permittedRoles.contains(userRole))
                 handler.handle(ctx)
             else
@@ -71,10 +71,13 @@ fun main(args: Array<String>) {
             logger.add("${ctx.method()} ${ctx.path()} took $timeMs ms")
         }
     }.start()
+    app.before {ctx ->
+        ctx.register(JWTContextMapper::class.java, JWTContextMapper())
+    }
     app.routes {
         Info().addEndpoints()
         Jump(auth, store).addEndpoints()
-        Similar(auth).addEndpoints()
+        Similar().addEndpoints()
         User(auth).addEndpoints()
         Verify(auth).addEndpoints()
     }

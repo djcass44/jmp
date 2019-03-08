@@ -32,7 +32,7 @@
 </template>
 <script>
 import axios from "axios";
-import { storageUser, storageToken } from "../../var.js";
+import { storageUser, storageJWT } from "../../var.js";
 
 export default {
     name: 'Similar',
@@ -55,7 +55,7 @@ export default {
         if(url.searchParams.has("query")) {
             let query = url.searchParams.get("query");
             let that = this;
-            axios.get(`${process.env.VUE_APP_BASE_URL}/v2/similar/${query}`, { headers: { "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}).then(function (response) {
+            axios.get(`${process.env.VUE_APP_BASE_URL}/v2/similar/${query}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function (response) {
                 console.log(`Loaded ${response.data.length} item(s)`);
                 response.data.map(item => {
                     that.items.push(item);

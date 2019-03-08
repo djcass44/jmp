@@ -26,7 +26,7 @@ class Init {
         val superName = "admin"
         transaction {
             if(User.all().empty()) {
-                val password = PasswordGenerator().get(16)
+                val password = PasswordGenerator.getInstance().get(16)
                 Auth().createUser(superName, password, true)
                 Log.w(javaClass, "Created superuser with access: [username: $superName]\nPlease change this ASAP!")
                 for (c in password)

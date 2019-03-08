@@ -18,6 +18,8 @@ package com.django.jmp.api.v2
 
 import com.django.jmp.api.Auth
 import com.django.jmp.api.Runner
+import com.django.jmp.auth.JWTContextMapper
+import com.django.jmp.auth.TokenProvider
 import com.django.jmp.db.*
 import com.django.jmp.db.User
 import com.django.log2.logging.Log
@@ -29,7 +31,6 @@ import io.javalin.apibuilder.EndpointGroup
 import io.javalin.security.SecurityUtil.roles
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.util.*
 
 class User(private val auth: Auth): EndpointGroup {
     override fun addEndpoints() {
@@ -46,46 +47,33 @@ class User(private val auth: Auth): EndpointGroup {
         put("${Runner.BASE}/v2/user/add", { ctx ->
             val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
             auth.createUser(basicAuth.username, basicAuth.password.toCharArray())
-        }, roles(Auth.BasicRoles.ADMIN))
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Get information about the current user
         get("${Runner.BASE}/v2/user", { ctx ->
-            val user = ctx.header(Auth.headerUser)
-            val token = ctx.header(Auth.headerToken)
-            if (user == null || token == null)
-                throw BadRequestResponse()
-            val tokenUUID = try {
-                UUID.fromString(token)
-            } catch (e: Exception) {
-                Log.e(Runner::class.java, "User: $user provided malformed token [IP: ${ctx.ip()}, UA: ${ctx.userAgent()}]")
-                throw BadRequestResponse()
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
+            val u = TokenProvider.getInstance().verify(jwt) ?: throw UnauthorizedResponse()
+            transaction {
+                ctx.status(HttpStatus.OK_200).result(u.role.name)
             }
-            if (!auth.userExists(user)) {
-                ctx.status(HttpStatus.OK_200).result("NONE")
-                return@get // User doesn't exist, stop here
-            }
-            if (auth.validateUserToken(tokenUUID)) {
-                val role = auth.getUserRole(user)
-                ctx.status(HttpStatus.OK_200).result(role.toString())
-            } else throw UnauthorizedResponse()
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Get a users token
         post("${Runner.BASE}/v2/user/auth", { ctx ->
             val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
-            val token = auth.getUserToken(basicAuth.username, basicAuth.password.toCharArray())
-            if (token != null)
-                ctx.json(token)
-            else
-                throw NotFoundResponse()
+            val token = auth.getUserToken(basicAuth.username, basicAuth.password.toCharArray()) ?: throw NotFoundResponse()
+            val jwt = TokenProvider.getInstance().create(basicAuth.username, token) ?: throw BadRequestResponse()
+            ctx.status(HttpStatus.OK_200).result(jwt)
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Change the role of a user
         patch("${Runner.BASE}/v2/user/permission", { ctx ->
             val updated = ctx.bodyAsClass(EditUserData::class.java)
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
+            val u = TokenProvider.getInstance().verify(jwt) ?: throw UnauthorizedResponse()
             transaction {
                 val user = User.findById(updated.id) ?: throw BadRequestResponse()
                 // Block dropping the superuser from admin
                 if(user.username == "admin") throw UnauthorizedResponse()
                 // Block the user from changing their own permissions
-                if(user.username == ctx.header(Auth.headerUser)) throw UnauthorizedResponse()
+                if(user.username == u.username) throw UnauthorizedResponse()
                 val role = Role.find {
                     Roles.name eq updated.role
                 }.elementAtOrNull(0) ?: throw BadRequestResponse()
@@ -96,16 +84,17 @@ class User(private val auth: Auth): EndpointGroup {
         // Delete a user
         delete("${Runner.BASE}/v2/user/rm/:id", { ctx ->
             val id = ctx.validatedPathParam("id").asInt().getOrThrow()
-            val user = ctx.header(Auth.headerUser)
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
+            val user = TokenProvider.getInstance().verify(jwt) ?: throw UnauthorizedResponse()
             transaction {
                 val target = User.findById(id) ?: throw BadRequestResponse()
-                Log.i(javaClass, "[$user] is removing ${target.username}")
+                Log.i(javaClass, "[${user.username}] is removing ${target.username}")
                 if(target.username == "admin") {
-                    Log.w(javaClass, "[$user] is attempting to remove the superuser")
+                    Log.w(javaClass, "[${user.username}] is attempting to remove the superuser")
                     throw UnauthorizedResponse()
                 } // Block deleting the superuser
-                if(target.username == user) {
-                    Log.w(javaClass, "[$user] is attempting to remove themselves")
+                if(target.username == user.username) {
+                    Log.w(javaClass, "[${user.username}] is attempting to remove themselves")
                     throw UnauthorizedResponse()
                 } // Stop the users deleting themselves
                 target.delete()

@@ -11,7 +11,7 @@
 
 <script>
 import axios from "axios";
-import { storageUser, storageToken } from "../var.js";
+import { storageUser, storageJWT } from "../var.js";
 
 export default {
     data() {
@@ -31,9 +31,9 @@ export default {
                 this.username = "Not authenticated";
                 this.$emit('toolbarAuthChanged', false);
             }
-            const url = `${process.env.VUE_APP_BASE_URL}/v2/verify/user/${username}`;
-            axios.get(url).then(r => {
-                return axios.get(`${process.env.VUE_APP_BASE_URL}/v2/user`, { headers: { "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}).then((r2) => {
+            const url = `${process.env.VUE_APP_BASE_URL}/v2/verify/token`;
+            axios.get(url, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}` }}).then(r => {
+                return axios.get(`${process.env.VUE_APP_BASE_URL}/v2/user`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}` }}).then((r2) => {
                     let role = r2.data;
                     this.$emit('toolbarAuthChanged', true, role === 'ADMIN');
                 }).catch((err) => {
@@ -54,7 +54,7 @@ export default {
         },
         invalidate() {
             localStorage.removeItem(storageUser);
-            localStorage.removeItem(storageToken);
+            localStorage.removeItem(storageJWT);
         }
     },
     created() {

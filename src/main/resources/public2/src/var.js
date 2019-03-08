@@ -1,2 +1,2 @@
 export const storageUser = "jmp-user";
-export const storageToken = "jmp-token";
+export const storageJWT = "jmp-jwt";

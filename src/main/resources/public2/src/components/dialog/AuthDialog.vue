@@ -33,7 +33,7 @@
 </template>
 <script>
 import axios from "axios";
-import { storageUser, storageToken } from "../../var.js";
+import { storageUser, storageJWT } from "../../var.js";
 
 const nameRegex= new RegExp('^[a-zA-Z0-9_.-]*$');
 export default {
@@ -85,7 +85,7 @@ export default {
             axios.put(
                 url,
                 {},
-                {headers: { 'Authorization': 'Basic ' + data, "Content-Type": "application/json", "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}
+                {headers: { 'Authorization': 'Basic ' + data, "Content-Type": "application/json" }}
             ).then(r => {
                 that.dialog = false;
                 that.$emit('snackbar', true, `Created user ${that.name}`);
@@ -107,7 +107,7 @@ export default {
             ).then(r => {
                 that.dialog = false;
                 // console.log(r.data);
-                localStorage.setItem(storageToken, r.data);
+                localStorage.setItem(storageJWT, r.data);
                 localStorage.setItem(storageUser, that.name);
                 that.$emit('getAuth');
                 that.$emit('pushItem');

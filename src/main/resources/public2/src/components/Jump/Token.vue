@@ -5,7 +5,7 @@
 </template>
 <script>
 import axios from "axios";
-import { storageUser, storageToken } from "../../var.js";
+import { storageUser, storageJWT } from "../../var.js";
 
 export default {
     name: 'Token',
@@ -18,7 +18,7 @@ export default {
         let url = new URL(window.location.href);
         if(url.searchParams.has("query")) {
             let query = url.searchParams.get("query");
-            axios.get(`${process.env.VUE_APP_BASE_URL}/v2/jump/${query}`, { headers: { "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}).then(r => {
+            axios.get(`${process.env.VUE_APP_BASE_URL}/v2/jump/${query}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
                 let target = r.data;
                 window.location.replace(target);
             }).catch(function(error) {

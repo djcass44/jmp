@@ -31,8 +31,13 @@
                 </li>
                 <div v-if="showZero === true">
                     <div class="mdl-grid">
+                        <div class="mdl-layout-spacer"></div>
+                        <h1 class="mdl-h1">204</h1>
+                        <div class="mdl-layout-spacer"></div>
+                    </div>
+                    <div class="mdl-grid">
                         <div class="mdl-layout-spacer title"></div>
-                        <h2 class="mdl-color-text--grey-800">Nothing to see here!</h2>
+                        <h2 class="mdl-h5">No jumps have been created yet.</h2>
                         <div class="mdl-layout-spacer title"></div>
                     </div>
                 </div>
@@ -44,7 +49,7 @@
 
 <script>
 import axios from "axios";
-import { storageUser, storageToken } from "../var.js";
+import { storageUser, storageJWT } from "../var.js";
 
 export default {
     name: "Jumps",
@@ -78,7 +83,7 @@ export default {
             let item = this.items[index];
             const url = `${process.env.VUE_APP_BASE_URL}/v1/jumps/rm/${item.id}`;
             let that = this;
-            axios.delete(url, { headers: { "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}).then(r => {
+            axios.delete(url, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
                 that.items.splice(index, 1); // Delete the item, making vue update
                 that.filterItems();
                 that.checkItemsLength();
@@ -123,7 +128,7 @@ export default {
             let items = this.items;
             let that = this;
             items.length = 0; // Reset in case this is being called later (e.g. from auth)
-            axios.get(url, { headers: { "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}).then(function(response) {
+            axios.get(url, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
                 console.log("Loaded items: " + response.data.length);
                 response.data.map(item => {
                     items.push(item);
@@ -161,3 +166,15 @@ export default {
     }
 };
 </script>
+<style scoped>
+.mdl-h1 {
+    color: #616161;
+    font-size: 148px;
+    font-weight: 300;
+}
+.mdl-h5 {
+    color: #757575;
+    font-size: 32px;
+    font-weight: 400;
+}
+</style>

@@ -39,7 +39,7 @@
 </template>
 <script>
 import axios from "axios";
-import { storageUser, storageToken } from "../../var.js";
+import { storageUser, storageJWT } from "../../var.js";
 
 const urlRegex = new RegExp('https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)');
 const nameRegex= new RegExp('^[a-zA-Z0-9_.-]*$');
@@ -106,7 +106,7 @@ export default {
             axios.patch(
                 url,
                 `{ "id": ${this.id}, "name": "${this.name}", "location": "${this.location}" }`,
-                {headers: {"Content-Type": "application/json", "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}
+                {headers: {"Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}
             ).then(r => {
                 that.dialog = false;
                 that.$emit('jumpsSetItem', { name: this.name, location: this.location, personal: this.select === this.items[1] }, that.index);
@@ -123,7 +123,7 @@ export default {
         submit () {
             this.$refs.form.validate();
             let url = `${process.env.VUE_APP_BASE_URL}/v1/jumps/add`;
-            const localToken = localStorage.getItem(storageToken);
+            const localToken = localStorage.getItem(storageJWT);
             let personalJump = this.select === this.items[1];
             if(localToken === null && personalJump === true) {
                 // User cannot create personal tokens if not auth'd
@@ -134,7 +134,7 @@ export default {
             axios.put(
                 url,
                 `{ "name": "${this.name}", "location": "${this.location}", "personal": "${personalJump}" }`,
-                {headers: {"Content-Type": "application/json", "X-Auth-Token": localToken, "X-Auth-User": localStorage.getItem(storageUser)}}
+                {headers: {"Content-Type": "application/json", "Authorization": `Bearer ${localToken}`}}
             ).then(r => {
                 that.dialog = false;
                 that.$emit('jumpsPushItem', {

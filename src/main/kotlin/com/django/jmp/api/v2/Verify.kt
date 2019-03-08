@@ -18,28 +18,27 @@ package com.django.jmp.api.v2
 
 import com.django.jmp.api.Auth
 import com.django.jmp.api.Runner
+import com.django.jmp.auth.JWTContextMapper
+import com.django.jmp.auth.TokenProvider
 import com.django.jmp.db.User
 import com.django.jmp.db.Users
 import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
-import io.javalin.apibuilder.ApiBuilder
-import io.javalin.apibuilder.ApiBuilder.*
+import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.security.SecurityUtil
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.util.*
 
 class Verify(private val auth: Auth): EndpointGroup {
     override fun addEndpoints() {
         // Verify a users token is still valid
         get("${Runner.BASE}/v2/verify/token", { ctx ->
-            val token: String? = ctx.header(Auth.headerToken)
-            val tokenUUID = if (token != null && token.isNotBlank() && token != "null") UUID.fromString(token) else null
-            if (tokenUUID == null)
-                throw BadRequestResponse()
-            else {
-                ctx.status(HttpStatus.OK_200).result(auth.validateUserToken(tokenUUID).toString())
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
+            if(jwt.isBlank() || jwt == "null") throw BadRequestResponse()
+            val user = TokenProvider.getInstance().verify(jwt) ?: throw BadRequestResponse()
+            transaction {
+                ctx.status(HttpStatus.OK_200).result(auth.validateUserToken(user.token).toString())
             }
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Verify a user still exists

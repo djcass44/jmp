@@ -50,6 +50,8 @@ dependencies {
     implementation("io.github.rybalkinsd:kohttp:0.7.1")
     implementation("com.google.code.gson:gson:2.8.5")
 
+    implementation("com.auth0:java-jwt:3.7.0")
+
     implementation("org.jetbrains.exposed:exposed:0.11.2")
     runtimeOnly("org.xerial:sqlite-jdbc:3.25.2")
 }

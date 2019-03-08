@@ -34,7 +34,7 @@
 
 <script>
 import axios from "axios";
-import { storageUser, storageToken } from "../var.js";
+import { storageUser, storageJWT } from "../var.js";
 
 export default {
     name: "Users",
@@ -63,7 +63,7 @@ export default {
             let item = this.items[index];
             const url = `${process.env.VUE_APP_BASE_URL}/v2/user/rm/${item.id}`;
             let that = this;
-            axios.delete(url, { headers: { "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}).then(r => {
+            axios.delete(url, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
                 that.items.splice(index, 1); // Delete the item, making vue update
                 that.filterItems();
             }).catch(e => {
@@ -81,7 +81,7 @@ export default {
             let index = this.indexFromId(id);
             let item = this.items[index];
             let that = this;
-            axios.patch(`${process.env.VUE_APP_BASE_URL}/v2/user/permission`, `{ "id": "${item.id}", "role": "${role}" }`, { headers: { "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}).then(function(response) {
+            axios.patch(`${process.env.VUE_APP_BASE_URL}/v2/user/permission`, `{ "id": "${item.id}", "role": "${role}" }`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
                 console.log(response.status);
                 that.$emit('snackbar', true, `${item.username} is now a ${role.toLowerCase()}!`);
                 that.loadItems();
@@ -113,7 +113,7 @@ export default {
             let items = this.items;
             let that = this;
             items.length = 0; // Reset in case this is being called later (e.g. from auth)
-            axios.get(url, { headers: { "X-Auth-Token": localStorage.getItem(storageToken), "X-Auth-User": localStorage.getItem(storageUser)}}).then(function(response) {
+            axios.get(url, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
                 console.log("Loaded items: " + response.data.length);
                 response.data.map(item => {
                     items.push(item);

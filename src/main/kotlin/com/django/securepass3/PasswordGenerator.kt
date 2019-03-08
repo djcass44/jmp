@@ -20,6 +20,15 @@ import java.util.*
 import kotlin.random.Random
 
 class PasswordGenerator {
+    companion object {
+        private lateinit var generator: PasswordGenerator
+
+        fun getInstance(): PasswordGenerator {
+            if(!this::generator.isInitialized)
+                generator = PasswordGenerator()
+            return generator
+        }
+    }
     private val vowels = "aeiou".toCharArray()
     private val consonants = "bchfghjklmnpqrstvwxyz".toCharArray()
 
@@ -27,6 +36,10 @@ class PasswordGenerator {
 
     init {
         for (v in vowels) for (c in consonants) pairs.add("" + v + c)
+    }
+    @Deprecated (message = "Not recommended", replaceWith = ReplaceWith("get(length)"))
+    fun getInsecure(length: Int): String {
+        return get(length).toString()
     }
     fun get(length: Int): CharArray {
         val result = CharArray(length)
