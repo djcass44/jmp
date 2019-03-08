@@ -35,6 +35,9 @@
                         </v-list-tile>
                     </v-list>
                 </v-card>
+                <div v-if="loading === true" class="text-xs-center pa-4">
+                    <v-progress-circular :size="100" color="accent" indeterminate></v-progress-circular>
+                </div>
                 <div v-if="systemInfo !== '' && appInfo !== ''">
                     <v-subheader inset>About</v-subheader>
                     <v-expansion-panel>
@@ -73,6 +76,7 @@ export default {
             filterResults: 0,
             items: [],
             filtered: [],
+            loading: false,
             systemInfo: '',
             appInfo: ''
         }
@@ -148,12 +152,14 @@ export default {
             let items = this.items;
             let that = this;
             items.length = 0; // Reset in case this is being called later (e.g. from auth)
+            this.loading = true;
             axios.get(url, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
                 console.log("Loaded items: " + response.data.length);
                 response.data.map(item => {
                     items.push(item);
                 });
                 that.filterItems();
+                that.loading = false;
                 setTimeout(function() {
                     componentHandler.upgradeDom();
                     componentHandler.upgradeAllRegistered();
@@ -161,6 +167,7 @@ export default {
             }).catch(function(error) {
                 console.log(error); // API is probably unreachable
                 that.filterItems();
+                that.loading = false;
                 that.$emit('snackbar', true, `Failed to load users: ${error.response.status}`);
             });
         },

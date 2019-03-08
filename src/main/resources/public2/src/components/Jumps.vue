@@ -47,7 +47,10 @@
                         </v-list-tile>
                     </v-list>
                 </v-card>
-                <div v-if="showZero === true || filtered.length === 0">
+                <div v-if="loading === true" class="text-xs-center pa-4">
+                    <v-progress-circular :size="100" color="accent" indeterminate></v-progress-circular>
+                </div>
+                <div v-if="(showZero === true || filtered.length === 0) && loading === false">
                     <h1 class="mdl-h1 text-xs-center">204</h1>
                     <h2 class="mdl-h5 text-xs-center" v-if="filtered.length === 0 && items.length === 0">No jumps have been created yet.</h2>
                     <h2 class="mdl-h5 text-xs-center" v-if="filtered.length === 0 && items.length > 0">No results.</h2>
@@ -70,7 +73,8 @@ export default {
             loggedIn: false,
             showZero: false,
             items: [],
-            filtered: []
+            filtered: [],
+            loading: false
         }
     },
     methods: {
@@ -144,6 +148,7 @@ export default {
             let items = this.items;
             let that = this;
             items.length = 0; // Reset in case this is being called later (e.g. from auth)
+            this.loading = true;
             axios.get(url, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
                 console.log("Loaded items: " + response.data.length);
                 response.data.map(item => {
@@ -151,6 +156,7 @@ export default {
                 });
                 that.filterItems();
                 that.checkItemsLength();
+                that.loading = false;
                 setTimeout(function() {
                     componentHandler.upgradeDom();
                     componentHandler.upgradeAllRegistered();
@@ -159,6 +165,7 @@ export default {
                 console.log(error); // API is probably unreachable
                 that.filterItems();
                 that.checkItemsLength();
+                that.loading = false;
                 that.$emit('snackbar', true, `Failed to load jumps: ${error.response.status}`);
             });
         },
