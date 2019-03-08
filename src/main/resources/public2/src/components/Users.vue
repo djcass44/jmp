@@ -100,6 +100,7 @@ export default {
             axios.delete(url, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
                 that.items.splice(index, 1); // Delete the item, making vue update
                 that.filterItems();
+                this.$emit('snackbar', true, "Successfully removed user");
             }).catch(e => {
                 console.log(e);
                 this.$emit('snackbar', true, `Failed to delete: ${e.response.status}`);
