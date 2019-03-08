@@ -29,7 +29,7 @@ class InfoAction {
     data class SystemInfo(val osInfo: OSInfo, val cpus: Int, val javaInfo: JavaInfo, val kotlinInfo: KotlinInfo, val memoryInfo: MemoryInfo)
     data class AppInfo(val version: String, val users: Int, val jumpInfo: JumpInfo, val appUptime: String, val launchConfig: ConfigStore)
 
-    data class JavaInfo(val name: String, val version: String, val vendor: String, val home: String, val uptime: String)
+    data class JavaInfo(val name: String, val version: String, val specification: String, val vendor: String, val home: String, val uptime: String)
     data class KotlinInfo(val major: Int, val minor: Int, val patch: Int)
     data class OSInfo(val name: String, val version: String, val arch: String)
     data class MemoryInfo(val total: String, val max: String, val used: String)
@@ -46,6 +46,7 @@ class InfoAction {
         )
         val javaInfo = JavaInfo(System.getProperty("java.vm.name"),
             System.getProperty("java.vm.version"),
+            System.getProperty("java.vm.specification.version"),
             System.getProperty("java.vm.vendor"),
             System.getProperty("java.home"), uptimeString)
         val kotlinInfo = KotlinInfo(KotlinVersion.CURRENT.major, KotlinVersion.CURRENT.minor, KotlinVersion.CURRENT.patch)

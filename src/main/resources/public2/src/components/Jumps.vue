@@ -14,8 +14,8 @@
                             <v-list-tile v-for="item in filtered" :key="item.id" avatar @click="">
                                 <v-list-tile-avatar color="indigo darken-2">
                                     <div v-if="item.image == null || item.image === ''">
-                                        <v-icon dark v-if="item.personal === false">public</v-icon>
-                                        <v-icon dark v-if="item.personal === true">account_circle</v-icon>
+                                        <v-icon large dark v-if="item.personal === false">public</v-icon>
+                                        <v-icon large dark v-if="item.personal === true">account_circle</v-icon>
                                     </div>
                                     <v-img v-if="item.image != null && item.image !== ''" :src="item.image" :lazy-src="item.image" aspect-ratio="1" class="grey darken-2">
                                         <template v-slot:placeholder>

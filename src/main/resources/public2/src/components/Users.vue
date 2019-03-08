@@ -13,7 +13,8 @@
                         <v-slide-y-transition class="py-0" group>
                             <v-list-tile v-for="user in filtered" :key="user.id" avatar @click="">
                                 <v-list-tile-avatar :color="user.role === 'ADMIN' ? 'red darken-4' : 'blue darken-4'">
-                                    <v-icon dark>account_circle</v-icon>
+                                    <v-icon large dark v-if="user.role === 'USER'">account_circle</v-icon>
+                                    <v-icon large dark v-if="user.role === 'ADMIN'">supervised_user_circle</v-icon>
                                 </v-list-tile-avatar>
                                 <v-list-tile-content>
                                     <v-list-tile-title>{{ user.username }}</v-list-tile-title>
