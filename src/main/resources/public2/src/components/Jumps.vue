@@ -8,7 +8,7 @@
         <v-layout>
             <v-flex xs12 sm6 offset-sm3>
                 <v-subheader inset v-if="filtered.length > 0">Jumps</v-subheader>
-                <v-card v-if="filtered.length > 0">
+                <v-card v-if="filtered.length > 0" class="m2-card">
                     <v-list two-line subheader>
                         <v-slide-y-transition class="py-0" group>
                             <v-list-tile v-for="item in filtered" :key="item.id" avatar @click="">
@@ -191,3 +191,8 @@ export default {
     }
 };
 </script>
+<style scoped>
+.m2-card {
+    border-radius: 12px;
+}
+</style>
