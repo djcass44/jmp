@@ -6,7 +6,7 @@
 
         <v-spacer></v-spacer>
 
-        <v-text-field v-model="searchQuery" @input="textChanged" flat solo light clearable placeholder="Enter a name"></v-text-field>
+        <v-text-field v-if="!nullPage" v-model="searchQuery" @input="textChanged" flat solo light clearable placeholder="Enter a name"></v-text-field>
 
         <v-spacer></v-spacer>
 
@@ -24,7 +24,7 @@
             <span>Add new</span>
         </v-tooltip>
 
-        <v-menu bottom left offset-y origin="top right" transition="scale-transition" v-if="!slashUsers && !nullPage">
+        <v-menu bottom left offset-y origin="top right" transition="scale-transition" v-if="!slashUsers && !nullPage" min-width="150">
             <template v-slot:activator="{ on }">
                 <v-btn icon v-on="on"><v-icon>more_vert</v-icon></v-btn>
             </template>

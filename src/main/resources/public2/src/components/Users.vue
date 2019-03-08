@@ -7,8 +7,8 @@
         </div>
         <v-layout>
             <v-flex xs12 sm6 offset-sm3>
-                <v-subheader inset>Users</v-subheader>
-                <v-card>
+                <v-subheader inset v-if="filtered.length > 0">Users</v-subheader>
+                <v-card v-if="filtered.length > 0">
                     <v-list two-line subheader>
                         <v-list-tile v-for="user in filtered" :key="user.id" avatar @click="">
                             <v-list-tile-avatar :color="user.role === 'ADMIN' ? 'red darken-4' : 'blue darken-4'">
@@ -19,7 +19,7 @@
                                 <v-list-tile-sub-title>{{ capitalize(user.role.toLowerCase()) }}</v-list-tile-sub-title>
                             </v-list-tile-content>
                             <v-list-tile-action>
-                                <v-menu bottom left offset-y origin="top right" transition="scale-transition">
+                                <v-menu bottom left offset-y origin="top right" transition="scale-transition" min-width="150">
                                     <template v-slot:activator="{ on }">
                                         <v-btn ripple icon v-on="on">
                                             <v-icon>more_vert</v-icon>

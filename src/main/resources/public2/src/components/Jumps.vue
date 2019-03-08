@@ -5,6 +5,60 @@
             <p>Searching for '{{ filter }}' ({{ filterResults }} results)</p>
             <div class="mdl-layout-spacer title"></div>
         </div>
+        <v-layout>
+            <v-flex xs12 sm6 offset-sm3>
+                <v-subheader inset v-if="filtered.length > 0">Jumps</v-subheader>
+                <v-card v-if="filtered.length > 0">
+                    <v-list two-line subheader>
+                        <v-list-tile v-for="item in filtered" :key="item.id" avatar @click="">
+                            <v-list-tile-avatar color="indigo darken-2">
+                                <div v-if="item.image == null || item.image === ''">
+                                    <v-icon dark v-if="item.personal === false">public</v-icon>
+                                    <v-icon dark v-if="item.personal === true">account_circle</v-icon>
+                                </div>
+                                <v-img v-if="item.image != null && item.image !== ''" :src="item.image" :lazy-src="item.image" aspect-ratio="1" class="grey lighten-2">
+                                    <template v-slot:placeholder>
+                                        <v-layout fill-height align-center justify-center ma-0>
+                                            <v-progress-circular indeterminate color="grey lighten-5"></v-progress-circular>
+                                        </v-layout>
+                                    </template>
+                                </v-img>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>{{ item.name }}</v-list-tile-title>
+                                <v-list-tile-sub-title><span v-html="highlight(item.location)">{{ item.location }}</span></v-list-tile-sub-title>
+                            </v-list-tile-content>
+                            <v-list-tile-action>
+                                <v-menu bottom left offset-y origin="top right" transition="scale-transition" min-width="150">
+                                    <template v-slot:activator="{ on }">
+                                        <v-btn ripple icon v-on="on">
+                                            <v-icon>more_vert</v-icon>
+                                        </v-btn>
+                                    </template>
+                                    <v-list>
+                                        <v-list-tile v-ripple @click=""><v-list-tile-title>Copy URL</v-list-tile-title></v-list-tile>
+                                        <v-list-tile v-ripple @click="edit(item.id)"><v-list-tile-title>Edit</v-list-tile-title></v-list-tile>
+                                        <v-list-tile v-ripple @click="remove(item.id)"><v-list-tile-title>Delete</v-list-tile-title></v-list-tile>
+                                    </v-list>
+                                </v-menu>
+                            </v-list-tile-action>
+                        </v-list-tile>
+                    </v-list>
+                </v-card>
+                <div v-if="showZero === true || filtered.length === 0">
+                    <h1 class="mdl-h1 text-xs-center">204</h1>
+                    <h2 class="mdl-h5 text-xs-center" v-if="filtered.length === 0 && items.length === 0">No jumps have been created yet.</h2>
+                    <h2 class="mdl-h5 text-xs-center" v-if="filtered.length === 0 && items.length > 0">No results.</h2>
+                </div>
+            </v-flex>
+        </v-layout>
+    </div>
+    <!-- <div id="main-list" v-cloak>
+        <div class="mdl-grid" v-if="filter !== ''">
+            <div class="mdl-layout-spacer title"></div>
+            <p>Searching for '{{ filter }}' ({{ filterResults }} results)</p>
+            <div class="mdl-layout-spacer title"></div>
+        </div>
         <div class="page-content mdl-grid">
             <div class="mdl-layout-spacer"></div>
             <ul class="main-list mdl-list" v-cloak>
@@ -19,7 +73,6 @@
                         <span v-html="highlight(item.location)" class="sub-text mdl-list__item-sub-title">{{ item.location }}</span>
                     </span>
                         <span class="mdl-list__item-secondary-content">
-                        <!-- Right aligned menu below button -->
                         <button :id="item.id" class="mdl-button mdl-js-button mdl-button--icon">
                           <i class="material-icons">more_vert</i>
                         </button>
@@ -44,7 +97,7 @@
             </ul>
             <div class="mdl-layout-spacer"></div>
         </div>
-    </div>
+    </div> -->
 </template>
 
 <script>
