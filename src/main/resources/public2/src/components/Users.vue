@@ -26,8 +26,8 @@
                                         </v-btn>
                                     </template>
                                     <v-list>
-                                        <v-list-tile v-ripple v-if="user.role === 'USER'" @click="makeAdmin(user.id)"><v-list-tile-title>Make admin</v-list-tile-title></v-list-tile>
-                                        <v-list-tile v-ripple v-if="user.role === 'ADMIN'" @click="makeUser(user.id)"><v-list-tile-title>Make user</v-list-tile-title></v-list-tile>
+                                        <v-list-tile v-ripple v-if="user.role === 'USER'" @click="makeAdmin(user.id)"><v-list-tile-title>Promote to admin</v-list-tile-title></v-list-tile>
+                                        <v-list-tile v-ripple v-if="user.role === 'ADMIN'" @click="makeUser(user.id)"><v-list-tile-title>Demote to user</v-list-tile-title></v-list-tile>
                                         <v-list-tile v-ripple @click="remove(user.id)"><v-list-tile-title>Delete</v-list-tile-title></v-list-tile>
                                     </v-list>
                                 </v-menu>
