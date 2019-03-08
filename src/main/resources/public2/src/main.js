@@ -2,6 +2,7 @@ import Vue from "vue";
 import VueRouter from "vue-router";
 import "./plugins/vuetify";
 import VueMdl from "vue-mdl";
+import VueClipboard from "vue-clipboard2";
 import App from "./App.vue";
 
 import Jumps from "./components/Jumps.vue";
@@ -12,6 +13,7 @@ import Similar from "./components/Jump/Similar.vue";
 
 Vue.use(VueRouter);
 Vue.use(VueMdl);
+Vue.use(VueClipboard);
 
 Vue.config.productionTip = false;
 

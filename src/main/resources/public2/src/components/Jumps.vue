@@ -36,7 +36,9 @@
                                         </v-btn>
                                     </template>
                                     <v-list>
-                                        <v-list-tile v-ripple @click=""><v-list-tile-title>Copy URL</v-list-tile-title></v-list-tile>
+                                        <v-list-tile v-ripple v-clipboard:copy="item.location" v-clipboard:success="copySuccess" v-clipboard:error="copyFailed" @click="">
+                                            <v-list-tile-title>Copy URL</v-list-tile-title>
+                                        </v-list-tile>
                                         <v-list-tile v-ripple @click="edit(item.id)"><v-list-tile-title>Edit</v-list-tile-title></v-list-tile>
                                         <v-list-tile v-ripple @click="remove(item.id)"><v-list-tile-title>Delete</v-list-tile-title></v-list-tile>
                                     </v-list>
@@ -72,6 +74,12 @@ export default {
         }
     },
     methods: {
+        copyFailed() {
+            this.$emit('snackbar', true, "Failed to copy!")
+        },
+        copySuccess() {
+            this.$emit('snackbar', true, "Copied URL to clipboard!")
+        },
         checkItemsLength() {
             this.showZero = this.filtered.length === 0;
         },
