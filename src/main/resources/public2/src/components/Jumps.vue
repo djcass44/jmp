@@ -16,7 +16,7 @@
                                     <v-icon dark v-if="item.personal === false">public</v-icon>
                                     <v-icon dark v-if="item.personal === true">account_circle</v-icon>
                                 </div>
-                                <v-img v-if="item.image != null && item.image !== ''" :src="item.image" :lazy-src="item.image" aspect-ratio="1" class="grey lighten-2">
+                                <v-img v-if="item.image != null && item.image !== ''" :src="item.image" :lazy-src="item.image" aspect-ratio="1" class="grey darken-2">
                                     <template v-slot:placeholder>
                                         <v-layout fill-height align-center justify-center ma-0>
                                             <v-progress-circular indeterminate color="grey lighten-5"></v-progress-circular>
@@ -53,51 +53,6 @@
             </v-flex>
         </v-layout>
     </div>
-    <!-- <div id="main-list" v-cloak>
-        <div class="mdl-grid" v-if="filter !== ''">
-            <div class="mdl-layout-spacer title"></div>
-            <p>Searching for '{{ filter }}' ({{ filterResults }} results)</p>
-            <div class="mdl-layout-spacer title"></div>
-        </div>
-        <div class="page-content mdl-grid">
-            <div class="mdl-layout-spacer"></div>
-            <ul class="main-list mdl-list" v-cloak>
-                <li v-for='item in filtered' :key="item.id" class="mdl-list__item mdl-list__item--two-line mdl-shadow--2dp">
-                    <span class="mdl-list__item-primary-content">
-                        <div v-if="item.image == null || item.image === ''">
-                            <i v-if="item.personal === false" class="material-icons mdl-list__item-avatar">public</i>
-                            <i v-if="item.personal === true" class="material-icons mdl-list__item-avatar">account_circle</i>
-                        </div>
-                        <img v-if="item.image != null && item.image !== ''" :src="item.image" class="mdl-list__item-avatar">
-                        <span class="strong-title">{{ item.name }}</span>
-                        <span v-html="highlight(item.location)" class="sub-text mdl-list__item-sub-title">{{ item.location }}</span>
-                    </span>
-                        <span class="mdl-list__item-secondary-content">
-                        <button :id="item.id" class="mdl-button mdl-js-button mdl-button--icon">
-                          <i class="material-icons">more_vert</i>
-                        </button>
-                    </span>
-                    <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect" :for="item.id">
-                        <li @click="edit(item.id)" class="mdl-menu__item">Edit</li>
-                        <li @click="remove(item.id)" class="mdl-menu__item">Delete</li>
-                    </ul>
-                </li>
-                <div v-if="showZero === true">
-                    <div class="mdl-grid">
-                        <div class="mdl-layout-spacer"></div>
-                        <h1 class="mdl-h1">204</h1>
-                        <div class="mdl-layout-spacer"></div>
-                    </div>
-                    <div class="mdl-grid">
-                        <div class="mdl-layout-spacer title"></div>
-                        <h2 class="mdl-h5">No jumps have been created yet.</h2>
-                        <div class="mdl-layout-spacer title"></div>
-                    </div>
-                </div>
-            </ul>
-            <div class="mdl-layout-spacer"></div>
-        </div>
-    </div> -->
 </template>
 
 <script>
@@ -168,7 +123,7 @@ export default {
             let that = this;
             this.filtered = this.items.filter(function(item) {
                 let regex = new RegExp(`(${that.filter})`, 'i');
-                return item.name.match(regex);
+                return item.name.match(regex) || item.location.match(regex);
             });
             this.filterResults = this.filtered.length;
             setTimeout(function() {
