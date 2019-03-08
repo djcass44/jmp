@@ -1,5 +1,5 @@
 <template>
-    <div id="app">
+    <v-app id="app">
         <!-- Always shows a header, even in smaller screens. -->
         <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
             <header class="mdl-layout__header">
@@ -46,7 +46,7 @@
             @snackbar="snackbar">
         </JumpDialog>
         <Snackbar ref="snackbar"></Snackbar>
-    </div>
+    </v-app>
 </template>
 
 <script>

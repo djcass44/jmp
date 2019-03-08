@@ -5,52 +5,59 @@
             <p>Searching for '{{ filter }}' ({{ filterResults }} results)</p>
             <div class="mdl-layout-spacer title"></div>
         </div>
-        <div class="page-content mdl-grid">
-            <div class="mdl-layout-spacer"></div>
-            <ul class="main-list mdl-list" v-cloak>
-                <li v-for='user in filtered' :key="user.id" class="mdl-list__item mdl-list__item--two-line mdl-shadow--2dp">
-                    <span class="mdl-list__item-primary-content">
-                        <i class="material-icons mdl-list__item-avatar">account_circle</i>
-                        <span class="strong-title">{{ user.username }}</span>
-                        <span class="sub-text mdl-list__item-sub-title">{{ user.role }}</span>
-                    </span>
-                        <span class="mdl-list__item-secondary-content">
-                        <!-- Right aligned menu below button -->
-                        <button :id="user.id" class="mdl-button mdl-js-button mdl-button--icon">
-                          <i class="material-icons">more_vert</i>
-                        </button>
-                    </span>
-                    <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect" :for="user.id">
-                        <li v-if="user.role === 'USER'" @click="makeAdmin(user.id)" class="mdl-menu__item">Make admin</li>
-                        <li v-if="user.role === 'ADMIN'" @click="makeUser(user.id)" class="mdl-menu__item">Make user</li>
-                        <li @click="remove(user.id)" class="mdl-menu__item">Delete</li>
-                    </ul>
-                </li>
-            </ul>
-            <div class="mdl-layout-spacer"></div>
-        </div>
-        <div class="mdl-grid main-list" v-if="systemInfo !== '' && appInfo !== ''">
-            <div class="mdl-layout-spacer"></div>
-            <v-expansion-panel>
-                <v-expansion-panel-content>
-                  <template v-slot:header>
-                    <div>System information</div>
-                  </template>
-                  <v-card>
-                    <v-card-text><code>{{ systemInfo }}</code></v-card-text>
-                  </v-card>
-                </v-expansion-panel-content>
-                <v-expansion-panel-content>
-                  <template v-slot:header>
-                    <div>Application information</div>
-                  </template>
-                  <v-card>
-                    <v-card-text><code>{{ appInfo }}</code></v-card-text>
-                  </v-card>
-                </v-expansion-panel-content>
-            </v-expansion-panel>
-            <div class="mdl-layout-spacer"></div>
-        </div>
+        <v-layout>
+            <v-flex xs12 sm6 offset-sm3>
+                <v-subheader inset>Users</v-subheader>
+                <v-card>
+                    <v-list two-line subheader>
+                        <v-list-tile v-for="user in filtered" :key="user.id" avatar @click="">
+                            <v-list-tile-avatar :color="user.role === 'ADMIN' ? 'red darken-4' : 'blue darken-4'">
+                                <v-icon dark>account_circle</v-icon>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>{{ user.username }}</v-list-tile-title>
+                                <v-list-tile-sub-title>{{ capitalize(user.role.toLowerCase()) }}</v-list-tile-sub-title>
+                            </v-list-tile-content>
+                            <v-list-tile-action>
+                                <v-menu bottom left offset-y origin="top right" transition="scale-transition">
+                                    <template v-slot:activator="{ on }">
+                                        <v-btn ripple icon v-on="on">
+                                            <v-icon>more_vert</v-icon>
+                                        </v-btn>
+                                    </template>
+                                    <v-list>
+                                        <v-list-tile v-ripple v-if="user.role === 'USER'" @click="makeAdmin(user.id)"><v-list-tile-title>Make admin</v-list-tile-title></v-list-tile>
+                                        <v-list-tile v-ripple v-if="user.role === 'ADMIN'" @click="makeUser(user.id)"><v-list-tile-title>Make user</v-list-tile-title></v-list-tile>
+                                        <v-list-tile v-ripple @click="remove(user.id)"><v-list-tile-title>Delete</v-list-tile-title></v-list-tile>
+                                    </v-list>
+                                </v-menu>
+                            </v-list-tile-action>
+                        </v-list-tile>
+                    </v-list>
+                </v-card>
+                <div v-if="systemInfo !== '' && appInfo !== ''">
+                    <v-subheader inset>About</v-subheader>
+                    <v-expansion-panel>
+                        <v-expansion-panel-content>
+                          <template v-slot:header>
+                            <div>System information</div>
+                          </template>
+                          <v-card>
+                            <v-card-text><code>{{ systemInfo }}</code></v-card-text>
+                          </v-card>
+                        </v-expansion-panel-content>
+                        <v-expansion-panel-content>
+                          <template v-slot:header>
+                            <div>Application information</div>
+                          </template>
+                          <v-card>
+                            <v-card-text><code>{{ appInfo }}</code></v-card-text>
+                          </v-card>
+                        </v-expansion-panel-content>
+                    </v-expansion-panel>
+                </div>
+            </v-flex>
+        </v-layout>
     </div>
 </template>
 
@@ -71,6 +78,9 @@ export default {
         }
     },
     methods: {
+        capitalize(s) {
+            return s && s[0].toUpperCase() + s.slice(1);
+        },
         indexFromId(id) {
             for(let i = 0; i < this.items.length; i++) {
                 if(this.items[i].id === id)
