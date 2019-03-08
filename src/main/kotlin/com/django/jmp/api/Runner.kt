@@ -1,10 +1,9 @@
 package com.django.jmp.api
 
 import com.django.jmp.api.v1.Jump
-import com.django.jmp.api.v2.Info
+import com.django.jmp.api.v2.*
 import com.django.jmp.api.v2.Similar
 import com.django.jmp.api.v2.User
-import com.django.jmp.api.v2.Verify
 import com.django.jmp.audit.Logger
 import com.django.jmp.auth.JWTContextMapper
 import com.django.jmp.auth.TokenProvider
@@ -83,6 +82,7 @@ fun main(args: Array<String>) {
         Jump(auth, store).addEndpoints()
         Similar().addEndpoints()
         User(auth).addEndpoints()
+        Oauth(auth).addEndpoints()
         Verify(auth).addEndpoints()
     }
 }

@@ -39,9 +39,24 @@ class TokenProvider {
 //    private val algorithm: Algorithm = Algorithm.HMAC256(PasswordGenerator.getInstance().getInsecure(32))
     private val algorithm: Algorithm = Algorithm.HMAC256("secret")
 
-    fun create(user: String, userToken: String): String? = try {
-        // Expires in 8 hours
+    // This should only be used for request tokens
+    fun create(user: String): String? = try {
         val expiry = Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(8))
+        JWT.create()
+            .withIssuer(javaClass.name)
+            .withClaim(Auth.headerUser, user)
+            .withClaim(Auth.headerToken, UUID.randomUUID().toString())
+            .withExpiresAt(expiry)
+            .withIssuedAt(Date(System.currentTimeMillis()))
+            .sign(algorithm)
+    }
+    catch (e: Exception) {
+        Log.e(javaClass, "Failed to generate token: [user: $user, cause: $e]")
+        null
+    }
+    fun create(user: String, userToken: String): String? = try {
+        // Expires in 1 hour
+        val expiry = Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1))
         JWT.create()
             .withIssuer(javaClass.name)
             .withClaim(Auth.headerUser, user)
@@ -54,9 +69,29 @@ class TokenProvider {
         Log.e(javaClass, "Failed to generate token: [user: $user, cause: $e]")
         null
     }
+    fun decode(token: String): User? {
+        val verify = JWT.require(algorithm)
+            .withIssuer(javaClass.name)
+            .acceptLeeway(TimeUnit.HOURS.toMillis(1))
+            .build()
+        return try {
+            val result = verify.verify(token)
+            transaction {
+                User.find {
+                    Users.username eq result.getClaim(Auth.headerUser).asString() and
+                            Users.token.eq(UUID.fromString(result.getClaim(Auth.headerToken).asString()))
+                }.limit(1).elementAtOrNull(0)
+            }
+        }
+        catch (e: Exception) {
+            Log.e(javaClass, "Failed lax token verification: $e")
+            null
+        }
+    }
     fun verify(token: String): User? {
         val verify = JWT.require(algorithm)
             .withIssuer(javaClass.name)
+            .acceptLeeway(TimeUnit.HOURS.toMillis(1))
             .build()
         return try {
             val result = verify.verify(token)
@@ -71,7 +106,7 @@ class TokenProvider {
         }
         catch (e: Exception) {
             Log.e(javaClass, "Failed token verification: $e")
-            e.printStackTrace()
+//            e.printStackTrace()
             null
         }
     }

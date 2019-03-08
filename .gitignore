@@ -103,3 +103,4 @@ fabric.properties
 hs_err_pid*
 
 logs
+data

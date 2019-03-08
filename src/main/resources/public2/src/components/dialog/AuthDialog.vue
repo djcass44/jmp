@@ -33,7 +33,7 @@
 </template>
 <script>
 import axios from "axios";
-import { storageUser, storageJWT } from "../../var.js";
+import { storageUser, storageJWT, storageRequest } from "../../var.js";
 
 const nameRegex= new RegExp('^[a-zA-Z0-9_.-]*$');
 export default {
@@ -97,7 +97,7 @@ export default {
         },
         submit () {
             this.$refs.form.validate();
-            const url = `${process.env.VUE_APP_BASE_URL}/v2/user/auth`;
+            const url = `${process.env.VUE_APP_BASE_URL}/v2/oauth/token`;
             let that = this;
             let data = window.btoa(`${this.name}:${this.password}`);
             axios.post(
@@ -107,7 +107,8 @@ export default {
             ).then(r => {
                 that.dialog = false;
                 // console.log(r.data);
-                localStorage.setItem(storageJWT, r.data);
+                localStorage.setItem(storageJWT, r.data.jwt);
+                localStorage.setItem(storageRequest, r.data.request);
                 localStorage.setItem(storageUser, that.name);
                 that.$emit('getAuth');
                 that.$emit('pushItem');

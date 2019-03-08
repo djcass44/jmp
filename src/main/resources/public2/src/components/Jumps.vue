@@ -184,10 +184,10 @@ export default {
         },
         setLoggedIn(loggedIn) {
             this.loggedIn = loggedIn;
+        },
+        authChanged(login, admin) {
+            this.loadItems();
         }
-    },
-    created() {
-        this.loadItems();
     }
 };
 </script>

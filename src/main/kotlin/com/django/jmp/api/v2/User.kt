@@ -24,7 +24,6 @@ import com.django.jmp.db.*
 import com.django.jmp.db.User
 import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
-import io.javalin.NotFoundResponse
 import io.javalin.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
@@ -58,10 +57,7 @@ class User(private val auth: Auth): EndpointGroup {
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Get a users token
         post("${Runner.BASE}/v2/user/auth", { ctx ->
-            val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
-            val token = auth.getUserToken(basicAuth.username, basicAuth.password.toCharArray()) ?: throw NotFoundResponse()
-            val jwt = TokenProvider.getInstance().create(basicAuth.username, token) ?: throw BadRequestResponse()
-            ctx.status(HttpStatus.OK_200).result(jwt)
+            ctx.status(HttpStatus.MOVED_PERMANENTLY_301).result("This has been deprecated in favour of OAuth2 /v2/oauth")
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Change the role of a user
         patch("${Runner.BASE}/v2/user/permission", { ctx ->

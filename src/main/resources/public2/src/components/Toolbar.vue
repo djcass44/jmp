@@ -90,7 +90,7 @@ export default {
                 // probably should just reload page
                 this.$emit('authInvalidate');
                 this.$emit('authGet');
-                this.$emit('loadItems');
+                // this.$emit('loadItems');
             }
         },
         authChanged(login, admin) {

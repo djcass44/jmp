@@ -120,6 +120,7 @@ export default {
         },
         toolbarAuthChanged(login, admin) {
             this.$refs.toolbar.authChanged(login, admin);
+            this.$refs.jumps.authChanged(login, admin);
         },
         toolbarCheckState() {
             this.$refs.toolbar.setSlashUsers(!this.isNotSlashUsers());

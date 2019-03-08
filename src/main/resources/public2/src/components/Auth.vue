@@ -11,7 +11,7 @@
 
 <script>
 import axios from "axios";
-import { storageUser, storageJWT } from "../var.js";
+import { storageUser, storageJWT, storageRequest } from "../var.js";
 
 export default {
     data() {
@@ -22,6 +22,7 @@ export default {
     },
     methods: {
         getAuth() {
+            let that = this;
             let username = '';
             if(localStorage.getItem(storageUser) !== null) {
                 this.username = `Currently authenticated as ${localStorage.getItem(storageUser)}`;
@@ -31,22 +32,34 @@ export default {
                 this.username = "Not authenticated";
                 this.$emit('toolbarAuthChanged', false);
             }
-            const url = `${process.env.VUE_APP_BASE_URL}/v2/verify/token`;
+            const url = `${process.env.VUE_APP_BASE_URL}/v2/oauth/valid`;
             axios.get(url, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}` }}).then(r => {
                 return axios.get(`${process.env.VUE_APP_BASE_URL}/v2/user`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}` }}).then((r2) => {
                     let role = r2.data;
-                    this.$emit('toolbarAuthChanged', true, role === 'ADMIN');
+                    that.$emit('toolbarAuthChanged', true, role === 'ADMIN');
                 }).catch((err) => {
                     console.log(err);
-                    this.$emit('toolbarAuthChanged', true, false);
+                    that.$emit('toolbarAuthChanged', true, false);
                 });
             }).catch((err) => {
                 console.log(err);
                 console.log("User credential verification failed (this is okay if not yet authenticated)");
-                this.username = "Not authenticated";
-                // User verification failed, nuke local storage
-                this.invalidate();
-                this.$emit('toolbarAuthChanged', false);
+                if(err.response.status === 400) {
+                    console.log("Token is probably expired, lets try to refresh it");
+                    // TODO Auth header not being received
+                    return axios.get(`${process.env.VUE_APP_BASE_URL}/v2/oauth/refresh?refresh_token=${localStorage.getItem(storageRequest)}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}` }}).then((r3) => {
+                        localStorage.setItem(storageJWT, r3.data.jwt);
+                        localStorage.setItem(storageRequest, r3.data.request);
+                        console.log("Successfully retrieved new token, will reauthenticate");
+                        that.getAuth();
+                    }).catch((err2) => {
+                        that.username = "Not authenticated";
+                        // User verification failed, nuke local storage
+                        that.invalidate();
+                        that.$emit('toolbarAuthChanged', false);
+                        console.log(`Refresh attempt: ${err2}`);
+                    });
+                }
             });
         },
         showAuth() {
@@ -55,6 +68,7 @@ export default {
         invalidate() {
             localStorage.removeItem(storageUser);
             localStorage.removeItem(storageJWT);
+            localStorage.removeItem(storageRequest);
         }
     },
     created() {

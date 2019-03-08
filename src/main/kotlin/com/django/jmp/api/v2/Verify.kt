@@ -18,8 +18,6 @@ package com.django.jmp.api.v2
 
 import com.django.jmp.api.Auth
 import com.django.jmp.api.Runner
-import com.django.jmp.auth.JWTContextMapper
-import com.django.jmp.auth.TokenProvider
 import com.django.jmp.db.User
 import com.django.jmp.db.Users
 import com.django.log2.logging.Log
@@ -34,17 +32,12 @@ class Verify(private val auth: Auth): EndpointGroup {
     override fun addEndpoints() {
         // Verify a users token is still valid
         get("${Runner.BASE}/v2/verify/token", { ctx ->
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
-            if(jwt.isBlank() || jwt == "null") throw BadRequestResponse()
-            val user = TokenProvider.getInstance().verify(jwt) ?: throw BadRequestResponse()
-            transaction {
-                ctx.status(HttpStatus.OK_200).result(auth.validateUserToken(user.token).toString())
-            }
+            ctx.status(HttpStatus.MOVED_PERMANENTLY_301).result("This has been deprecated in favour of OAuth2 /v2/oauth")
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Verify a user still exists
         get("${Runner.BASE}/v2/verify/user/:name", { ctx ->
             val name = ctx.pathParam("name")
-            if (name.isBlank()) { // TODO never send 'null'
+            if (name.isBlank()) {
                 Log.v(Runner::class.java, "User made null/empty request")
                 throw BadRequestResponse()
             }

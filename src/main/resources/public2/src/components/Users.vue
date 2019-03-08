@@ -154,6 +154,21 @@ export default {
                 componentHandler.upgradeAllRegistered();
             }, 0);
         },
+        loadInfo() {
+            let that = this;
+            axios.get(`${process.env.VUE_APP_BASE_URL}/v2/info/system`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
+                that.systemInfo = r.data;
+            }).catch(function(err) {
+                console.log(err);
+                that.$emit('snackbar', true, `Failed to load system info: ${err.response.status}`);
+            });
+            axios.get(`${process.env.VUE_APP_BASE_URL}/v2/info/app`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
+                that.appInfo = r.data;
+            }).catch(function(err) {
+                console.log(err);
+                that.$emit('snackbar', true, `Failed to load app info: ${err.response.status}`);
+            });
+        },
         loadItems() {
             let url = `${process.env.VUE_APP_BASE_URL}/v2/users`;
             let items = this.items;
@@ -190,23 +205,13 @@ export default {
         },
         setLoggedIn(loggedIn) {
             this.loggedIn = loggedIn;
+        },
+        authChanged(login, admin) {
+            if(login === true) {
+                this.loadItems();
+                this.loadInfo();
+            }
         }
-    },
-    created() {
-        this.loadItems();
-        let that = this;
-        axios.get(`${process.env.VUE_APP_BASE_URL}/v2/info/system`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
-            that.systemInfo = r.data;
-        }).catch(function(err) {
-            console.log(err);
-            that.$emit('snackbar', true, `Failed to system info: ${error.response.status}`);
-        });
-        axios.get(`${process.env.VUE_APP_BASE_URL}/v2/info/app`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
-            that.appInfo = r.data;
-        }).catch(function(err) {
-            console.log(err);
-            that.$emit('snackbar', true, `Failed to app info: ${error.response.status}`);
-        });
     }
 };
 </script>
