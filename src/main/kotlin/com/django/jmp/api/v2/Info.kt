@@ -30,8 +30,11 @@ class Info: EndpointGroup {
         get("${Runner.BASE}/v2/version", { ctx ->
             ctx.status(HttpStatus.OK_200).result("v2.0")
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
-        get("${Runner.BASE}/v2/info", { ctx ->
-            ctx.status(HttpStatus.OK_200).json(InfoAction().get())
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        get("${Runner.BASE}/v2/info/system", { ctx ->
+            ctx.status(HttpStatus.OK_200).json(InfoAction().getSystem())
+        }, roles(Auth.BasicRoles.ADMIN))
+        get("${Runner.BASE}/v2/info/app", { ctx ->
+            ctx.status(HttpStatus.OK_200).json(InfoAction().getApp())
+        }, roles(Auth.BasicRoles.ADMIN))
     }
 }

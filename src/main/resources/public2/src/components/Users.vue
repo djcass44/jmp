@@ -29,7 +29,7 @@
             </ul>
             <div class="mdl-layout-spacer"></div>
         </div>
-        <div class="mdl-grid main-list" v-if="systemInfo !== ''">
+        <div class="mdl-grid main-list" v-if="systemInfo !== '' && appInfo !== ''">
             <div class="mdl-layout-spacer"></div>
             <v-expansion-panel>
                 <v-expansion-panel-content>
@@ -38,6 +38,14 @@
                   </template>
                   <v-card>
                     <v-card-text><code>{{ systemInfo }}</code></v-card-text>
+                  </v-card>
+                </v-expansion-panel-content>
+                <v-expansion-panel-content>
+                  <template v-slot:header>
+                    <div>Application information</div>
+                  </template>
+                  <v-card>
+                    <v-card-text><code>{{ appInfo }}</code></v-card-text>
                   </v-card>
                 </v-expansion-panel-content>
             </v-expansion-panel>
@@ -58,7 +66,8 @@ export default {
             filterResults: 0,
             items: [],
             filtered: [],
-            systemInfo: ''
+            systemInfo: '',
+            appInfo: ''
         }
     },
     methods: {
@@ -161,11 +170,17 @@ export default {
     created() {
         this.loadItems();
         let that = this;
-        axios.get(`${process.env.VUE_APP_BASE_URL}/v2/info`).then(r => {
+        axios.get(`${process.env.VUE_APP_BASE_URL}/v2/info/system`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
             that.systemInfo = r.data;
         }).catch(function(err) {
             console.log(err);
             that.$emit('snackbar', true, `Failed to system info: ${error.response.status}`);
+        });
+        axios.get(`${process.env.VUE_APP_BASE_URL}/v2/info/app`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
+            that.appInfo = r.data;
+        }).catch(function(err) {
+            console.log(err);
+            that.$emit('snackbar', true, `Failed to app info: ${error.response.status}`);
         });
     }
 };

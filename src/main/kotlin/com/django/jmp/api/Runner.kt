@@ -24,9 +24,11 @@ import java.util.*
 
 object Runner {
     const val BASE = "/api"
+    var START_TIME = 0L
 }
 
 fun main(args: Array<String>) {
+    Runner.START_TIME = System.currentTimeMillis()
     Log.v(Runner::class.java, Arrays.toString(args))
     val enableCors = args.contains("--enable-cors")
     if(enableCors) Log.w(Runner::class.java, "WARNING: CORS access is enable for ALL origins. DO NOT allow this in production: WARNING")
