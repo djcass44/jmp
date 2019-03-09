@@ -83,7 +83,7 @@ export default {
             filterResults: 0,
             items: [],
             filtered: [],
-            loading: false,
+            loading: true,
             systemInfo: '',
             appInfo: ''
         }

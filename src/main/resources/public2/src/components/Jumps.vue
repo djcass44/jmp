@@ -76,7 +76,7 @@ export default {
             showZero: false,
             items: [],
             filtered: [],
-            loading: false
+            loading: true
         }
     },
     methods: {
