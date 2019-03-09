@@ -17,9 +17,9 @@
 package com.django.jmp.api
 
 import com.amdelamar.jhash.Hash
-import com.django.jmp.db.Roles
-import com.django.jmp.db.User
-import com.django.jmp.db.Users
+import com.django.jmp.db.dao.Roles
+import com.django.jmp.db.dao.User
+import com.django.jmp.db.dao.Users
 import com.django.log2.logging.Log
 import io.javalin.ConflictResponse
 import io.javalin.security.Role
@@ -161,18 +161,18 @@ class Auth {
             }
         }
     }
-    private fun getDAOUserRole(): com.django.jmp.db.Role {
+    private fun getDAOUserRole(): com.django.jmp.db.dao.Role {
         return getDAORole(BasicRoles.USER)
     }
-    private fun getDAOAdminRole(): com.django.jmp.db.Role {
+    private fun getDAOAdminRole(): com.django.jmp.db.dao.Role {
         return getDAORole(BasicRoles.ADMIN)
     }
-    private fun getDAORole(role: BasicRoles): com.django.jmp.db.Role {
+    private fun getDAORole(role: BasicRoles): com.django.jmp.db.dao.Role {
         return transaction {
-            return@transaction com.django.jmp.db.Role.find {
+            return@transaction com.django.jmp.db.dao.Role.find {
                 Roles.name eq role.name
             }.elementAtOrNull(0)?: // If role is null, create it
-            com.django.jmp.db.Role.new {
+            com.django.jmp.db.dao.Role.new {
                 name = role.name
             }
         }

@@ -17,6 +17,8 @@
 package com.django.jmp.db
 
 import com.django.jmp.api.Auth
+import com.django.jmp.db.dao.Role
+import com.django.jmp.db.dao.User
 import com.django.log2.logging.Log
 import com.django.securepass3.PasswordGenerator
 import org.jetbrains.exposed.sql.transactions.transaction

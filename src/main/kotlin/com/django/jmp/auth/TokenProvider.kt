@@ -19,8 +19,8 @@ package com.django.jmp.auth
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.django.jmp.api.Auth
-import com.django.jmp.db.User
-import com.django.jmp.db.Users
+import com.django.jmp.db.dao.User
+import com.django.jmp.db.dao.Users
 import com.django.log2.logging.Log
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction

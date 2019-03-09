@@ -18,8 +18,8 @@ package com.django.jmp.api.v2
 
 import com.django.jmp.api.Auth
 import com.django.jmp.api.Runner
-import com.django.jmp.db.User
-import com.django.jmp.db.Users
+import com.django.jmp.db.dao.User
+import com.django.jmp.db.dao.Users
 import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
 import io.javalin.apibuilder.ApiBuilder.get

@@ -19,9 +19,9 @@ package com.django.jmp.api.actions
 import com.django.jmp.Version
 import com.django.jmp.api.Runner
 import com.django.jmp.db.ConfigStore
-import com.django.jmp.db.Jump
-import com.django.jmp.db.Jumps
-import com.django.jmp.db.User
+import com.django.jmp.db.dao.Jump
+import com.django.jmp.db.dao.Jumps
+import com.django.jmp.db.dao.User
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.lang.management.ManagementFactory
 import java.util.concurrent.TimeUnit

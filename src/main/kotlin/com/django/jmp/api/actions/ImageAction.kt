@@ -16,8 +16,8 @@
 
 package com.django.jmp.api.actions
 
-import com.django.jmp.db.Jump
-import com.django.jmp.db.Jumps
+import com.django.jmp.db.dao.Jump
+import com.django.jmp.db.dao.Jumps
 import com.django.jmp.net.Favicon
 import com.django.jmp.net.FaviconGrabber
 import org.jetbrains.exposed.sql.transactions.transaction

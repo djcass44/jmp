@@ -21,8 +21,8 @@ import com.django.jmp.api.Runner
 import com.django.jmp.api.Similar
 import com.django.jmp.auth.JWTContextMapper
 import com.django.jmp.auth.TokenProvider
-import com.django.jmp.db.Jump
-import com.django.jmp.db.Jumps
+import com.django.jmp.db.dao.Jump
+import com.django.jmp.db.dao.Jumps
 import com.django.jmp.except.EmptyPathException
 import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse

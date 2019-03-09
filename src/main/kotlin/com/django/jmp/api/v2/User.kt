@@ -20,8 +20,8 @@ import com.django.jmp.api.Auth
 import com.django.jmp.api.Runner
 import com.django.jmp.auth.JWTContextMapper
 import com.django.jmp.auth.TokenProvider
-import com.django.jmp.db.*
-import com.django.jmp.db.User
+import com.django.jmp.db.dao.*
+import com.django.jmp.db.dao.User
 import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
 import io.javalin.UnauthorizedResponse

@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.django.jmp.db
+package com.django.jmp.db.dao
 
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IntEntity
@@ -40,33 +40,3 @@ data class JumpData(val id: Int, val name: String, val location: String, val per
     constructor(jump: Jump): this(jump.id.value, jump.name, jump.location, jump.owner != null, jump.image)
 }
 data class EditJumpData(val id: Int, val name: String, val location: String)
-
-object Users: IntIdTable() {
-    val username = varchar("username", 36).uniqueIndex()
-    val hash = text("hash")
-    val token = uuid("token")
-    val role = reference("role", Roles)
-    val requestToken = text("request_token").nullable()
-}
-class User(id: EntityID<Int>): IntEntity(id) {
-    companion object : IntEntityClass<User>(Users)
-
-    var username by Users.username
-    var hash by Users.hash
-    var token by Users.token
-    var role by Role referencedOn Users.role
-    var requestToken by Users.requestToken
-}
-data class UserData(val id: Int, val username: String, val role: String) {
-    constructor(user: User): this(user.id.value, user.username, user.role.name)
-}
-data class EditUserData(val id: Int, val role: String)
-
-object Roles: IntIdTable() {
-    val name = varchar("name", 12).uniqueIndex()
-}
-class Role(id: EntityID<Int>): IntEntity(id) {
-    companion object: IntEntityClass<Role>(Roles)
-
-    var name by Roles.name
-}

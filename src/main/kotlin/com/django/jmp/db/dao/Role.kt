@@ -14,13 +14,18 @@
  *    limitations under the License.
  */
 
-package com.django.jmp
+package com.django.jmp.db.dao
 
-object Version {
-    private const val MAJOR = "2"
-    private const val MINOR = "1"
-    private const val PATCH = "3"
-    private const val BUILD = "6"
+import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.IntIdTable
 
-    fun getVersion() = "$MAJOR.$MINOR.$PATCH-$BUILD"
+object Roles: IntIdTable() {
+    val name = varchar("name", 12).uniqueIndex()
+}
+class Role(id: EntityID<Int>): IntEntity(id) {
+    companion object: IntEntityClass<Role>(Roles)
+
+    var name by Roles.name
 }
