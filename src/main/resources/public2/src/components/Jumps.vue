@@ -1,13 +1,11 @@
 <template>
     <div id="main-list" v-cloak>
-        <div class="mdl-grid" v-if="filter !== ''">
-            <div class="mdl-layout-spacer title"></div>
-            <p>Searching for '{{ filter }}' ({{ filterResults }} results)</p>
-            <div class="mdl-layout-spacer title"></div>
-        </div>
         <v-layout>
             <v-flex xs12 sm6 offset-sm3>
-                <v-subheader inset v-if="filtered.length > 0">Jumps</v-subheader>
+                <v-subheader inset v-if="filtered.length > 0">
+                    <div v-if="filter !== ''">Jumps ({{ filterResults}} results)</div>
+                    <div v-if="filter === ''">Jumps</div>
+                </v-subheader>
                 <v-card v-if="filtered.length > 0" class="m2-card">
                     <v-list two-line subheader>
                         <v-slide-y-transition class="py-0" group>
