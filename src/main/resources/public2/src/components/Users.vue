@@ -207,9 +207,13 @@ export default {
             this.loggedIn = loggedIn;
         },
         authChanged(login, admin) {
-            if(login === true) {
+            if(login === true && admin === true) {
                 this.loadItems();
                 this.loadInfo();
+            }
+            else {
+                this.loading = false;
+                window.location.replace(`${process.env.VUE_APP_FE_URL}/404`);
             }
         }
     }

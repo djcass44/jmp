@@ -16,9 +16,8 @@
 export default {
     name: 'NotFound',
     methods: {
-        setLoggedIn(loggedIn) {
-
-        }
+        setLoggedIn() {},
+        authChanged() {}
     }
 }
 </script>
