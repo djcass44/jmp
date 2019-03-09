@@ -19,11 +19,10 @@
             <div class="mdl-layout-spacer"></div>
             <div v-cloak class="mdl-grid">
                 <div v-for="item in items" :key="item" class="mdl-cell">
-                    <!-- Contact Chip -->
-                    <button type="button" class="mdl-chip mdl-chip--contact mdl-chip-padding" v-on:click="open(item)">
-                        <span class="mdl-chip__contact mdl-color--blue mdl-color-text--white">{{ item.substring(0, 1).toUpperCase() }}</span>
-                        <span class="mdl-chip__text">{{ item }}</span>
-                    </button>
+                    <v-chip v-ripple @click="open(item)" color="primary" text-color="white">
+                        <v-avatar class="blue darken-4"><strong>{{ item.substring(0, 1).toUpperCase() }}</strong></v-avatar>
+                        <strong class="px-1">{{ item }}</strong>
+                    </v-chip>
                 </div>
             </div>
             <div class="mdl-layout-spacer"></div>
@@ -43,9 +42,8 @@ export default {
         }
     },
     methods: {
-        setLoggedIn() {
-
-        },
+        setLoggedIn() {},
+        authChanged() {},
         open(itemName) {
             window.location.replace(`${process.env.VUE_APP_FE_URL}/jmp?query=${itemName}`)
         }

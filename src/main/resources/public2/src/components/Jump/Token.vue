@@ -1,6 +1,6 @@
 <template>
     <div class="content">
-        <div class="mdl-spinner mdl-js-spinner is-active"></div>
+        <v-progress-circular :size="100" color="accent" indeterminate></v-progress-circular>
     </div>
 </template>
 <script>
@@ -10,9 +10,8 @@ import { storageUser, storageJWT } from "../../var.js";
 export default {
     name: 'Token',
     methods: {
-        setLoggedIn() {
-
-        }
+        setLoggedIn() {},
+        authChanged() {}
     },
     created() {
         let url = new URL(window.location.href);

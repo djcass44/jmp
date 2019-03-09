@@ -16,27 +16,25 @@
 
 package com.django.jmp.api
 
-import com.django.log2.logging.Log
 import info.debatty.java.stringsimilarity.JaroWinkler
-import java.util.*
 
 class Similar(private val query: String, private val dict: ArrayList<String>, private val threshold: Double = 0.75) {
     fun compute(): ArrayList<String> {
-        Log.d(javaClass, "Computing similar values for $query")
+//        Log.d(javaClass, "Computing similar values for $query")
         val jw = JaroWinkler()
         val similarities = arrayListOf<String>()
         var best = ""
-        var best_i = 0.0
+        var bestIndex = 0.0
         for (s in dict) {
             val metric = jw.similarity(query, s)
             if(metric > threshold)
                 similarities.add(s)
-            if(metric > 0.65 && metric > best_i) {
-                best_i = metric
+            if(metric > 0.65 && metric > bestIndex) {
+                bestIndex = metric
                 best = s
             }
-            if(metric > 0)
-                Log.v(javaClass, "s: $s, metric: $metric")
+//            if(metric > 0)
+//                Log.v(javaClass, "s: $s, metric: $metric")
         }
         return if(similarities.size == 0 && best.isNotBlank())
             arrayListOf(best)
