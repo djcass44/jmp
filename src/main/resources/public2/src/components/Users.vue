@@ -20,7 +20,7 @@
                                     <v-list-tile-title>{{ user.username }}</v-list-tile-title>
                                     <v-list-tile-sub-title>{{ capitalize(user.role.toLowerCase()) }}</v-list-tile-sub-title>
                                 </v-list-tile-content>
-                                <v-list-tile-action>
+                                <v-list-tile-action v-if="user.username !== 'admin'">
                                     <v-menu bottom left offset-y origin="top right" transition="scale-transition" min-width="150">
                                         <template v-slot:activator="{ on }">
                                             <v-btn ripple icon v-on="on">

@@ -16,6 +16,7 @@
 
 package com.django.jmp.api.v2
 
+import com.django.jmp.Version
 import com.django.jmp.api.Auth
 import com.django.jmp.api.Runner
 import com.django.jmp.api.actions.InfoAction
@@ -28,7 +29,7 @@ class Info: EndpointGroup {
     override fun addEndpoints() {
         // Version/info
         get("${Runner.BASE}/v2/version", { ctx ->
-            ctx.status(HttpStatus.OK_200).result("v2.0")
+            ctx.status(HttpStatus.OK_200).result("v${Version.getVersion()}")
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         get("${Runner.BASE}/v2/info/system", { ctx ->
             ctx.status(HttpStatus.OK_200).json(InfoAction().getSystem())

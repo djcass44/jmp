@@ -16,6 +16,7 @@
 
 package com.django.jmp.api.actions
 
+import com.django.jmp.Version
 import com.django.jmp.api.Runner
 import com.django.jmp.db.ConfigStore
 import com.django.jmp.db.Jump
@@ -61,7 +62,7 @@ class InfoAction {
      * This information may be sensitive in nature, only allow access to ADMIN
      */
     fun getApp(): AppInfo = transaction {
-        val version = "2.0"
+        val version = Version.getVersion()
         val users = User.all().count()
         val jumps = Jump.all().count()
         val globalJumps = Jump.find {

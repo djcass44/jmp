@@ -1,0 +1,65 @@
+<!--
+  ~    Copyright 2019 Django Cass
+  ~
+  ~    Licensed under the Apache License, Version 2.0 (the "License");
+  ~    you may not use this file except in compliance with the License.
+  ~    You may obtain a copy of the License at
+  ~
+  ~        http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~    Unless required by applicable law or agreed to in writing, software
+  ~    distributed under the License is distributed on an "AS IS" BASIS,
+  ~    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~    See the License for the specific language governing permissions and
+  ~    limitations under the License.
+  -->
+
+<project name="jmp" default="ide" basedir=".">
+    <description>Increments patch number on IntelliJ/Gradle build</description>
+
+    <property name="src" location="src/main/kotlin/com/django/jmp" />
+
+    <property file="version.properties" />
+    <property name="build.number" value="${build.major.number}.${build.minor.number}.${build.build.number}.${build.build.number}" />
+
+    <target name="ide">
+        <propertyfile file="version.properties">
+            <entry key="build.build.number" type="int" operation="+" pattern="0" default="0" value="1" />
+        </propertyfile>
+        <replaceregexp file="${src}/Version.kt"
+                       match="private\s+const\s+val\s+BUILD\s+=\s+&quot;.*&quot;"
+                       replace="private const val BUILD = &quot;${build.build.number}&quot;"
+                       byline="true"
+        />
+        <replaceregexp file="${src}/Version.kt"
+                       match="private\s+const\s+val\s+MAJOR\s+=\s+&quot;.*&quot;"
+                       replace="private const val MAJOR = &quot;${build.major.number}&quot;"
+                       byline="true"
+        />
+        <replaceregexp file="${src}/Version.kt"
+                       match="private\s+const\s+val\s+MINOR\s+=\s+&quot;.*&quot;"
+                       replace="private const val MINOR = &quot;${build.minor.number}&quot;"
+                       byline="true"
+        />
+    </target>
+    <target name="increment-patch">
+        <propertyfile file="version.properties">
+            <entry key="build.patch.number" type="int" operation="+" pattern="0" default="0" value="1" />
+        </propertyfile>
+        <replaceregexp file="${src}/Version.kt"
+                       match="private\s+const\s+val\s+PATCH\s+=\s+&quot;.*&quot;"
+                       replace="private const val PATCH = &quot;${build.patch.number}&quot;"
+                       byline="true"
+        />
+        <replaceregexp file="${src}/Version.kt"
+                       match="private\s+const\s+val\s+MAJOR\s+=\s+&quot;.*&quot;"
+                       replace="private const val MAJOR = &quot;${build.major.number}&quot;"
+                       byline="true"
+        />
+        <replaceregexp file="${src}/Version.kt"
+                       match="private\s+const\s+val\s+MINOR\s+=\s+&quot;.*&quot;"
+                       replace="private const val MINOR = &quot;${build.minor.number}&quot;"
+                       byline="true"
+        />
+    </target>
+</project>

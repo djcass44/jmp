@@ -24,9 +24,11 @@ plugins {
 }
 
 group = "com.django"
-version = "2.0"
+version = "2.1"
 
 apply(plugin = "java")
+
+ant.importBuild("version.xml")
 
 repositories {
     maven { setUrl("https://dl.bintray.com/kotlin/kotlin-eap") }
