@@ -1,9 +1,6 @@
 <template>
     <div id="auth-check" class="mdl-grid" v-cloak>
         <div class="mdl-layout-spacer title"></div>
-        <button class="mdl-button mdl-js-button mdl-button--icon" v-on:click="showAuth">
-            <i class="material-icons" style="color: #3F51B5;">account_circle</i>
-        </button>
         <span class="text-light" style="height: 32px; line-height: 32px;">{{ username }}&nbsp;&bull;&nbsp;{{ version }}</span>
         <div class="mdl-layout-spacer title"></div>
     </div>
@@ -60,9 +57,6 @@ export default {
                     });
                 }
             });
-        },
-        showAuth() {
-            this.$emit('dialog-auth', true);
         },
         invalidate() {
             localStorage.removeItem(storageUser);

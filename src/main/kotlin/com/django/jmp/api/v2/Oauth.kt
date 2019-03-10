@@ -21,6 +21,7 @@ import com.django.jmp.api.Runner
 import com.django.jmp.auth.JWTContextMapper
 import com.django.jmp.auth.TokenProvider
 import io.javalin.BadRequestResponse
+import io.javalin.ForbiddenResponse
 import io.javalin.NotFoundResponse
 import io.javalin.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.get
@@ -49,7 +50,7 @@ class Oauth(private val auth: Auth): EndpointGroup {
         get("${Runner.BASE}/v2/oauth/refresh", { ctx ->
             val refresh = ctx.queryParam("refresh_token", "")
             if(refresh.isNullOrBlank()) throw BadRequestResponse()
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw ForbiddenResponse()
             if (jwt.isBlank() || jwt == "null") throw BadRequestResponse()
             val user = TokenProvider.getInstance().decode(jwt) ?: throw BadRequestResponse()
             // Check if users request token matched expected
@@ -65,7 +66,7 @@ class Oauth(private val auth: Auth): EndpointGroup {
         get("${Runner.BASE}/v2/oauth/valid", { ctx ->
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
             if (jwt.isBlank() || jwt == "null") throw BadRequestResponse()
-            val user = TokenProvider.getInstance().verify(jwt) ?: throw BadRequestResponse()
+            val user = TokenProvider.getInstance().verify(jwt) ?: throw ForbiddenResponse()
             transaction {
                 ctx.status(HttpStatus.OK_200).result(auth.validateUserToken(user.token).toString())
             }

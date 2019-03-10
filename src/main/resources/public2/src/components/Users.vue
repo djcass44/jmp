@@ -38,7 +38,7 @@
                     </v-list>
                 </v-card>
                 <v-subheader inset v-if="loading === false">
-                    <div v-if="filter !== ''">Groups ({{ filterResults}} results)</div>
+                    <div v-if="filter !== ''">Groups ({{ groupResults }} results)</div>
                     <div v-if="filter === ''">Groups</div>
                     <v-spacer></v-spacer>
                     <v-btn icon @click="showGCD(true)"><v-icon color="grey darken-1">add</v-icon></v-btn>
@@ -139,7 +139,8 @@ export default {
             systemInfo: '',
             appInfo: '',
             groups: [],
-            filteredGroups: []
+            filteredGroups: [],
+            groupResults: 0
         }
     },
     methods: {
@@ -249,6 +250,7 @@ export default {
             this.filteredGroups = this.groups.filter(function(item) {
                 return item.name.match(regex);
             });
+            this.groupResults = this.filteredGroups.length;
         },
         loadInfo() {
             let that = this;
@@ -322,13 +324,13 @@ export default {
             this.loggedIn = loggedIn;
         },
         authChanged(login, admin) {
-            if(login === true && admin === true) {
+            if(login === true) {
                 this.loadItems();
-                this.loadInfo();
+                if(admin === true)
+                    this.loadInfo();
             }
             else {
                 this.loading = false;
-                window.location.replace(`${process.env.VUE_APP_FE_URL}/404`);
             }
         },
         loadFailed() {

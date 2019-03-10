@@ -28,10 +28,7 @@ import com.django.jmp.db.dao.JumpData
 import com.django.jmp.db.dao.Jumps
 import com.django.jmp.except.EmptyPathException
 import com.django.log2.logging.Log
-import io.javalin.BadRequestResponse
-import io.javalin.ConflictResponse
-import io.javalin.NotFoundResponse
-import io.javalin.UnauthorizedResponse
+import io.javalin.*
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.security.SecurityUtil
@@ -123,9 +120,9 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
         put("${Runner.BASE}/v1/jumps/add", { ctx ->
             val add = ctx.bodyAsClass(JumpData::class.java)
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
-            val user = TokenProvider.getInstance().verify(jwt) ?: throw BadRequestResponse()
+            val user = TokenProvider.getInstance().verify(jwt) ?: throw UnauthorizedResponse()
             // Block non-admin user from adding global jumps
-            if (!add.personal && transaction { return@transaction user.role.name != Auth.BasicRoles.ADMIN.name }) throw UnauthorizedResponse()
+            if (!add.personal && transaction { return@transaction user.role.name != Auth.BasicRoles.ADMIN.name }) throw ForbiddenResponse()
             if (!jumpExists(add.name, user.username, user.token)) {
                 transaction {
                     Jump.new {
@@ -156,20 +153,20 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
                     ImageAction(update.location).get()
                     ctx.status(HttpStatus.NO_CONTENT_204).json(update)
                 }
-                else throw UnauthorizedResponse()
+                else throw ForbiddenResponse()
             }
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Delete a jump point
         delete("${Runner.BASE}/v1/jumps/rm/:id", { ctx ->
             val id = ctx.pathParam("id").toIntOrNull() ?: throw BadRequestResponse()
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
-            val user = TokenProvider.getInstance().verify(jwt) ?: throw BadRequestResponse()
+            val user = TokenProvider.getInstance().verify(jwt) ?: throw UnauthorizedResponse()
             transaction {
                 val result = Jump.findById(id) ?: throw NotFoundResponse()
                 // 401 if jump is global and user ISN'T admin
-                if (result.owner == null && user.role.name != Auth.BasicRoles.ADMIN.name) throw UnauthorizedResponse()
+                if (result.owner == null && user.role.name != Auth.BasicRoles.ADMIN.name) throw ForbiddenResponse()
                 // 401 if jump is personal and tokens don't match
-                if (result.owner != null && result.owner!!.token != user.token) throw UnauthorizedResponse()
+                if (result.owner != null && result.owner!!.token != user.token) throw ForbiddenResponse()
                 result.delete()
             }
             ctx.status(HttpStatus.NO_CONTENT_204)

@@ -24,6 +24,7 @@ import com.django.jmp.db.dao.*
 import com.django.jmp.db.dao.User
 import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
+import io.javalin.ForbiddenResponse
 import io.javalin.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
@@ -52,7 +53,7 @@ class User(private val auth: Auth): EndpointGroup {
                 }
             }
             ctx.status(HttpStatus.OK_200).json(users)
-        }, roles(Auth.BasicRoles.ADMIN))
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Add a user
         put("${Runner.BASE}/v2/user/add", { ctx ->
             val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
@@ -78,9 +79,9 @@ class User(private val auth: Auth): EndpointGroup {
             transaction {
                 val user = User.findById(updated.id) ?: throw BadRequestResponse()
                 // Block dropping the superuser from admin
-                if(user.username == "admin") throw UnauthorizedResponse()
+                if(user.username == "admin") throw ForbiddenResponse()
                 // Block the user from changing their own permissions
-                if(user.username == u.username) throw UnauthorizedResponse()
+                if(user.username == u.username) throw ForbiddenResponse()
                 val role = Role.find {
                     Roles.name eq updated.role
                 }.elementAtOrNull(0) ?: throw BadRequestResponse()
@@ -98,11 +99,11 @@ class User(private val auth: Auth): EndpointGroup {
                 Log.i(javaClass, "[${user.username}] is removing ${target.username}")
                 if(target.username == "admin") {
                     Log.w(javaClass, "[${user.username}] is attempting to remove the superuser")
-                    throw UnauthorizedResponse()
+                    throw ForbiddenResponse()
                 } // Block deleting the superuser
                 if(target.username == user.username) {
                     Log.w(javaClass, "[${user.username}] is attempting to remove themselves")
-                    throw UnauthorizedResponse()
+                    throw ForbiddenResponse()
                 } // Stop the users deleting themselves
                 target.delete()
             }

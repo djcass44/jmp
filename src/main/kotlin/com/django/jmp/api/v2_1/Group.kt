@@ -22,14 +22,16 @@ import com.django.jmp.auth.JWTContextMapper
 import com.django.jmp.auth.TokenProvider
 import com.django.jmp.db.dao.*
 import com.django.jmp.db.dao.Group
+import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
 import io.javalin.ConflictResponse
+import io.javalin.ForbiddenResponse
 import io.javalin.NotFoundResponse
-import io.javalin.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.security.SecurityUtil.roles
 import org.eclipse.jetty.http.HttpStatus
+import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -67,17 +69,23 @@ class Group: EndpointGroup {
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         put("${Runner.BASE}/v2_1/group/add", { ctx ->
             val add = ctx.bodyAsClass(GroupData::class.java)
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("Invalid token")
+            Log.d(javaClass, "add - JWT parse valid")
+            val user = TokenProvider.getInstance().verify(jwt) ?: throw BadRequestResponse("Token verification failed")
+            Log.d(javaClass, "add - JWT validation passed")
             transaction {
                 val existing = Group.find {
                     Groups.name eq add.name
                 }
                 if(existing.count() > 0) throw ConflictResponse("Group already exists")
-                Group.new {
+                val g = Group.new {
                     name = add.name
                 }
+                // Add the user to the new group
+                g.users = SizedCollection(arrayListOf(user))
             }
             ctx.status(HttpStatus.CREATED_201).json(add)
-        }, roles(Auth.BasicRoles.ADMIN))
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         patch("${Runner.BASE}/v2_1/group/edit", { ctx ->
             val update = ctx.bodyAsClass(GroupData::class.java)
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("JWT couldn't be parsed")
@@ -85,7 +93,7 @@ class Group: EndpointGroup {
             transaction {
                 val existing = Group.findById(update.id) ?: throw NotFoundResponse("Group not found")
                 // Only allow update if user belongs to group (or is admin)
-                if(user.role.name != Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw UnauthorizedResponse("User not in requested group")
+                if(user.role.name != Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
                 existing.name = update.name
                 ctx.status(HttpStatus.NO_CONTENT_204).json(update)
             }
@@ -97,7 +105,7 @@ class Group: EndpointGroup {
             transaction {
                 val existing = Group.findById(id) ?: throw NotFoundResponse("Group not found")
                 // Only allow deletion if user belongs to group (or is admin)
-                if(user.role.name != Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw UnauthorizedResponse("User not in requested group")
+                if(user.role.name != Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
                 existing.delete()
                 ctx.status(HttpStatus.NO_CONTENT_204)
             }
