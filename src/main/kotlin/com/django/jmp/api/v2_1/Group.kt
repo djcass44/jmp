@@ -23,6 +23,7 @@ import com.django.jmp.auth.TokenProvider
 import com.django.jmp.db.dao.*
 import com.django.jmp.db.dao.Group
 import io.javalin.BadRequestResponse
+import io.javalin.ConflictResponse
 import io.javalin.NotFoundResponse
 import io.javalin.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.*
@@ -67,6 +68,10 @@ class Group: EndpointGroup {
         put("${Runner.BASE}/v2_1/group/add", { ctx ->
             val add = ctx.bodyAsClass(GroupData::class.java)
             transaction {
+                val existing = Group.find {
+                    Groups.name eq add.name
+                }
+                if(existing.count() > 0) throw ConflictResponse("Group already exists")
                 Group.new {
                     name = add.name
                 }

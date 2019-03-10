@@ -20,7 +20,7 @@ object Version {
     private const val MAJOR = "2"
     private const val MINOR = "1"
     private const val PATCH = "3"
-    private const val BUILD = "13"
+    private const val BUILD = "14"
 
     fun getVersion() = "$MAJOR.$MINOR.$PATCH-$BUILD"
 }

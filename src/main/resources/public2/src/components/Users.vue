@@ -40,7 +40,7 @@
                     <div v-if="filter !== ''">Groups ({{ filterResults}} results)</div>
                     <div v-if="filter === ''">Groups</div>
                     <v-spacer></v-spacer>
-                    <v-btn icon><v-icon color="grey darken-1">add</v-icon></v-btn>
+                    <v-btn icon @click="showGCD"><v-icon color="grey darken-1">add</v-icon></v-btn>
                 </v-subheader>
                 <v-card v-if="filteredGroups.length > 0" class="m2-card">
                     <v-list two-line subheader>
@@ -99,6 +99,10 @@
                 </div>
             </v-flex>
         </v-layout>
+        <GroupCreateDialog ref="groupCreateDialog"
+            @snackbar="snackbar"
+            @pushItem="loadGroups">
+        </GroupCreateDialog>
     </div>
 </template>
 
@@ -106,8 +110,13 @@
 import axios from "axios";
 import { storageUser, storageJWT } from "../var.js";
 
+import GroupCreateDialog from "./dialog/GroupCreateDialog.vue";
+
 export default {
     name: "Users",
+    components: {
+        GroupCreateDialog
+    },
     data() {
         return {
             filter: '',
@@ -122,6 +131,12 @@ export default {
         }
     },
     methods: {
+        showGCD() {
+            this.$refs.groupCreateDialog.setVisible(true);
+        },
+        snackbar(visible, text) {
+            this.$emit('snackbar', visible, text);
+        },
         capitalize(s) {
             return s && s[0].toUpperCase() + s.slice(1);
         },
@@ -239,6 +254,7 @@ export default {
         },
         loadGroups() {
             let that = this;
+            this.groups = []; // Why is this needed here but not in 'loadItems' ?
             let groups = this.groups;
             axios.get(`${process.env.VUE_APP_BASE_URL}/v2_1/groups`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
                 console.log(`Loaded groups: ${response.data.length}`);

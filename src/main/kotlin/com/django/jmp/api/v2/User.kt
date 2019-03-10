@@ -29,6 +29,7 @@ import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.security.SecurityUtil.roles
 import org.eclipse.jetty.http.HttpStatus
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class User(private val auth: Auth): EndpointGroup {
@@ -37,7 +38,17 @@ class User(private val auth: Auth): EndpointGroup {
             val users = arrayListOf<UserData>()
             transaction {
                 User.all().forEach {
-                    users.add(UserData(it))
+                    val res = (Groups innerJoin GroupUsers innerJoin Users)
+                        .slice(Groups.columns)
+                        .select {
+                            Users.id eq it.id
+                        }
+                        .withDistinct()
+                    val groups = arrayListOf<String>()
+                    Group.wrapRows(res).toList().forEach { g ->
+                        groups.add(g.name)
+                    }
+                    users.add(UserData(it, groups))
                 }
             }
             ctx.status(HttpStatus.OK_200).json(users)

@@ -37,7 +37,7 @@ class User(id: EntityID<Int>): IntEntity(id) {
     var role by Role referencedOn Users.role
     var requestToken by Users.requestToken
 }
-data class UserData(val id: Int, val username: String, val role: String) {
-    constructor(user: User): this(user.id.value, user.username, user.role.name)
+data class UserData(val id: Int, val username: String, val role: String, val groups: ArrayList<String>) {
+    constructor(user: User, groups: ArrayList<String>): this(user.id.value, user.username, user.role.name, groups)
 }
 data class EditUserData(val id: Int, val role: String)
