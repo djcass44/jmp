@@ -5,6 +5,8 @@
                 <v-subheader inset v-if="filtered.length > 0">
                     <div v-if="filter !== ''">Users ({{ filterResults}} results)</div>
                     <div v-if="filter === ''">Users</div>
+                    <v-spacer></v-spacer>
+                    <v-btn icon @click="showCreateDialog"><v-icon color="grey darken-1">add</v-icon></v-btn>
                 </v-subheader>
                 <v-card v-if="filtered.length > 0" class="m2-card">
                     <v-list two-line subheader>
@@ -144,6 +146,9 @@ export default {
         }
     },
     methods: {
+        showCreateDialog() {
+            this.$emit('dialog-create', true);
+        },
         showGCD(create, item) {
             this.$refs.groupDialog.setVisible(true, create, item);
         },
@@ -324,13 +329,10 @@ export default {
             this.loggedIn = loggedIn;
         },
         authChanged(login, admin) {
+            this.loadItems();
             if(login === true) {
-                this.loadItems();
                 if(admin === true)
                     this.loadInfo();
-            }
-            else {
-                this.loading = false;
             }
         },
         loadFailed() {

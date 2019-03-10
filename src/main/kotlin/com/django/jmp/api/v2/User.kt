@@ -36,6 +36,10 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class User(private val auth: Auth): EndpointGroup {
     override fun addEndpoints() {
         get("${Runner.BASE}/v2/users", { ctx ->
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("Invalid token")
+            Log.d(javaClass, "list - JWT parse valid")
+            TokenProvider.getInstance().verify(jwt) ?: throw ForbiddenResponse("Token verification failed")
+            Log.d(javaClass, "list - JWT validation passed")
             val users = arrayListOf<UserData>()
             transaction {
                 User.all().forEach {

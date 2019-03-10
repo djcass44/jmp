@@ -17,20 +17,13 @@
             <span>Search</span>
         </v-tooltip> -->
 
-        <v-tooltip bottom v-if="loggedIn && !nullPage">
+        <v-menu bottom left offset-y origin="top right" transition="scale-transition" v-if="!nullPage" min-width="150">
             <template v-slot:activator="{ on }">
-                <v-btn icon v-on="on" @click="openJumpDialog"><v-icon>add</v-icon></v-btn>
-            </template>
-            <span>Add new</span>
-        </v-tooltip>
-
-        <v-menu bottom left offset-y origin="top right" transition="scale-transition" v-if="!slashUsers && !nullPage" min-width="150">
-            <template v-slot:activator="{ on }">
-                <v-btn icon v-on="on"><v-icon>more_vert</v-icon></v-btn>
+                <v-btn icon v-on="on"><v-icon>account_circle</v-icon></v-btn>
             </template>
             <v-list>
                 <v-list-tile v-ripple v-if="!loggedIn" @click="openDialog"><v-list-tile-title>Login</v-list-tile-title></v-list-tile>
-                <v-list-tile v-ripple v-if="isAdmin" @click="openAdmin"><v-list-tile-title>Admin settings</v-list-tile-title></v-list-tile>
+                <v-list-tile v-ripple v-if="isAdmin && !slashUsers" @click="openAdmin"><v-list-tile-title>Admin settings</v-list-tile-title></v-list-tile>
                 <v-list-tile v-ripple v-if="loggedIn" @click="logout"><v-list-tile-title>Logout</v-list-tile-title></v-list-tile>
             </v-list>
         </v-menu>

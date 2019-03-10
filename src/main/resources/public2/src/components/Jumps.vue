@@ -2,9 +2,11 @@
     <div id="main-list" v-cloak>
         <v-layout>
             <v-flex xs12 sm6 offset-sm3>
-                <v-subheader inset v-if="filtered.length > 0">
+                <v-subheader inset v-if="filtered.length > 0 && loading === false">
                     <div v-if="filter !== ''">Jumps ({{ filterResults}} results)</div>
                     <div v-if="filter === ''">Jumps</div>
+                    <v-spacer></v-spacer>
+                    <v-btn icon @click="showCreateDialog"><v-icon color="grey darken-1">add</v-icon></v-btn>
                 </v-subheader>
                 <v-card v-if="filtered.length > 0" class="m2-card">
                     <v-list two-line subheader>
@@ -78,6 +80,9 @@ export default {
         }
     },
     methods: {
+        showCreateDialog() {
+            this.$emit('dialog-create', true, 'New jump point', 'Create');
+        },
         copyFailed() {
             this.$emit('snackbar', true, "Failed to copy!")
         },
