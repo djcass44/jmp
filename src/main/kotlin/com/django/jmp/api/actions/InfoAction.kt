@@ -25,7 +25,6 @@ import com.django.jmp.db.dao.Jumps
 import com.django.jmp.db.dao.User
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.lang.management.ManagementFactory
-import java.util.concurrent.TimeUnit
 
 class InfoAction {
     data class SystemInfo(val osInfo: OSInfo, val cpus: Int, val javaInfo: JavaInfo, val kotlinInfo: KotlinInfo, val memoryInfo: MemoryInfo)
@@ -41,11 +40,7 @@ class InfoAction {
         val cpuCount = Runtime.getRuntime().availableProcessors()
 
         val jvmUptime = ManagementFactory.getRuntimeMXBean().uptime
-        val uptimeString = String.format("%02d min, %02d sec",
-            TimeUnit.MILLISECONDS.toMinutes(jvmUptime),
-            TimeUnit.MILLISECONDS.toSeconds(jvmUptime) -
-                    TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(jvmUptime))
-        )
+        val uptimeString = timeSpan(jvmUptime)
         val javaInfo = JavaInfo(System.getProperty("java.vm.name"),
             System.getProperty("java.vm.version"),
             System.getProperty("java.vm.specification.version"),
@@ -75,12 +70,30 @@ class InfoAction {
         }.count()
         val jumpInfo = JumpInfo(jumps, globalJumps, personalJumps)
         val uptime = System.currentTimeMillis() - Runner.START_TIME
-        val uptimeString = String.format("%02d min, %02d sec",
-            TimeUnit.MILLISECONDS.toMinutes(uptime),
-            TimeUnit.MILLISECONDS.toSeconds(uptime) -
-                    TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(uptime))
-        )
+        val uptimeString = timeSpan(uptime)
         return@transaction AppInfo(version, users, groups, jumpInfo, uptimeString, Runner.store)
+    }
+
+    private fun slf(n: Double): String = Math.floor(n).toLong().toString()
+    private fun timeSpan(timeInMs: Long): String {
+        val t = timeInMs.toDouble()
+        if (t < 1000.0)
+            return slf(t) + "ms"
+        if (t < 60000.0)
+            return slf(t / 1000.0) + "s " +
+                    slf(t % 1000.0) + "ms"
+        if (t < 3600000.0)
+            return slf(t / 60000.0) + "m " +
+                    slf(t % 60000.0 / 1000.0) + "s " +
+                    slf(t % 1000.0) + "ms"
+        return if (t < 86400000.0) slf(t / 3600000.0) + "h " +
+                slf(t % 3600000.0 / 60000.0) + "m " +
+                slf(t % 60000.0 / 1000.0) + "s " +
+                slf(t % 1000.0) + "ms" else slf(t / 86400000.0) + "d " +
+                slf(t % 86400000.0 / 3600000.0) + "h " +
+                slf(t % 3600000.0 / 60000.0) + "m " +
+                slf(t % 60000.0 / 1000.0) + "s " +
+                slf(t % 1000.0) + "ms"
     }
 
     private fun getByteFormatted(bytes: Long, si: Boolean = true): String {
