@@ -36,6 +36,39 @@
                         </v-slide-y-transition>
                     </v-list>
                 </v-card>
+                <v-subheader inset v-if="filteredGroups.length > 0">
+                    <div v-if="filter !== ''">Groups ({{ filterResults}} results)</div>
+                    <div v-if="filter === ''">Groups</div>
+                    <v-spacer></v-spacer>
+                    <v-btn icon><v-icon color="grey darken-1">add</v-icon></v-btn>
+                </v-subheader>
+                <v-card v-if="filteredGroups.length > 0" class="m2-card">
+                    <v-list two-line subheader>
+                        <v-slide-y-transition class="py-0" group>
+                            <v-list-tile v-for="group in filteredGroups" :key="group.id" avatar @click="">
+                                <v-list-tile-avatar color="blue darken-4">
+                                    <v-icon large dark>group</v-icon>
+                                </v-list-tile-avatar>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>{{ group.name }}</v-list-tile-title>
+                                </v-list-tile-content>
+                                <v-list-tile-action>
+                                    <v-menu bottom left offset-y origin="top right" transition="scale-transition" min-width="150">
+                                        <template v-slot:activator="{ on }">
+                                            <v-btn ripple icon v-on="on">
+                                                <v-icon>more_vert</v-icon>
+                                            </v-btn>
+                                        </template>
+                                        <v-list>
+                                            <v-list-tile v-ripple @click=""><v-list-tile-title>Edit</v-list-tile-title></v-list-tile>
+                                            <v-list-tile v-ripple @click=""><v-list-tile-title>Delete</v-list-tile-title></v-list-tile>
+                                        </v-list>
+                                    </v-menu>
+                                </v-list-tile-action>
+                            </v-list-tile>
+                        </v-slide-y-transition>
+                    </v-list>
+                </v-card>
                 <div v-if="loading === true" class="text-xs-center pa-4">
                     <v-progress-circular :size="100" color="accent" indeterminate></v-progress-circular>
                 </div>
@@ -83,7 +116,9 @@ export default {
             filtered: [],
             loading: true,
             systemInfo: '',
-            appInfo: ''
+            appInfo: '',
+            groups: [],
+            filteredGroups: []
         }
     },
     methods: {
@@ -147,10 +182,20 @@ export default {
                 return item.username.match(regex);
             });
             this.filterResults = this.filtered.length;
+            that.filterGroups();
             setTimeout(function() {
                 componentHandler.upgradeDom();
                 componentHandler.upgradeAllRegistered();
             }, 0);
+        },
+        filterGroups() {
+            if(this.filter === '')
+                this.filteredGroups = this.groups;
+            let that = this;
+            let regex = new RegExp(`(${that.filter})`, 'i');
+            this.filteredGroups = this.groups.filter(function(item) {
+                return item.name.match(regex);
+            });
         },
         loadInfo() {
             let that = this;
@@ -190,6 +235,24 @@ export default {
                 that.loading = false;
                 that.$emit('snackbar', true, `Failed to load users: ${error.response.status}`);
             });
+            that.loadGroups();
+        },
+        loadGroups() {
+            let that = this;
+            let groups = this.groups;
+            axios.get(`${process.env.VUE_APP_BASE_URL}/v2_1/groups`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
+                console.log(`Loaded groups: ${response.data.length}`);
+                response.data.map(item => {
+                    groups.push(item);
+                });
+                that.filterItems();
+                that.loading = false;
+            }).catch(function(error) {
+                console.log(error);
+                that.filterItems();
+                that.loading = false;
+                that.$emit('snackbar', true, `Failed to load groups: ${error.response.status}`);
+            });
         },
         pushItem(item) {
             // this.items.push(item);
@@ -213,6 +276,9 @@ export default {
                 this.loading = false;
                 window.location.replace(`${process.env.VUE_APP_FE_URL}/404`);
             }
+        },
+        loadFailed() {
+            this.loading = false;
         }
     }
 };

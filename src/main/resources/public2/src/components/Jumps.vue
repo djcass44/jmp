@@ -185,6 +185,9 @@ export default {
         },
         authChanged(login, admin) {
             this.loadItems();
+        },
+        loadFailed() {
+            this.loading = false;
         }
     }
 };

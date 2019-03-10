@@ -44,9 +44,8 @@ export default {
             }).catch((err) => {
                 console.log(err);
                 console.log("User credential verification failed (this is okay if not yet authenticated)");
-                if(err.response.status === 400) {
+                if(err.response !== undefined && err.response.status === 400) {
                     console.log("Token is probably expired, lets try to refresh it");
-                    // TODO Auth header not being received
                     return axios.get(`${process.env.VUE_APP_BASE_URL}/v2/oauth/refresh?refresh_token=${localStorage.getItem(storageRequest)}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}` }}).then((r3) => {
                         localStorage.setItem(storageJWT, r3.data.jwt);
                         localStorage.setItem(storageRequest, r3.data.request);

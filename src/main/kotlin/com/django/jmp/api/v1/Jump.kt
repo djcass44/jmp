@@ -135,7 +135,7 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
                     }
                     ImageAction(add.location).get()
                 }
-                ctx.status(HttpStatus.CREATED_201)
+                ctx.status(HttpStatus.CREATED_201).json(add)
             } else
                 throw ConflictResponse()
         }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))

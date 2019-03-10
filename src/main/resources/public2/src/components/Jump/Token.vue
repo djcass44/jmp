@@ -11,7 +11,8 @@ export default {
     name: 'Token',
     methods: {
         setLoggedIn() {},
-        authChanged() {}
+        authChanged() {},
+        loadFailed() {},
     },
     created() {
         let url = new URL(window.location.href);

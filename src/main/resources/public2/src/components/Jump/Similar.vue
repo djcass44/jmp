@@ -44,6 +44,7 @@ export default {
     methods: {
         setLoggedIn() {},
         authChanged() {},
+        loadFailed() {},
         open(itemName) {
             window.location.replace(`${process.env.VUE_APP_FE_URL}/jmp?query=${itemName}`)
         }

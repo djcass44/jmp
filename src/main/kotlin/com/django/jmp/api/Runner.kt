@@ -3,15 +3,15 @@ package com.django.jmp.api
 import com.django.jmp.api.v1.Jump
 import com.django.jmp.api.v2.*
 import com.django.jmp.api.v2.Similar
+import com.django.jmp.api.v2.User
+import com.django.jmp.api.v2_1.Group
 import com.django.jmp.audit.Logger
 import com.django.jmp.auth.JWTContextMapper
 import com.django.jmp.auth.TokenProvider
 import com.django.jmp.db.Config
 import com.django.jmp.db.ConfigStore
 import com.django.jmp.db.Init
-import com.django.jmp.db.dao.Jumps
-import com.django.jmp.db.dao.Roles
-import com.django.jmp.db.dao.Users
+import com.django.jmp.db.dao.*
 import com.django.log2.logging.Log
 import io.javalin.Javalin
 import org.eclipse.jetty.http.HttpStatus
@@ -50,12 +50,12 @@ fun main(args: Array<String>) {
     Log.v(Runner::class.java, "Database config: [${store.url}, ${store.driver}]")
     Log.v(Runner::class.java, "Application config: [${store.BASE_URL}, ${store.logRequestDir}]")
     Database.connect(store.url, store.driver)
-    TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE // Fix required for SQLite
+    TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE // Fix required for SQLite/Oracle DB
 
     transaction {
         addLogger(StdOutSqlLogger)
-        SchemaUtils.create(Jumps, Users, Roles) // Ensure that the 'Jumps' table is created
-        Init() // Ensure that the default admin is created
+        SchemaUtils.create(Jumps, Users, Roles, Groups, GroupUsers) // Ensure that the tables are created
+        Init() // Ensure that the default admin/roles is created
     }
     val auth = Auth()
     val logger = Logger(store.logRequestDir)
@@ -86,6 +86,7 @@ fun main(args: Array<String>) {
         Jump(auth, store).addEndpoints()
         Similar().addEndpoints()
         User(auth).addEndpoints()
+        Group().addEndpoints()
         Oauth(auth).addEndpoints()
         Verify(auth).addEndpoints()
     }

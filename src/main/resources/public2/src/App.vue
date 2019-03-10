@@ -28,6 +28,7 @@
                 </router-view>
                 <Auth ref="auth"
                     @dialog-auth="dialogAuth"
+                    @loadFailed="loadFailed"
                     @toolbarAuthChanged="toolbarAuthChanged">
                 </Auth>
             </main>
@@ -131,6 +132,9 @@ export default {
         },
         authInvalidate() {
             this.$refs.auth.invalidate();
+        },
+        loadFailed() {
+            this.$refs.jumps.loadFailed();
         },
         isSlashUsers() {
             return this.$refs.jumps.$options.name === "Users";

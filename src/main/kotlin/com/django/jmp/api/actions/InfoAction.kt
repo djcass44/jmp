@@ -19,6 +19,7 @@ package com.django.jmp.api.actions
 import com.django.jmp.Version
 import com.django.jmp.api.Runner
 import com.django.jmp.db.ConfigStore
+import com.django.jmp.db.dao.Group
 import com.django.jmp.db.dao.Jump
 import com.django.jmp.db.dao.Jumps
 import com.django.jmp.db.dao.User
@@ -28,7 +29,7 @@ import java.util.concurrent.TimeUnit
 
 class InfoAction {
     data class SystemInfo(val osInfo: OSInfo, val cpus: Int, val javaInfo: JavaInfo, val kotlinInfo: KotlinInfo, val memoryInfo: MemoryInfo)
-    data class AppInfo(val version: String, val users: Int, val jumpInfo: JumpInfo, val appUptime: String, val launchConfig: ConfigStore)
+    data class AppInfo(val version: String, val users: Int, val groups: Int, val jumpInfo: JumpInfo, val appUptime: String, val launchConfig: ConfigStore)
 
     data class JavaInfo(val name: String, val version: String, val specification: String, val vendor: String, val home: String, val uptime: String)
     data class KotlinInfo(val major: Int, val minor: Int, val patch: Int)
@@ -64,6 +65,7 @@ class InfoAction {
     fun getApp(): AppInfo = transaction {
         val version = Version.getVersion()
         val users = User.all().count()
+        val groups = Group.all().count()
         val jumps = Jump.all().count()
         val globalJumps = Jump.find {
             Jumps.owner.isNull()
@@ -78,7 +80,7 @@ class InfoAction {
             TimeUnit.MILLISECONDS.toSeconds(uptime) -
                     TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(uptime))
         )
-        return@transaction AppInfo(version, users, jumpInfo, uptimeString, Runner.store)
+        return@transaction AppInfo(version, users, groups, jumpInfo, uptimeString, Runner.store)
     }
 
     private fun getByteFormatted(bytes: Long, si: Boolean = true): String {
