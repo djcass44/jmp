@@ -29,6 +29,7 @@
                                             <v-list-tile v-ripple v-if="user.role === 'USER'" @click="makeAdmin(user.id)"><v-list-tile-title>Promote to admin</v-list-tile-title></v-list-tile>
                                             <v-list-tile v-ripple v-if="user.role === 'ADMIN'" @click="makeUser(user.id)"><v-list-tile-title>Demote to user</v-list-tile-title></v-list-tile>
                                             <v-list-tile v-ripple @click="remove(user.id)"><v-list-tile-title>Delete</v-list-tile-title></v-list-tile>
+                                            <v-list-tile v-ripple @click=""><v-list-tile-title>Set groups</v-list-tile-title></v-list-tile>
                                         </v-list>
                                     </v-menu>
                                 </v-list-tile-action>
@@ -61,7 +62,7 @@
                                         </template>
                                         <v-list>
                                             <v-list-tile v-ripple @click=""><v-list-tile-title>Edit</v-list-tile-title></v-list-tile>
-                                            <v-list-tile v-ripple @click=""><v-list-tile-title>Delete</v-list-tile-title></v-list-tile>
+                                            <v-list-tile v-ripple @click="showGDD(group.id)"><v-list-tile-title>Delete</v-list-tile-title></v-list-tile>
                                         </v-list>
                                     </v-menu>
                                 </v-list-tile-action>
@@ -103,6 +104,9 @@
             @snackbar="snackbar"
             @pushItem="loadGroups">
         </GroupCreateDialog>
+        <GenericDeleteDialog ref="deleteDialog"
+            @doRemove="removeGroup">
+        </GenericDeleteDialog>
     </div>
 </template>
 
@@ -111,11 +115,13 @@ import axios from "axios";
 import { storageUser, storageJWT } from "../var.js";
 
 import GroupCreateDialog from "./dialog/GroupCreateDialog.vue";
+import GenericDeleteDialog from "./dialog/GenericDeleteDialog.vue";
 
 export default {
     name: "Users",
     components: {
-        GroupCreateDialog
+        GroupCreateDialog,
+        GenericDeleteDialog
     },
     data() {
         return {
@@ -134,6 +140,9 @@ export default {
         showGCD() {
             this.$refs.groupCreateDialog.setVisible(true);
         },
+        showGDD(id) {
+            this.$refs.deleteDialog.setVisible(true, id);
+        },
         snackbar(visible, text) {
             this.$emit('snackbar', visible, text);
         },
@@ -143,6 +152,13 @@ export default {
         indexFromId(id) {
             for(let i = 0; i < this.items.length; i++) {
                 if(this.items[i].id === id)
+                    return i;
+            }
+            return -1;
+        },
+        indexFromGId(id) {
+            for(let i = 0; i < this.groups.length; i++) {
+                if(this.groups[i].id === id)
                     return i;
             }
             return -1;
@@ -159,10 +175,23 @@ export default {
             axios.delete(url, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
                 that.items.splice(index, 1); // Delete the item, making vue update
                 that.filterItems();
-                this.$emit('snackbar', true, "Successfully removed user");
+                that.$emit('snackbar', true, "Successfully removed user");
             }).catch(e => {
                 console.log(e);
-                this.$emit('snackbar', true, `Failed to delete: ${e.response.status}`);
+                that.$emit('snackbar', true, `Failed to delete: ${e.response.status}`);
+            });
+        },
+        removeGroup(id) {
+            let index = this.indexFromGId(id);
+            let item = this.groups[index];
+            let that = this;
+            axios.delete(`${process.env.VUE_APP_BASE_URL}/v2_1/group/rm/${item.id}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
+                that.groups.splice(index, 1);
+                that.filterItems();
+                that.snackbar(true, "Successfully removed group");
+            }).catch(e => {
+                console.log(e);
+                that.snackbar(true, `Failed to delete group: ${e.response.status}`);
             });
         },
         makeAdmin(id) {
