@@ -28,8 +28,8 @@
                                         <v-list>
                                             <v-list-tile v-ripple v-if="user.role === 'USER'" @click="makeAdmin(user.id)"><v-list-tile-title>Promote to admin</v-list-tile-title></v-list-tile>
                                             <v-list-tile v-ripple v-if="user.role === 'ADMIN'" @click="makeUser(user.id)"><v-list-tile-title>Demote to user</v-list-tile-title></v-list-tile>
+                                            <v-list-tile v-ripple @click="showGSD(user.id)"><v-list-tile-title>Set groups</v-list-tile-title></v-list-tile>
                                             <v-list-tile v-ripple @click="remove(user.id)"><v-list-tile-title>Delete</v-list-tile-title></v-list-tile>
-                                            <v-list-tile v-ripple @click=""><v-list-tile-title>Set groups</v-list-tile-title></v-list-tile>
                                         </v-list>
                                     </v-menu>
                                 </v-list-tile-action>
@@ -37,18 +37,19 @@
                         </v-slide-y-transition>
                     </v-list>
                 </v-card>
-                <v-subheader inset v-if="filteredGroups.length > 0">
+                <v-subheader inset v-if="loading === false">
                     <div v-if="filter !== ''">Groups ({{ filterResults}} results)</div>
                     <div v-if="filter === ''">Groups</div>
                     <v-spacer></v-spacer>
-                    <v-btn icon @click="showGCD"><v-icon color="grey darken-1">add</v-icon></v-btn>
+                    <v-btn icon @click="showGCD(true)"><v-icon color="grey darken-1">add</v-icon></v-btn>
                 </v-subheader>
+                <div v-if="filteredGroups.length === 0 && loading === false" class="text-xs-center body-1" color="grey darken-1">No groups.</div>
                 <v-card v-if="filteredGroups.length > 0" class="m2-card">
                     <v-list two-line subheader>
                         <v-slide-y-transition class="py-0" group>
                             <v-list-tile v-for="group in filteredGroups" :key="group.id" avatar @click="">
                                 <v-list-tile-avatar color="blue darken-4">
-                                    <v-icon large dark>group</v-icon>
+                                    <v-icon large dark>domain</v-icon>
                                 </v-list-tile-avatar>
                                 <v-list-tile-content>
                                     <v-list-tile-title>{{ group.name }}</v-list-tile-title>
@@ -61,7 +62,7 @@
                                             </v-btn>
                                         </template>
                                         <v-list>
-                                            <v-list-tile v-ripple @click=""><v-list-tile-title>Edit</v-list-tile-title></v-list-tile>
+                                            <v-list-tile v-ripple @click="showGCD(false, group)"><v-list-tile-title>Edit</v-list-tile-title></v-list-tile>
                                             <v-list-tile v-ripple @click="showGDD(group.id)"><v-list-tile-title>Delete</v-list-tile-title></v-list-tile>
                                         </v-list>
                                     </v-menu>
@@ -100,13 +101,16 @@
                 </div>
             </v-flex>
         </v-layout>
-        <GroupCreateDialog ref="groupCreateDialog"
+        <GroupDialog ref="groupDialog"
             @snackbar="snackbar"
             @pushItem="loadGroups">
-        </GroupCreateDialog>
+        </GroupDialog>
         <GenericDeleteDialog ref="deleteDialog"
             @doRemove="removeGroup">
         </GenericDeleteDialog>
+        <GroupSelectDialog ref="groupSelectDialog"
+            @snackbar="snackbar">
+        </GroupSelectDialog>
     </div>
 </template>
 
@@ -114,14 +118,16 @@
 import axios from "axios";
 import { storageUser, storageJWT } from "../var.js";
 
-import GroupCreateDialog from "./dialog/GroupCreateDialog.vue";
+import GroupDialog from "./dialog/GroupDialog.vue";
 import GenericDeleteDialog from "./dialog/GenericDeleteDialog.vue";
+import GroupSelectDialog from "./dialog/GroupSelectDialog.vue";
 
 export default {
     name: "Users",
     components: {
-        GroupCreateDialog,
-        GenericDeleteDialog
+        GroupDialog,
+        GenericDeleteDialog,
+        GroupSelectDialog
     },
     data() {
         return {
@@ -137,11 +143,14 @@ export default {
         }
     },
     methods: {
-        showGCD() {
-            this.$refs.groupCreateDialog.setVisible(true);
+        showGCD(create, item) {
+            this.$refs.groupDialog.setVisible(true, create, item);
         },
         showGDD(id) {
             this.$refs.deleteDialog.setVisible(true, id);
+        },
+        showGSD(uid) {
+            this.$refs.groupSelectDialog.setVisible(true, uid);
         },
         snackbar(visible, text) {
             this.$emit('snackbar', visible, text);

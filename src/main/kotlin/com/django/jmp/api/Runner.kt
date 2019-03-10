@@ -13,6 +13,7 @@ import com.django.jmp.db.Config
 import com.django.jmp.db.ConfigStore
 import com.django.jmp.db.Init
 import com.django.jmp.db.dao.*
+import com.django.jmp.except.InvalidSecurityConfigurationException
 import com.django.log2.logging.Log
 import io.javalin.Javalin
 import org.eclipse.jetty.http.HttpStatus
@@ -50,6 +51,8 @@ fun main(args: Array<String>) {
     Runner.store = store
     Log.v(Runner::class.java, "Database config: [${store.url}, ${store.driver}]")
     Log.v(Runner::class.java, "Application config: [${store.BASE_URL}, ${store.logRequestDir}]")
+    // Do not allow CORS on an https url
+    if(store.BASE_URL.startsWith("https") && enableCors) throw InvalidSecurityConfigurationException()
     Database.connect(store.url, store.driver)
     TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE // Fix required for SQLite/Oracle DB
 
@@ -76,7 +79,7 @@ fun main(args: Array<String>) {
                 ctx.status(HttpStatus.UNAUTHORIZED_401).result("Unauthorised")
         }
         requestLogger { ctx, timeMs ->
-            logger.add("${ctx.method()} ${ctx.path()} took $timeMs ms")
+            logger.add("${System.currentTimeMillis()} - ${ctx.method()} ${ctx.path()} took $timeMs ms")
         }
         before { ctx ->
             ctx.register(JWTContextMapper::class.java, JWTContextMapper())

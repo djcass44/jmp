@@ -108,5 +108,26 @@ class User(private val auth: Auth): EndpointGroup {
             }
             ctx.status(HttpStatus.NO_CONTENT_204)
         }, roles(Auth.BasicRoles.ADMIN))
+        get("${Runner.BASE}/v2_1/user/groups", { ctx ->
+            val uid = ctx.validatedQueryParam("uid").asInt().value ?: throw BadRequestResponse("UID cannot be null")
+            val items = arrayListOf<GroupData>()
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: ""
+            val user = if(jwt == "null" || jwt.isBlank()) null else TokenProvider.getInstance().verify(jwt)
+            if(user != null) {
+                transaction {
+                    val getUser = User.findById(uid) ?: throw BadRequestResponse("Requested user is null")
+                    val res = (Groups innerJoin GroupUsers innerJoin Users)
+                        .slice(Groups.columns)
+                        .select {
+                            Users.id eq getUser.id
+                        }
+                        .withDistinct()
+                    Group.wrapRows(res).toList().forEach {
+                        items.add(GroupData(it))
+                    }
+                }
+            }
+            ctx.status(HttpStatus.OK_200).json(items)
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
     }
 }

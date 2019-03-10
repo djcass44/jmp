@@ -22,6 +22,7 @@ import com.django.jmp.auth.JWTContextMapper
 import com.django.jmp.auth.TokenProvider
 import com.django.jmp.db.dao.Group
 import com.django.jmp.db.dao.User
+import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
 import io.javalin.NotFoundResponse
 import io.javalin.apibuilder.ApiBuilder.delete
@@ -34,11 +35,14 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class GroupMod: EndpointGroup {
     override fun addEndpoints() {
         patch("${Runner.BASE}/v2_1/groupmod/add", { ctx ->
-            val addUser = ctx.validatedPathParam("uid").asInt().value
-            val addGroup = ctx.validatedPathParam("gid").asInt().value
+            val addUser = ctx.validatedQueryParam("uid").asInt().value
+            val addGroup = ctx.validatedQueryParam("gid").asInt().value
             if(addUser == null || addGroup == null) throw BadRequestResponse("Invalid path parameters")
+            Log.d(javaClass, "add - queryParams valid")
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("Invalid token")
+            Log.d(javaClass, "add - JWT parse valid")
             val user = TokenProvider.getInstance().verify(jwt) ?: throw BadRequestResponse("Token verification failed")
+            Log.d(javaClass, "add - JWT validation passed")
             transaction {
                 val newUser = User.findById(addUser) ?: throw NotFoundResponse("Invalid uid")
                 val group = Group.findById(addGroup) ?: throw NotFoundResponse("Invalid gid")
@@ -48,15 +52,19 @@ class GroupMod: EndpointGroup {
                     newUsers.addAll(group.users)
                     newUsers.add(newUser)
                     group.users = SizedCollection(newUsers)
+                    Log.i(javaClass, "${user.username} added ${newUser.username} to group ${group.name}")
                 }
             }
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         delete("${Runner.BASE}/v2_1/groupmod/rm", { ctx ->
-            val rmUser = ctx.validatedPathParam("uid").asInt().value
-            val rmGroup = ctx.validatedPathParam("gid").asInt().value
+            val rmUser = ctx.validatedQueryParam("uid").asInt().value
+            val rmGroup = ctx.validatedQueryParam("gid").asInt().value
             if(rmUser == null || rmGroup == null) throw BadRequestResponse("Invalid path parameters")
+            Log.d(javaClass, "rm - queryParams valid")
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("Invalid token")
+            Log.d(javaClass, "rm - JWT parse valid")
             val user = TokenProvider.getInstance().verify(jwt) ?: throw BadRequestResponse("Token verification failed")
+            Log.d(javaClass, "rm - JWT validation passed")
             transaction {
                 val oldUser = User.findById(rmUser) ?: throw NotFoundResponse("Invalid uid")
                 val group = Group.findById(rmGroup) ?: throw NotFoundResponse("Invalid gid")
@@ -65,6 +73,7 @@ class GroupMod: EndpointGroup {
                     newUsers.addAll(group.users)
                     newUsers.remove(oldUser)
                     group.users = SizedCollection(newUsers)
+                    Log.i(javaClass, "${user.username} removed ${oldUser.username} from group ${group.name}")
                 }
             }
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))

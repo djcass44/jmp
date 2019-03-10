@@ -80,7 +80,7 @@ class Group: EndpointGroup {
         }, roles(Auth.BasicRoles.ADMIN))
         patch("${Runner.BASE}/v2_1/group/edit", { ctx ->
             val update = ctx.bodyAsClass(GroupData::class.java)
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("JWT couldn't be parsed")
             val user = TokenProvider.getInstance().verify(jwt) ?: throw BadRequestResponse()
             transaction {
                 val existing = Group.findById(update.id) ?: throw NotFoundResponse("Group not found")
@@ -92,7 +92,7 @@ class Group: EndpointGroup {
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         delete("${Runner.BASE}/v2_1/group/rm/:id", { ctx ->
             val id = ctx.validatedPathParam("id").asInt().getOrThrow()
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("JWT couldn't be parsed")
             val user = TokenProvider.getInstance().verify(jwt) ?: throw BadRequestResponse()
             transaction {
                 val existing = Group.findById(id) ?: throw NotFoundResponse("Group not found")
