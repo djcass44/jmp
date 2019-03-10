@@ -22,6 +22,9 @@ import com.django.jmp.auth.JWTContextMapper
 import com.django.jmp.auth.TokenProvider
 import com.django.jmp.db.dao.*
 import com.django.jmp.db.dao.Group
+import io.javalin.BadRequestResponse
+import io.javalin.NotFoundResponse
+import io.javalin.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.security.SecurityUtil.roles
@@ -71,13 +74,28 @@ class Group: EndpointGroup {
             ctx.status(HttpStatus.CREATED_201).json(add)
         }, roles(Auth.BasicRoles.ADMIN))
         patch("${Runner.BASE}/v2_1/group/edit", { ctx ->
-            ctx.status(HttpStatus.FORBIDDEN_403).result("This endpoint is unfinished, or not ready for public use.")
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
-        patch("${Runner.BASE}/v2_1/group/adduser", { ctx ->
-            ctx.status(HttpStatus.FORBIDDEN_403).result("This endpoint is unfinished, or not ready for public use.")
+            val update = ctx.bodyAsClass(GroupData::class.java)
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
+            val user = TokenProvider.getInstance().verify(jwt) ?: throw BadRequestResponse()
+            transaction {
+                val existing = Group.findById(update.id) ?: throw NotFoundResponse("Group not found")
+                // Only allow update if user belongs to group (or is admin)
+                if(user.role.name != Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw UnauthorizedResponse("User not in requested group")
+                existing.name = update.name
+                ctx.status(HttpStatus.NO_CONTENT_204).json(update)
+            }
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         delete("${Runner.BASE}/v2_1/group/rm/:id", { ctx ->
-            ctx.status(HttpStatus.FORBIDDEN_403).result("This endpoint is unfinished, or not ready for public use.")
+            val id = ctx.validatedPathParam("id").asInt().getOrThrow()
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
+            val user = TokenProvider.getInstance().verify(jwt) ?: throw BadRequestResponse()
+            transaction {
+                val existing = Group.findById(id) ?: throw NotFoundResponse("Group not found")
+                // Only allow deletion if user belongs to group (or is admin)
+                if(user.role.name != Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw UnauthorizedResponse("User not in requested group")
+                existing.delete()
+                ctx.status(HttpStatus.NO_CONTENT_204)
+            }
         }, roles(Auth.BasicRoles.ADMIN))
     }
 }

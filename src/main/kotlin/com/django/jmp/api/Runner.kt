@@ -5,6 +5,7 @@ import com.django.jmp.api.v2.*
 import com.django.jmp.api.v2.Similar
 import com.django.jmp.api.v2.User
 import com.django.jmp.api.v2_1.Group
+import com.django.jmp.api.v2_1.GroupMod
 import com.django.jmp.audit.Logger
 import com.django.jmp.auth.JWTContextMapper
 import com.django.jmp.auth.TokenProvider
@@ -59,7 +60,7 @@ fun main(args: Array<String>) {
     }
     val auth = Auth()
     val logger = Logger(store.logRequestDir)
-    val app = Javalin.create().apply {
+    Javalin.create().apply {
         port(7000)
         if(enableCors) enableCorsForAllOrigins()
         enableCaseSensitiveUrls()
@@ -77,17 +78,27 @@ fun main(args: Array<String>) {
         requestLogger { ctx, timeMs ->
             logger.add("${ctx.method()} ${ctx.path()} took $timeMs ms")
         }
+        before { ctx ->
+            ctx.register(JWTContextMapper::class.java, JWTContextMapper())
+        }
+        routes {
+            // General
+            Info().addEndpoints()
+
+            // Jumping
+            Jump(auth, store).addEndpoints()
+            Similar().addEndpoints()
+
+            // Users
+            User(auth).addEndpoints()
+
+            // Group
+            Group().addEndpoints()
+            GroupMod().addEndpoints()
+
+            // Authentication
+            Oauth(auth).addEndpoints()
+            Verify(auth).addEndpoints()
+        }
     }.start()
-    app.before {ctx ->
-        ctx.register(JWTContextMapper::class.java, JWTContextMapper())
-    }
-    app.routes {
-        Info().addEndpoints()
-        Jump(auth, store).addEndpoints()
-        Similar().addEndpoints()
-        User(auth).addEndpoints()
-        Group().addEndpoints()
-        Oauth(auth).addEndpoints()
-        Verify(auth).addEndpoints()
-    }
 }
