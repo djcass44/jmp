@@ -39,6 +39,13 @@
                         </v-slide-y-transition>
                     </v-list>
                 </v-card>
+                <div v-if="loading === true" class="text-xs-center pa-4">
+                    <v-progress-circular :size="100" color="accent" indeterminate></v-progress-circular>
+                </div>
+                <div v-if="filtered.length === 0 && loading === false">
+                    <h1 class="mdl-h1 text-xs-center">204</h1>
+                    <h2 class="mdl-h5 text-xs-center" v-if="filtered.length === 0 && items.length > 0">No results.</h2>
+                </div>
                 <v-subheader inset v-if="loading === false">
                     <div v-if="filter !== ''">Groups ({{ groupResults }} results)</div>
                     <div v-if="filter === ''">Groups</div>
@@ -73,13 +80,6 @@
                         </v-slide-y-transition>
                     </v-list>
                 </v-card>
-                <div v-if="loading === true" class="text-xs-center pa-4">
-                    <v-progress-circular :size="100" color="accent" indeterminate></v-progress-circular>
-                </div>
-                <div v-if="filtered.length === 0 && loading === false">
-                    <h1 class="mdl-h1 text-xs-center">204</h1>
-                    <h2 class="mdl-h5 text-xs-center" v-if="filtered.length === 0 && items.length > 0">No results.</h2>
-                </div>
                 <div v-if="systemInfo !== '' && appInfo !== ''">
                     <v-subheader inset>About</v-subheader>
                     <v-expansion-panel>
@@ -284,19 +284,12 @@ export default {
                 response.data.map(item => {
                     items.push(item);
                 });
-                that.filterItems();
-                that.loading = false;
-                setTimeout(function() {
-                    componentHandler.upgradeDom();
-                    componentHandler.upgradeAllRegistered();
-                }, 0);
+                that.loadGroups();
             }).catch(function(error) {
                 console.log(error); // API is probably unreachable
-                that.filterItems();
-                that.loading = false;
+                that.loadGroups();
                 that.$emit('snackbar', true, `Failed to load users: ${error.response.status}`);
             });
-            that.loadGroups();
         },
         loadGroups() {
             let that = this;
