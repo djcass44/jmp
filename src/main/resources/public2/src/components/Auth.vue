@@ -1,9 +1,9 @@
 <template>
-    <div id="auth-check" class="mdl-grid" v-cloak>
+    <!-- <div id="auth-check" class="mdl-grid" v-cloak>
         <div class="mdl-layout-spacer title"></div>
-        <span class="text-light" style="height: 32px; line-height: 32px;">{{ username }}&nbsp;&bull;&nbsp;{{ version }}</span>
+        <span class="text-light" style="height: 32px; line-height: 32px;">{{ username }}</span>
         <div class="mdl-layout-spacer title"></div>
-    </div>
+    </div> -->
 </template>
 
 <script>
@@ -13,8 +13,7 @@ import { storageUser, storageJWT, storageRequest } from "../var.js";
 export default {
     data() {
         return {
-            username: '',
-            version: ''
+            username: ''
         }
     },
     methods: {
@@ -73,10 +72,6 @@ export default {
     },
     created() {
         this.getAuth();
-        let that = this;
-        axios.get(`${process.env.VUE_APP_BASE_URL}/v2/version`).then(r => {
-            that.version = r.data;
-        });
     }
 }
 

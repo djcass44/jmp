@@ -21,16 +21,58 @@
             <template v-slot:activator="{ on }">
                 <v-btn icon v-on="on"><v-icon>account_circle</v-icon></v-btn>
             </template>
-            <v-list>
-                <v-list-tile v-ripple v-if="!loggedIn" @click="openDialog"><v-list-tile-title>Login</v-list-tile-title></v-list-tile>
-                <v-list-tile v-ripple v-if="isAdmin && !slashUsers" @click="openAdmin"><v-list-tile-title>Admin settings</v-list-tile-title></v-list-tile>
-                <v-list-tile v-ripple v-if="loggedIn" @click="logout"><v-list-tile-title>Logout</v-list-tile-title></v-list-tile>
-            </v-list>
+            <v-card>
+                <v-list>
+                    <v-list-tile avatar>
+                        <v-list-tile-avatar>
+                            <v-icon large>account_circle</v-icon>
+                        </v-list-tile-avatar>
+
+                        <v-list-tile-content>
+                        <v-list-tile-title>{{ getName() }}</v-list-tile-title>
+                        <v-list-tile-sub-title><p v-if="isAdmin === true">Admin</p><p v-if="isAdmin !== true">User</p></v-list-tile-sub-title>
+                        </v-list-tile-content>
+                    </v-list-tile>
+                    <v-list-tile>
+                        <v-list-tile-title>{{ version }}</v-list-tile-title>
+                    </v-list-tile>
+                </v-list>
+                <v-divider></v-divider>
+                <v-list>
+                    <v-list-tile v-if="isAdmin && !slashUsers" v-ripple @click="openAdmin">
+                        <v-list-tile-action>
+                            <v-icon>settings</v-icon>
+                        </v-list-tile-action>
+                        <v-list-tile-title>Admin settings</v-list-tile-title>
+                    </v-list-tile>
+                    <v-list-tile v-if="!loggedIn" v-ripple @click="openDialog">
+                        <v-list-tile-action>
+                            <v-icon>input</v-icon>
+                        </v-list-tile-action>
+                        <v-list-tile-title>Login</v-list-tile-title>
+                    </v-list-tile>
+                    <v-list-tile v-if="loggedIn" v-ripple @click="logout">
+                        <v-list-tile-action>
+                            <v-icon>close</v-icon>
+                        </v-list-tile-action>
+                        <v-list-tile-title>Logout</v-list-tile-title>
+                    </v-list-tile>
+                </v-list>
+            </v-card>
+            <!-- <v-card>
+                <v-list>
+                    <v-list-tile v-ripple v-if="!loggedIn" @click="openDialog"><v-list-tile-title>Login</v-list-tile-title></v-list-tile>
+                    <v-list-tile v-ripple v-if="isAdmin && !slashUsers" @click="openAdmin"><v-list-tile-title>Admin settings</v-list-tile-title></v-list-tile>
+                    <v-list-tile v-ripple v-if="loggedIn" @click="logout"><v-list-tile-title>Logout</v-list-tile-title></v-list-tile>
+                </v-list>
+            </v-card> -->
         </v-menu>
     </v-toolbar>
 </template>
 
 <script>
+import { storageUser } from "../var.js";
+import axios from "axios";
 
 export default {
     data () {
@@ -39,7 +81,8 @@ export default {
             slashUsers: false,
             searchQuery: '',
             loggedIn: false,
-            isAdmin: false
+            isAdmin: false,
+            version: ''
         }
     },
     created() {
@@ -47,8 +90,18 @@ export default {
         setTimeout(function() {
             that.$emit('init');
         }, 10);
+        axios.get(`${process.env.VUE_APP_BASE_URL}/v2/version`).then(r => {
+            that.version = r.data;
+        });
     },
     methods: {
+        getName: function() {
+            let name = localStorage.getItem(storageUser);
+            if(name === '' || name == null) {
+                return "No logged in.";
+            }
+            return name;
+        },
         setNullPage(nullPage) {
             console.log(nullPage);
             this.nullPage = nullPage;
