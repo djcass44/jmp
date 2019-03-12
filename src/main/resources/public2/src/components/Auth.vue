@@ -41,7 +41,7 @@ export default {
             }).catch((err) => {
                 console.log(err);
                 console.log("User credential verification failed (this is okay if not yet authenticated)");
-                if(err.response !== undefined && err.response.status === 400) {
+                if(err.response !== undefined && err.response.status === 403) {
                     console.log("Token is probably expired, lets try to refresh it");
                     return axios.get(`${process.env.VUE_APP_BASE_URL}/v2/oauth/refresh?refresh_token=${localStorage.getItem(storageRequest)}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}` }}).then((r3) => {
                         localStorage.setItem(storageJWT, r3.data.jwt);
@@ -55,6 +55,13 @@ export default {
                         that.$emit('toolbarAuthChanged', false);
                         console.log(`Refresh attempt: ${err2}`);
                     });
+                }
+                else {
+                    // User verification failed, probably 403
+                    that.username = "Not authenticated";
+                    // User verification failed, nuke local storage
+                    that.invalidate();
+                    that.$emit('toolbarAuthChanged', false);
                 }
             });
         },

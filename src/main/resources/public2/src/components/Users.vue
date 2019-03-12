@@ -28,10 +28,10 @@
                                             </v-btn>
                                         </template>
                                         <v-list>
-                                            <v-list-tile v-ripple v-if="user.role === 'USER'" @click="makeAdmin(user.id)"><v-list-tile-title>Promote to admin</v-list-tile-title></v-list-tile>
-                                            <v-list-tile v-ripple v-if="user.role === 'ADMIN'" @click="makeUser(user.id)"><v-list-tile-title>Demote to user</v-list-tile-title></v-list-tile>
+                                            <v-list-tile v-ripple v-if="user.role === 'USER' && isAdmin === true" @click="makeAdmin(user.id)"><v-list-tile-title>Promote to admin</v-list-tile-title></v-list-tile>
+                                            <v-list-tile v-ripple v-if="user.role === 'ADMIN' && isAdmin === true" @click="makeUser(user.id)"><v-list-tile-title>Demote to user</v-list-tile-title></v-list-tile>
                                             <v-list-tile v-ripple @click="showGSD(user.id)"><v-list-tile-title>Set groups</v-list-tile-title></v-list-tile>
-                                            <v-list-tile v-ripple @click="remove(user.id)"><v-list-tile-title>Delete</v-list-tile-title></v-list-tile>
+                                            <v-list-tile v-ripple v-if="isAdmin === true"@click="remove(user.id)"><v-list-tile-title>Delete</v-list-tile-title></v-list-tile>
                                         </v-list>
                                     </v-menu>
                                 </v-list-tile-action>
@@ -142,7 +142,8 @@ export default {
             appInfo: '',
             groups: [],
             filteredGroups: [],
-            groupResults: 0
+            groupResults: 0,
+            isAdmin: false
         }
     },
     methods: {
@@ -330,9 +331,20 @@ export default {
         },
         authChanged(login, admin) {
             this.loadItems();
+            this.isAdmin = false;
             if(login === true) {
-                if(admin === true)
+                if(admin === true) {
                     this.loadInfo();
+                    this.isAdmin = true;
+                }
+                else {
+                    this.systemInfo = '';
+                    this.appInfo = '';
+                }
+            }
+            else {
+                this.systemInfo = '';
+                this.appInfo = '';
             }
         },
         loadFailed() {
