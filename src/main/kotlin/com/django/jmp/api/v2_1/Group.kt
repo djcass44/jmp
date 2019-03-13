@@ -20,6 +20,7 @@ import com.django.jmp.api.Auth
 import com.django.jmp.api.Runner
 import com.django.jmp.auth.JWTContextMapper
 import com.django.jmp.auth.TokenProvider
+import com.django.jmp.auth.response.AuthenticateResponse
 import com.django.jmp.db.dao.*
 import com.django.jmp.db.dao.Group
 import com.django.log2.logging.Log
@@ -71,7 +72,10 @@ class Group: EndpointGroup {
             val add = ctx.bodyAsClass(GroupData::class.java)
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("Invalid token")
             Log.d(javaClass, "add - JWT parse valid")
-            val user = TokenProvider.getInstance().verify(jwt) ?: throw BadRequestResponse("Token verification failed")
+            val user = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
             Log.d(javaClass, "add - JWT validation passed")
             transaction {
                 val existing = Group.find {
@@ -89,7 +93,10 @@ class Group: EndpointGroup {
         patch("${Runner.BASE}/v2_1/group/edit", { ctx ->
             val update = ctx.bodyAsClass(GroupData::class.java)
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("JWT couldn't be parsed")
-            val user = TokenProvider.getInstance().verify(jwt) ?: throw BadRequestResponse()
+            val user = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
             transaction {
                 val existing = Group.findById(update.id) ?: throw NotFoundResponse("Group not found")
                 // Only allow update if user belongs to group (or is admin)
@@ -101,7 +108,10 @@ class Group: EndpointGroup {
         delete("${Runner.BASE}/v2_1/group/rm/:id", { ctx ->
             val id = ctx.validatedPathParam("id").asInt().getOrThrow()
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("JWT couldn't be parsed")
-            val user = TokenProvider.getInstance().verify(jwt) ?: throw BadRequestResponse()
+            val user = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
             transaction {
                 val existing = Group.findById(id) ?: throw NotFoundResponse("Group not found")
                 // Only allow deletion if user belongs to group (or is admin)

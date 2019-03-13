@@ -14,13 +14,9 @@
  *    limitations under the License.
  */
 
-package com.django.jmp
+package com.django.jmp.auth.response
 
-object Version {
-    private const val MAJOR = "2"
-    private const val MINOR = "1"
-    private const val PATCH = "3"
-    private const val BUILD = "58"
-
-    fun getVersion() = "$MAJOR.$MINOR.$PATCH-$BUILD"
+object AuthenticateResponse {
+    const val header = "WWW-Authenticate"
+    const val response = "Bearer realm=\"example\""
 }

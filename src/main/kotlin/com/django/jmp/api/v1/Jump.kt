@@ -21,6 +21,7 @@ import com.django.jmp.api.Runner
 import com.django.jmp.api.actions.ImageAction
 import com.django.jmp.auth.JWTContextMapper
 import com.django.jmp.auth.TokenProvider
+import com.django.jmp.auth.response.AuthenticateResponse
 import com.django.jmp.db.ConfigStore
 import com.django.jmp.db.dao.EditJumpData
 import com.django.jmp.db.dao.Jump
@@ -28,7 +29,10 @@ import com.django.jmp.db.dao.JumpData
 import com.django.jmp.db.dao.Jumps
 import com.django.jmp.except.EmptyPathException
 import com.django.log2.logging.Log
-import io.javalin.*
+import io.javalin.BadRequestResponse
+import io.javalin.ConflictResponse
+import io.javalin.ForbiddenResponse
+import io.javalin.NotFoundResponse
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.security.SecurityUtil
@@ -119,8 +123,14 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
         // Add a jump point
         put("${Runner.BASE}/v1/jumps/add", { ctx ->
             val add = ctx.bodyAsClass(JumpData::class.java)
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
-            val user = TokenProvider.getInstance().verify(jwt) ?: throw UnauthorizedResponse()
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
+            val user = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
             // Block non-admin user from adding global jumps
             if (!add.personal && transaction { return@transaction user.role.name != Auth.BasicRoles.ADMIN.name }) throw ForbiddenResponse()
             if (!jumpExists(add.name, user.username, user.token)) {
@@ -139,8 +149,14 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
         // Edit a jump point
         patch("${Runner.BASE}/v1/jumps/edit", { ctx ->
             val update = ctx.bodyAsClass(EditJumpData::class.java)
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
-            val user = TokenProvider.getInstance().verify(jwt) ?: throw BadRequestResponse()
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
+            val user = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
             transaction {
                 val existing = Jump.findById(update.id) ?: throw NotFoundResponse()
 
@@ -159,8 +175,14 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
         // Delete a jump point
         delete("${Runner.BASE}/v1/jumps/rm/:id", { ctx ->
             val id = ctx.pathParam("id").toIntOrNull() ?: throw BadRequestResponse()
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
-            val user = TokenProvider.getInstance().verify(jwt) ?: throw UnauthorizedResponse()
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
+            val user = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
             transaction {
                 val result = Jump.findById(id) ?: throw NotFoundResponse()
                 // 401 if jump is global and user ISN'T admin

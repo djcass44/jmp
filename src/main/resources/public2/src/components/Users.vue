@@ -223,7 +223,7 @@ export default {
                 that.loadItems();
             }).catch((err) => {
                 console.log(err);
-                that.$emit('snackbar', true, `Failed to add ${item.username} as ${role.toLowerCase()}: ${err.response.status}`);
+                that.$emit('snackbar', true, `Failed to set ${item.username} as ${role.toLowerCase()}: ${err.response.status}`);
             });
         },
         setFilter(query) {

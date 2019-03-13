@@ -20,6 +20,7 @@ import com.django.jmp.api.Auth
 import com.django.jmp.api.Runner
 import com.django.jmp.auth.JWTContextMapper
 import com.django.jmp.auth.TokenProvider
+import com.django.jmp.auth.response.AuthenticateResponse
 import io.javalin.BadRequestResponse
 import io.javalin.ForbiddenResponse
 import io.javalin.NotFoundResponse
@@ -50,7 +51,10 @@ class Oauth(private val auth: Auth): EndpointGroup {
         get("${Runner.BASE}/v2/oauth/refresh", { ctx ->
             val refresh = ctx.queryParam("refresh_token", "")
             if(refresh.isNullOrBlank()) throw BadRequestResponse()
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw ForbiddenResponse()
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
             if (jwt.isBlank() || jwt == "null") throw BadRequestResponse()
             val user = TokenProvider.getInstance().decode(jwt) ?: throw BadRequestResponse()
             // Check if users request token matched expected
@@ -64,7 +68,10 @@ class Oauth(private val auth: Auth): EndpointGroup {
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Verify a users token is still valid
         get("${Runner.BASE}/v2/oauth/valid", { ctx ->
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
             if (jwt.isBlank() || jwt == "null") throw BadRequestResponse()
             val user = TokenProvider.getInstance().verify(jwt) ?: throw ForbiddenResponse()
             transaction {

@@ -20,6 +20,7 @@ import com.django.jmp.api.Auth
 import com.django.jmp.api.Runner
 import com.django.jmp.auth.JWTContextMapper
 import com.django.jmp.auth.TokenProvider
+import com.django.jmp.auth.response.AuthenticateResponse
 import com.django.jmp.db.dao.Group
 import com.django.jmp.db.dao.User
 import com.django.log2.logging.Log
@@ -42,7 +43,10 @@ class GroupMod: EndpointGroup {
             Log.d(javaClass, "add - queryParams valid")
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("Invalid token")
             Log.d(javaClass, "add - JWT parse valid")
-            val user = TokenProvider.getInstance().verify(jwt) ?: throw ForbiddenResponse("Token verification failed")
+            val user = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
             Log.d(javaClass, "add - JWT validation passed")
             transaction {
                 val newUser = User.findById(addUser) ?: throw NotFoundResponse("Invalid uid")
@@ -64,7 +68,10 @@ class GroupMod: EndpointGroup {
             Log.d(javaClass, "rm - queryParams valid")
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("Invalid token")
             Log.d(javaClass, "rm - JWT parse valid")
-            val user = TokenProvider.getInstance().verify(jwt) ?: throw ForbiddenResponse("Token verification failed")
+            val user = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
             Log.d(javaClass, "rm - JWT validation passed")
             transaction {
                 val oldUser = User.findById(rmUser) ?: throw NotFoundResponse("Invalid uid")

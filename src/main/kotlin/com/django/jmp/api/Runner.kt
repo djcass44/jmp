@@ -74,7 +74,7 @@ fun main(args: Array<String>) {
         enableCaseSensitiveUrls()
         accessManager { handler, ctx, permittedRoles ->
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx)
-            val user = if(jwt != null && jwt.isNotBlank() && jwt != "null") TokenProvider.getInstance().verify(jwt) else null
+            val user = if(jwt != null && jwt.isNotBlank() && jwt != "null" && jwt.split(".").size == 3) TokenProvider.getInstance().verify(jwt) else null
             val userRole = if(user == null) Auth.BasicRoles.USER else transaction {
                 Auth.BasicRoles.valueOf(user.role.name)
             }

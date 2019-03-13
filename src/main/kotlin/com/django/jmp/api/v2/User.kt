@@ -20,12 +20,12 @@ import com.django.jmp.api.Auth
 import com.django.jmp.api.Runner
 import com.django.jmp.auth.JWTContextMapper
 import com.django.jmp.auth.TokenProvider
+import com.django.jmp.auth.response.AuthenticateResponse
 import com.django.jmp.db.dao.*
 import com.django.jmp.db.dao.User
 import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
 import io.javalin.ForbiddenResponse
-import io.javalin.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.security.SecurityUtil.roles
@@ -36,9 +36,15 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class User(private val auth: Auth): EndpointGroup {
     override fun addEndpoints() {
         get("${Runner.BASE}/v2/users", { ctx ->
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("Invalid token")
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
             Log.d(javaClass, "list - JWT parse valid")
-            TokenProvider.getInstance().verify(jwt) ?: throw ForbiddenResponse("Token verification failed")
+            TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
             Log.d(javaClass, "list - JWT validation passed")
             val users = arrayListOf<UserData>()
             transaction {
@@ -65,8 +71,14 @@ class User(private val auth: Auth): EndpointGroup {
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Get information about the current user
         get("${Runner.BASE}/v2/user", { ctx ->
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
-            val u = TokenProvider.getInstance().verify(jwt) ?: throw UnauthorizedResponse()
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
+            val u = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
             transaction {
                 ctx.status(HttpStatus.OK_200).result(u.role.name)
             }
@@ -78,8 +90,14 @@ class User(private val auth: Auth): EndpointGroup {
         // Change the role of a user
         patch("${Runner.BASE}/v2/user/permission", { ctx ->
             val updated = ctx.bodyAsClass(EditUserData::class.java)
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
-            val u = TokenProvider.getInstance().verify(jwt) ?: throw UnauthorizedResponse()
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
+            val u = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
             transaction {
                 val user = User.findById(updated.id) ?: throw BadRequestResponse()
                 // Block dropping the superuser from admin
@@ -96,8 +114,14 @@ class User(private val auth: Auth): EndpointGroup {
         // Delete a user
         delete("${Runner.BASE}/v2/user/rm/:id", { ctx ->
             val id = ctx.validatedPathParam("id").asInt().getOrThrow()
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse()
-            val user = TokenProvider.getInstance().verify(jwt) ?: throw UnauthorizedResponse()
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
+            val user = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
             transaction {
                 val target = User.findById(id) ?: throw BadRequestResponse()
                 Log.i(javaClass, "[${user.username}] is removing ${target.username}")
