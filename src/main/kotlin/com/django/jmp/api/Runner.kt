@@ -13,11 +13,12 @@ import com.django.jmp.db.Config
 import com.django.jmp.db.ConfigStore
 import com.django.jmp.db.Init
 import com.django.jmp.db.dao.*
+import com.django.jmp.db.source.BasicAuthSource
+import com.django.jmp.db.source.NoAuthSource
 import com.django.jmp.except.InvalidSecurityConfigurationException
 import com.django.log2.logging.Log
 import io.javalin.Javalin
 import org.eclipse.jetty.http.HttpStatus
-import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.addLogger
@@ -53,7 +54,11 @@ fun main(args: Array<String>) {
     Log.v(Runner::class.java, "Application config: [${store.BASE_URL}, ${store.logRequestDir}]")
     // Do not allow CORS on an https url
     if(store.BASE_URL.startsWith("https") && enableCors) throw InvalidSecurityConfigurationException()
-    Database.connect(store.url, store.driver)
+    val source = when {
+        !store.tableUser.isNullOrBlank() && !store.tablePassword.isNullOrBlank() -> BasicAuthSource()
+        else -> NoAuthSource()
+    }
+    source.connect(store)
     TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE // Fix required for SQLite/Oracle DB
 
     transaction {

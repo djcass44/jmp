@@ -2,12 +2,16 @@
     <div id="main-list" v-cloak>
         <v-layout>
             <v-flex xs12 sm6 offset-sm3>
-                <v-subheader inset v-if="filtered.length > 0">
+                <div v-if="loading === true" class="text-xs-center pa-4">
+                    <v-progress-circular :size="100" color="accent" indeterminate></v-progress-circular>
+                </div>
+                <v-subheader inset v-if="loading === false">
                     <div v-if="filter !== ''">Users ({{ filterResults}} results)</div>
                     <div v-if="filter === ''">Users</div>
                     <v-spacer></v-spacer>
                     <v-btn icon @click="showCreateDialog"><v-icon color="grey darken-1">add</v-icon></v-btn>
                 </v-subheader>
+                <div v-if="filtered.length === 0 && loading === false" class="text-xs-center body-1" color="grey darken-1">No users found.</div>
                 <v-card v-if="filtered.length > 0" class="m2-card">
                     <v-list two-line subheader>
                         <v-slide-y-transition class="py-0" group>
@@ -39,20 +43,13 @@
                         </v-slide-y-transition>
                     </v-list>
                 </v-card>
-                <div v-if="loading === true" class="text-xs-center pa-4">
-                    <v-progress-circular :size="100" color="accent" indeterminate></v-progress-circular>
-                </div>
-                <div v-if="filtered.length === 0 && loading === false">
-                    <h1 class="mdl-h1 text-xs-center">204</h1>
-                    <h2 class="mdl-h5 text-xs-center" v-if="filtered.length === 0 && items.length > 0">No results.</h2>
-                </div>
                 <v-subheader inset v-if="loading === false">
                     <div v-if="filter !== ''">Groups ({{ groupResults }} results)</div>
                     <div v-if="filter === ''">Groups</div>
                     <v-spacer></v-spacer>
                     <v-btn icon @click="showGCD(true)"><v-icon color="grey darken-1">add</v-icon></v-btn>
                 </v-subheader>
-                <div v-if="filteredGroups.length === 0 && loading === false" class="text-xs-center body-1" color="grey darken-1">No groups.</div>
+                <div v-if="filteredGroups.length === 0 && loading === false" class="text-xs-center body-1" color="grey darken-1">No groups found.</div>
                 <v-card v-if="filteredGroups.length > 0" class="m2-card">
                     <v-list two-line subheader>
                         <v-slide-y-transition class="py-0" group>

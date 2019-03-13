@@ -6,7 +6,7 @@
 
         <v-spacer></v-spacer>
 
-        <v-text-field v-if="!nullPage" v-model="searchQuery" @input="textChanged" flat solo light clearable placeholder="Enter a name"></v-text-field>
+        <v-text-field v-if="!nullPage" v-model="searchQuery" @input="textChanged" flat solo dark clearable background-color="blue darken-4" placeholder="Enter a name"></v-text-field>
 
         <v-spacer></v-spacer>
 
@@ -17,7 +17,7 @@
             <span>Search</span>
         </v-tooltip> -->
 
-        <v-menu bottom left offset-y origin="top right" transition="scale-transition" v-if="!nullPage" min-width="150">
+        <v-menu bottom left offset-y origin="top right" transition="scale-transition" v-if="!nullPage" min-width="200" :clone-on-content-click="false">
             <template v-slot:activator="{ on }">
                 <v-btn icon v-on="on"><v-icon>account_circle</v-icon></v-btn>
             </template>
@@ -30,7 +30,7 @@
 
                         <v-list-tile-content>
                         <v-list-tile-title>{{ getName() }}</v-list-tile-title>
-                        <v-list-tile-sub-title><p v-if="isAdmin === true">Admin</p><p v-if="isAdmin !== true">User</p></v-list-tile-sub-title>
+                        <v-list-tile-sub-title>{{ getUserType() }}</v-list-tile-sub-title>
                         </v-list-tile-content>
                     </v-list-tile>
                     <v-list-tile>
@@ -39,11 +39,17 @@
                 </v-list>
                 <v-divider></v-divider>
                 <v-list>
-                    <v-list-tile v-if="isAdmin && !slashUsers" v-ripple @click="openAdmin">
+                    <v-list-tile v-if="slashUsers" v-ripple @click="openHome">
+                        <v-list-tile-action>
+                            <v-icon>home</v-icon>
+                        </v-list-tile-action>
+                        <v-list-tile-title>Home</v-list-tile-title>
+                    </v-list-tile>
+                    <v-list-tile v-if="!slashUsers" v-ripple @click="openAdmin">
                         <v-list-tile-action>
                             <v-icon>settings</v-icon>
                         </v-list-tile-action>
-                        <v-list-tile-title>Admin settings</v-list-tile-title>
+                        <v-list-tile-title>Settings</v-list-tile-title>
                     </v-list-tile>
                     <v-list-tile v-if="!loggedIn" v-ripple @click="openDialog">
                         <v-list-tile-action>
@@ -98,9 +104,17 @@ export default {
         getName: function() {
             let name = localStorage.getItem(storageUser);
             if(name === '' || name == null) {
-                return "No logged in.";
+                return "Anonymous";
             }
             return name;
+        },
+        getUserType() {
+            if(this.isAdmin === true)
+                return "Admin";
+            else if(this.loggedIn === true)
+                return "User";
+            else
+                return "Lurker";
         },
         setNullPage(nullPage) {
             console.log(nullPage);

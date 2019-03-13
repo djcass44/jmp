@@ -14,13 +14,13 @@
  *    limitations under the License.
  */
 
-package com.django.jmp
+package com.django.jmp.db.source
 
-object Version {
-    private const val MAJOR = "2"
-    private const val MINOR = "1"
-    private const val PATCH = "3"
-    private const val BUILD = "55"
+import com.django.jmp.db.ConfigStore
+import org.jetbrains.exposed.sql.Database
 
-    fun getVersion() = "$MAJOR.$MINOR.$PATCH-$BUILD"
+class NoAuthSource: DataSource {
+    override fun connect(store: ConfigStore) {
+        Database.connect(store.url, store.driver)
+    }
 }

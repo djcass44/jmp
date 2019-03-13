@@ -19,7 +19,7 @@ package com.django.jmp.db
 import com.beust.klaxon.Klaxon
 import com.django.log2.logging.Log
 
-data class ConfigStore(val url: String, val driver: String, val logRequestDir: String, val BASE_URL: String)
+data class ConfigStore(val url: String, val driver: String, val logRequestDir: String, val BASE_URL: String, val tableUser: String? = "", val tablePassword: String? = "")
 
 class Config {
     companion object {
@@ -28,6 +28,8 @@ class Config {
 
         private const val envUrl = "DRIVER_URL"
         private const val envDriver = "DRIVER_CLASS"
+        private const val envUser = "DRIVER_USER"
+        private const val envKey = "DRIVER_PASSWORD"
 
         private const val logRequestDir = "ENV_LOG_REQUEST_DIRECTORY"
     }
@@ -49,7 +51,9 @@ class Config {
             Util.getEnv(envUrl, defaultUrl),
             Util.getEnv(envDriver, defaultDriver),
             Util.getEnv(logRequestDir, "."),
-            Util.getEnv("BASE_URL", "http://localhost:8080")
+            Util.getEnv("BASE_URL", "http://localhost:8080"),
+            Util.getEnv(envUser, ""),
+            Util.getEnv(envKey, "")
         )
     }
 }

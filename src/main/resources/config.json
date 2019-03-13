@@ -2,5 +2,7 @@
   "url": "jdbc:sqlite:data/jmp.db",
   "driver": "org.sqlite.JDBC",
   "logRequestDir": ".",
-  "BASE_URL": "http://localhost:8080"
+  "BASE_URL": "http://localhost:8080",
+  "DRIVER_USER": "",
+  "DRIVER_PASSWORD": ""
 }
