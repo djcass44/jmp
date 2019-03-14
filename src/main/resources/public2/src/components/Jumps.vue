@@ -59,6 +59,14 @@
                 </div>
             </v-flex>
         </v-layout>
+        <JumpDialog ref="dialogjump"
+            @jumpsPushItem="pushItem"
+            @jumpsSetItem="setItem"
+            @snackbar="snackbar">
+        </JumpDialog>
+        <GenericDeleteDialog ref="deleteDialog"
+            @doRemove="doRemove">
+        </GenericDeleteDialog>
     </div>
 </template>
 
@@ -66,8 +74,15 @@
 import axios from "axios";
 import { storageUser, storageJWT } from "../var.js";
 
+import JumpDialog from '../components/dialog/JumpDialog.vue';
+import GenericDeleteDialog from "./dialog/GenericDeleteDialog.vue";
+
 export default {
     name: "Jumps",
+    components: {
+        JumpDialog,
+        GenericDeleteDialog
+    },
     data() {
         return {
             filter: '',
@@ -80,8 +95,11 @@ export default {
         }
     },
     methods: {
+        snackbar(visible, text) {
+            this.$emit('snackbar', visible, text);
+        },
         showCreateDialog() {
-            this.$emit('dialog-create', true, 'New jump point', 'Create');
+            this.$refs.dialogjump.setVisible(true, 'New jump point', 'Create');
         },
         copyFailed() {
             this.$emit('snackbar', true, "Failed to copy!")
@@ -100,11 +118,13 @@ export default {
             return -1;
         },
         remove(id) {
-            let index = this.indexFromId(id);
-            let item = this.items[index];
-            this.$emit('dialog-delete', true, item.name, index);
+            this.showGDD(id);
         },
-        doRemove(index) {
+        showGDD(id) {
+            this.$refs.deleteDialog.setVisible(true, id);
+        },
+        doRemove(id) {
+            let index = this.indexFromId(id);
             let item = this.items[index];
             const url = `${process.env.VUE_APP_BASE_URL}/v1/jumps/rm/${item.id}`;
             let that = this;
@@ -120,7 +140,7 @@ export default {
         edit(id) {
             let index = this.indexFromId(id);
             let item = this.items[index];
-            this.$emit('dialog-create', true, 'Edit jump point', 'Update', true, 'USER-ID', item.id, item.name, item.location, index);
+            this.$refs.dialogjump.setVisible(true, 'Edit jump point', 'Update', true, item.id, item.name, item.location, index);
         },
         highlight(text) {
             return text.replace(new RegExp("https?:\\/\\/(www\\.)?"), match => {
