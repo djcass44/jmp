@@ -14,13 +14,26 @@
  *    limitations under the License.
  */
 
-package com.django.jmp
+package com.django.jmp.api.actions
 
-object Version {
-    private const val MAJOR = "2"
-    private const val MINOR = "1"
-    private const val PATCH = "3"
-    private const val BUILD = "76"
+import com.django.jmp.db.dao.Group
+import com.django.jmp.db.dao.Groups
+import org.jetbrains.exposed.sql.transactions.transaction
 
-    fun getVersion() = "$MAJOR.$MINOR.$PATCH-$BUILD"
+class GroupAction {
+    companion object {
+        private lateinit var instance: GroupAction
+
+        fun getInstance(): GroupAction {
+            if(!this::instance.isInitialized)
+                instance = GroupAction()
+            return instance
+        }
+    }
+
+    fun getGroupByName(name: String): Group? = transaction {
+        Group.find {
+            Groups.name eq name
+        }.elementAtOrNull(0)
+    }
 }

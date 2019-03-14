@@ -55,7 +55,7 @@ class Oauth(private val auth: Auth): EndpointGroup {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
-            if (jwt.isBlank() || jwt == "null") throw BadRequestResponse()
+            if (!TokenProvider.getInstance().mayBeToken(jwt)) throw BadRequestResponse()
             val user = TokenProvider.getInstance().decode(jwt) ?: throw BadRequestResponse()
             // Check if users request token matched expected
             if(user.requestToken != refresh) throw UnauthorizedResponse("Invalid refresh token")
@@ -72,7 +72,7 @@ class Oauth(private val auth: Auth): EndpointGroup {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
-            if (jwt.isBlank() || jwt == "null") throw BadRequestResponse()
+            if (!TokenProvider.getInstance().mayBeToken(jwt)) throw BadRequestResponse()
             val user = TokenProvider.getInstance().verify(jwt) ?: throw ForbiddenResponse()
             transaction {
                 ctx.status(HttpStatus.OK_200).result(auth.validateUserToken(user.token).toString())

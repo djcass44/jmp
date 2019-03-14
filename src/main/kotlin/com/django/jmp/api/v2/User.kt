@@ -32,6 +32,7 @@ import io.javalin.security.SecurityUtil.roles
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.*
 
 class User(private val auth: Auth): EndpointGroup {
     override fun addEndpoints() {
@@ -83,6 +84,19 @@ class User(private val auth: Auth): EndpointGroup {
                 ctx.status(HttpStatus.OK_200).result(u.role.name)
             }
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        get("${Runner.BASE}/v2_1/user/info", { ctx ->
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
+            val u = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
+                throw ForbiddenResponse("Token verification failed")
+            }
+            transaction {
+                ctx.status(HttpStatus.OK_200).json(UserData(u, arrayListOf()))
+            }
+        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         // Get a users token
         post("${Runner.BASE}/v2/user/auth", { ctx ->
             ctx.status(HttpStatus.MOVED_PERMANENTLY_301).result("This has been deprecated in favour of OAuth2 /v2/oauth")
@@ -113,7 +127,7 @@ class User(private val auth: Auth): EndpointGroup {
         }, roles(Auth.BasicRoles.ADMIN))
         // Delete a user
         delete("${Runner.BASE}/v2/user/rm/:id", { ctx ->
-            val id = ctx.validatedPathParam("id").asInt().getOrThrow()
+            val id = UUID.fromString(ctx.pathParam("id"))
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
@@ -138,7 +152,11 @@ class User(private val auth: Auth): EndpointGroup {
             ctx.status(HttpStatus.NO_CONTENT_204)
         }, roles(Auth.BasicRoles.ADMIN))
         get("${Runner.BASE}/v2_1/user/groups", { ctx ->
-            val uid = ctx.validatedQueryParam("uid").asInt().value ?: throw BadRequestResponse("UID cannot be null")
+            val uid = kotlin.runCatching {
+                UUID.fromString(ctx.queryParam("uid"))
+            }.getOrElse {
+                throw BadRequestResponse("Bad UUID")
+            }
             val items = arrayListOf<GroupData>()
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: ""
             val user = if(jwt == "null" || jwt.isBlank()) null else TokenProvider.getInstance().verify(jwt)

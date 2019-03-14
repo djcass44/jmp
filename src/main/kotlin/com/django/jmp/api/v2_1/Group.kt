@@ -35,6 +35,7 @@ import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.*
 
 class Group: EndpointGroup {
     override fun addEndpoints() {
@@ -82,11 +83,11 @@ class Group: EndpointGroup {
                     Groups.name eq add.name
                 }
                 if(existing.count() > 0) throw ConflictResponse("Group already exists")
-                val g = Group.new {
+                val g = Group.new(UUID.randomUUID()) {
                     name = add.name
+                    // Add the user to the new group
+                    users = SizedCollection(arrayListOf(user))
                 }
-                // Add the user to the new group
-                g.users = SizedCollection(arrayListOf(user))
             }
             ctx.status(HttpStatus.CREATED_201).json(add)
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
@@ -98,7 +99,7 @@ class Group: EndpointGroup {
                 throw ForbiddenResponse("Token verification failed")
             }
             transaction {
-                val existing = Group.findById(update.id) ?: throw NotFoundResponse("Group not found")
+                val existing = Group.findById(update.id!!) ?: throw NotFoundResponse("Group not found")
                 // Only allow update if user belongs to group (or is admin)
                 if(user.role.name != Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
                 existing.name = update.name
@@ -106,7 +107,7 @@ class Group: EndpointGroup {
             }
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         delete("${Runner.BASE}/v2_1/group/rm/:id", { ctx ->
-            val id = ctx.validatedPathParam("id").asInt().getOrThrow()
+            val id = UUID.fromString(ctx.pathParam("id"))
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("JWT couldn't be parsed")
             val user = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)

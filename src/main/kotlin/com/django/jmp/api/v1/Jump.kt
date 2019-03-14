@@ -18,7 +18,9 @@ package com.django.jmp.api.v1
 
 import com.django.jmp.api.Auth
 import com.django.jmp.api.Runner
+import com.django.jmp.api.actions.GroupAction
 import com.django.jmp.api.actions.ImageAction
+import com.django.jmp.api.actions.OwnerAction
 import com.django.jmp.auth.JWTContextMapper
 import com.django.jmp.auth.TokenProvider
 import com.django.jmp.auth.response.AuthenticateResponse
@@ -40,7 +42,6 @@ import io.javalin.security.SecurityUtil.roles
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.lowerCase
-import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
@@ -71,11 +72,9 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
             val items = arrayListOf<JumpData>()
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: ""
             val user = if(jwt == "null" || jwt.isBlank()) null else TokenProvider.getInstance().verify(jwt)
+            val userJumps = OwnerAction.getInstance().getJumpsForUser(user)
             transaction {
-                val res = Jump.find {
-                    Jumps.owner.isNull() or Jumps.owner.eq(user?.id)
-                }
-                res.forEach {
+                userJumps.forEach {
                     items.add(JumpData(it))
                 }
             }
@@ -100,11 +99,9 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
                 transaction {
                     Log.d(javaClass, "User information: [name: ${user?.username}, token: ${user?.token}]")
                     Log.d(javaClass, "Found user: ${user != null}")
-                    val res = Jump.find {
-                        Jumps.name.lowerCase().eq(target.toLowerCase()) and (Jumps.owner.isNull() or Jumps.owner.eq(user?.id))
-                    }
-                    if(!res.empty()) {
-                        val location = res.elementAt(0).location
+                    val jump = OwnerAction.getInstance().getJumpForUser(user, target)
+                    if(jump != null) {
+                        val location = jump.location
                         Log.v(javaClass, "v2: moving to point: $location")
                         ctx.status(HttpStatus.OK_200).result(location) // Send the user the result, don't redirect them
                     }
@@ -123,6 +120,7 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
         // Add a jump point
         put("${Runner.BASE}/v1/jumps/add", { ctx ->
             val add = ctx.bodyAsClass(JumpData::class.java)
+            val groupName = ctx.queryParam("gname")
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
@@ -134,11 +132,13 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
             // Block non-admin user from adding global jumps
             if (!add.personal && transaction { return@transaction user.role.name != Auth.BasicRoles.ADMIN.name }) throw ForbiddenResponse()
             if (!jumpExists(add.name, user.username, user.token)) {
+                val group = if(groupName != null && groupName.isNotBlank()) GroupAction.getInstance().getGroupByName(groupName) else null
                 transaction {
                     Jump.new {
                         name = add.name
                         location = add.location
                         this.owner = if (add.personal) user else null
+                        this.ownerGroup = group
                     }
                     ImageAction(add.location).get()
                 }

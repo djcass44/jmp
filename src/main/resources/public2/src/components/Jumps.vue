@@ -120,7 +120,7 @@ export default {
         edit(id) {
             let index = this.indexFromId(id);
             let item = this.items[index];
-            this.$emit('dialog-create', true, 'Edit jump point', 'Update', true, item.id, item.name, item.location, index);
+            this.$emit('dialog-create', true, 'Edit jump point', 'Update', true, 'USER-ID', item.id, item.name, item.location, index);
         },
         highlight(text) {
             return text.replace(new RegExp("https?:\\/\\/(www\\.)?"), match => {
@@ -155,9 +155,10 @@ export default {
             items.length = 0; // Reset in case this is being called later (e.g. from auth)
             this.loading = true;
             axios.get(url, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
+                that.items = [];
                 console.log("Loaded items: " + response.data.length);
                 response.data.map(item => {
-                    items.push(item);
+                    that.items.push(item);
                 });
                 that.filterItems();
                 that.checkItemsLength();

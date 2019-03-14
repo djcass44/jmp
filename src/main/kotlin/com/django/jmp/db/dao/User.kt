@@ -17,19 +17,20 @@
 package com.django.jmp.db.dao
 
 import org.jetbrains.exposed.dao.EntityID
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.IntIdTable
+import org.jetbrains.exposed.dao.UUIDEntity
+import org.jetbrains.exposed.dao.UUIDEntityClass
+import org.jetbrains.exposed.dao.UUIDTable
+import java.util.*
 
-object Users: IntIdTable() {
+object Users: UUIDTable() {
     val username = varchar("username", 36).uniqueIndex()
     val hash = text("hash")
     val token = uuid("token")
     val role = reference("role", Roles)
     val requestToken = text("request_token").nullable()
 }
-class User(id: EntityID<Int>): IntEntity(id) {
-    companion object : IntEntityClass<User>(Users)
+class User(id: EntityID<UUID>): UUIDEntity(id) {
+    companion object : UUIDEntityClass<User>(Users)
 
     var username by Users.username
     var hash by Users.hash
@@ -37,7 +38,7 @@ class User(id: EntityID<Int>): IntEntity(id) {
     var role by Role referencedOn Users.role
     var requestToken by Users.requestToken
 }
-data class UserData(val id: Int, val username: String, val role: String, val groups: ArrayList<String>) {
+data class UserData(val id: UUID, val username: String, val role: String, val groups: ArrayList<String>) {
     constructor(user: User, groups: ArrayList<String>): this(user.id.value, user.username, user.role.name, groups)
 }
-data class EditUserData(val id: Int, val role: String)
+data class EditUserData(val id: UUID, val role: String)

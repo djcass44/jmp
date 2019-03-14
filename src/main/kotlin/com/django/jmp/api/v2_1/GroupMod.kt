@@ -33,12 +33,14 @@ import io.javalin.apibuilder.EndpointGroup
 import io.javalin.security.SecurityUtil.roles
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.*
+import kotlin.collections.ArrayList
 
 class GroupMod: EndpointGroup {
     override fun addEndpoints() {
         patch("${Runner.BASE}/v2_1/groupmod/add", { ctx ->
-            val addUser = ctx.validatedQueryParam("uid").asInt().value
-            val addGroup = ctx.validatedQueryParam("gid").asInt().value
+            val addUser = UUID.fromString(ctx.queryParam("uid"))
+            val addGroup = UUID.fromString(ctx.queryParam("gid"))
             if(addUser == null || addGroup == null) throw BadRequestResponse("Invalid path parameters")
             Log.d(javaClass, "add - queryParams valid")
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("Invalid token")
@@ -62,8 +64,8 @@ class GroupMod: EndpointGroup {
             }
         }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
         delete("${Runner.BASE}/v2_1/groupmod/rm", { ctx ->
-            val rmUser = ctx.validatedQueryParam("uid").asInt().value
-            val rmGroup = ctx.validatedQueryParam("gid").asInt().value
+            val rmUser = UUID.fromString(ctx.queryParam("uid"))
+            val rmGroup = UUID.fromString(ctx.queryParam("gid"))
             if(rmUser == null || rmGroup == null) throw BadRequestResponse("Invalid path parameters")
             Log.d(javaClass, "rm - queryParams valid")
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("Invalid token")

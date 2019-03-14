@@ -17,21 +17,22 @@
 package com.django.jmp.db.dao
 
 import org.jetbrains.exposed.dao.EntityID
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.IntIdTable
+import org.jetbrains.exposed.dao.UUIDEntity
+import org.jetbrains.exposed.dao.UUIDEntityClass
+import org.jetbrains.exposed.dao.UUIDTable
 import org.jetbrains.exposed.sql.Table
+import java.util.*
 
-object Groups: IntIdTable() {
+object Groups: UUIDTable() {
     val name = varchar("name", 24).uniqueIndex()
 }
-class Group(id: EntityID<Int>): IntEntity(id) {
-    companion object: IntEntityClass<Group>(Groups)
+class Group(id: EntityID<UUID>): UUIDEntity(id) {
+    companion object: UUIDEntityClass<Group>(Groups)
 
     var name by Groups.name
     var users by User via GroupUsers
 }
-data class GroupData(val id: Int, val name: String) {
+data class GroupData(val id: UUID? = UUID.randomUUID(), val name: String) {
     constructor(group: Group): this(group.id.value, group.name)
 }
 object GroupUsers: Table() {

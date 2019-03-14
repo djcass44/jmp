@@ -110,4 +110,8 @@ class TokenProvider {
             null
         }
     }
+
+    fun mayBeToken(token: String?): Boolean {
+        return (token != null && token.isNotBlank() && token != "null" && token.split(".").size == 3)
+    }
 }

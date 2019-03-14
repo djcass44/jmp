@@ -23,6 +23,7 @@ import com.django.jmp.db.dao.Group
 import com.django.jmp.db.dao.Jump
 import com.django.jmp.db.dao.Jumps
 import com.django.jmp.db.dao.User
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.lang.management.ManagementFactory
 
@@ -53,7 +54,7 @@ class InfoAction {
         val memInfo = MemoryInfo(totalMemory, maxMemory, usedMemory)
         return SystemInfo(osInfo, cpuCount, javaInfo, kotlinInfo, memInfo)
     }
-    data class JumpInfo(val total: Int, val global: Int, val personal: Int)
+    data class JumpInfo(val total: Int, val global: Int, val personal: Int, val grouped: Int)
     /**
      * This information may be sensitive in nature, only allow access to ADMIN
      */
@@ -62,13 +63,10 @@ class InfoAction {
         val users = User.all().count()
         val groups = Group.all().count()
         val jumps = Jump.all().count()
-        val globalJumps = Jump.find {
-            Jumps.owner.isNull()
-        }.count()
-        val personalJumps = Jump.find {
-            Jumps.owner.isNotNull()
-        }.count()
-        val jumpInfo = JumpInfo(jumps, globalJumps, personalJumps)
+        val globalJumps = Jump.find { Jumps.owner.isNull() and Jumps.ownerGroup.isNull() }.count()
+        val personalJumps = Jump.find { Jumps.owner.isNotNull() }.count()
+        val groupedJumps = Jump.find { Jumps.ownerGroup.isNotNull() }.count()
+        val jumpInfo = JumpInfo(jumps, globalJumps, personalJumps, groupedJumps)
         val uptime = System.currentTimeMillis() - Runner.START_TIME
         val uptimeString = timeSpan(uptime)
         return@transaction AppInfo(version, users, groups, jumpInfo, uptimeString, Runner.store)

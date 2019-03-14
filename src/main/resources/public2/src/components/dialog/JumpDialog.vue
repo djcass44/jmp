@@ -20,6 +20,9 @@
                                         <v-flex xs12>
                                             <v-select v-if="edit === false" v-model="select" :items="items" :rules="typeRules" label="Type" required></v-select>
                                         </v-flex>
+                                        <v-flex xs12>
+                                            <v-select v-if="edit === false && select === items[2]" v-model="selectGroup" :items="groups" :rules="typeRules" label="Group" required></v-select>
+                                        </v-flex>
                                     </v-layout>
                                 </v-container>
                                 <small>*indicates required field</small>
@@ -67,12 +70,16 @@ export default {
             select: null,
             items: [
                 "Global",
-                "Personal"
+                "Personal",
+                "Group"
             ],
             typeRules: [
                 v => !!v || 'Type is required.'
             ],
-            index: -1
+            index: -1,
+            groupIndex: -1,
+            selectGroup: null,
+            groups: []
         }
     },
     methods: {
@@ -98,6 +105,26 @@ export default {
                 this.index = index;
             else
                 this.index = -1;
+            if(visible === true)
+                this.loadGroups();
+        },
+        loadGroups() {
+            let that = this;
+            axios.get(`${process.env.VUE_APP_BASE_URL}/v2_1/user/info`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
+                let user = response.data;
+                return axios.get(`${process.env.VUE_APP_BASE_URL}/v2_1/user/groups?uid=${user.id}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
+                    that.groups = [];
+                    response.data.map(item => {
+                        that.groups.push(item.name);
+                    });
+                }).catch(function(error) {
+                    console.log(error);
+                    that.$emit('snackbar', true, `Failed to load groups: ${error.response.status}`);
+                });
+            }).catch(function(error) {
+                console.log(error);
+                that.$emit('snackbar', true, `Failed to load user info: ${error.response.status}`);
+            });
         },
         update () {
             this.$refs.form.validate();
@@ -122,9 +149,15 @@ export default {
         },
         submit () {
             this.$refs.form.validate();
-            let url = `${process.env.VUE_APP_BASE_URL}/v1/jumps/add`;
             const localToken = localStorage.getItem(storageJWT);
             let personalJump = this.select === this.items[1];
+            let owner = null;
+            let url = `${process.env.VUE_APP_BASE_URL}/v1/jumps/add`;
+            if(this.select === this.items[2]) {// Owned by group
+                owner = this.selectGroup;
+                url += `?gname=${owner}`;
+                console.log(`Group id: ${owner}`);
+            }
             if(localToken === null && personalJump === true) {
                 // User cannot create personal tokens if not auth'd
                 this.$emit('snackbar', true, "Login to create personal jumps!");
