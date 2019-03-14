@@ -27,7 +27,7 @@
                                 </v-list-tile-avatar>
                                 <v-list-tile-content>
                                     <v-list-tile-title>{{ item.name }}</v-list-tile-title>
-                                    <v-list-tile-sub-title><span v-html="highlight(item.location)">{{ item.location }}</span></v-list-tile-sub-title>
+                                    <v-list-tile-sub-title><span v-html="highlight(item.location)">{{ item.location }}</span><span v-if="item.owner !== null">&nbsp;&bull;&nbsp;{{ item.owner }}</span></v-list-tile-sub-title>
                                 </v-list-tile-content>
                                 <v-list-tile-action>
                                     <v-menu bottom left offset-y origin="top right" transition="scale-transition" min-width="150">

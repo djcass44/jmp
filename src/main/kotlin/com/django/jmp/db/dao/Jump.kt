@@ -20,6 +20,7 @@ import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.IntIdTable
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object Jumps : IntIdTable() {
     val name = varchar("name", 50)
@@ -38,7 +39,19 @@ class Jump(id: EntityID<Int>) : IntEntity(id) {
     var ownerGroup by Group optionalReferencedOn Jumps.ownerGroup
     var image by Jumps.image
 }
-data class JumpData(val id: Int, val name: String, val location: String, val personal: Boolean = false, val image: String? = null) {
-    constructor(jump: Jump): this(jump.id.value, jump.name, jump.location, jump.owner != null || jump.ownerGroup != null, jump.image)
+data class JumpData(val id: Int, val name: String, val location: String, val personal: Boolean = false, val owner: String? = null, val image: String? = null) {
+    constructor(jump: Jump): this(jump.id.value, jump.name, jump.location, jump.owner != null || jump.ownerGroup != null, getOwner(jump), jump.image)
+
+    companion object {
+        fun getOwner(jump: Jump): String? = transaction {
+            if(jump.ownerGroup == null && jump.owner == null)
+                return@transaction null
+            if(jump.ownerGroup != null)
+                return@transaction jump.ownerGroup!!.name
+            if(jump.owner != null)
+                return@transaction jump.owner!!.username
+            return@transaction null
+        }
+    }
 }
 data class EditJumpData(val id: Int, val name: String, val location: String)
