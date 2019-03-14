@@ -83,7 +83,7 @@ class Group: EndpointGroup {
                     Groups.name eq add.name
                 }
                 if(existing.count() > 0) throw ConflictResponse("Group already exists")
-                val g = Group.new(UUID.randomUUID()) {
+                Group.new(UUID.randomUUID()) {
                     name = add.name
                     // Add the user to the new group
                     users = SizedCollection(arrayListOf(user))

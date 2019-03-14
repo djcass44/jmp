@@ -18,17 +18,14 @@ package com.django.jmp.api.v1
 
 import com.django.jmp.api.Auth
 import com.django.jmp.api.Runner
-import com.django.jmp.api.actions.GroupAction
 import com.django.jmp.api.actions.ImageAction
 import com.django.jmp.api.actions.OwnerAction
 import com.django.jmp.auth.JWTContextMapper
 import com.django.jmp.auth.TokenProvider
 import com.django.jmp.auth.response.AuthenticateResponse
 import com.django.jmp.db.ConfigStore
-import com.django.jmp.db.dao.EditJumpData
+import com.django.jmp.db.dao.*
 import com.django.jmp.db.dao.Jump
-import com.django.jmp.db.dao.JumpData
-import com.django.jmp.db.dao.Jumps
 import com.django.jmp.except.EmptyPathException
 import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
@@ -120,7 +117,7 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
         // Add a jump point
         put("${Runner.BASE}/v1/jumps/add", { ctx ->
             val add = ctx.bodyAsClass(JumpData::class.java)
-            val groupName = ctx.queryParam("gname")
+            val groupID = UUID.fromString(ctx.queryParam("gid"))
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
@@ -132,8 +129,8 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
             // Block non-admin user from adding global jumps
             if (!add.personal && transaction { return@transaction user.role.name != Auth.BasicRoles.ADMIN.name }) throw ForbiddenResponse()
             if (!jumpExists(add.name, user.username, user.token)) {
-                val group = if(groupName != null && groupName.isNotBlank()) GroupAction.getInstance().getGroupByName(groupName) else null
                 transaction {
+                    val group = Group.findById(groupID)
                     Jump.new {
                         name = add.name
                         location = add.location

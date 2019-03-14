@@ -21,7 +21,7 @@
                                             <v-select v-if="edit === false" v-model="select" :items="items" :rules="typeRules" label="Type" required></v-select>
                                         </v-flex>
                                         <v-flex xs12>
-                                            <v-select v-if="edit === false && select === items[2]" v-model="selectGroup" :items="groups" :rules="typeRules" label="Group" required></v-select>
+                                            <v-select v-if="edit === false && select === items[2]" v-model="selectGroup" :items="groups" item-text="name" :rules="typeRules" label="Group" required></v-select>
                                         </v-flex>
                                     </v-layout>
                                 </v-container>
@@ -115,7 +115,7 @@ export default {
                 return axios.get(`${process.env.VUE_APP_BASE_URL}/v2_1/user/groups?uid=${user.id}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
                     that.groups = [];
                     response.data.map(item => {
-                        that.groups.push(item.name);
+                        that.groups.push(item);
                     });
                 }).catch(function(error) {
                     console.log(error);
@@ -154,9 +154,11 @@ export default {
             let owner = null;
             let url = `${process.env.VUE_APP_BASE_URL}/v1/jumps/add`;
             if(this.select === this.items[2]) {// Owned by group
-                owner = this.selectGroup;
-                url += `?gname=${owner}`;
-                console.log(`Group id: ${owner}`);
+                for(let i = 0; i < this.groups.length; i++) {
+                    if(this.groups[i].name === this.selectGroup)
+                        owner = this.groups[i].id;
+                }
+                url += `?gid=${owner}`;
             }
             if(localToken === null && personalJump === true) {
                 // User cannot create personal tokens if not auth'd
