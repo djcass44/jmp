@@ -11,20 +11,22 @@ export default {
     name: 'Token',
     methods: {
         setLoggedIn() {},
-        authChanged() {},
+        authChanged() {
+            this.jumpUser();
+        },
         loadFailed() {},
-    },
-    created() {
-        let url = new URL(window.location.href);
-        if(url.searchParams.has("query")) {
-            let query = url.searchParams.get("query");
-            axios.get(`${process.env.VUE_APP_BASE_URL}/v2/jump/${query}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
-                let target = r.data;
-                window.location.replace(target);
-            }).catch(function(error) {
-                console.log(error);
-                that.$emit('snackbar', true, `Failed to load target: ${error.response.status}`);
-            });
+        jumpUser() {
+            let url = new URL(window.location.href);
+            if(url.searchParams.has("query")) {
+                let query = url.searchParams.get("query");
+                axios.get(`${process.env.VUE_APP_BASE_URL}/v2/jump/${query}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
+                    let target = r.data;
+                    window.location.replace(target);
+                }).catch(function(error) {
+                    console.log(error);
+                    that.$emit('snackbar', true, `Failed to load target: ${error.response.status}`);
+                });
+            }
         }
     }
 };
