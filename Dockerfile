@@ -4,7 +4,7 @@ FROM openjdk:11.0.1-slim-stretch as GRADLE_CACHE
 WORKDIR /app
 
 # Dry run for caching
-COPY build.gradle.kts settings.gradle gradlew ./
+COPY build.gradle.kts settings.gradle version.xml gradlew ./
 COPY gradle ./gradle
 RUN ./gradlew build || return 0
 # Build & package app
