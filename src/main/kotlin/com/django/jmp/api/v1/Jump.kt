@@ -117,7 +117,7 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
         // Add a jump point
         put("${Runner.BASE}/v1/jumps/add", { ctx ->
             val add = ctx.bodyAsClass(JumpData::class.java)
-            val groupID = UUID.fromString(ctx.queryParam("gid"))
+            val groupID = kotlin.runCatching { UUID.fromString(ctx.queryParam("gid")) }.getOrNull()
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
@@ -130,7 +130,7 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
             if (!add.personal && transaction { return@transaction user.role.name != Auth.BasicRoles.ADMIN.name }) throw ForbiddenResponse()
             if (!jumpExists(add.name, user.username, user.token)) {
                 transaction {
-                    val group = Group.findById(groupID)
+                    val group = if(groupID != null) Group.findById(groupID) else null
                     Jump.new {
                         name = add.name
                         location = add.location

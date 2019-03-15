@@ -32,9 +32,11 @@ object Runner {
     const val BASE = "/api"
     var START_TIME = 0L
     lateinit var store: ConfigStore
+    lateinit var args: Array<String>
 }
 
 fun main(args: Array<String>) {
+    Runner.args = args
     Runner.START_TIME = System.currentTimeMillis()
     Log.v(Runner::class.java, Arrays.toString(args))
     val enableCors = args.contains("--enable-cors")

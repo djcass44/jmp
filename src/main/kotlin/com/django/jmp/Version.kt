@@ -19,8 +19,8 @@ package com.django.jmp
 object Version {
     private const val MAJOR = "2"
     private const val MINOR = "1"
-    private const val PATCH = "5"
-    private const val BUILD = "80"
+    private const val PATCH = "6"
+    private const val BUILD = "86"
 
     fun getVersion() = "$MAJOR.$MINOR.$PATCH-$BUILD"
 }

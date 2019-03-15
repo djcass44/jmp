@@ -25,11 +25,12 @@ import com.django.jmp.db.dao.Jumps
 import com.django.jmp.db.dao.User
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.io.File
 import java.lang.management.ManagementFactory
 
 class InfoAction {
     data class SystemInfo(val osInfo: OSInfo, val cpus: Int, val javaInfo: JavaInfo, val kotlinInfo: KotlinInfo, val memoryInfo: MemoryInfo)
-    data class AppInfo(val version: String, val users: Int, val groups: Int, val jumpInfo: JumpInfo, val appUptime: String, val launchConfig: ConfigStore)
+    data class AppInfo(val version: String, val users: Int, val groups: Int, val jumpInfo: JumpInfo, val appUptime: String, val launchConfig: ConfigStore, val launchArgs: ArrayList<String>)
 
     data class JavaInfo(val name: String, val version: String, val specification: String, val vendor: String, val home: String, val uptime: String)
     data class KotlinInfo(val major: Int, val minor: Int, val patch: Int)
@@ -69,7 +70,8 @@ class InfoAction {
         val jumpInfo = JumpInfo(jumps, globalJumps, personalJumps, groupedJumps)
         val uptime = System.currentTimeMillis() - Runner.START_TIME
         val uptimeString = timeSpan(uptime)
-        return@transaction AppInfo(version, users, groups, jumpInfo, uptimeString, Runner.store)
+        val cleanLaunchConfig = ConfigStore(Runner.store.url, Runner.store.driver, File(Runner.store.logRequestDir).absolutePath, Runner.store.BASE_URL, "****", "****")
+        return@transaction AppInfo(version, users, groups, jumpInfo, uptimeString, cleanLaunchConfig, ArrayList(Runner.args.toList()))
     }
 
     private fun slf(n: Double): String = Math.floor(n).toLong().toString()

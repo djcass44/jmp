@@ -20,6 +20,8 @@ ENV DRIVER_URL="jdbc:sqlite:jmp.db"
 ENV DRIVER_CLASS="org.sqlite.JDBC"
 ENV ENV_LOG_REQUEST_DIRECTORY="."
 ENV BASE_URL="localhost:8080"
+ENV DRIVER_USER=""
+ENV DRIVER_PASSWORD=""
 
 WORKDIR /app
 COPY --from=GRADLE_CACHE /app/build/libs/jmp.jar .
