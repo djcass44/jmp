@@ -1,5 +1,6 @@
 package com.django.jmp.api
 
+import com.django.jmp.Arguments
 import com.django.jmp.api.v1.Jump
 import com.django.jmp.api.v2.*
 import com.django.jmp.api.v2.Similar
@@ -39,8 +40,9 @@ fun main(args: Array<String>) {
     Runner.args = args
     Runner.START_TIME = System.currentTimeMillis()
     Log.v(Runner::class.java, Arrays.toString(args))
-    val enableCors = args.contains("--enable-cors")
-    if(enableCors) Log.w(Runner::class.java, "WARNING: CORS access is enable for ALL origins. DO NOT allow this in production: WARNING")
+    val arguments = Arguments(args)
+    if(arguments.enableCors) Log.w(Runner::class.java, "WARNING: CORS access is enable for ALL origins. DO NOT allow this in production: WARNING")
+    Log.setPriorityLevel(arguments.debugLevel)
     val configLocation = if(args.size >= 2 && args[0] == "using") {
         args[1]
     }
@@ -55,7 +57,7 @@ fun main(args: Array<String>) {
     Log.v(Runner::class.java, "Database config: [${store.url}, ${store.driver}]")
     Log.v(Runner::class.java, "Application config: [${store.BASE_URL}, ${store.logRequestDir}]")
     // Do not allow CORS on an https url
-    if(store.BASE_URL.startsWith("https") && enableCors) throw InvalidSecurityConfigurationException()
+    if(store.BASE_URL.startsWith("https") && arguments.enableCors) throw InvalidSecurityConfigurationException()
     val source = when {
         !store.tableUser.isNullOrBlank() && !store.tablePassword.isNullOrBlank() -> BasicAuthSource()
         else -> NoAuthSource()
@@ -71,8 +73,9 @@ fun main(args: Array<String>) {
     val auth = Auth()
     val logger = Logger(store.logRequestDir)
     Javalin.create().apply {
+        disableStartupBanner()
         port(7000)
-        if(enableCors) enableCorsForAllOrigins()
+        if(arguments.enableCors) enableCorsForAllOrigins()
         enableCaseSensitiveUrls()
         accessManager { handler, ctx, permittedRoles ->
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx)

@@ -11,7 +11,7 @@
                             <v-container grid-list-md>
                                 <v-layout wrap>
                                     <v-flex xs12>
-                                        <v-text-field outline label="Name*" v-model="name" :rules="nameRules" :counter="36" required autocomplete="name"></v-text-field>
+                                        <v-text-field outline label="Name*" v-model="name" :rules="nameRules" :counter="24" required autocomplete="name"></v-text-field>
                                     </v-flex>
                                 </v-layout>
                             </v-container>
@@ -43,7 +43,7 @@ export default {
             nameRules: [
                 (v) => !!v || 'This is a required field.',
                 (v) => nameRegex.test(v) || 'Username must not contain special characters',
-                (v) => v && v.length < 37 || 'Username must be less than 37 characters'
+                (v) => v && v.length < 25 || 'Username must be less than 25 characters'
             ],
             create: true,
             title: '',
