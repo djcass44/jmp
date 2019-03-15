@@ -1,6 +1,7 @@
 package com.django.jmp.api
 
 import com.django.jmp.Arguments
+import com.django.jmp.Version
 import com.django.jmp.api.v1.Jump
 import com.django.jmp.api.v2.*
 import com.django.jmp.api.v2.Similar
@@ -114,4 +115,12 @@ fun main(args: Array<String>) {
             Verify(auth).addEndpoints()
         }
     }.start()
+    println("       _ __  __ _____  \n" +
+            "      | |  \\/  |  __ \\ \n" +
+            "      | | \\  / | |__) |\n" +
+            "  _   | | |\\/| |  ___/ \n" +
+            " | |__| | |  | | |     \n" +
+            "  \\____/|_|  |_|_|     \n" +
+            "                       \n" +
+            "JMP v${Version.getVersion()} is ready.")
 }

@@ -128,7 +128,7 @@ export default {
             });
         },
         update () {
-            that.loading = true;
+            this.loading = true;
             this.$refs.form.validate();
             let url = `${process.env.VUE_APP_BASE_URL}/v1/jumps/edit`;
             let that = this;
@@ -152,7 +152,7 @@ export default {
             });
         },
         submit () {
-            that.loading = true;
+            this.loading = true;
             this.$refs.form.validate();
             const localToken = localStorage.getItem(storageJWT);
             let personalJump = this.select === this.items[1];
