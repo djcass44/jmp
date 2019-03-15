@@ -20,6 +20,7 @@ import com.django.jmp.db.dao.Jump
 import com.django.jmp.db.dao.Jumps
 import com.django.jmp.net.Favicon
 import com.django.jmp.net.FaviconGrabber
+import com.django.log2.logging.Log
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class ImageAction(private val address: String) {
@@ -37,8 +38,10 @@ class ImageAction(private val address: String) {
                             Jumps.location eq address
                         }
                         for (r in results) {
-                            if(r.image == null || r.image != f.src)
+                            if(r.image == null || r.image != f.src) {
+                                Log.v(javaClass, "Updating icon for ${r.name} [previous: ${r.image}, new: ${f.src}")
                                 r.image = f.src
+                            }
                         }
                     }
                 }

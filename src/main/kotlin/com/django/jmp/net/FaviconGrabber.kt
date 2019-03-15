@@ -16,6 +16,7 @@
 
 package com.django.jmp.net
 
+import com.django.jmp.except.InsecureDomainException
 import com.django.log2.logging.Log
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -33,9 +34,9 @@ class FaviconGrabber(private val domain: String, private val pretty: Boolean = t
                 val r: Response = url.httpGet()
                 val text = r.body()?.string()
                 listener.onLoad(gson.fromJson(text ?: "", Favicon::class.java))
-            } catch (e: Exception) {
+            }
+            catch (e: Exception) {
                 Log.e(javaClass, "Failed to load favicon [$domain]: $e")
-                e.printStackTrace()
             }
         }
         t.apply {
@@ -49,21 +50,30 @@ class FaviconGrabber(private val domain: String, private val pretty: Boolean = t
 }
 class Favicon(val domain: String, val icons: Array<Icon>?) {
     fun get(): Icon? {
-        if(icons == null || icons.isEmpty())
-            return null
-        if(icons.size == 1)
-            return icons[0]
-        var result = icons[0]
-        for(i in icons) {
-            if(i.sizes != null) {
-                if(result.sizes == null)
-                    result = i
-                if(i.getSize() > result.getSize())
-                    result = i
+        try {
+            if (icons == null || icons.isEmpty())
+                return null
+            if (icons.size == 1) {
+                if (icons[0].src.startsWith("http://")) throw InsecureDomainException()
+                return icons[0]
             }
+            var result = icons[0]
+            for (i in icons) {
+                if (i.sizes != null) {
+                    if (result.sizes == null)
+                        result = i
+                    if (i.getSize() > result.getSize())
+                        result = i
+                }
+            }
+            if (result.src.startsWith("http://")) throw InsecureDomainException()
+            Log.d(javaClass, "domain: $domain, maxSize: ${result.sizes}")
+            return result
         }
-        Log.d(javaClass, "domain: $domain, maxSize: ${result.sizes}")
-        return result
+        catch (e: Exception) {
+            Log.e(javaClass, "Failed to get favicon [$domain]: $e")
+            return null
+        }
     }
 }
 class Icon(val src: String, val type: String?, val sizes: String?) {
