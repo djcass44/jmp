@@ -155,7 +155,11 @@ export default {
             this.loading = true;
             this.$refs.form.validate();
             const localToken = localStorage.getItem(storageJWT);
-            let personalJump = this.select === this.items[1];
+            let personalJump = 0; // Assume global at first
+            if(this.select === this.items[1])
+                personalJump = 1;
+            else if(this.select === this.items[2])
+                personalJump = 2;
             let owner = null;
             let url = `${process.env.VUE_APP_BASE_URL}/v1/jumps/add`;
             if(this.select === this.items[2]) {// Owned by group
@@ -165,9 +169,10 @@ export default {
                 }
                 url += `?gid=${owner}`;
             }
-            if(localToken === null && personalJump === true) {
-                // User cannot create personal tokens if not auth'd
-                this.$emit('snackbar', true, "Login to create personal jumps!");
+            if(localToken === null) {
+                // User cannot create jumps if not auth'd
+                this.$emit('snackbar', true, "Login to create jumps!");
+                this.loading = false;
                 return;
             }
             let that = this;

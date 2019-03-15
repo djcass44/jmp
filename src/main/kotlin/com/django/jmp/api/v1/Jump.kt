@@ -127,14 +127,14 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
                 throw ForbiddenResponse("Token verification failed")
             }
             // Block non-admin user from adding global jumps
-            if (!add.personal && transaction { return@transaction user.role.name != Auth.BasicRoles.ADMIN.name }) throw ForbiddenResponse()
+            if (add.personal == JumpData.TYPE_GLOBAL && transaction { return@transaction user.role.name != Auth.BasicRoles.ADMIN.name }) throw ForbiddenResponse()
             if (!jumpExists(add.name, user.username, user.token)) {
                 transaction {
                     val group = if(groupID != null) Group.findById(groupID) else null
                     Jump.new {
                         name = add.name
                         location = add.location
-                        this.owner = if (add.personal) user else null
+                        this.owner = if (add.personal == JumpData.TYPE_PERSONAL) user else null
                         this.ownerGroup = group
                     }
                     ImageAction(add.location).get()
