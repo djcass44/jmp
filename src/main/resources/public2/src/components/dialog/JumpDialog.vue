@@ -31,7 +31,7 @@
                                 <v-btn color="pink" flat @click="clear">Clear</v-btn>
                                 <v-spacer></v-spacer>
                                 <v-btn color="pink" flat @click="dialog = false">Cancel</v-btn>
-                                <v-btn color="pink" flat :disabled="!valid" @click="edit ? update() : submit()">{{ action }}</v-btn>
+                                <v-btn color="pink" flat :disabled="valid === false || loading === true" @click="edit ? update() : submit()">{{ action }}</v-btn>
                             </v-card-actions>
                         </v-card>
                     </v-form>
@@ -49,6 +49,7 @@ const nameRegex= new RegExp('^[a-zA-Z0-9_.-]*$');
 export default {
     data () {
         return {
+            loading: false,
             dialog: false,
             valid: false,
             edit: false,
@@ -127,6 +128,7 @@ export default {
             });
         },
         update () {
+            that.loading = true;
             this.$refs.form.validate();
             let url = `${process.env.VUE_APP_BASE_URL}/v1/jumps/edit`;
             let that = this;
@@ -135,6 +137,7 @@ export default {
                 `{ "id": ${this.id}, "name": "${this.name}", "location": "${this.location}" }`,
                 {headers: {"Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}
             ).then(r => {
+                that.loading = false;
                 that.dialog = false;
                 that.$emit('jumpsSetItem', { name: this.name, location: this.location, personal: this.select === this.items[1] }, that.index);
                 setTimeout(function() {
@@ -144,10 +147,12 @@ export default {
                 that.$emit('snackbar', true, `Updated ${that.name}`);
             }).catch(e => {
                 console.log(e);
+                that.loading = false;
                 that.$emit('snackbar', true, `Failed to update: ${e.response.status}`);
             });
         },
         submit () {
+            that.loading = true;
             this.$refs.form.validate();
             const localToken = localStorage.getItem(storageJWT);
             let personalJump = this.select === this.items[1];
@@ -171,6 +176,7 @@ export default {
                 `{ "name": "${this.name}", "location": "${this.location}", "personal": "${personalJump}" }`,
                 {headers: {"Content-Type": "application/json", "Authorization": `Bearer ${localToken}`}}
             ).then(r => {
+                that.loading = false;
                 that.dialog = false;
                 that.$emit('jumpsPushItem', {
                     name: that.name,
@@ -184,6 +190,7 @@ export default {
                 that.$emit('snackbar', true, `Added ${that.name}`)
             }).catch(e => {
                 console.log(e);
+                that.loading = false;
                 that.$emit('snackbar', true, `Failed to add: ${e.response.status}`);
             });
         },

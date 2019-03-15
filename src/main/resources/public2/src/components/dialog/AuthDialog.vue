@@ -23,7 +23,7 @@
                         <v-card-actions>
                             <v-spacer></v-spacer>
                             <v-btn color="pink" flat @click="dialog = false">Cancel</v-btn>
-                            <v-btn color="pink" flat :disabled="!valid" @click="create ? onCreate() : submit()">{{ action }}</v-btn>
+                            <v-btn color="pink" flat :disabled="valid === false || loading === true" @click="create ? onCreate() : submit()">{{ action }}</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-form>
@@ -39,6 +39,7 @@ const nameRegex= new RegExp('^[a-zA-Z0-9_.-]*$');
 export default {
     data () {
         return {
+            loading: false,
             dialog: false,
             valid: false,
             name: '',
@@ -78,6 +79,7 @@ export default {
             this.$emit('dialog-auth', visible, create);
         },
         onCreate() {
+            this.loading = true;
             this.$refs.form.validate();
             const url = `${process.env.VUE_APP_BASE_URL}/v2/user/add`;
             let that = this;
@@ -90,12 +92,15 @@ export default {
                 that.dialog = false;
                 that.$emit('snackbar', true, `Created user ${that.name}`);
                 that.$emit("pushItem");
+                that.loading = false;
             }).catch(e => {
                 console.log(e);
+                that.loading = false;
                 that.$emit('snackbar', true, `Failed to create user: ${e.response.status}`);
             });
         },
         submit () {
+            this.loading = true;
             this.$refs.form.validate();
             const url = `${process.env.VUE_APP_BASE_URL}/v2/oauth/token`;
             let that = this;
@@ -112,8 +117,10 @@ export default {
                 localStorage.setItem(storageUser, that.name);
                 that.$emit('getAuth');
                 that.$emit('pushItem');
+                that.loading = false;
             }).catch(function(e) {
                 console.log(e);
+                that.loading = false;
                 if(e.response.status === 404)
                     that.$emit('snackbar', true, "Password incorrect or user doesn't exist");
                 else

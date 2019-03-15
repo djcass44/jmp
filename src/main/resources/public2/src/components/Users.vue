@@ -107,6 +107,9 @@
         <GenericDeleteDialog ref="deleteDialog"
             @doRemove="removeGroup">
         </GenericDeleteDialog>
+        <GenericDeleteDialog ref="dialogrmuser"
+            @doRemove="doRemove">
+        </GenericDeleteDialog>
         <GroupSelectDialog ref="groupSelectDialog"
             @snackbar="snackbar">
         </GroupSelectDialog>
@@ -177,11 +180,10 @@ export default {
             return -1;
         },
         remove(id) {
-            let index = this.indexFromId(id);
-            let item = this.items[index];
-            this.$emit('dialog-delete', true, item.name, index);
+            this.$refs.dialogrmuser.setVisible(true, id);
         },
-        doRemove(index) {
+        doRemove(id) {
+            let index = this.indexFromId(id);
             let item = this.items[index];
             const url = `${process.env.VUE_APP_BASE_URL}/v2/user/rm/${item.id}`;
             let that = this;
