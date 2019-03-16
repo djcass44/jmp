@@ -34,8 +34,6 @@ import io.javalin.ForbiddenResponse
 import io.javalin.NotFoundResponse
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
-import io.javalin.security.SecurityUtil
-import io.javalin.security.SecurityUtil.roles
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.lowerCase
@@ -56,7 +54,7 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
             return jumpExists(name) // Fall back to v1 without a token
         return transaction {
             val userObject = auth.getUser(user, token)
-            val existing = OwnerAction.getInstance().getJumpForUser(userObject, name)
+            val existing = OwnerAction.getInstance().getJumpFromUser(userObject, name)
             return@transaction if(existing == null) jumpExists(name) else true // Fall back to v1 if nothing found in v2
         }
     }
@@ -67,14 +65,14 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
             val items = arrayListOf<JumpData>()
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: ""
             val user = if(jwt == "null" || jwt.isBlank()) null else TokenProvider.getInstance().verify(jwt)
-            val userJumps = OwnerAction.getInstance().getJumpsForUser(user)
+            val userJumps = OwnerAction.getInstance().getUserVisibleJumps(user)
             transaction {
                 userJumps.forEach {
                     items.add(JumpData(it))
                 }
             }
             ctx.json(items).status(HttpStatus.OK_200)
-        }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2/jump/:target", { ctx ->
             try {
                 val target = ctx.pathParam("target")
@@ -94,7 +92,7 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
                 transaction {
                     Log.d(javaClass, "User information: [name: ${user?.username}, token: ${user?.token}]")
                     Log.d(javaClass, "Found user: ${user != null}")
-                    val jump = OwnerAction.getInstance().getJumpForUser(user, target)
+                    val jump = OwnerAction.getInstance().getJumpFromUser(user, target)
                     if(jump != null) {
                         val location = jump.location
                         jump.metaUsage++ // Increment usage count for statistics
@@ -112,16 +110,16 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
                 Log.e(Runner::class.java, "Empty target")
                 throw NotFoundResponse()
             }
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
         // Add a jump point
         put("${Runner.BASE}/v1/jumps/add", { ctx ->
             val add = ctx.bodyAsClass(JumpData::class.java)
             val groupID = kotlin.runCatching { UUID.fromString(ctx.queryParam("gid")) }.getOrNull()
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
-            val user = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+            val user = TokenProvider.getInstance().verify(jwt) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
@@ -143,15 +141,15 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
                 ctx.status(HttpStatus.CREATED_201).json(add)
             } else
                 throw ConflictResponse()
-        }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
         // Edit a jump point
         patch("${Runner.BASE}/v1/jumps/edit", { ctx ->
             val update = ctx.bodyAsClass(EditJumpData::class.java)
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
-            val user = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+            val user = TokenProvider.getInstance().verify(jwt) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
@@ -170,27 +168,27 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
                 }
                 else throw ForbiddenResponse()
             }
-        }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
         // Delete a jump point
         delete("${Runner.BASE}/v1/jumps/rm/:id", { ctx ->
             val id = ctx.pathParam("id").toIntOrNull() ?: throw BadRequestResponse()
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
-            val user = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+            val user = TokenProvider.getInstance().verify(jwt) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
             transaction {
                 val result = Jump.findById(id) ?: throw NotFoundResponse()
-                // 401 if jump is global and user ISN'T admin
+                // 403 if jump is global and user ISN'T admin
                 if (result.owner == null && user.role.name != Auth.BasicRoles.ADMIN.name) throw ForbiddenResponse()
-                // 401 if jump is personal and tokens don't match
+                // 403 if jump is personal and tokens don't match
                 if (result.owner != null && result.owner!!.token != user.token) throw ForbiddenResponse()
                 result.delete()
             }
             ctx.status(HttpStatus.NO_CONTENT_204)
-        }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
     }
 }

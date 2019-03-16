@@ -24,7 +24,6 @@ import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
-import io.javalin.security.SecurityUtil
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -33,7 +32,7 @@ class Verify(private val auth: Auth): EndpointGroup {
         // Verify a users token is still valid
         get("${Runner.BASE}/v2/verify/token", { ctx ->
             ctx.status(HttpStatus.MOVED_PERMANENTLY_301).result("This has been deprecated in favour of OAuth2 /v2/oauth")
-        }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
         // Verify a user still exists
         get("${Runner.BASE}/v2/verify/user/:name", { ctx ->
             val name = ctx.pathParam("name")
@@ -60,6 +59,6 @@ class Verify(private val auth: Auth): EndpointGroup {
                     }
                 }
             }
-        }, SecurityUtil.roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
     }
 }

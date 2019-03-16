@@ -32,17 +32,11 @@ class ImageAction(private val address: String) {
         FaviconGrabber(cutAddress).get(object : FaviconGrabber.OnLoadCallback {
             override fun onLoad(favicon: Favicon) {
                 val f = favicon.get()
-                if(f != null) {
-                    transaction {
-                        val results = Jump.find {
-                            Jumps.location eq address
-                        }
-                        for (r in results) {
-                            if(r.image == null || r.image != f.src) {
-                                Log.v(javaClass, "Updating icon for ${r.name} [previous: ${r.image}, new: ${f.src}")
-                                r.image = f.src
-                            }
-                        }
+                if(f != null) transaction {
+                    val results = Jump.find { Jumps.location eq address }
+                    for (r in results) if(r.image == null || r.image != f.src) {
+                        Log.v(javaClass, "Updating icon for ${r.name} [previous: ${r.image}, new: ${f.src}")
+                        r.image = f.src
                     }
                 }
             }

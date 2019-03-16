@@ -30,7 +30,6 @@ import io.javalin.NotFoundResponse
 import io.javalin.apibuilder.ApiBuilder.delete
 import io.javalin.apibuilder.ApiBuilder.patch
 import io.javalin.apibuilder.EndpointGroup
-import io.javalin.security.SecurityUtil.roles
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -45,7 +44,7 @@ class GroupMod: EndpointGroup {
             Log.d(javaClass, "add - queryParams valid")
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("Invalid token")
             Log.d(javaClass, "add - JWT parse valid")
-            val user = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+            val user = TokenProvider.getInstance().verify(jwt) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
@@ -62,7 +61,7 @@ class GroupMod: EndpointGroup {
                     Log.i(javaClass, "${user.username} added ${newUser.username} to group ${group.name}")
                 }
             }
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
         delete("${Runner.BASE}/v2_1/groupmod/rm", { ctx ->
             val rmUser = UUID.fromString(ctx.queryParam("uid"))
             val rmGroup = UUID.fromString(ctx.queryParam("gid"))
@@ -70,7 +69,7 @@ class GroupMod: EndpointGroup {
             Log.d(javaClass, "rm - queryParams valid")
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("Invalid token")
             Log.d(javaClass, "rm - JWT parse valid")
-            val user = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+            val user = TokenProvider.getInstance().verify(jwt) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
@@ -86,6 +85,6 @@ class GroupMod: EndpointGroup {
                     Log.i(javaClass, "${user.username} removed ${oldUser.username} from group ${group.name}")
                 }
             }
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
     }
 }

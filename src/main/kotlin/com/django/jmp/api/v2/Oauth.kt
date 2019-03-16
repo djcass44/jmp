@@ -28,7 +28,6 @@ import io.javalin.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.post
 import io.javalin.apibuilder.EndpointGroup
-import io.javalin.security.SecurityUtil.roles
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -47,11 +46,11 @@ class Oauth(private val auth: Auth): EndpointGroup {
                 user.requestToken = newRequestToken
             }
             ctx.status(HttpStatus.OK_200).json(TokenResponse(jwt, newRequestToken))
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2/oauth/refresh", { ctx ->
             val refresh = ctx.queryParam("refresh_token", "")
             if(refresh.isNullOrBlank()) throw BadRequestResponse()
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
@@ -65,10 +64,10 @@ class Oauth(private val auth: Auth): EndpointGroup {
                 user.requestToken = newRequestToken
             }
             ctx.status(HttpStatus.OK_200).json(TokenResponse(newToken, newRequestToken))
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
         // Verify a users token is still valid
         get("${Runner.BASE}/v2/oauth/valid", { ctx ->
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
@@ -77,6 +76,6 @@ class Oauth(private val auth: Auth): EndpointGroup {
             transaction {
                 ctx.status(HttpStatus.OK_200).result(auth.validateUserToken(user.token).toString())
             }
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
     }
 }

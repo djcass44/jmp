@@ -64,16 +64,16 @@ class Group: EndpointGroup {
                 }
             }
             ctx.status(HttpStatus.OK_200).json(items)
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2_1/group/:id", { ctx ->
             // Only allow users to view groups they're already in
             ctx.status(HttpStatus.FORBIDDEN_403).result("This endpoint is unfinished, or not ready for public use.")
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
         put("${Runner.BASE}/v2_1/group/add", { ctx ->
             val add = ctx.bodyAsClass(GroupData::class.java)
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("Invalid token")
             Log.d(javaClass, "add - JWT parse valid")
-            val user = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+            val user = TokenProvider.getInstance().verify(jwt) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
@@ -90,11 +90,11 @@ class Group: EndpointGroup {
                 }
             }
             ctx.status(HttpStatus.CREATED_201).json(add)
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
         patch("${Runner.BASE}/v2_1/group/edit", { ctx ->
             val update = ctx.bodyAsClass(GroupData::class.java)
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("JWT couldn't be parsed")
-            val user = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+            val user = TokenProvider.getInstance().verify(jwt) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
@@ -105,11 +105,11 @@ class Group: EndpointGroup {
                 existing.name = update.name
                 ctx.status(HttpStatus.NO_CONTENT_204).json(update)
             }
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
         delete("${Runner.BASE}/v2_1/group/rm/:id", { ctx ->
             val id = UUID.fromString(ctx.pathParam("id"))
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("JWT couldn't be parsed")
-            val user = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+            val user = TokenProvider.getInstance().verify(jwt) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }

@@ -27,7 +27,6 @@ import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
-import io.javalin.security.SecurityUtil.roles
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -42,7 +41,7 @@ class Similar : EndpointGroup {
                 if (query.isBlank())
                     throw EmptyPathException()
                 val names = arrayListOf<String>()
-                val userJumps = OwnerAction.getInstance().getJumpsForUser(user)
+                val userJumps = OwnerAction.getInstance().getUserVisibleJumps(user)
                 transaction {
                     userJumps.forEach { names.add(it.name) }
                 }
@@ -53,6 +52,6 @@ class Similar : EndpointGroup {
                 Log.e(Runner::class.java, "Empty target")
                 throw BadRequestResponse()
             }
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
     }
 }

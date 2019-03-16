@@ -25,10 +25,10 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class Init {
     init {
-        val superName = "admin"
+        val superName = "admin" // Hardcoded into FE, don't change
         transaction {
             if(User.all().empty()) {
-                val password = PasswordGenerator.getInstance().get(16)
+                val password = PasswordGenerator.getInstance().get(16, true)
                 Auth().createUser(superName, password, true)
                 Log.w(javaClass, "Created superuser with access: [username: $superName]\nPlease change this ASAP!")
                 for (c in password)

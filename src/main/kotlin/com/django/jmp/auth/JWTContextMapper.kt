@@ -27,7 +27,9 @@ class JWTContextMapper {
             val bearer = authHeader.split(" ")[0]
             if(bearer != "Bearer")
                 return null
-            authHeader.split(" ")[1]
+            val jwt = authHeader.split(" ")[1]
+            // Check that the contents of the token look like a JWT
+            if(TokenProvider.getInstance().mayBeToken(jwt)) jwt else null
         }
         catch (e: IndexOutOfBoundsException) {
             null

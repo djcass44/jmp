@@ -18,6 +18,7 @@ package com.django.jmp.db
 
 object Util {
     fun getEnv(name: String, default: String): String {
-        return if (System.getenv(name).isNullOrEmpty()) default else System.getenv(name)
+        val env = System.getenv(name)
+        return if (env.isNullOrEmpty()) default else env
     }
 }

@@ -22,6 +22,7 @@ import com.django.jmp.api.Auth
 import com.django.jmp.db.dao.User
 import com.django.jmp.db.dao.Users
 import com.django.log2.logging.Log
+import com.django.securepass3.PasswordGenerator
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -36,8 +37,7 @@ class TokenProvider {
             return tokenProvider
         }
     }
-//    private val algorithm: Algorithm = Algorithm.HMAC256(PasswordGenerator.getInstance().getInsecure(32))
-    private val algorithm: Algorithm = Algorithm.HMAC256("secret")
+    private val algorithm: Algorithm = Algorithm.HMAC256(PasswordGenerator.getInstance().get(32, true).toString())
 
     // This should only be used for request tokens
     fun create(user: String): String? = try {

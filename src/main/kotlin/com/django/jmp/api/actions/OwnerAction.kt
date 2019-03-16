@@ -32,7 +32,7 @@ class OwnerAction {
         }
     }
 
-    fun getJumpsForUser(user: User?): ArrayList<Jump> {
+    fun getUserVisibleJumps(user: User?): ArrayList<Jump> {
         val jumps = arrayListOf<Jump>()
         transaction {
             // STAGE 1 get global + jumps the user owns
@@ -59,8 +59,8 @@ class OwnerAction {
         }
         return jumps
     }
-    fun getJumpForUser(user: User?, jump: String): Jump? {
-        val jumps = getJumpsForUser(user)
+    fun getJumpFromUser(user: User?, jump: String): Jump? {
+        val jumps = getUserVisibleJumps(user)
         jumps.forEach {
             if(it.name == jump)
                 return it

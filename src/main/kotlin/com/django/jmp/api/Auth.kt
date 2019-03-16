@@ -23,6 +23,7 @@ import com.django.jmp.db.dao.Users
 import com.django.log2.logging.Log
 import io.javalin.ConflictResponse
 import io.javalin.security.Role
+import io.javalin.security.SecurityUtil
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -40,6 +41,8 @@ class Auth {
     companion object {
         const val headerToken = "X-Auth-Token"
         const val headerUser = "X-Auth-User"
+
+        val defaultRoleAccess = SecurityUtil.roles(BasicRoles.USER, BasicRoles.ADMIN)
     }
 
     @Deprecated(message = "Do not use strings when dealing with passwords.")

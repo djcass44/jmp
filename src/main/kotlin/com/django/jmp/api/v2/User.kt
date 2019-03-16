@@ -37,12 +37,12 @@ import java.util.*
 class User(private val auth: Auth): EndpointGroup {
     override fun addEndpoints() {
         get("${Runner.BASE}/v2/users", { ctx ->
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
             Log.d(javaClass, "list - JWT parse valid")
-            TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+            TokenProvider.getInstance().verify(jwt) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
@@ -64,51 +64,51 @@ class User(private val auth: Auth): EndpointGroup {
                 }
             }
             ctx.status(HttpStatus.OK_200).json(users)
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
         // Add a user
         put("${Runner.BASE}/v2/user/add", { ctx ->
             val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
             auth.createUser(basicAuth.username, basicAuth.password.toCharArray())
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
         // Get information about the current user
         get("${Runner.BASE}/v2/user", { ctx ->
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
-            val u = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+            val u = TokenProvider.getInstance().verify(jwt) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
             transaction {
                 ctx.status(HttpStatus.OK_200).result(u.role.name)
             }
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2_1/user/info", { ctx ->
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
-            val u = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+            val u = TokenProvider.getInstance().verify(jwt) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
             transaction {
                 ctx.status(HttpStatus.OK_200).json(UserData(u, arrayListOf()))
             }
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
         // Get a users token
         post("${Runner.BASE}/v2/user/auth", { ctx ->
             ctx.status(HttpStatus.MOVED_PERMANENTLY_301).result("This has been deprecated in favour of OAuth2 /v2/oauth")
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
         // Change the role of a user
         patch("${Runner.BASE}/v2/user/permission", { ctx ->
             val updated = ctx.bodyAsClass(EditUserData::class.java)
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
-            val u = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+            val u = TokenProvider.getInstance().verify(jwt) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
@@ -128,11 +128,11 @@ class User(private val auth: Auth): EndpointGroup {
         // Delete a user
         delete("${Runner.BASE}/v2/user/rm/:id", { ctx ->
             val id = UUID.fromString(ctx.pathParam("id"))
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: kotlin.run {
+            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
-            val user = TokenProvider.getInstance().verify(jwt) ?: kotlin.run {
+            val user = TokenProvider.getInstance().verify(jwt) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
@@ -152,7 +152,7 @@ class User(private val auth: Auth): EndpointGroup {
             ctx.status(HttpStatus.NO_CONTENT_204)
         }, roles(Auth.BasicRoles.ADMIN))
         get("${Runner.BASE}/v2_1/user/groups", { ctx ->
-            val uid = kotlin.runCatching {
+            val uid = runCatching {
                 UUID.fromString(ctx.queryParam("uid"))
             }.getOrElse {
                 throw BadRequestResponse("Bad UUID")
@@ -175,6 +175,6 @@ class User(private val auth: Auth): EndpointGroup {
                 }
             }
             ctx.status(HttpStatus.OK_200).json(items)
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
     }
 }

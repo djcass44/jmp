@@ -16,8 +16,8 @@
 
 package com.django.securepass3
 
+import java.security.SecureRandom
 import java.util.*
-import kotlin.random.Random
 
 class PasswordGenerator {
     companion object {
@@ -41,14 +41,15 @@ class PasswordGenerator {
     fun getInsecure(length: Int): String {
         return get(length).toString()
     }
-    fun get(length: Int): CharArray {
+    fun get(length: Int, strong: Boolean = false): CharArray {
         val result = CharArray(length)
+        val random = if(!strong) SecureRandom() else SecureRandom.getInstanceStrong()
         for (i in 0 until (length / 2)) {
-            val pair = pairs[Random.nextInt(pairs.size - 1)]
+            val pair = pairs[random.nextInt(pairs.size - 1)]
             result[i * 2] = pair[0]
             result[(i * 2) + 1] = pair[1]
         }
-        val s5 = Random.nextBoolean()
+        val s5 = random.nextBoolean()
         return if(s5) {
             val r = result.copyOfRange(0, result.size - 1)
             Arrays.fill(result, '0') // Clear the old array from memory

@@ -29,8 +29,8 @@ object Jumps : IntIdTable() {
     val ownerGroup = optReference("ownerGroup", Groups)
     val image = varchar("image", 2083).nullable()
 
-    val metaCreation = long("metaCreation").default(0)
-    val metaUpdate = long("metaUpdate").default(0)
+    val metaCreation = long("metaCreation").default(System.currentTimeMillis())
+    val metaUpdate = long("metaUpdate").default(System.currentTimeMillis())
     val metaUsage = integer("metaUsage").default(0)
 }
 
@@ -47,8 +47,8 @@ class Jump(id: EntityID<Int>) : IntEntity(id) {
     var metaUpdate by Jumps.metaUpdate
     var metaUsage by Jumps.metaUsage
 }
-data class JumpData(val id: Int, val name: String, val location: String, val personal: Int = 0, val owner: String? = null, val image: String? = null) {
-    constructor(jump: Jump): this(jump.id.value, jump.name, jump.location, getType(jump), getOwner(jump), jump.image)
+data class JumpData(val id: Int, val name: String, val location: String, val personal: Int = 0, val owner: String? = null, val image: String? = null, val metadata: JumpMetaData? = null) {
+    constructor(jump: Jump): this(jump.id.value, jump.name, jump.location, getType(jump), getOwner(jump), jump.image, JumpMetaData(jump))
 
     companion object {
         const val TYPE_GLOBAL = 0
@@ -74,5 +74,8 @@ data class JumpData(val id: Int, val name: String, val location: String, val per
             return@transaction null
         }
     }
+}
+data class JumpMetaData(val creation: Long, val update: Long, val usage: Int) {
+    constructor(jump: Jump): this(jump.metaCreation, jump.metaUpdate, jump.metaUsage)
 }
 data class EditJumpData(val id: Int, val name: String, val location: String)

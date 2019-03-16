@@ -30,7 +30,7 @@ class Info: EndpointGroup {
         // Version/info
         get("${Runner.BASE}/v2/version", { ctx ->
             ctx.status(HttpStatus.OK_200).result("v${Version.getVersion()}")
-        }, roles(Auth.BasicRoles.USER, Auth.BasicRoles.ADMIN))
+        }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2/info/system", { ctx ->
             ctx.status(HttpStatus.OK_200).json(InfoAction().getSystem())
         }, roles(Auth.BasicRoles.ADMIN))
