@@ -69,6 +69,8 @@ fun main(args: Array<String>) {
     transaction {
         addLogger(StdOutSqlLogger)
         SchemaUtils.create(Jumps, Users, Roles, Groups, GroupUsers) // Ensure that the tables are created
+        Log.i(javaClass, "Running automated database upgrade (if required)")
+        SchemaUtils.createMissingTablesAndColumns(Jumps, Users, Roles, Groups, GroupUsers)
         Init() // Ensure that the default admin/roles is created
     }
     val auth = Auth()

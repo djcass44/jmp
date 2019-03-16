@@ -56,10 +56,8 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
             return jumpExists(name) // Fall back to v1 without a token
         return transaction {
             val userObject = auth.getUser(user, token)
-            val existing = Jump.find {
-                Jumps.name.lowerCase() eq name.toLowerCase() and Jumps.owner.eq(userObject?.id)
-            }
-            return@transaction if(existing.empty()) jumpExists(name) else !existing.empty() // Fall back to v1 if nothing found in v2
+            val existing = OwnerAction.getInstance().getJumpForUser(userObject, name)
+            return@transaction if(existing == null) jumpExists(name) else true // Fall back to v1 if nothing found in v2
         }
     }
 
@@ -99,6 +97,7 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
                     val jump = OwnerAction.getInstance().getJumpForUser(user, target)
                     if(jump != null) {
                         val location = jump.location
+                        jump.metaUsage++ // Increment usage count for statistics
                         Log.v(javaClass, "v2: moving to point: $location")
                         ctx.status(HttpStatus.OK_200).result(location) // Send the user the result, don't redirect them
                     }
@@ -134,8 +133,10 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
                     Jump.new {
                         name = add.name
                         location = add.location
-                        this.owner = if (add.personal == JumpData.TYPE_PERSONAL) user else null
-                        this.ownerGroup = group
+                        owner = if (add.personal == JumpData.TYPE_PERSONAL) user else null
+                        ownerGroup = group
+                        metaCreation = System.currentTimeMillis()
+                        metaUpdate = System.currentTimeMillis()
                     }
                     ImageAction(add.location).get()
                 }
@@ -160,8 +161,9 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
                 // User can change personal jumps
                 if(existing.owner == user || user.role.name == Auth.BasicRoles.ADMIN.name) {
                     existing.apply {
-                        this.name = update.name
-                        this.location = update.location
+                        name = update.name
+                        location = update.location
+                        metaUpdate = System.currentTimeMillis()
                     }
                     ImageAction(update.location).get()
                     ctx.status(HttpStatus.NO_CONTENT_204).json(update)
