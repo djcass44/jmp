@@ -6,6 +6,17 @@
                     <div v-if="filter !== ''">Jumps ({{ filterResults}} results)</div>
                     <div v-if="filter === ''">Jumps</div>
                     <v-spacer></v-spacer>
+                    <v-menu bottom left offset-y origin="top right" transition="scale-transition" min-width="150">
+                        <template v-slot:activator="{ on }">
+                            <v-btn ripple icon v-on="on">
+                                <v-icon color="grey darken-1">sort</v-icon>
+                            </v-btn>
+                        </template>
+                        <v-list>
+                            <v-list-tile v-ripple @click="setSort('name')"><v-list-tile-title>Name</v-list-tile-title></v-list-tile>
+                            <v-list-tile v-ripple @click="setSort('-name')"><v-list-tile-title>Name descending</v-list-tile-title></v-list-tile>
+                        </v-list>
+                    </v-menu>
                     <v-btn icon @click="showCreateDialog"><v-icon color="grey darken-1">add</v-icon></v-btn>
                 </v-subheader>
                 <v-card v-if="filtered.length > 0" class="m2-card">
@@ -73,7 +84,7 @@
 
 <script>
 import axios from "axios";
-import { storageUser, storageJWT } from "../var.js";
+import { storageUser, storageJWT, storageSortMode } from "../var.js";
 
 import JumpDialog from '../components/dialog/JumpDialog.vue';
 import GenericDeleteDialog from "./dialog/GenericDeleteDialog.vue";
@@ -88,6 +99,11 @@ export default {
         return {
             filter: '',
             filterResults: 0,
+            sort: 'name',
+            sorts: [
+                'name',
+                '-name'
+            ],
             loggedIn: false,
             showZero: false,
             items: [],
@@ -95,7 +111,19 @@ export default {
             loading: true
         }
     },
+    created() {
+        let localSort = localStorage.getItem(storageSortMode);
+        if(localSort !== null && this.sorts.includes(localSort))
+            this.sort = localSort;
+        else
+            this.sort = this.sorts[0];
+    },
     methods: {
+        setSort(sort) {
+            this.sort = sort;
+            localStorage.setItem(storageSortMode, sort);
+            this.filterItems();
+        },
         snackbar(visible, text) {
             this.$emit('snackbar', visible, text);
         },
@@ -159,10 +187,10 @@ export default {
             if(this.filter === '')
                 this.filtered = this.items;
             let that = this;
-            this.filtered = this.items.filter(function(item) {
-                let regex = new RegExp(`(${that.filter})`, 'i');
-                return item.name.match(regex) || item.location.match(regex);
+            this.filtered = this.items.filter(item => {
+                return item.name.includes(that.filter) || item.location.includes(that.filter);
             });
+            this.filtered.sort(this.dynamicSort(this.sort));
             this.filterResults = this.filtered.length;
             setTimeout(function() {
                 componentHandler.upgradeDom();
@@ -215,6 +243,28 @@ export default {
         },
         loadFailed() {
             this.loading = false;
+        },
+        // dynamicSortMultiple: function() {
+        //     let props = arguments;
+        //     return function (obj1, obj2) {
+        //         let i = 0, result = 0, numberOfProps = props.length;
+        //         while(result === 0 && i < numberOfProps) {
+        //             result = dynamicSort(props[i])(obj1, obj2);
+        //             i++;
+        //         }
+        //         return result;
+        //     }
+        // },
+        dynamicSort: function(property) {
+            let sortOrder = 1;
+            if(property[0] === "-") {
+                sortOrder = -1;
+                property = property.substr(1);
+            }
+            return function (a,b) {
+                let result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0;
+                return result * sortOrder;
+            }
         }
     }
 };
