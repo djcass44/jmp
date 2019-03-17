@@ -1,33 +1,24 @@
 <template>
-    <div id="main-list">
-        <div class="mdl-grid">
-            <div class="mdl-layout-spacer"></div>
-            <h1 class="mdl-h1">404</h1>
-            <div class="mdl-layout-spacer"></div>
-        </div>
-        <div class="mdl-grid">
-            <div class="mdl-layout-spacer"></div>
-            <p class="mdl-h5">That jump doesn't exist, or you don't have access!</p>
-            <div class="mdl-layout-spacer"></div>
-        </div>
-        <div class="mdl-grid">
-            <div class="mdl-layout-spacer"></div>
-            <p v-cloak>{{ status }}</p>
-            <div class="mdl-layout-spacer"></div>
-        </div>
-        <div class="mdl-grid">
-            <div class="mdl-layout-spacer"></div>
-            <div v-cloak class="mdl-grid">
-                <div v-for="item in items" :key="item" class="mdl-cell">
+    <v-container grid-list-md text-xs-center>
+        <v-layout row wrap>
+            <v-flex xs12><h1 class="mdl-h1">404</h1></v-flex>
+            <v-flex xs12><p class="mdl-h5">That jump doesn't exist, or you don't have access!</p></v-flex>
+            <v-flex xs12 v-cloak v-if="loading === false"><p>{{ status }}</p></v-flex>
+            <v-flex xs12 v-cloak v-if="loading === false">
+                <v-spacer></v-spacer>
+                <div v-for="item in items" :key="item">
                     <v-chip v-ripple @click="open(item)" color="primary" text-color="white">
                         <v-avatar class="blue darken-4"><strong>{{ item.substring(0, 1).toUpperCase() }}</strong></v-avatar>
                         <strong class="px-1">{{ item }}</strong>
                     </v-chip>
                 </div>
-            </div>
-            <div class="mdl-layout-spacer"></div>
-        </div>
-    </div>
+                <v-spacer></v-spacer>
+            </v-flex>
+            <v-flex xs12 v-if="loading === true" class="text-xs-center pa-4">
+                <v-progress-circular :size="100" color="accent" indeterminate></v-progress-circular>
+            </v-flex>
+        </v-layout>
+    </v-container>
 </template>
 <script>
 import axios from "axios";
@@ -38,7 +29,8 @@ export default {
     data() {
         return {
             status: '',
-            items: []
+            items: [],
+            loading: true
         }
     },
     methods: {
@@ -50,6 +42,7 @@ export default {
         }
     },
     created() {
+        this.loading = true;
         let url = new URL(window.location.href);
         if(url.searchParams.has("query")) {
             let query = url.searchParams.get("query");
@@ -63,12 +56,16 @@ export default {
                     that.status = "No similar jumps could be found.";
                 else
                     that.status = `Found ${that.items.length} similar jumps...`;
+                that.loading = false;
             }).catch(function (error) {
                 console.log(error);
+                that.loading = false;
             });
         }
-        else
+        else {
             this.status = "No query specified!"
+            this.loading = false;
+        }
     }
 }
 </script>
