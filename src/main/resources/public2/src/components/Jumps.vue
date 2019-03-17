@@ -41,7 +41,7 @@
                                     </v-img>
                                 </v-list-tile-avatar>
                                 <v-list-tile-content>
-                                    <v-list-tile-title>{{ item.name }}</v-list-tile-title>
+                                    <v-list-tile-title><span v-html="highlightFilter(item.name)">{{ item.name }}</span></v-list-tile-title>
                                     <v-list-tile-sub-title><span v-html="highlight(item.location)">{{ item.location }}</span><span v-if="item.owner !== null">&nbsp;&bull;&nbsp;{{ item.owner }}</span></v-list-tile-sub-title>
                                 </v-list-tile-content>
                                 <v-list-tile-action>
@@ -186,6 +186,11 @@ export default {
                     return `<span class="text-https">${match}</span>`;
                 else
                     return `<span class="text-http">${match}</span>`;
+            });
+        },
+        highlightFilter(text) {
+            return text.replace(new RegExp(this.filter), match => {
+                return `<span class="text-highlight">${match}</span>`;
             });
         },
         setFilter(query) {

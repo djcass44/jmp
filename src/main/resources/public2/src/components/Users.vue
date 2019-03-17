@@ -34,7 +34,7 @@
                                     <v-icon large dark v-if="user.role === 'ADMIN'">supervised_user_circle</v-icon>
                                 </v-list-tile-avatar>
                                 <v-list-tile-content>
-                                    <v-list-tile-title>{{ user.username }}</v-list-tile-title>
+                                    <v-list-tile-title><span v-html="highlightFilter(user.username)">{{ user.username }}</span></v-list-tile-title>
                                     <v-list-tile-sub-title>{{ capitalize(user.role.toLowerCase()) }}</v-list-tile-sub-title>
                                 </v-list-tile-content>
                                 <v-list-tile-action v-if="user.username !== 'admin'">
@@ -71,7 +71,7 @@
                                     <v-icon large dark>domain</v-icon>
                                 </v-list-tile-avatar>
                                 <v-list-tile-content>
-                                    <v-list-tile-title>{{ group.name }}</v-list-tile-title>
+                                    <v-list-tile-title><span v-html="highlightFilter(group.name)">{{ group.name }}</span></v-list-tile-title>
                                 </v-list-tile-content>
                                 <v-list-tile-action>
                                     <v-menu bottom left offset-y origin="top right" transition="scale-transition" min-width="150">
@@ -262,6 +262,11 @@ export default {
             }).catch((err) => {
                 console.log(err);
                 that.$emit('snackbar', true, `Failed to set ${item.username} as ${role.toLowerCase()}: ${err.response.status}`);
+            });
+        },
+        highlightFilter(text) {
+            return text.replace(new RegExp(this.filter), match => {
+                return `<span class="text-highlight">${match}</span>`;
             });
         },
         setFilter(query) {
