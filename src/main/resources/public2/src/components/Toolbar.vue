@@ -1,5 +1,5 @@
 <template>
-    <v-toolbar dark color="primary">
+    <v-toolbar absolute dark color="primary">
         <!-- <v-toolbar-side-icon></v-toolbar-side-icon> -->
         <img src="assets/ic_launcher.png" width="32" height="32">
         <v-toolbar-title v-ripple @click="openHome" class="white--text">JumpPoints</v-toolbar-title>

@@ -242,10 +242,6 @@ export default {
             });
             this.filterResults = this.filtered.length;
             that.filterGroups();
-            setTimeout(function() {
-                componentHandler.upgradeDom();
-                componentHandler.upgradeAllRegistered();
-            }, 0);
         },
         filterGroups() {
             if(this.filter === '')

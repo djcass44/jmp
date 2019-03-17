@@ -192,10 +192,6 @@ export default {
             });
             this.filtered.sort(this.dynamicSort(this.sort));
             this.filterResults = this.filtered.length;
-            setTimeout(function() {
-                componentHandler.upgradeDom();
-                componentHandler.upgradeAllRegistered();
-            }, 0);
         },
         loadItems() {
             let url = `${process.env.VUE_APP_BASE_URL}/v1/jumps`;
@@ -212,10 +208,6 @@ export default {
                 that.filterItems();
                 that.checkItemsLength();
                 that.loading = false;
-                setTimeout(function() {
-                    componentHandler.upgradeDom();
-                    componentHandler.upgradeAllRegistered();
-                }, 0);
             }).catch(function(error) {
                 console.log(error); // API is probably unreachable
                 that.filterItems();

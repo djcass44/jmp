@@ -1,8 +1,8 @@
 <template>
     <v-app id="app">
         <!-- Always shows a header, even in smaller screens. -->
-        <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
-            <header class="mdl-layout__header">
+        <div>
+            <header>
                 <Toolbar ref="toolbar"
                     @jumpsSetFilter="jumpsSetFilter"
                     @dialog-create="dialogCreate"
@@ -15,17 +15,19 @@
                     @init="toolbarCheckState">
                 </Toolbar>
             </header>
-            <main class="mdl-layout__content">
-                <router-view ref="jumps"
-                    @snackbar="snackbar"
-                    @dialog-create="dialogCreate"
-                    @dialog-delete="dialogDelete">
-                </router-view>
-                <Auth ref="auth"
-                    @dialog-auth="dialogAuth"
-                    @loadFailed="loadFailed"
-                    @toolbarAuthChanged="toolbarAuthChanged">
-                </Auth>
+            <main>
+                <v-content>
+                    <router-view ref="jumps"
+                        @snackbar="snackbar"
+                        @dialog-create="dialogCreate"
+                        @dialog-delete="dialogDelete">
+                    </router-view>
+                    <Auth ref="auth"
+                        @dialog-auth="dialogAuth"
+                        @loadFailed="loadFailed"
+                        @toolbarAuthChanged="toolbarAuthChanged">
+                    </Auth>
+                </v-content>
             </main>
         </div>
         <AuthDialog ref="dialogauth"
@@ -122,9 +124,19 @@ export default {
         isNotSlashUsers() {
             return this.$refs.jumps.$options.name === "Jumps";
         }
-    },
-    mounted: function() {
-        componentHandler.upgradeAllRegistered();
     }
 }
 </script>
+<style scoped>
+html {
+    overflow: hidden;
+}
+main.v-content {
+    width: 100vw;
+    height: calc(100vh - 64px);
+    flex-direction: column;
+    overflow: scroll;
+    margin-top: 64px;
+    padding-top: 0 !important;
+}
+</style>

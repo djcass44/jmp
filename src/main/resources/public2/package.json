@@ -10,10 +10,8 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
-    "material-design-lite": "^1.3.0",
     "vue": "^2.6.6",
     "vue-clipboard2": "^0.3.0",
-    "vue-mdl": "^1.1.1",
     "vuetify": "^1.3.0"
   },
   "devDependencies": {
