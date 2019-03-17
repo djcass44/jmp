@@ -47,8 +47,11 @@ class Jump(id: EntityID<Int>) : IntEntity(id) {
     var metaUpdate by Jumps.metaUpdate
     var metaUsage by Jumps.metaUsage
 }
-data class JumpData(val id: Int, val name: String, val location: String, val personal: Int = 0, val owner: String? = null, val image: String? = null, val metadata: JumpMetaData? = null) {
-    constructor(jump: Jump): this(jump.id.value, jump.name, jump.location, getType(jump), getOwner(jump), jump.image, JumpMetaData(jump))
+data class JumpData(val id: Int, val name: String, val location: String, val personal: Int = 0, val owner: String? = null, val image: String? = null,
+                    val metaCreation: Long = 0,
+                    val metaUpdate: Long = 0,
+                    val metaUsage: Int = 0) {
+    constructor(jump: Jump): this(jump.id.value, jump.name, jump.location, getType(jump), getOwner(jump), jump.image, jump.metaCreation, jump.metaUpdate, jump.metaUsage)
 
     companion object {
         const val TYPE_GLOBAL = 0
@@ -74,8 +77,5 @@ data class JumpData(val id: Int, val name: String, val location: String, val per
             return@transaction null
         }
     }
-}
-data class JumpMetaData(val creation: Long, val update: Long, val usage: Int) {
-    constructor(jump: Jump): this(jump.metaCreation, jump.metaUpdate, jump.metaUsage)
 }
 data class EditJumpData(val id: Int, val name: String, val location: String)

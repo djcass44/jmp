@@ -15,6 +15,9 @@
                         <v-list>
                             <v-list-tile v-ripple @click="setSort('name')"><v-list-tile-title>Name</v-list-tile-title></v-list-tile>
                             <v-list-tile v-ripple @click="setSort('-name')"><v-list-tile-title>Name descending</v-list-tile-title></v-list-tile>
+                            <v-list-tile v-ripple @click="setSort('-metaCreation')"><v-list-tile-title>Creation</v-list-tile-title></v-list-tile>
+                            <v-list-tile v-ripple @click="setSort('-metaUpdate')"><v-list-tile-title>Last updated</v-list-tile-title></v-list-tile>
+                            <v-list-tile v-ripple @click="setSort('-metaUsage')"><v-list-tile-title>Popularity</v-list-tile-title></v-list-tile>
                         </v-list>
                     </v-menu>
                     <v-btn icon @click="showCreateDialog"><v-icon color="grey darken-1">add</v-icon></v-btn>
@@ -102,7 +105,10 @@ export default {
             sort: 'name',
             sorts: [
                 'name',
-                '-name'
+                '-name',
+                '-metaCreation',
+                '-metaUpdate',
+                '-metaUsage'
             ],
             loggedIn: false,
             showZero: false,
@@ -205,6 +211,7 @@ export default {
                 console.log("Loaded items: " + response.data.length);
                 response.data.map(item => {
                     that.items.push(item);
+                    // console.log(`${item.name}: ${item.metaCreation}, ${item.metaUpdate}, ${item.metaUsage}`);
                 });
                 that.filterItems();
                 that.checkItemsLength();
