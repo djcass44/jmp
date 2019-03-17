@@ -13,11 +13,11 @@
                             </v-btn>
                         </template>
                         <v-list>
-                            <v-list-tile v-ripple @click="setSort('name')"><v-list-tile-title>Name</v-list-tile-title></v-list-tile>
-                            <v-list-tile v-ripple @click="setSort('-name')"><v-list-tile-title>Name descending</v-list-tile-title></v-list-tile>
-                            <v-list-tile v-ripple @click="setSort('-metaCreation')"><v-list-tile-title>Creation</v-list-tile-title></v-list-tile>
-                            <v-list-tile v-ripple @click="setSort('-metaUpdate')"><v-list-tile-title>Last updated</v-list-tile-title></v-list-tile>
-                            <v-list-tile v-ripple @click="setSort('-metaUsage')"><v-list-tile-title>Popularity</v-list-tile-title></v-list-tile>
+                            <v-list-tile v-ripple @click="setSort('name')"><v-icon v-if="sort === 'name'">done</v-icon><v-list-tile-title>Name</v-list-tile-title></v-list-tile>
+                            <v-list-tile v-ripple @click="setSort('-name')"><v-icon v-if="sort === '-name'">done</v-icon><v-list-tile-title>Name descending</v-list-tile-title></v-list-tile>
+                            <v-list-tile v-ripple @click="setSort('-metaCreation')"><v-icon v-if="sort === '-metaCreation'">done</v-icon><v-list-tile-title>Creation</v-list-tile-title></v-list-tile>
+                            <v-list-tile v-ripple @click="setSort('-metaUpdate')"><v-icon v-if="sort === '-metaUpdate'">done</v-icon><v-list-tile-title>Last updated</v-list-tile-title></v-list-tile>
+                            <v-list-tile v-ripple @click="setSort('-metaUsage')"><v-icon v-if="sort === '-metaUsage'">done</v-icon><v-list-tile-title>Popularity</v-list-tile-title></v-list-tile>
                         </v-list>
                     </v-menu>
                     <v-btn icon @click="showCreateDialog"><v-icon color="grey darken-1">add</v-icon></v-btn>
