@@ -28,6 +28,9 @@ object Users: UUIDTable() {
     val token = uuid("token")
     val role = reference("role", Roles)
     val requestToken = text("request_token").nullable()
+
+    val metaCreation = long("metaCreation").default(System.currentTimeMillis())
+    val metaUpdate = long("metaUpdate").default(System.currentTimeMillis())
 }
 class User(id: EntityID<UUID>): UUIDEntity(id) {
     companion object : UUIDEntityClass<User>(Users)
@@ -37,8 +40,11 @@ class User(id: EntityID<UUID>): UUIDEntity(id) {
     var token by Users.token
     var role by Role referencedOn Users.role
     var requestToken by Users.requestToken
+
+    var metaCreation by Users.metaCreation
+    var metaUpdate by Users.metaUpdate
 }
-data class UserData(val id: UUID, val username: String, val role: String, val groups: ArrayList<String>) {
-    constructor(user: User, groups: ArrayList<String>): this(user.id.value, user.username, user.role.name, groups)
+data class UserData(val id: UUID, val username: String, val role: String, val groups: ArrayList<String>, val metaCreation: Long = 0, val metaUpdate: Long = 0) {
+    constructor(user: User, groups: ArrayList<String>): this(user.id.value, user.username, user.role.name, groups, user.metaCreation, user.metaUpdate)
 }
 data class EditUserData(val id: UUID, val role: String)

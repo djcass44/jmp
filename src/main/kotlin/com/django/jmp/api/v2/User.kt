@@ -122,6 +122,7 @@ class User(private val auth: Auth): EndpointGroup {
                     Roles.name eq updated.role
                 }.elementAtOrNull(0) ?: throw BadRequestResponse()
                 user.role = role
+                user.metaUpdate = System.currentTimeMillis()
                 ctx.status(HttpStatus.NO_CONTENT_204).json(updated)
             }
         }, roles(Auth.BasicRoles.ADMIN))

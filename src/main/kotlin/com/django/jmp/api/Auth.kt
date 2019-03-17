@@ -67,8 +67,10 @@ class Auth {
                 User.new {
                     this.username = username
                     this.hash = hash
-                    this.token = UUID.randomUUID() // Generate an initial token
-                    this.role = if(admin) getDAOAdminRole() else getDAOUserRole()
+                    token = UUID.randomUUID() // Generate an initial token
+                    role = if(admin) getDAOAdminRole() else getDAOUserRole()
+                    metaCreation = System.currentTimeMillis()
+                    metaUpdate = System.currentTimeMillis()
                 }
             }
         }
