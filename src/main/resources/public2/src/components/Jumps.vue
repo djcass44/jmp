@@ -119,6 +119,8 @@ export default {
     },
     mounted: function() {
         let localSort = localStorage.getItem(storageSortMode);
+        if(localSort === 'username') localSort = 'name'; // Account for difference between Jumps/Users
+        if(localSort === '-username') localSort = '-name';
         if(localSort !== null && this.sorts.includes(localSort))
             this.sort = localSort;
         else
@@ -195,7 +197,7 @@ export default {
                 this.filtered = this.items;
             let that = this;
             this.filtered = this.items.filter(item => {
-                return item.name.includes(that.filter) || item.location.includes(that.filter);
+                return item.name.toLowerCase().includes(that.filter.toLowerCase()) || item.location.toLowerCase().includes(that.filter.toLowerCase());
             });
             this.filtered.sort(this.dynamicSort(this.sort));
             this.filterResults = this.filtered.length;

@@ -9,6 +9,19 @@
                     <div v-if="filter !== ''">Users ({{ filterResults}} results)</div>
                     <div v-if="filter === ''">Users</div>
                     <v-spacer></v-spacer>
+                    <v-menu bottom left offset-y origin="top right" transition="scale-transition" min-width="150">
+                        <template v-slot:activator="{ on }">
+                            <v-btn ripple icon v-on="on">
+                                <v-icon color="grey darken-1">sort</v-icon>
+                            </v-btn>
+                        </template>
+                        <v-list>
+                            <v-list-tile v-ripple @click="setSort('username')"><v-icon v-if="sort === 'username'">done</v-icon><v-list-tile-title>Name</v-list-tile-title></v-list-tile>
+                            <v-list-tile v-ripple @click="setSort('-username')"><v-icon v-if="sort === '-username'">done</v-icon><v-list-tile-title>Name descending</v-list-tile-title></v-list-tile>
+                            <v-list-tile v-ripple @click="setSort('-metaCreation')"><v-icon v-if="sort === '-metaCreation'">done</v-icon><v-list-tile-title>Creation</v-list-tile-title></v-list-tile>
+                            <v-list-tile v-ripple @click="setSort('-metaUpdate')"><v-icon v-if="sort === '-metaUpdate'">done</v-icon><v-list-tile-title>Last modified</v-list-tile-title></v-list-tile>
+                        </v-list>
+                    </v-menu>
                     <v-btn icon @click="showCreateDialog"><v-icon color="grey darken-1">add</v-icon></v-btn>
                 </v-subheader>
                 <div v-if="filtered.length === 0 && loading === false" class="text-xs-center body-1" color="grey darken-1">No users found.</div>
@@ -118,7 +131,7 @@
 
 <script>
 import axios from "axios";
-import { storageUser, storageJWT } from "../var.js";
+import { storageUser, storageJWT, storageSortMode } from "../var.js";
 
 import GroupDialog from "./dialog/GroupDialog.vue";
 import GenericDeleteDialog from "./dialog/GenericDeleteDialog.vue";
@@ -137,6 +150,14 @@ export default {
             filterResults: 0,
             items: [],
             filtered: [],
+            sort: 'username',
+            sorts: [
+                'username',
+                '-username',
+                '-metaCreation',
+                '-metaUpdate',
+                '-metaUsage'
+            ],
             loading: true,
             systemInfo: '',
             appInfo: '',
@@ -147,9 +168,21 @@ export default {
         }
     },
     mounted: function() {
+        let localSort = localStorage.getItem(storageSortMode);
+        if(localSort === 'name') localSort = 'username'; // Account for difference between Jumps/Users
+        if(localSort === '-name') localSort = '-username';
+        if(localSort !== null && this.sorts.includes(localSort))
+            this.sort = localSort;
+        else
+            this.sort = this.sorts[0];
         this.$emit('postInit');
     },
     methods: {
+        setSort(sort) {
+            this.sort = sort;
+            localStorage.setItem(storageSortMode, sort);
+            this.filterItems();
+        },
         showCreateDialog() {
             this.$emit('dialog-create', true);
         },
@@ -240,9 +273,9 @@ export default {
                 this.filtered = this.items;
             let that = this;
             this.filtered = this.items.filter(function(item) {
-                let regex = new RegExp(`(${that.filter})`, 'i');
-                return item.username.match(regex);
+                return item.username.toLowerCase().includes(that.filter.toLowerCase()) || item.role.toLowerCase() === that.filter.toLowerCase();
             });
+            this.filtered.sort(this.dynamicSort(this.sort));
             this.filterResults = this.filtered.length;
             that.filterGroups();
         },
@@ -250,9 +283,8 @@ export default {
             if(this.filter === '')
                 this.filteredGroups = this.groups;
             let that = this;
-            let regex = new RegExp(`(${that.filter})`, 'i');
             this.filteredGroups = this.groups.filter(function(item) {
-                return item.name.match(regex);
+                return item.name.toLowerCase().includes(that.filter.toLowerCase());
             });
             this.groupResults = this.filteredGroups.length;
         },
@@ -340,6 +372,17 @@ export default {
         },
         loadFailed() {
             this.loading = false;
+        },
+        dynamicSort: function(property) {
+            let sortOrder = 1;
+            if(property[0] === "-") {
+                sortOrder = -1;
+                property = property.substr(1);
+            }
+            return function (a,b) {
+                let result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0;
+                return result * sortOrder;
+            }
         }
     }
 };
