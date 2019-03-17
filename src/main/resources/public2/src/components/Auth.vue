@@ -4,6 +4,14 @@
         <span class="text-light" style="height: 32px; line-height: 32px;">{{ username }}</span>
         <div class="mdl-layout-spacer title"></div>
     </div> -->
+    <v-layout>
+        <v-flex xs12 sm6 offset-sm3>
+            <v-alert :value="!api" outline type="error" class="m2-card">Failed to reach API</v-alert>
+            <div v-if="loading === true" class="text-xs-center pa-4">
+                <v-progress-circular :size="50" color="accent" indeterminate></v-progress-circular>
+            </div>
+        </v-flex>
+    </v-layout>
 </template>
 
 <script>
@@ -13,10 +21,27 @@ import { storageUser, storageJWT, storageRequest } from "../var.js";
 export default {
     data() {
         return {
-            username: ''
+            username: '',
+            loading: false,
+            api: true // Assume API is reachable so we don't get ugly ui
         }
     },
     methods: {
+        checkAPI() {
+            this.loading = true;
+            let that = this;
+            axios.get(`${process.env.VUE_APP_BASE_URL}/v2/version`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}` }}).then(r => {
+                console.log("API is available");
+                that.api = true;
+                that.loading = false;
+            }).catch(err => {
+                console.log("Failed to reach API");
+                console.log(err);
+                that.api = false;
+                that.loading = false;
+                that.$emit('snackbar', true, "Failed to reach API");
+            });
+        },
         getAuth() {
             let that = this;
             let username = '';
@@ -68,12 +93,16 @@ export default {
             localStorage.removeItem(storageUser);
             localStorage.removeItem(storageJWT);
             localStorage.removeItem(storageRequest);
+        },
+        init() {
+            this.checkAPI();
+            this.getAuth();
         }
-    },
-    created() {
-        this.getAuth();
     }
-}
-
-
+};
 </script>
+<style scoped>
+.m2-card {
+    border-radius: 12px;
+}
+</style>

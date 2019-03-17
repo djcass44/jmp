@@ -41,6 +41,9 @@ export default {
             window.location.replace(`${process.env.VUE_APP_FE_URL}/jmp?query=${itemName}`)
         }
     },
+    mounted: function() {
+        this.$emit('postInit');
+    },
     created() {
         this.loading = true;
         let url = new URL(window.location.href);

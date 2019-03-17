@@ -18,6 +18,9 @@ export default {
             loading: true
         }
     },
+    mounted: function() {
+        this.$emit('postInit');
+    },
     methods: {
         setLoggedIn() {},
         authChanged() {

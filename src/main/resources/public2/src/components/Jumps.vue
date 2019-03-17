@@ -66,7 +66,7 @@
                 </div>
                 <div v-if="(showZero === true || filtered.length === 0) && loading === false">
                     <h1 class="mdl-h1 text-xs-center">204</h1>
-                    <h2 class="mdl-h5 text-xs-center" v-if="filtered.length === 0 && items.length === 0">No jumps have been created yet.</h2>
+                    <h2 class="mdl-h5 text-xs-center" v-if="filtered.length === 0 && items.length === 0">No jumps could be found.</h2>
                     <h2 class="mdl-h5 text-xs-center" v-if="filtered.length === 0 && items.length > 0">No results.</h2>
                 </div>
             </v-flex>
@@ -111,12 +111,13 @@ export default {
             loading: true
         }
     },
-    created() {
+    mounted: function() {
         let localSort = localStorage.getItem(storageSortMode);
         if(localSort !== null && this.sorts.includes(localSort))
             this.sort = localSort;
         else
             this.sort = this.sorts[0];
+        this.$emit('postInit');
     },
     methods: {
         setSort(sort) {

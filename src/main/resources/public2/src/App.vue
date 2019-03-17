@@ -17,16 +17,18 @@
             </header>
             <main>
                 <v-content>
+                    <Auth ref="auth"
+                        @dialog-auth="dialogAuth"
+                        @loadFailed="loadFailed"
+                        @snackbar="snackbar"
+                        @toolbarAuthChanged="toolbarAuthChanged">
+                    </Auth>
                     <router-view ref="jumps"
+                        @postInit="postInit"
                         @snackbar="snackbar"
                         @dialog-create="dialogCreate"
                         @dialog-delete="dialogDelete">
                     </router-view>
-                    <Auth ref="auth"
-                        @dialog-auth="dialogAuth"
-                        @loadFailed="loadFailed"
-                        @toolbarAuthChanged="toolbarAuthChanged">
-                    </Auth>
                 </v-content>
             </main>
         </div>
@@ -123,6 +125,10 @@ export default {
         },
         isNotSlashUsers() {
             return this.$refs.jumps.$options.name === "Jumps";
+        },
+        postInit() {
+            this.$refs.auth.init();
+            this.$refs.toolbar.init();
         }
     }
 }

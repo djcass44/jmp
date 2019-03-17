@@ -146,6 +146,9 @@ export default {
             isAdmin: false
         }
     },
+    mounted: function() {
+        this.$emit('postInit');
+    },
     methods: {
         showCreateDialog() {
             this.$emit('dialog-create', true);

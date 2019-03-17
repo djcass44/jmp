@@ -91,16 +91,16 @@ export default {
             version: ''
         }
     },
-    created() {
-        let that = this;
-        setTimeout(function() {
-            that.$emit('init');
-        }, 10);
-        axios.get(`${process.env.VUE_APP_BASE_URL}/v2/version`).then(r => {
-            that.version = r.data;
-        });
-    },
     methods: {
+        init() {
+            let that = this;
+            setTimeout(function() {
+                that.$emit('init');
+            }, 10);
+            axios.get(`${process.env.VUE_APP_BASE_URL}/v2/version`).then(r => {
+                that.version = r.data;
+            });
+        },
         getName: function() {
             let name = localStorage.getItem(storageUser);
             if(name === '' || name == null) {
