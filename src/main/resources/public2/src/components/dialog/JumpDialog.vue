@@ -1,43 +1,41 @@
 <template>
     <div id="create-dialog" v-cloak>
-        <v-app id="inspire">
-            <v-layout row justify-center>
-                <v-dialog v-model="dialog" persistent max-width="600px">
-                    <v-form v-model="valid" ref="form">
-                        <v-card>
-                            <v-card-title>
-                                <span class="strong-title headline">{{ title }}</span>
-                            </v-card-title>
-                            <v-card-text>
-                                <v-container grid-list-md>
-                                    <v-layout wrap>
-                                        <v-flex xs12>
-                                            <v-text-field outline label="Name*" v-model="name" :rules="nameRules" :counter="50" required></v-text-field>
-                                        </v-flex>
-                                        <v-flex xs12>
-                                            <v-text-field outline append-icon="link" label="Location*" v-model="location" :rules="locationRules" :counter="2083" required autocomplete="url"></v-text-field>
-                                        </v-flex>
-                                        <v-flex xs12>
-                                            <v-select v-if="edit === false" v-model="select" :items="items" :rules="typeRules" label="Type" required></v-select>
-                                        </v-flex>
-                                        <v-flex xs12>
-                                            <v-select v-if="edit === false && select === items[2]" v-model="selectGroup" :items="groups" item-text="name" :rules="typeRules" label="Group" required></v-select>
-                                        </v-flex>
-                                    </v-layout>
-                                </v-container>
-                                <small>*indicates required field</small>
-                            </v-card-text>
-                            <v-card-actions>
-                                <v-btn color="pink" flat @click="clear">Clear</v-btn>
-                                <v-spacer></v-spacer>
-                                <v-btn color="pink" flat @click="dialog = false">Cancel</v-btn>
-                                <v-btn color="pink" flat :disabled="valid === false || loading === true" @click="edit ? update() : submit()">{{ action }}</v-btn>
-                            </v-card-actions>
-                        </v-card>
-                    </v-form>
-                </v-dialog>
-            </v-layout>
-        </v-app>
+        <v-layout row justify-center>
+            <v-dialog v-model="dialog" persistent max-width="600px">
+                <v-form v-model="valid" ref="form">
+                    <v-card>
+                        <v-card-title>
+                            <span class="strong-title headline">{{ title }}</span>
+                        </v-card-title>
+                        <v-card-text>
+                            <v-container grid-list-md>
+                                <v-layout wrap>
+                                    <v-flex xs12>
+                                        <v-text-field outline label="Name*" v-model="name" :rules="nameRules" :counter="50" required></v-text-field>
+                                    </v-flex>
+                                    <v-flex xs12>
+                                        <v-text-field outline append-icon="link" label="Location*" v-model="location" :rules="locationRules" :counter="2083" required autocomplete="url"></v-text-field>
+                                    </v-flex>
+                                    <v-flex xs12>
+                                        <v-select v-if="edit === false" v-model="select" :items="items" :rules="typeRules" label="Type" required></v-select>
+                                    </v-flex>
+                                    <v-flex xs12>
+                                        <v-select v-if="edit === false && select === items[2]" v-model="selectGroup" :items="groups" item-text="name" :rules="typeRules" label="Group" required></v-select>
+                                    </v-flex>
+                                </v-layout>
+                            </v-container>
+                            <small>*indicates required field</small>
+                        </v-card-text>
+                        <v-card-actions>
+                            <v-btn color="pink" flat @click="clear">Clear</v-btn>
+                            <v-spacer></v-spacer>
+                            <v-btn color="pink" flat @click="dialog = false">Cancel</v-btn>
+                            <v-btn color="pink" flat :disabled="valid === false || loading === true" @click="edit ? update() : submit()">{{ action }}</v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-form>
+            </v-dialog>
+        </v-layout>
     </div>
 </template>
 <script>

@@ -64,7 +64,7 @@ export default {
             vm.$refs.form.reset();
             if(create) {
                 vm.create = create;
-                vm.title = "Add user";
+                vm.title = "Add a new user";
                 vm.action = "Create";
             }
             else {
