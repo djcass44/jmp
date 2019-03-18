@@ -22,7 +22,7 @@
                             <v-list-tile v-ripple @click="setSort('-metaUpdate')"><v-icon v-if="sort === '-metaUpdate'">done</v-icon><v-list-tile-title>Last modified</v-list-tile-title></v-list-tile>
                         </v-list>
                     </v-menu>
-                    <v-btn icon @click="showCreateDialog"><v-icon color="grey darken-1">add</v-icon></v-btn>
+                    <v-btn icon @click="showCreateDialog" v-if="login === true"><v-icon color="grey darken-1">add</v-icon></v-btn>
                 </v-subheader>
                 <div v-if="filtered.length === 0 && loading === false" class="text-xs-center body-1" color="grey darken-1">No users found.</div>
                 <v-card v-if="filtered.length > 0" class="m2-card">
@@ -60,7 +60,7 @@
                     <div v-if="filter !== ''">Groups ({{ groupResults }} results)</div>
                     <div v-if="filter === ''">Groups</div>
                     <v-spacer></v-spacer>
-                    <v-btn icon @click="showGCD(true)"><v-icon color="grey darken-1">add</v-icon></v-btn>
+                    <v-btn icon @click="showGCD(true)" v-if="login === true"><v-icon color="grey darken-1">add</v-icon></v-btn>
                 </v-subheader>
                 <div v-if="filteredGroups.length === 0 && loading === false" class="text-xs-center body-1" color="grey darken-1">No groups found.</div>
                 <v-card v-if="filteredGroups.length > 0" class="m2-card">
@@ -164,7 +164,8 @@ export default {
             groups: [],
             filteredGroups: [],
             groupResults: 0,
-            isAdmin: false
+            isAdmin: false,
+            login: false
         }
     },
     mounted: function() {
@@ -360,6 +361,7 @@ export default {
         authChanged(login, admin) {
             this.loadItems();
             this.isAdmin = false;
+            this.login = login;
             if(login === true) {
                 if(admin === true) {
                     this.loadInfo();

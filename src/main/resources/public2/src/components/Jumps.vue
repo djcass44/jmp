@@ -20,7 +20,7 @@
                             <v-list-tile v-ripple @click="setSort('-metaUsage')"><v-icon v-if="sort === '-metaUsage'">done</v-icon><v-list-tile-title>Popularity</v-list-tile-title></v-list-tile>
                         </v-list>
                     </v-menu>
-                    <v-btn icon @click="showCreateDialog"><v-icon color="grey darken-1">add</v-icon></v-btn>
+                    <v-btn icon @click="showCreateDialog" v-if="loggedIn === true"><v-icon color="grey darken-1">add</v-icon></v-btn>
                 </v-subheader>
                 <v-card v-if="filtered.length > 0" class="m2-card">
                     <v-list two-line subheader>
