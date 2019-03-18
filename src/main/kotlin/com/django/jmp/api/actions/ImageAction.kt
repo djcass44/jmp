@@ -26,10 +26,10 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class ImageAction(private val address: String) {
     fun get() {
         // Get the favicon for an address (only https)
-        val cutAddress = kotlin.runCatching { address.split("https://")[1] }.getOrNull() ?: address
-        if (cutAddress.isBlank())
-            return
-        FaviconGrabber(cutAddress).get(object : FaviconGrabber.OnLoadCallback {
+//        val cutAddress = kotlin.runCatching { address.split("https://")[1] }.getOrNull() ?: address
+//        if (cutAddress.isBlank())
+//            return
+        FaviconGrabber(address).get(object : FaviconGrabber.OnLoadCallback {
             override fun onLoad(favicon: Favicon) {
                 val f = favicon.get()
                 if(f != null) transaction {

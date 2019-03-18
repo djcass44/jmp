@@ -43,7 +43,7 @@ dependencies {
 
     implementation("com.gitlab.django-sandbox:log2:8b941edd1a")
 
-    implementation("io.javalin:javalin:2.6.0")
+    implementation("io.javalin:javalin:2.7.0")
     implementation("org.slf4j:slf4j-simple:1.7.25")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.8")
     implementation("com.beust:klaxon:5.0.1")
@@ -51,6 +51,7 @@ dependencies {
     implementation("com.amdelamar:jhash:2.1.0")
     implementation("io.github.rybalkinsd:kohttp:0.7.1")
     implementation("com.google.code.gson:gson:2.8.5")
+    implementation("com.github.bisignam:jicon:master-SNAPSHOT")
 
     implementation("commons-cli:commons-cli:1.4")
 
@@ -58,6 +59,10 @@ dependencies {
 
     implementation("org.jetbrains.exposed:exposed:0.11.2")
     runtimeOnly("org.xerial:sqlite-jdbc:3.25.2")
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.2.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.2.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.2.0")
 }
 
 application {
@@ -70,4 +75,7 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<ShadowJar> {
     archiveName = "jmp.$extension"
+}
+tasks.withType<Test> {
+    useJUnitPlatform()
 }

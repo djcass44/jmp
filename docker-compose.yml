@@ -7,7 +7,7 @@ services:
       - "7000:7000"
     volumes:
       - ./data:/data
-    command: ["using", "env", "--enable-cors"]
+    command: ["using", "env", "--enable-cors", "-d", "0"]
     environment:
       - DRIVER_URL=jdbc:sqlite:/data/jmp.db
       - DRIVER_CLASS=org.sqlite.JDBC

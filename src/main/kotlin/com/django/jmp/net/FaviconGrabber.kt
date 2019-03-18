@@ -16,24 +16,24 @@
 
 package com.django.jmp.net
 
+import ch.bisi.jicon.common.Util
+import ch.bisi.jicon.fetcher.link.JsoupFaviconsLinksFetcher
 import com.django.jmp.except.InsecureDomainException
 import com.django.log2.logging.Log
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import io.github.rybalkinsd.kohttp.ext.httpGet
-import okhttp3.Response
+import org.jsoup.Jsoup
+import java.net.URL
 
-class FaviconGrabber(private val domain: String, private val pretty: Boolean = true) {
-    companion object {
-        private val gson: Gson = GsonBuilder().setPrettyPrinting().create()
-    }
+class FaviconGrabber(private val domain: String) {
+
     fun get(listener: OnLoadCallback) {
         val t = Thread {
-            val url = "https://favicongrabber.com/api/grab/$domain?pretty=$pretty"
             try {
-                val r: Response = url.httpGet()
-                val text = r.body()?.string()
-                listener.onLoad(gson.fromJson(text ?: "", Favicon::class.java))
+                val document = Jsoup.connect(Util.getDomain(URL(domain))).get()
+                val icons = JsoupFaviconsLinksFetcher(document).fetchLinks()
+                val links = Array(icons.size) { i ->
+                    return@Array Icon(icons[i].toString(), null, null)
+                }
+                listener.onLoad(Favicon(domain, links))
             }
             catch (e: Exception) {
                 Log.e(javaClass, "Failed to load favicon [$domain]: $e")
@@ -42,6 +42,20 @@ class FaviconGrabber(private val domain: String, private val pretty: Boolean = t
         t.apply {
             isDaemon = true
             start()
+        }
+    }
+    fun get(): Favicon? {
+        return try {
+            val document = Jsoup.connect(Util.getDomain(URL(domain))).get()
+            val icons = JsoupFaviconsLinksFetcher(document).fetchLinks()
+            val links = Array(icons.size) { i ->
+                return@Array Icon(icons[i].toString(), null, null)
+            }
+            Favicon(domain, links)
+        }
+        catch (e: Exception) {
+            Log.e(javaClass, "Failed to load favicon [$domain]: $e")
+            null
         }
     }
     interface OnLoadCallback {
