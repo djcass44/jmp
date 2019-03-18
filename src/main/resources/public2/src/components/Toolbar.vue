@@ -51,6 +51,12 @@
                         </v-list-tile-action>
                         <v-list-tile-title>Settings</v-list-tile-title>
                     </v-list-tile>
+                    <v-list-tile v-if="!loggedIn" v-ripple @click="openCreateDialog">
+                        <v-list-tile-action>
+                            <v-icon>person_add</v-icon>
+                        </v-list-tile-action>
+                        <v-list-tile-title>Create account</v-list-tile-title>
+                    </v-list-tile>
                     <v-list-tile v-if="!loggedIn" v-ripple @click="openDialog">
                         <v-list-tile-action>
                             <v-icon>input</v-icon>
@@ -103,7 +109,7 @@ export default {
         },
         getName: function() {
             let name = localStorage.getItem(storageUser);
-            if(name === '' || name == null) {
+            if(name === '' || name == null || this.loggedIn === false) {
                 return "Anonymous";
             }
             return name;
