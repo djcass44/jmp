@@ -17,8 +17,7 @@
 package com.django.jmp.net
 
 import com.django.log2.logging.Log
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
@@ -36,5 +35,14 @@ class FaviconGrabberTest {
         assertTrue(f!!.icons!!.isNotEmpty())
         Log.d(javaClass, f.get()!!.src)
         assertTrue(f.get()!!.src.startsWith("https://"))
+    }
+    @ParameterizedTest
+    @ValueSource(strings = [
+        "http://www.website.org"
+    ])
+    fun getHttpIcon(value: String) { // Used to test grabber works on site with valid favicon
+        val grabber = FaviconGrabber(value)
+        val f = grabber.get()
+        assertNull(f)
     }
 }

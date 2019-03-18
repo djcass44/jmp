@@ -27,17 +27,9 @@ class FaviconGrabber(private val domain: String) {
 
     fun get(listener: OnLoadCallback) {
         val t = Thread {
-            try {
-                val document = Jsoup.connect(Util.getDomain(URL(domain))).get()
-                val icons = JsoupFaviconsLinksFetcher(document).fetchLinks()
-                val links = Array(icons.size) { i ->
-                    return@Array Icon(icons[i].toString(), null, null)
-                }
-                listener.onLoad(Favicon(domain, links))
-            }
-            catch (e: Exception) {
-                Log.e(javaClass, "Failed to load favicon [$domain]: $e")
-            }
+            val f = get()
+            if(f != null) listener.onLoad(f)
+            else Log.v(javaClass, "Favicon for $domain is null")
         }
         t.apply {
             isDaemon = true
@@ -46,6 +38,7 @@ class FaviconGrabber(private val domain: String) {
     }
     fun get(): Favicon? {
         return try {
+            if(domain.startsWith("http://")) return null
             val document = Jsoup.connect(Util.getDomain(URL(domain))).get()
             val icons = JsoupFaviconsLinksFetcher(document).fetchLinks()
             val links = Array(icons.size) { i ->
