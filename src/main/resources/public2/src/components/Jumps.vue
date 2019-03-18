@@ -2,6 +2,7 @@
     <div id="main-list" v-cloak>
         <v-layout>
             <v-flex xs12 sm6 offset-sm3>
+                <v-alert :value="loggedIn === false && loading === false" outline type="info" class="m2-card">Login or create an account to create &amp; view additional Jumps</v-alert>
                 <v-subheader inset v-if="loading === false">
                     <div v-if="filter !== ''">Jumps ({{ filterResults}} results)</div>
                     <div v-if="filter === ''">Jumps</div>

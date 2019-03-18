@@ -138,10 +138,6 @@ export default {
                 that.loading = false;
                 that.dialog = false;
                 that.$emit('jumpsSetItem', { name: this.name, location: this.location, personal: this.select === this.items[1] }, that.index);
-                setTimeout(function() {
-                    componentHandler.upgradeDom();
-                    componentHandler.upgradeAllRegistered();
-                }, 0);
                 that.$emit('snackbar', true, `Updated ${that.name}`);
             }).catch(e => {
                 console.log(e);
@@ -186,10 +182,6 @@ export default {
                     location: that.location,
                     personal: personalJump
                 });
-                setTimeout(function() {
-                    componentHandler.upgradeDom();
-                    componentHandler.upgradeAllRegistered();
-                }, 0);
                 that.$emit('snackbar', true, `Added ${that.name}`)
             }).catch(e => {
                 console.log(e);

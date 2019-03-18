@@ -2,6 +2,7 @@
     <div id="main-list" v-cloak>
         <v-layout>
             <v-flex xs12 sm6 offset-sm3>
+                <v-alert :value="login === false && loading === false" outline type="info" class="m2-card">Login or create an account to see users &amp; groups.</v-alert>
                 <div v-if="loading === true" class="text-xs-center pa-4">
                     <v-progress-circular :size="100" color="accent" indeterminate></v-progress-circular>
                 </div>
