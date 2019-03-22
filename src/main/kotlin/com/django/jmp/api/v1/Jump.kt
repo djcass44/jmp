@@ -85,7 +85,7 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
                 val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: ""
                 if (jwt.isBlank()) {
                     Log.d(javaClass, "User has no token, redirecting for check...")
-                    ctx.status(HttpStatus.FOUND_302).redirect("${config.BASE_URL}/token?query=$target")
+                    ctx.status(HttpStatus.FOUND_302).redirect("${config.BASE_URL}/jmp?query=$target")
                     return@get
                 }
                 val user = if(jwt.isBlank()) null else TokenProvider.getInstance().verify(jwt)
