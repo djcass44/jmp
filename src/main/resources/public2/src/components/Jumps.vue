@@ -69,9 +69,18 @@
                     <v-progress-circular :size="100" color="accent" indeterminate></v-progress-circular>
                 </div>
                 <div v-if="(showZero === true || filtered.length === 0) && loading === false">
-                    <h1 class="mdl-h1 text-xs-center">204</h1>
-                    <h2 class="mdl-h5 text-xs-center" v-if="filtered.length === 0 && items.length === 0">No jumps could be found.</h2>
-                    <h2 class="mdl-h5 text-xs-center" v-if="filtered.length === 0 && items.length > 0">No results.</h2>
+                    <v-card class="m2-card">
+                        <v-card-title primary-title>
+                            <v-avatar color="red darken-4" class="ma-4">
+                                <v-icon large dark>sentiment_dissatisfied</v-icon>
+                            </v-avatar>
+                            <div>
+                                <h3 class="display-3 font-weight-light">204</h3>
+                                <div class="subheading">Nothing could be found.</div>
+                                <div class="body grey--text" v-if="items.length === 0">Click the user icon to login and start creating Jumps!</div>
+                            </div>
+                        </v-card-title>
+                    </v-card>
                 </div>
             </v-flex>
         </v-layout>
@@ -252,17 +261,6 @@ export default {
         loadFailed() {
             this.loading = false;
         },
-        // dynamicSortMultiple: function() {
-        //     let props = arguments;
-        //     return function (obj1, obj2) {
-        //         let i = 0, result = 0, numberOfProps = props.length;
-        //         while(result === 0 && i < numberOfProps) {
-        //             result = dynamicSort(props[i])(obj1, obj2);
-        //             i++;
-        //         }
-        //         return result;
-        //     }
-        // },
         dynamicSort: function(property) {
             let sortOrder = 1;
             if(property[0] === "-") {
