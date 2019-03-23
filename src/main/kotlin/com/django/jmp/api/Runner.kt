@@ -123,7 +123,8 @@ fun main(args: Array<String>) {
 //                startHeartbeat()
             }
         }
-    }.start()
+        start()
+    }
     println("       _ __  __ _____  \n" +
             "      | |  \\/  |  __ \\ \n" +
             "      | | \\  / | |__) |\n" +

@@ -16,35 +16,30 @@
 
 package com.django.jmp.net
 
-import ch.bisi.jicon.common.Util
-import ch.bisi.jicon.fetcher.link.JsoupFaviconsLinksFetcher
 import com.django.jmp.except.InsecureDomainException
 import com.django.log2.logging.Log
-import org.jsoup.Jsoup
-import java.net.URL
+import dev.castive.fav2.Fav
 
 class FaviconGrabber(private val domain: String) {
-
+    init {
+        Fav.DEBUG = true
+        Fav.ALLOW_HTTP = false // Do not load insecure origins
+    }
     fun get(listener: OnLoadCallback) {
-        val t = Thread {
-            val f = get()
-            if(f != null) listener.onLoad(f)
-            else Log.v(javaClass, "Favicon for $domain is null")
-        }
-        t.apply {
-            isDaemon = true
-            start()
-        }
+        Fav.loadDomain(domain, object : Fav.OnLoadedCallback {
+            override fun onLoad(favicon: String?) {
+                Log.d(javaClass, "Found link: $favicon")
+                if(favicon == null) return
+                listener.onLoad(Favicon(domain, arrayOf(Icon(favicon, null, null))))
+            }
+        })
     }
     fun get(): Favicon? {
         return try {
             if(domain.startsWith("http://")) return null
-            val document = Jsoup.connect(Util.getDomain(URL(domain))).get()
-            val icons = JsoupFaviconsLinksFetcher(document).fetchLinks()
-            val links = Array(icons.size) { i ->
-                return@Array Icon(icons[i].toString(), null, null)
-            }
-            Favicon(domain, links)
+            val link = Fav.loadDomain(domain) ?: return null
+            Log.d(javaClass, "Found link: $link")
+            Favicon(domain, arrayOf(Icon(link, null, null)))
         }
         catch (e: Exception) {
             Log.e(javaClass, "Failed to load favicon [$domain]: $e")

@@ -42,6 +42,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
 
     implementation("com.gitlab.django-sandbox:log2:8b941edd1a")
+    implementation("com.github.djcass44:fav2:0.2.0")
 
     implementation("io.javalin:javalin:2.7.0")
     implementation("org.slf4j:slf4j-simple:1.7.25")
@@ -51,7 +52,6 @@ dependencies {
     implementation("com.amdelamar:jhash:2.1.0")
     implementation("io.github.rybalkinsd:kohttp:0.7.1")
     implementation("com.google.code.gson:gson:2.8.5")
-    implementation("com.github.bisignam:jicon:master-SNAPSHOT")
 
     implementation("commons-cli:commons-cli:1.4")
 
