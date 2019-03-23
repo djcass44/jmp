@@ -166,10 +166,10 @@ class Auth {
             }
         }
     }
-    private fun getDAOUserRole(): com.django.jmp.db.dao.Role {
+    fun getDAOUserRole(): com.django.jmp.db.dao.Role {
         return getDAORole(BasicRoles.USER)
     }
-    private fun getDAOAdminRole(): com.django.jmp.db.dao.Role {
+    fun getDAOAdminRole(): com.django.jmp.db.dao.Role {
         return getDAORole(BasicRoles.ADMIN)
     }
     private fun getDAORole(role: BasicRoles): com.django.jmp.db.dao.Role {

@@ -31,6 +31,8 @@ object Users: UUIDTable() {
 
     val metaCreation = long("metaCreation").default(System.currentTimeMillis())
     val metaUpdate = long("metaUpdate").default(System.currentTimeMillis())
+
+    val from = varchar("from", 24).default("local")
 }
 class User(id: EntityID<UUID>): UUIDEntity(id) {
     companion object : UUIDEntityClass<User>(Users)
@@ -43,8 +45,10 @@ class User(id: EntityID<UUID>): UUIDEntity(id) {
 
     var metaCreation by Users.metaCreation
     var metaUpdate by Users.metaUpdate
+
+    var from by Users.from
 }
-data class UserData(val id: UUID, val username: String, val role: String, val groups: ArrayList<String>, val metaCreation: Long = 0, val metaUpdate: Long = 0) {
-    constructor(user: User, groups: ArrayList<String>): this(user.id.value, user.username, user.role.name, groups, user.metaCreation, user.metaUpdate)
+data class UserData(val id: UUID, val username: String, val role: String, val groups: ArrayList<String>, val metaCreation: Long = 0, val metaUpdate: Long = 0, val from: String = "local") {
+    constructor(user: User, groups: ArrayList<String>): this(user.id.value, user.username, user.role.name, groups, user.metaCreation, user.metaUpdate, user.from)
 }
 data class EditUserData(val id: UUID, val role: String)
