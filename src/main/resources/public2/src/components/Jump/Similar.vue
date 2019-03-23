@@ -6,11 +6,27 @@
             <v-flex xs12 v-cloak v-if="loading === false"><p>{{ status }}</p></v-flex>
             <v-flex xs12 v-cloak v-if="loading === false">
                 <v-spacer></v-spacer>
-                <div v-for="item in items" :key="item">
-                    <v-chip v-ripple @click="open(item)" color="primary" text-color="white">
-                        <v-avatar class="blue darken-4"><strong>{{ item.name.substring(0, 1).toUpperCase() }}</strong></v-avatar>
-                        <strong class="px-1">{{ item.name }}</strong>
-                    </v-chip>
+                <div v-for="item in items" :key="item.id">
+                    <v-hover>
+                        <v-chip v-ripple @click="open(item)" color="primary" text-color="white" slot-scope="{ hover }">
+                            <v-avatar class="blue darken-4">
+                                <strong v-if="item.image == null || item.image === ''">{{ item.name.substring(0, 1).toUpperCase() }}</strong>
+                                <v-img v-if="item.image != null && item.image !== ''" :src="item.image" :lazy-src="item.image" v-on:error="item.image = ''" aspect-ratio="1" class="grey darken-2">
+                                    <template v-slot:placeholder>
+                                        <v-layout fill-height align-center justify-center ma-0>
+                                            <v-progress-circular indeterminate color="grey lighten-5"></v-progress-circular>
+                                        </v-layout>
+                                    </template>
+                                </v-img>
+                            </v-avatar>
+                            <v-slide-x-transition>
+                                <strong class="px-1" v-if="!hover">{{ item.name }}</strong>
+                            </v-slide-x-transition>
+                            <v-expand-x-transition>
+                                <strong class="px-1 transition-fast-in-fast-out" v-if="hover">{{ item.location }}</strong>
+                            </v-expand-x-transition>
+                        </v-chip>
+                    </v-hover>
                 </div>
                 <v-spacer></v-spacer>
             </v-flex>
