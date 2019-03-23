@@ -16,29 +16,37 @@
 
 package com.django.jmp.api
 
+import com.django.jmp.db.dao.Jump
+import com.django.jmp.db.dao.JumpData
 import info.debatty.java.stringsimilarity.JaroWinkler
+import org.jetbrains.exposed.sql.transactions.transaction
 
-class Similar(private val query: String, private val dict: ArrayList<String>, private val threshold: Double = 0.75) {
-    fun compute(): ArrayList<String> {
-//        Log.d(javaClass, "Computing similar values for $query")
-        val jw = JaroWinkler()
-        val similarities = arrayListOf<String>()
-        var best = ""
-        var bestIndex = 0.0
-        for (s in dict) {
-            val metric = jw.similarity(query, s)
-            if(metric > threshold)
-                similarities.add(s)
-            if(metric > 0.65 && metric > bestIndex) {
-                bestIndex = metric
-                best = s
+class Similar(private val query: String, private val dict: ArrayList<Jump>, private val threshold: Double = 0.75) {
+    private val results = arrayListOf<Jump>()
+    fun compute() {
+        transaction {
+            val jw = JaroWinkler()
+            results.clear()
+            var best: Jump? = null
+            var bestIndex = 0.0
+            for (s in dict) {
+                val metric = jw.similarity(query, s.name)
+                if (metric > threshold)
+                    results.add(s)
+                if (metric > 0.65 && metric > bestIndex) {
+                    bestIndex = metric
+                    best = s
+                }
             }
-//            if(metric > 0)
-//                Log.v(javaClass, "s: $s, metric: $metric")
+            if (results.size == 0 && best != null) {
+                results.clear()
+                results.add(best)
+            }
         }
-        return if(similarities.size == 0 && best.isNotBlank())
-            arrayListOf(best)
-        else
-            similarities
+    }
+    fun get(): ArrayList<JumpData> {
+        val jumps = arrayListOf<JumpData>()
+        transaction { results.forEach { jumps.add(JumpData(it)) } }
+        return jumps
     }
 }

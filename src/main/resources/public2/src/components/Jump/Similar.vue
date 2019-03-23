@@ -8,8 +8,8 @@
                 <v-spacer></v-spacer>
                 <div v-for="item in items" :key="item">
                     <v-chip v-ripple @click="open(item)" color="primary" text-color="white">
-                        <v-avatar class="blue darken-4"><strong>{{ item.substring(0, 1).toUpperCase() }}</strong></v-avatar>
-                        <strong class="px-1">{{ item }}</strong>
+                        <v-avatar class="blue darken-4"><strong>{{ item.name.substring(0, 1).toUpperCase() }}</strong></v-avatar>
+                        <strong class="px-1">{{ item.name }}</strong>
                     </v-chip>
                 </div>
                 <v-spacer></v-spacer>
@@ -37,8 +37,8 @@ export default {
         setLoggedIn() {},
         authChanged() {},
         loadFailed() {},
-        open(itemName) {
-            window.location.replace(`${process.env.VUE_APP_FE_URL}/jmp?query=${itemName}`)
+        open(item) {
+            window.location.replace(`${process.env.VUE_APP_FE_URL}/jmp?query=${item.name}`);
         }
     },
     mounted: function() {

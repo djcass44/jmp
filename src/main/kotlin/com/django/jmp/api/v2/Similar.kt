@@ -28,7 +28,6 @@ import io.javalin.BadRequestResponse
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
-import org.jetbrains.exposed.sql.transactions.transaction
 
 class Similar : EndpointGroup {
     override fun addEndpoints() {
@@ -40,13 +39,10 @@ class Similar : EndpointGroup {
                 val query = ctx.pathParam("query")
                 if (query.isBlank())
                     throw EmptyPathException()
-                val names = arrayListOf<String>()
                 val userJumps = OwnerAction.getInstance().getUserVisibleJumps(user)
-                transaction {
-                    userJumps.forEach { names.add(it.name) }
-                }
-                val similar = Similar(query, names)
-                ctx.status(HttpStatus.OK_200).json(similar.compute())
+                val similar = Similar(query, userJumps)
+                similar.compute()
+                ctx.status(HttpStatus.OK_200).json(similar.get())
             }
             catch (e: EmptyPathException) {
                 Log.e(Runner::class.java, "Empty target")
