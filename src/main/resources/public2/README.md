@@ -1,4 +1,4 @@
-# public2
+# JMP UI
 
 ## Project setup
 ```
