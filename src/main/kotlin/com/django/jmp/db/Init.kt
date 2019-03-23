@@ -22,6 +22,9 @@ import com.django.jmp.db.dao.User
 import com.django.log2.logging.Log
 import com.django.securepass3.PasswordGenerator
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Path
 
 class Init {
     init {
@@ -30,8 +33,9 @@ class Init {
             if(User.all().empty()) {
                 val password = PasswordGenerator.getInstance().get(16, true)
                 Auth().createUser(superName, password, true)
-                Log.w(javaClass, "Created superuser with access: [username: $superName]\nPlease change this ASAP!")
-                for (c in password)
+                Log.w(javaClass, "Created superuser with access: [username: $superName]\nPlease change this ASAP!\nThis will also be stored in the current directory in 'initialAdminPassword'")
+                Files.writeString(Path.of("initialAdminPassword"), String(password), StandardCharsets.UTF_8)
+                for (c in password) // Probably useless if converted to a string above
                     print(c)
                 println()
             }
