@@ -15,6 +15,11 @@ Vue.use(VueClipboard);
 
 Vue.config.productionTip = false;
 
+// Disable logging in production
+if(process.env.NODE_ENV === "production") {
+    console.log = function() {}
+}
+
 const router = new VueRouter({
     mode: 'history',
     routes: [
