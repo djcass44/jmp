@@ -7,7 +7,7 @@
                     <div v-if="filter !== ''">Jumps ({{ filterResults}} results)</div>
                     <div v-if="filter === ''">Jumps</div>
                     <v-spacer></v-spacer>
-                    <v-menu v-if="loading === false && filtered.length > 0" bottom left offset-y origin="top right" transition="scale-transition" min-width="150">
+                    <v-menu v-if="loading === false && filtered.length > 1" bottom left offset-y origin="top right" transition="scale-transition" min-width="150">
                         <template v-slot:activator="{ on }">
                             <v-btn ripple icon v-on="on">
                                 <v-icon color="grey darken-1">sort</v-icon>

@@ -2,6 +2,7 @@
     <div id="main-list" v-cloak>
         <v-layout>
             <v-flex xs12 sm6 offset-sm3>
+                <p class="subheading"><v-btn flat icon color="grey darken-1" @click="openHome"><v-icon>arrow_back</v-icon></v-btn>Back to home</p>
                 <v-alert :value="login === false && loading === false" outline type="info" class="m2-card">Login or create an account to see users &amp; groups.</v-alert>
                 <div v-if="loading === true" class="text-xs-center pa-4">
                     <v-progress-circular :size="100" color="accent" indeterminate></v-progress-circular>
@@ -10,7 +11,7 @@
                     <div v-if="filter !== ''">Users ({{ filterResults}} results)</div>
                     <div v-if="filter === ''">Users</div>
                     <v-spacer></v-spacer>
-                    <v-menu bottom left offset-y origin="top right" transition="scale-transition" min-width="150">
+                    <v-menu bottom left offset-y origin="top right" transition="scale-transition" min-width="150" v-if="filtered.length > 1">
                         <template v-slot:activator="{ on }">
                             <v-btn ripple icon v-on="on">
                                 <v-icon color="grey darken-1">sort</v-icon>
@@ -391,7 +392,10 @@ export default {
                 let result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0;
                 return result * sortOrder;
             }
-        }
+        },
+        openHome: function(event) {
+            window.location.href = process.env.VUE_APP_FE_URL;
+        },
     }
 };
 </script>
