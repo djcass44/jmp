@@ -23,7 +23,7 @@ const router = new VueRouter({
             component: Jumps
         },
         {
-            path: '/users',
+            path: '/settings',
             component: Users
         },
         {

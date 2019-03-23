@@ -1,8 +1,8 @@
 <template>
     <v-toolbar absolute dark color="primary">
         <!-- <v-toolbar-side-icon></v-toolbar-side-icon> -->
-        <img src="assets/ic_launcher.png" width="32" height="32" class="mx-2">
-        <v-toolbar-title v-ripple @click="openHome" class="white--text hidden-sm-and-down">JumpPoints</v-toolbar-title>
+        <img @click="openHome" src="assets/ic_launcher.png" width="32" height="32" class="mx-2">
+        <v-toolbar-title v-ripple @click="openHome" class="white--text hidden-sm-and-down" :style="{ cursor: 'pointer' }">JumpPoints</v-toolbar-title>
 
         <v-spacer></v-spacer>
 
@@ -139,7 +139,7 @@ export default {
         },
         openAdmin: function (event) {
             if(event)
-                location.href='/users'
+                location.href='/settings'
         },
         openHome: function(event) {
             window.location.href = process.env.VUE_APP_FE_URL;
