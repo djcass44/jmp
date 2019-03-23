@@ -2,7 +2,7 @@
     <v-toolbar absolute dark color="primary">
         <!-- <v-toolbar-side-icon></v-toolbar-side-icon> -->
         <img @click="openHome" src="assets/ic_launcher.png" width="32" height="32" class="mx-2">
-        <v-toolbar-title v-ripple @click="openHome" class="white--text hidden-sm-and-down" :style="{ cursor: 'pointer' }">JMP</v-toolbar-title>
+        <v-toolbar-title v-ripple @click="openHome" class="white--text hidden-sm-and-down" :style="{ cursor: 'pointer' }">{{ appName }}</v-toolbar-title>
 
         <v-spacer></v-spacer>
 
@@ -87,6 +87,11 @@ export default {
             loggedIn: false,
             isAdmin: false,
             version: ''
+        }
+    },
+    computed: {
+        appName: function() {
+            return process.env.VUE_APP_APP_NAME;
         }
     },
     methods: {
