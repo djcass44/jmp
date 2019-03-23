@@ -141,7 +141,7 @@ main.v-content {
     width: 100vw;
     height: calc(100vh - 64px);
     flex-direction: column;
-    overflow: scroll;
+    overflow-y: scroll;
     margin-top: 64px;
     padding-top: 0 !important;
 }
