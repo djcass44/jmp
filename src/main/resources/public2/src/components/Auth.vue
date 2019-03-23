@@ -93,6 +93,7 @@ export default {
             localStorage.removeItem(storageUser);
             localStorage.removeItem(storageJWT);
             localStorage.removeItem(storageRequest);
+            console.log("User data invalidated");
         },
         init() {
             this.checkAPI();

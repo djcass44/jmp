@@ -83,11 +83,12 @@ class Jump(private val auth: Auth, private val config: ConfigStore): EndpointGro
                  * 2. Assume no token, redirect to checker
                  */
                 val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: ""
-                if (jwt.isBlank()) {
-                    Log.d(javaClass, "User has no token, redirecting for check...")
-                    ctx.status(HttpStatus.FOUND_302).redirect("${config.BASE_URL}/jmp?query=$target")
-                    return@get
-                }
+                // Disabled below due to causing #31 - django
+//                if (jwt.isBlank()) {
+//                    Log.d(javaClass, "User has no token, redirecting for check...")
+//                    ctx.status(HttpStatus.FOUND_302).redirect("${config.BASE_URL}/jmp?query=$target")
+//                    return@get
+//                }
                 val user = if(jwt.isBlank()) null else TokenProvider.getInstance().verify(jwt)
                 transaction {
                     Log.d(javaClass, "User information: [name: ${user?.username}, token: ${user?.token}]")
