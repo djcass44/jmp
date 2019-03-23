@@ -8,6 +8,7 @@ import com.django.jmp.api.v2.Similar
 import com.django.jmp.api.v2.User
 import com.django.jmp.api.v2_1.Group
 import com.django.jmp.api.v2_1.GroupMod
+import com.django.jmp.api.v2_1.Health
 import com.django.jmp.audit.Logger
 import com.django.jmp.auth.JWTContextMapper
 import com.django.jmp.auth.TokenProvider
@@ -115,6 +116,12 @@ fun main(args: Array<String>) {
             // Authentication
             Oauth(auth).addEndpoints()
             Verify(auth).addEndpoints()
+
+            // Health
+            Health().apply {
+                addEndpoints()
+//                startHeartbeat()
+            }
         }
     }.start()
     println("       _ __  __ _____  \n" +
