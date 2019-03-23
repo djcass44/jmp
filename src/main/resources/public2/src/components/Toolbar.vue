@@ -1,12 +1,12 @@
 <template>
     <v-toolbar absolute dark color="primary">
         <!-- <v-toolbar-side-icon></v-toolbar-side-icon> -->
-        <img src="assets/ic_launcher.png" width="32" height="32">
-        <v-toolbar-title v-ripple @click="openHome" class="white--text">JumpPoints</v-toolbar-title>
+        <img src="assets/ic_launcher.png" width="32" height="32" class="mx-2">
+        <v-toolbar-title v-ripple @click="openHome" class="white--text hidden-sm-and-down">JumpPoints</v-toolbar-title>
 
         <v-spacer></v-spacer>
 
-        <v-text-field v-if="!nullPage" v-model="searchQuery" @input="textChanged" flat solo dark clearable background-color="blue darken-4" placeholder="Enter a name"></v-text-field>
+        <v-text-field v-if="!nullPage" v-model="searchQuery" @input="textChanged" single-line flat solo-inverted prepend-inner-icon="search" label="Search"></v-text-field>
 
         <v-spacer></v-spacer>
 
@@ -71,13 +71,6 @@
                     </v-list-tile>
                 </v-list>
             </v-card>
-            <!-- <v-card>
-                <v-list>
-                    <v-list-tile v-ripple v-if="!loggedIn" @click="openDialog"><v-list-tile-title>Login</v-list-tile-title></v-list-tile>
-                    <v-list-tile v-ripple v-if="isAdmin && !slashUsers" @click="openAdmin"><v-list-tile-title>Admin settings</v-list-tile-title></v-list-tile>
-                    <v-list-tile v-ripple v-if="loggedIn" @click="logout"><v-list-tile-title>Logout</v-list-tile-title></v-list-tile>
-                </v-list>
-            </v-card> -->
         </v-menu>
     </v-toolbar>
 </template>
