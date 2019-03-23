@@ -33,7 +33,7 @@
                                         <v-icon large dark v-if="item.personal === 1">account_circle</v-icon>
                                         <v-icon large dark v-if="item.personal === 2">group</v-icon>
                                     </div>
-                                    <v-img v-if="item.image != null && item.image !== ''" :src="item.image" :lazy-src="item.image" aspect-ratio="1" class="grey darken-2">
+                                    <v-img v-if="item.image != null && item.image !== ''" :src="item.image" :lazy-src="item.image" v-on:error="item.image = ''" aspect-ratio="1" class="grey darken-2">
                                         <template v-slot:placeholder>
                                             <v-layout fill-height align-center justify-center ma-0>
                                                 <v-progress-circular indeterminate color="grey lighten-5"></v-progress-circular>
