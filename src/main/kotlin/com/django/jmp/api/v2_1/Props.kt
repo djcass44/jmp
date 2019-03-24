@@ -27,7 +27,7 @@ class Props(private val providers: Providers): EndpointGroup {
     override fun addEndpoints() {
         ApiBuilder.get("${Runner.BASE}/v2_1/prop/:target", { ctx ->
             val targetProp = ctx.pathParam("target")
-            ctx.status(HttpStatus.OK_200).result(providers.properties.getOrDefault(targetProp, "").toString())
+            ctx.status(HttpStatus.OK_200).result(providers.properties.getOrDefault(targetProp, "undefined").toString())
         }, Auth.adminRoleAccess)
     }
 }

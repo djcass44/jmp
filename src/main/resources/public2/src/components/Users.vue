@@ -91,6 +91,7 @@
                         </v-slide-y-transition>
                     </v-list>
                 </v-card>
+                <LDAP ref="ldap"></LDAP>
                 <div v-if="systemInfo !== '' && appInfo !== ''">
                     <v-subheader inset>About</v-subheader>
                     <v-expansion-panel>
@@ -138,12 +139,15 @@ import GroupDialog from "./dialog/GroupDialog.vue";
 import GenericDeleteDialog from "./dialog/GenericDeleteDialog.vue";
 import GroupSelectDialog from "./dialog/GroupSelectDialog.vue";
 
+import LDAP from "./prop/LDAP.vue";
+
 export default {
     name: "Users",
     components: {
         GroupDialog,
         GenericDeleteDialog,
-        GroupSelectDialog
+        GroupSelectDialog,
+        LDAP
     },
     data() {
         return {
@@ -366,6 +370,7 @@ export default {
             if(login === true) {
                 if(admin === true) {
                     this.loadInfo();
+                    this.$refs.ldap.loadProps();
                     this.isAdmin = true;
                 }
                 else {
