@@ -10,7 +10,7 @@ RUN ./gradlew build || return 0
 # Build & package app
 COPY . .
 
-RUN ./gradlew shadowJar
+RUN ./gradlew buildPackage
 
 # STAGE 2 - RUN
 FROM openjdk:11.0.1-slim-stretch

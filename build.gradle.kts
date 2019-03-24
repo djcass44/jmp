@@ -79,3 +79,7 @@ tasks.withType<ShadowJar> {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+task("buildPackage") {
+    println("Building package...")
+    finalizedBy("increment-patch", "shadowJar")
+}
