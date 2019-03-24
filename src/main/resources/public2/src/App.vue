@@ -57,6 +57,7 @@ import Snackbar from './components/widget/Snackbar.vue';
 
 import Token from './components/Jump/Token.vue';
 import Similar from './components/Jump/Similar.vue';
+import Setup from './components/Jump/Setup.vue';
 
 export default {
     props: ['comp'],
@@ -71,7 +72,8 @@ export default {
         Snackbar,
         NotFound,
         Token,
-        Similar
+        Similar,
+        Setup
     },
     // There has to be a better way!
     methods: {
@@ -108,8 +110,8 @@ export default {
             this.$refs.jumps.authChanged(login, admin);
         },
         toolbarCheckState() {
-            this.$refs.toolbar.setSlashUsers(!this.isNotSlashUsers());
-            this.$refs.toolbar.setNullPage(!this.isNotSlashUsers() && !this.isSlashUsers());
+            this.$refs.toolbar.setSlashUsers(this.isSlashUsers());
+            this.$refs.toolbar.setNullPage(this.isNullPage());
         },
         authGet() {
             this.$refs.auth.getAuth();
@@ -123,8 +125,8 @@ export default {
         isSlashUsers() {
             return this.$refs.jumps.$options.name === "Users";
         },
-        isNotSlashUsers() {
-            return this.$refs.jumps.$options.name === "Jumps";
+        isNullPage() {
+            return this.$refs.jumps.$options.name !== "Jumps" && this.$refs.jumps.$options.name !== "Users";
         },
         postInit() {
             this.$refs.auth.init();

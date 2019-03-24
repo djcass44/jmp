@@ -2,6 +2,7 @@
     <div id="main-list" v-cloak>
         <v-layout>
             <v-flex xs12 sm6 offset-sm3>
+                <p class="subheading ml-3"><v-btn flat icon color="grey darken-1" @click="openHome"><v-icon>arrow_back</v-icon></v-btn>Back to home</p>
                 <v-alert :value="login === false && loading === false" outline type="info" class="m2-card">Login or create an account to see users &amp; groups.</v-alert>
                 <div v-if="loading === true" class="text-xs-center pa-4">
                     <v-progress-circular :size="100" color="accent" indeterminate></v-progress-circular>
@@ -10,7 +11,7 @@
                     <div v-if="filter !== ''">Users ({{ filterResults}} results)</div>
                     <div v-if="filter === ''">Users</div>
                     <v-spacer></v-spacer>
-                    <v-menu bottom left offset-y origin="top right" transition="scale-transition" min-width="150">
+                    <v-menu bottom left offset-y origin="top right" transition="scale-transition" min-width="150" v-if="filtered.length > 1">
                         <template v-slot:activator="{ on }">
                             <v-btn ripple icon v-on="on">
                                 <v-icon color="grey darken-1">sort</v-icon>
@@ -25,7 +26,6 @@
                     </v-menu>
                     <v-btn icon @click="showCreateDialog" v-if="login === true && allowUserCreation === true"><v-icon color="grey darken-1">add</v-icon></v-btn>
                 </v-subheader>
-                <div v-if="filtered.length === 0 && loading === false" class="text-xs-center body-1" color="grey darken-1">No users found.</div>
                 <v-card v-if="filtered.length > 0" class="m2-card">
                     <v-list two-line subheader>
                         <v-slide-y-transition class="py-0" group>
@@ -57,13 +57,25 @@
                         </v-slide-y-transition>
                     </v-list>
                 </v-card>
+                <div v-if="filtered.length === 0 && loading === false">
+                    <v-card class="m2-card">
+                        <v-card-title primary-title>
+                            <v-avatar color="red darken-4" class="ma-4">
+                                <v-icon dark>person</v-icon>
+                            </v-avatar>
+                            <div>
+                                <h3 class="display-3 font-weight-light">204</h3>
+                                <div class="subheading">No users found.</div>
+                            </div>
+                        </v-card-title>
+                    </v-card>
+                </div>
                 <v-subheader inset v-if="loading === false">
                     <div v-if="filter !== ''">Groups ({{ groupResults }} results)</div>
                     <div v-if="filter === ''">Groups</div>
                     <v-spacer></v-spacer>
                     <v-btn icon @click="showGCD(true)" v-if="login === true"><v-icon color="grey darken-1">add</v-icon></v-btn>
                 </v-subheader>
-                <div v-if="filteredGroups.length === 0 && loading === false" class="text-xs-center body-1" color="grey darken-1">No groups found.</div>
                 <v-card v-if="filteredGroups.length > 0" class="m2-card">
                     <v-list two-line subheader>
                         <v-slide-y-transition class="py-0" group>
@@ -91,6 +103,19 @@
                         </v-slide-y-transition>
                     </v-list>
                 </v-card>
+                <div v-if="filteredGroups.length === 0 && loading === false">
+                    <v-card class="m2-card">
+                        <v-card-title primary-title>
+                            <v-avatar color="red darken-4" class="ma-4">
+                                <v-icon dark>group</v-icon>
+                            </v-avatar>
+                            <div>
+                                <h3 class="display-3 font-weight-light">204</h3>
+                                <div class="subheading">No groups found.</div>
+                            </div>
+                        </v-card-title>
+                    </v-card>
+                </div>
                 <LDAP ref="ldap"></LDAP>
                 <div v-if="systemInfo !== '' && appInfo !== ''">
                     <v-subheader inset>About</v-subheader>
@@ -400,6 +425,9 @@ export default {
                 let result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0;
                 return result * sortOrder;
             }
+        },
+        openHome: function(event) {
+            window.location.href = process.env.VUE_APP_FE_URL;
         },
         checkUserCreate() {
             let that = this;

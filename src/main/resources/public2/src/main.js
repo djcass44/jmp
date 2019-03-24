@@ -9,11 +9,17 @@ import Users from "./components/Users.vue";
 import NotFound from "./components/error/NotFound.vue";
 import Token from "./components/Jump/Token.vue";
 import Similar from "./components/Jump/Similar.vue";
+import Setup from "./components/Jump/Setup.vue";
 
 Vue.use(VueRouter);
 Vue.use(VueClipboard);
 
 Vue.config.productionTip = false;
+
+// Disable logging in production
+if(process.env.NODE_ENV === "production") {
+    console.log = function() {}
+}
 
 const router = new VueRouter({
     mode: 'history',
@@ -23,8 +29,12 @@ const router = new VueRouter({
             component: Jumps
         },
         {
-            path: '/users',
+            path: '/settings',
             component: Users
+        },
+        {
+            path: '/setup',
+            component: Setup
         },
         {
             path: '/jmp',

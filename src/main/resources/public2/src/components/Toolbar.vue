@@ -1,21 +1,20 @@
 <template>
     <v-toolbar absolute dark color="primary">
         <!-- <v-toolbar-side-icon></v-toolbar-side-icon> -->
-        <img src="assets/ic_launcher.png" width="32" height="32" class="mx-2">
-        <v-toolbar-title v-ripple @click="openHome" class="white--text hidden-sm-and-down">JumpPoints</v-toolbar-title>
+        <img @click="openHome" src="assets/ic_launcher.png" width="32" height="32" class="mx-2">
+        <v-toolbar-title v-ripple @click="openHome" class="white--text hidden-sm-and-down" :style="{ cursor: 'pointer' }">{{ appName }}</v-toolbar-title>
 
         <v-spacer></v-spacer>
 
         <v-text-field v-if="!nullPage" v-model="searchQuery" @input="textChanged" single-line flat solo-inverted prepend-inner-icon="search" label="Search"></v-text-field>
 
         <v-spacer></v-spacer>
-
-        <!-- <v-tooltip bottom>
+        <v-tooltip bottom v-if="nullPage === false && slashUsers === false">
             <template v-slot:activator="{ on }">
-                <v-btn icon v-on="on" v-if="!nullPage"><v-icon>search</v-icon></v-btn>
+                <v-btn icon v-on="on" @click="openSetup"><v-icon>help_outline</v-icon></v-btn>
             </template>
-            <span>Search</span>
-        </v-tooltip> -->
+            <span>Setup &amp; help</span>
+        </v-tooltip>
 
         <v-menu bottom left offset-y origin="top right" transition="scale-transition" v-if="!nullPage" min-width="200" :clone-on-content-click="false">
             <template v-slot:activator="{ on }">
@@ -91,6 +90,11 @@ export default {
             allowUserCreation: true
         }
     },
+    computed: {
+        appName: function() {
+            return process.env.VUE_APP_APP_NAME;
+        }
+    },
     methods: {
         init() {
             let that = this;
@@ -140,7 +144,11 @@ export default {
         },
         openAdmin: function (event) {
             if(event)
-                location.href='/users'
+                location.href='/settings'
+        },
+        openSetup: function(event) {
+            if(event)
+                location.href='/setup'
         },
         openHome: function(event) {
             window.location.href = process.env.VUE_APP_FE_URL;
