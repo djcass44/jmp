@@ -108,7 +108,6 @@ class Providers(config: ConfigStore, private val auth: Auth) {
         transaction {
             users.forEach { u ->
                 names.add(u.username)
-                val admin = u.role == Auth.BasicRoles.ADMIN.name
                 val match = User.find { Users.username eq u.username and Users.from.eq(LDAPProvider.SOURCE_NAME) }
                 if (match.empty()) {
                     // User doesn't exist yet
@@ -116,11 +115,13 @@ class Providers(config: ConfigStore, private val auth: Auth) {
                         username = u.username
                         hash = ""
                         token = UUID.randomUUID()
-                        role = if (admin) auth.getDAOAdminRole() else auth.getDAOUserRole()
+                        role = auth.getDAOUserRole()
                         from = u.from
                     }
-                } else match.elementAt(0).apply {
-                    role = if (admin) auth.getDAOAdminRole() else auth.getDAOUserRole()
+                }
+                else match.elementAt(0).apply {
+                    // TODO update user details
+//                    role = if (admin) auth.getDAOAdminRole() else auth.getDAOUserRole()
                 }
             }
             // Get LDAP user which weren't in the most recent search and delete them

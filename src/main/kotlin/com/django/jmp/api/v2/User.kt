@@ -115,6 +115,7 @@ class User(private val auth: Auth, private val providers: Providers): EndpointGr
                 val role = Role.find {
                     Roles.name eq updated.role
                 }.elementAtOrNull(0) ?: throw BadRequestResponse()
+                Log.i(javaClass, "User role updated [user: ${user.username}, from: ${user.role.name}, to: ${role.name}] by ${u.username}")
                 user.role = role
                 user.metaUpdate = System.currentTimeMillis()
                 ctx.status(HttpStatus.NO_CONTENT_204).json(updated)
