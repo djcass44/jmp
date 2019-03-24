@@ -23,7 +23,7 @@ plugins {
     application
 }
 
-group = "com.django"
+group = "dev.castive"
 version = "2.1"
 
 apply(plugin = "java")
@@ -66,7 +66,7 @@ dependencies {
 }
 
 application {
-    mainClassName = "com.django.jmp.api.RunnerKt"
+    mainClassName = "dev.castive.jmp.api.RunnerKt"
 }
 
 tasks.withType<KotlinCompile> {

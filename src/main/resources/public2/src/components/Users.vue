@@ -41,7 +41,7 @@
                                 </v-list-tile-avatar>
                                 <v-list-tile-content>
                                     <v-list-tile-title><span v-html="highlightFilter(user.username)">{{ user.username }}</span></v-list-tile-title>
-                                    <v-list-tile-sub-title>{{ capitalize(user.role.toLowerCase()) }}</v-list-tile-sub-title>
+                                    <v-list-tile-sub-title>{{ capitalize(user.role.toLowerCase()) }}&nbsp;&bull;&nbsp;{{ formattedFrom(user) }}</v-list-tile-sub-title>
                                 </v-list-tile-content>
                                 <v-list-tile-action v-if="user.username !== 'admin'">
                                     <v-menu bottom left offset-y origin="top right" transition="scale-transition" min-width="150">
@@ -267,6 +267,10 @@ export default {
         },
         capitalize(s) {
             return s && s[0].toUpperCase() + s.slice(1);
+        },
+        formattedFrom: function(user) {
+            if(user.from.toLowerCase() === 'ldap') return 'LDAP';
+            else return this.capitalize(user.from);
         },
         indexFromId(id) {
             for(let i = 0; i < this.items.length; i++) {

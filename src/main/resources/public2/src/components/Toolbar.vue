@@ -24,7 +24,7 @@
                 <v-list>
                     <v-list-tile avatar>
                         <v-list-tile-avatar>
-                            <v-icon large>account_circle</v-icon>
+                            <v-icon large>{{ getUserAvatar() }}</v-icon>
                         </v-list-tile-avatar>
 
                         <v-list-tile-content>
@@ -119,6 +119,12 @@ export default {
                 return "User";
             else
                 return "Lurker";
+        },
+        getUserAvatar() {
+            let type = this.getUserType();
+            if(type === "Admin") return "supervised_user_circle";
+            else if(type === "User") return "account_circle";
+            else return "person_outline";
         },
         setNullPage(nullPage) {
             console.log(nullPage);

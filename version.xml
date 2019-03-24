@@ -17,7 +17,7 @@
 <project name="jmp" default="ide" basedir=".">
     <description>Increments patch number on IntelliJ/Gradle build</description>
 
-    <property name="src" location="src/main/kotlin/com/django/jmp" />
+    <property name="src" location="src/main/kotlin/dev/castive/jmp" />
 
     <property file="version.properties" />
     <property name="build.number" value="${build.major.number}.${build.minor.number}.${build.build.number}.${build.build.number}" />

@@ -13,7 +13,7 @@ JMP can be installed in 2 different ways.
 Edit [env](env) and add the url the application will be running on
 
 ```bash
-docker build -t jmp:0.3.7 -f Dockerfile.prod .
+docker build -t jmp:0.3.7 .
 docker run jmp:0.3.7 -v "./data:/data" -p 7000:7000
 ```
 
