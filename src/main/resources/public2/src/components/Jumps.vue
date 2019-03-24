@@ -4,7 +4,7 @@
             <v-flex xs12 sm6 offset-sm3>
                 <v-alert :value="loggedIn === false && loading === false && showLoginBanner === true" outline type="info" class="m2-card">
                     <v-layout fill-height>
-                        <v-flex xs10 class="text-xs-left pa-2">Login or create an account to see users &amp; groups.</v-flex>
+                        <v-flex xs10 class="text-xs-left pa-2">Login or create an account to create &amp; view additional Jumps</v-flex>
                         <v-flex xs2 class="text-xs-right"><v-btn small icon @click="hideLoginBanner"><v-icon small color="info">close</v-icon></v-btn></v-flex>
                     </v-layout>
                 </v-alert>
