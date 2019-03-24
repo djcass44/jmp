@@ -3,7 +3,12 @@
         <v-layout>
             <v-flex xs12 sm6 offset-sm3>
                 <p class="subheading ml-3"><v-btn flat icon color="grey darken-1" @click="openHome"><v-icon>arrow_back</v-icon></v-btn>Back to home</p>
-                <v-alert :value="login === false && loading === false" outline type="info" class="m2-card">Login or create an account to see users &amp; groups.</v-alert>
+                <v-alert :value="login === false && loading === false && showLoginBanner === true" outline type="info" class="m2-card">
+                    <v-layout fill-height>
+                        <v-flex xs10 class="text-xs-left pa-2">Login or create an account to see users &amp; groups.</v-flex>
+                        <v-flex xs2 class="text-xs-right"><v-btn small icon @click="hideLoginBanner"><v-icon small color="info">close</v-icon></v-btn></v-flex>
+                    </v-layout>
+                </v-alert>
                 <div v-if="loading === true" class="text-xs-center pa-4">
                     <v-progress-circular :size="100" color="accent" indeterminate></v-progress-circular>
                 </div>
@@ -158,7 +163,7 @@
 
 <script>
 import axios from "axios";
-import { storageUser, storageJWT, storageSortMode } from "../var.js";
+import { storageUser, storageJWT, storageSortMode, flagSeenLoginBanner } from "../var.js";
 
 import GroupDialog from "./dialog/GroupDialog.vue";
 import GenericDeleteDialog from "./dialog/GenericDeleteDialog.vue";
@@ -196,10 +201,14 @@ export default {
             groupResults: 0,
             isAdmin: false,
             login: false,
-            allowUserCreation: true
+            allowUserCreation: true,
+            showLoginBanner: true
         }
     },
     mounted: function() {
+        if(localStorage.getItem(flagSeenLoginBanner) !== null) {
+            this.showLoginBanner = false;
+        }
         let localSort = localStorage.getItem(storageSortMode);
         if(localSort === 'name') localSort = 'username'; // Account for difference between Jumps/Users
         if(localSort === '-name') localSort = '-username';
@@ -210,6 +219,10 @@ export default {
         this.$emit('postInit');
     },
     methods: {
+        hideLoginBanner() {
+            localStorage.setItem(flagSeenLoginBanner, true);
+            this.showLoginBanner = false;
+        },
         setSort(sort) {
             this.sort = sort;
             localStorage.setItem(storageSortMode, sort);

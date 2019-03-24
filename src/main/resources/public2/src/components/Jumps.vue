@@ -2,7 +2,12 @@
     <div id="main-list" v-cloak>
         <v-layout>
             <v-flex xs12 sm6 offset-sm3>
-                <v-alert :value="loggedIn === false && loading === false" outline type="info" class="m2-card">Login or create an account to create &amp; view additional Jumps</v-alert>
+                <v-alert :value="loggedIn === false && loading === false && showLoginBanner === true" outline type="info" class="m2-card">
+                    <v-layout fill-height>
+                        <v-flex xs10 class="text-xs-left pa-2">Login or create an account to see users &amp; groups.</v-flex>
+                        <v-flex xs2 class="text-xs-right"><v-btn small icon @click="hideLoginBanner"><v-icon small color="info">close</v-icon></v-btn></v-flex>
+                    </v-layout>
+                </v-alert>
                 <v-subheader inset v-if="loading === false">
                     <div v-if="filter !== ''">Jumps ({{ filterResults}} results)</div>
                     <div v-if="filter === ''">Jumps</div>
@@ -93,7 +98,7 @@
 
 <script>
 import axios from "axios";
-import { storageUser, storageJWT, storageSortMode } from "../var.js";
+import { storageUser, storageJWT, storageSortMode, flagSeenLoginBanner } from "../var.js";
 
 import JumpDialog from '../components/dialog/JumpDialog.vue';
 import GenericDeleteDialog from "./dialog/GenericDeleteDialog.vue";
@@ -120,10 +125,14 @@ export default {
             showZero: false,
             items: [],
             filtered: [],
-            loading: true
+            loading: true,
+            showLoginBanner: true
         }
     },
     mounted: function() {
+        if(localStorage.getItem(flagSeenLoginBanner) !== null) {
+            this.showLoginBanner = false;
+        }
         let localSort = localStorage.getItem(storageSortMode);
         if(localSort === 'username') localSort = 'name'; // Account for difference between Jumps/Users
         if(localSort === '-username') localSort = '-name';
@@ -134,6 +143,10 @@ export default {
         this.$emit('postInit');
     },
     methods: {
+        hideLoginBanner() {
+            localStorage.setItem(flagSeenLoginBanner, true);
+            this.showLoginBanner = false;
+        },
         avatar: function(item) {
             if(item.personal === 1) return 'account_circle';
             else if(item.personal === 2) return 'group';
