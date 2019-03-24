@@ -9,6 +9,7 @@ import com.django.jmp.api.v2.User
 import com.django.jmp.api.v2_1.Group
 import com.django.jmp.api.v2_1.GroupMod
 import com.django.jmp.api.v2_1.Health
+import com.django.jmp.api.v2_1.Props
 import com.django.jmp.audit.Logger
 import com.django.jmp.auth.JWTContextMapper
 import com.django.jmp.auth.Providers
@@ -77,7 +78,7 @@ fun main(args: Array<String>) {
         Init() // Ensure that the default admin/roles is created
     }
     val auth = Auth()
-    Providers(store, auth) // Setup user authentication
+    val providers = Providers(store, auth) // Setup user authentication
     Javalin.create().apply {
         disableStartupBanner()
         port(7000)
@@ -103,6 +104,7 @@ fun main(args: Array<String>) {
         routes {
             // General
             Info().addEndpoints()
+            Props(providers).addEndpoints()
 
             // Jumping
             Jump(auth, store).addEndpoints()

@@ -35,8 +35,15 @@ class Providers(config: ConfigStore, private val auth: Auth) {
     companion object {
         val internalProvider = InternalProvider()
         var primaryProvider: BaseProvider? = null
+
+        const val PROP_LDAP = "ldap"
+        const val PROP_LDAP_HOST = "ldap.host"
+        const val PROP_LDAP_PORT = "ldap.port"
+        const val PROP_LDAP_CTX = "ldap.context"
+        const val PROP_LDAP_USER = "ldap.user"
+        const val PROP_LDAP_PASS = "ldap.password"
     }
-    private val properties = Properties()
+    val properties = Properties()
     init {
         val data = File(config.dataPath, "jmp.properties")
         Log.v(javaClass, "Properties file exists: ${data.exists()}")
@@ -59,14 +66,14 @@ class Providers(config: ConfigStore, private val auth: Auth) {
      * Try to setup LDAP provider if it's enabled
      */
     private fun initLDAP() {
-        val useLDAP = properties.getOrDefault("ldap", "false").toString().toBoolean()
+        val useLDAP = properties.getOrDefault(PROP_LDAP, "false").toString().toBoolean()
         Log.v(javaClass, "LDAP: $useLDAP")
         if(!useLDAP) return
-        val ldapHost = properties["ldap.host"].toString()
-        val ldapPort = properties.getOrDefault("ldap.port", 389).toString().toInt()
-        val ldapContext = properties["ldap.context"].toString()
-        val ldapUser = properties["ldap.user"].toString()
-        val ldapPassword = properties["ldap.password"].toString()
+        val ldapHost = properties[PROP_LDAP_HOST].toString()
+        val ldapPort = properties.getOrDefault(PROP_LDAP_PORT, 389).toString().toInt()
+        val ldapContext = properties[PROP_LDAP_CTX].toString()
+        val ldapUser = properties[PROP_LDAP_USER].toString()
+        val ldapPassword = properties[PROP_LDAP_PASS].toString()
 
         primaryProvider = LDAPProvider(ldapHost, ldapPort, ldapContext, ldapUser, ldapPassword)
     }

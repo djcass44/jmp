@@ -44,6 +44,7 @@ class Auth {
         const val headerUser = "X-Auth-User"
 
         val defaultRoleAccess = SecurityUtil.roles(BasicRoles.USER, BasicRoles.ADMIN)
+        val adminRoleAccess = SecurityUtil.roles(BasicRoles.ADMIN)
     }
 
     @Deprecated(message = "Do not use strings when dealing with passwords.")
