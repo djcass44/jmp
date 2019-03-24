@@ -106,7 +106,7 @@ class TokenProvider {
         }
         catch (e: Exception) {
             Log.e(javaClass, "Failed token verification: $e")
-            e.printStackTrace()
+//            e.printStackTrace()
             null
         }
     }

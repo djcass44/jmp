@@ -11,7 +11,8 @@
                     <v-layout>
                         <v-flex xs12>
                             <div v-for="p in props">
-                                <p>{{ p.name }}={{ p.value}}</p>
+                                <v-switch v-if="typeof p.value === 'boolean'" readonly v-model="p.value" :label="p.name"></v-switch>
+                                <v-text-field v-if="typeof p.value !== 'boolean'" readonly :label="p.name" :value="p.value"></v-text-field>
                             </div>
                         </v-flex>
                     </v-layout>
@@ -49,6 +50,14 @@ export default {
                 },
                 {
                     name: 'ldap.user',
+                    value: ''
+                },
+                {
+                    name: 'jmp.ldap.remove_stale',
+                    value: ''
+                },
+                {
+                    name: 'jmp.ldap.sync_rate',
                     value: ''
                 }
             ]

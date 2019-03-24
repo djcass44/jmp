@@ -42,8 +42,14 @@ class Providers(config: ConfigStore, private val auth: Auth) {
         const val PROP_LDAP_CTX = "ldap.context"
         const val PROP_LDAP_USER = "ldap.user"
         const val PROP_LDAP_PASS = "ldap.password"
+
+        const val PROP_LDAP_RM_STALE = "jmp.ldap.remove_stale"
+        const val PROP_LDAP_SYNC = "jmp.ldap.sync_rate"
     }
     val properties = Properties()
+    var removeStale = true
+    var syncRate = (300 * 1000).toLong()
+
     init {
         val data = File(config.dataPath, "jmp.properties")
         Log.v(javaClass, "Properties file exists: ${data.exists()}")
@@ -74,11 +80,18 @@ class Providers(config: ConfigStore, private val auth: Auth) {
         val ldapContext = properties[PROP_LDAP_CTX].toString()
         val ldapUser = properties[PROP_LDAP_USER].toString()
         val ldapPassword = properties[PROP_LDAP_PASS].toString()
+        removeStale = properties.getOrDefault(PROP_LDAP_RM_STALE, "true").toString().toBoolean()
+        syncRate = properties.getOrDefault(PROP_LDAP_SYNC, (300 * 1000).toLong()).toString().toLong()
+        Log.i(javaClass, "Using LDAP sync rate: $syncRate milliseconds")
+        if(syncRate < 5000) {
+            Log.w(javaClass, "LDAP sync rate must be above 5000")
+            syncRate = 5000
+        }
 
         primaryProvider = LDAPProvider(ldapHost, ldapPort, ldapContext, ldapUser, ldapPassword)
     }
 
-    private fun startCRON() = fixedRateTimer(javaClass.name, true, 0, (300 * 1000)) { sync() }
+    private fun startCRON() = fixedRateTimer(javaClass.name, true, 0, syncRate) { sync() }
 
     private fun sync() {
         if(primaryProvider == null) {
@@ -115,10 +128,11 @@ class Providers(config: ConfigStore, private val auth: Auth) {
                     invalid.add(it)
             }
             Log.i(javaClass, "Found ${invalid.size} stale users")
-            invalid.forEach {
-                it.delete()
+            if(removeStale) {
+                invalid.forEach { it.delete() }
+                if (invalid.size > 0) Log.w(javaClass, "Removed ${invalid.size} stale users")
             }
-            if (invalid.size > 0) Log.w(javaClass, "Removed ${invalid.size} stale users")
+            else Log.i(javaClass, "Stale user remove blocked by application property")
         }
     }
 }
