@@ -19,15 +19,27 @@ package com.django.jmp.api.v2_1
 import com.django.jmp.api.Auth
 import com.django.jmp.api.Runner
 import com.django.jmp.auth.Providers
-import io.javalin.apibuilder.ApiBuilder
+import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
 
 class Props(private val providers: Providers): EndpointGroup {
     override fun addEndpoints() {
-        ApiBuilder.get("${Runner.BASE}/v2_1/prop/:target", { ctx ->
+        get("${Runner.BASE}/v2_1/prop/:target", { ctx ->
             val targetProp = ctx.pathParam("target")
-            ctx.status(HttpStatus.OK_200).result(providers.properties.getOrDefault(targetProp, "undefined").toString())
+            val result = when {
+                providers.keyedProps.containsKey(targetProp) -> providers.keyedProps[targetProp]
+                else -> providers.properties.getOrDefault(targetProp, "undefined")
+            }
+            ctx.status(HttpStatus.OK_200).result(result.toString())
         }, Auth.adminRoleAccess)
+        get("${Runner.BASE}/v2_1/uprop/allow_local", { ctx ->
+            val targetProp = "jmp.ext.allow_local"
+            val result = when {
+                providers.keyedProps.containsKey(targetProp) -> providers.keyedProps[targetProp]
+                else -> providers.properties.getOrDefault(targetProp, "undefined")
+            }
+            ctx.status(HttpStatus.OK_200).result(result.toString())
+        }, Auth.defaultRoleAccess)
     }
 }

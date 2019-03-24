@@ -23,7 +23,7 @@
                             <v-list-tile v-ripple @click="setSort('-metaUpdate')"><v-icon v-if="sort === '-metaUpdate'">done</v-icon><v-list-tile-title>Last modified</v-list-tile-title></v-list-tile>
                         </v-list>
                     </v-menu>
-                    <v-btn icon @click="showCreateDialog" v-if="login === true"><v-icon color="grey darken-1">add</v-icon></v-btn>
+                    <v-btn icon @click="showCreateDialog" v-if="login === true && allowUserCreation === true"><v-icon color="grey darken-1">add</v-icon></v-btn>
                 </v-subheader>
                 <div v-if="filtered.length === 0 && loading === false" class="text-xs-center body-1" color="grey darken-1">No users found.</div>
                 <v-card v-if="filtered.length > 0" class="m2-card">
@@ -170,7 +170,8 @@ export default {
             filteredGroups: [],
             groupResults: 0,
             isAdmin: false,
-            login: false
+            login: false,
+            allowUserCreation: true
         }
     },
     mounted: function() {
@@ -365,6 +366,7 @@ export default {
         },
         authChanged(login, admin) {
             this.loadItems();
+            this.checkUserCreate();
             this.isAdmin = false;
             this.login = login;
             if(login === true) {
@@ -376,11 +378,13 @@ export default {
                 else {
                     this.systemInfo = '';
                     this.appInfo = '';
+                    this.$refs.ldap.clear();
                 }
             }
             else {
                 this.systemInfo = '';
                 this.appInfo = '';
+                this.$refs.ldap.clear();
             }
         },
         loadFailed() {
@@ -396,6 +400,15 @@ export default {
                 let result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0;
                 return result * sortOrder;
             }
+        },
+        checkUserCreate() {
+            let that = this;
+            axios.get(`${process.env.VUE_APP_BASE_URL}/v2_1/uprop/allow_local`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
+                that.allowUserCreation = r.data;
+            }).catch(function(err) {
+                console.log(err);
+                that.allowUserCreation = true;
+            });
         }
     }
 };

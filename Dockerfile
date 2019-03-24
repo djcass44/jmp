@@ -22,6 +22,7 @@ ENV ENV_LOG_REQUEST_DIRECTORY="."
 ENV BASE_URL="localhost:8080"
 ENV DRIVER_USER=""
 ENV DRIVER_PASSWORD=""
+ENV JMP_HOME="/data/"
 
 WORKDIR /app
 COPY --from=GRADLE_CACHE /app/build/libs/jmp.jar .

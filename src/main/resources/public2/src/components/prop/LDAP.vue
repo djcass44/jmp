@@ -59,6 +59,10 @@ export default {
                 {
                     name: 'jmp.ldap.sync_rate',
                     value: ''
+                },
+                {
+                    name: 'jmp.ext.allow_local',
+                    value: ''
                 }
             ]
         }
@@ -74,6 +78,9 @@ export default {
                     this.props[i].value = 'undefined';
                 });
             }
+        },
+        clear() {
+            this.init = false;
         }
     }
 };

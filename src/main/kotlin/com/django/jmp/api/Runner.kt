@@ -111,7 +111,7 @@ fun main(args: Array<String>) {
             Similar().addEndpoints()
 
             // Users
-            User(auth).addEndpoints()
+            User(auth, providers).addEndpoints()
 
             // Group
             Group().addEndpoints()

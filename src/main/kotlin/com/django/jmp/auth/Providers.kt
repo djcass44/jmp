@@ -45,10 +45,12 @@ class Providers(config: ConfigStore, private val auth: Auth) {
 
         const val PROP_LDAP_RM_STALE = "jmp.ldap.remove_stale"
         const val PROP_LDAP_SYNC = "jmp.ldap.sync_rate"
+
+        const val PROP_EXT_ALLOW_LOCAL = "jmp.ext.allow_local"
     }
     val properties = Properties()
-    var removeStale = true
-    var syncRate = (300 * 1000).toLong()
+
+    val keyedProps = HashMap<String, Any>()
 
     init {
         val data = File(config.dataPath, "jmp.properties")
@@ -80,18 +82,19 @@ class Providers(config: ConfigStore, private val auth: Auth) {
         val ldapContext = properties[PROP_LDAP_CTX].toString()
         val ldapUser = properties[PROP_LDAP_USER].toString()
         val ldapPassword = properties[PROP_LDAP_PASS].toString()
-        removeStale = properties.getOrDefault(PROP_LDAP_RM_STALE, "true").toString().toBoolean()
-        syncRate = properties.getOrDefault(PROP_LDAP_SYNC, (300 * 1000).toLong()).toString().toLong()
-        Log.i(javaClass, "Using LDAP sync rate: $syncRate milliseconds")
-        if(syncRate < 5000) {
+        keyedProps[PROP_LDAP_RM_STALE] = properties.getOrDefault(PROP_LDAP_RM_STALE, "true").toString().toBoolean()
+        keyedProps[PROP_LDAP_SYNC] = properties.getOrDefault(PROP_LDAP_SYNC, (300 * 1000).toLong()).toString().toLong()
+        Log.i(javaClass, "Using LDAP sync rate: ${keyedProps[PROP_LDAP_SYNC] as Long} milliseconds")
+        if((keyedProps[PROP_LDAP_SYNC] as Long) < 5000) {
             Log.w(javaClass, "LDAP sync rate must be above 5000")
-            syncRate = 5000
+            keyedProps[PROP_LDAP_SYNC] = 5000L
         }
+        keyedProps[PROP_EXT_ALLOW_LOCAL] = properties.getOrDefault(PROP_EXT_ALLOW_LOCAL, "true").toString().toBoolean()
 
         primaryProvider = LDAPProvider(ldapHost, ldapPort, ldapContext, ldapUser, ldapPassword)
     }
 
-    private fun startCRON() = fixedRateTimer(javaClass.name, true, 0, syncRate) { sync() }
+    private fun startCRON() = fixedRateTimer(javaClass.name, true, 0, (keyedProps[PROP_LDAP_SYNC] as Long)) { sync() }
 
     private fun sync() {
         if(primaryProvider == null) {
@@ -128,7 +131,7 @@ class Providers(config: ConfigStore, private val auth: Auth) {
                     invalid.add(it)
             }
             Log.i(javaClass, "Found ${invalid.size} stale users")
-            if(removeStale) {
+            if((keyedProps[PROP_LDAP_RM_STALE] as Boolean)) {
                 invalid.forEach { it.delete() }
                 if (invalid.size > 0) Log.w(javaClass, "Removed ${invalid.size} stale users")
             }
