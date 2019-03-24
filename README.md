@@ -13,8 +13,8 @@ JMP can be installed in 2 different ways.
 Edit [env](env) and add the url the application will be running on
 
 ```bash
-docker build -t jmp:2.1 -f Dockerfile.prod .
-docker run jmp:2.1 -v "./data:/data" -p 7000:7000
+docker build -t jmp:0.3.7 -f Dockerfile.prod .
+docker run jmp:0.3.7 -v "./data:/data" -p 7000:7000
 ```
 
 There is also a docker-compose utility script you can use
@@ -54,6 +54,8 @@ Possible values:
 `-d <value>`: set the level of logging (0 -> 6, lower is more).
 
 ## Setup
+
+This information is also available in a running UI instance via the `?` button or `/setup`. It is more user-oriented.
 
 *Note: replace $BASE_URL with the url the application will be running on.*
 

@@ -83,6 +83,7 @@
                         </v-card-title>
                     </v-card>
                 </div>
+                <div class="ma-4"></div>
             </v-flex>
         </v-layout>
         <JumpDialog ref="dialogjump"

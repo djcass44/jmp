@@ -17,8 +17,8 @@ Set `VUE_APP_FE_URL` to the URL the UI will be running on (e.g. `https://jmp.you
 1. **Using docker** (recommended)
 
 ```bash
-docker build -t jmp:2.1 .
-docker run jmp:2.1 -p 80:80
+docker build -t jmp:0.3.7 .
+docker run jmp:0.3.7 -p 80:80
 ```
 
 2. **Standalone**

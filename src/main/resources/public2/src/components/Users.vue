@@ -134,15 +134,32 @@
                           </v-card>
                         </v-expansion-panel-content>
                         <v-expansion-panel-content>
-                          <template v-slot:header>
-                            <div>Application information</div>
-                          </template>
-                          <v-card>
-                            <v-card-text><code>{{ appInfo }}</code></v-card-text>
-                          </v-card>
+                            <template v-slot:header>
+                                <div>Application information</div>
+                            </template>
+                            <v-card>
+                                <v-list two-line subheader>
+                                  <v-slide-y-transition class="py-0" group>
+                                      <v-list-tile v-for="i in [1]" :key="i" avatar @click="">
+                                          <v-list-tile-avatar size="64" class="mx-2">
+                                              <img src="assets/ic_launcher.png"></img>
+                                          </v-list-tile-avatar>
+                                          <v-list-tile-content>
+                                              <v-list-tile-title>{{ appName }}</v-list-tile-title>
+                                              <v-list-tile-sub-title>Version {{ appInfo['version'] }} API Level {{ appInfo['apiLevel'] }}</v-list-tile-sub-title>
+                                          </v-list-tile-content>
+                                      </v-list-tile>
+                                  </v-slide-y-transition>
+                                </v-list>
+                                <p class="px-4">Powered by JMP</br>Created by Django Cass</p>
+                                <v-card-text>
+                                    <code>{{ appInfo }}</code>
+                                </v-card-text>
+                            </v-card>
                         </v-expansion-panel-content>
                     </v-expansion-panel>
                 </div>
+                <div class="ma-4"></div>
             </v-flex>
         </v-layout>
         <GroupDialog ref="groupDialog"
@@ -203,6 +220,11 @@ export default {
             login: false,
             allowUserCreation: true,
             showLoginBanner: true
+        }
+    },
+    computed: {
+        appName: function() {
+            return process.env.VUE_APP_APP_NAME;
         }
     },
     mounted: function() {
