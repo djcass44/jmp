@@ -25,15 +25,19 @@ import java.util.*
 
 object Groups: UUIDTable() {
     val name = varchar("name", 24).uniqueIndex()
+
+    val from = varchar("from", 24).default("local")
 }
 class Group(id: EntityID<UUID>): UUIDEntity(id) {
     companion object: UUIDEntityClass<Group>(Groups)
 
     var name by Groups.name
     var users by User via GroupUsers
+
+    var from by Groups.from
 }
-data class GroupData(val id: UUID? = UUID.randomUUID(), val name: String) {
-    constructor(group: Group): this(group.id.value, group.name)
+data class GroupData(val id: UUID? = UUID.randomUUID(), val name: String, val from: String = "local") {
+    constructor(group: Group): this(group.id.value, group.name, group.from)
 }
 object GroupUsers: Table() {
     val group = reference("group", Groups).primaryKey(0)

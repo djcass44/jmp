@@ -24,7 +24,7 @@
                             <v-list-tile v-ripple @click="setSort('-metaUpdate')"><v-icon v-if="sort === '-metaUpdate'">done</v-icon><v-list-tile-title>Last modified</v-list-tile-title></v-list-tile>
                         </v-list>
                     </v-menu>
-                    <v-btn icon @click="showCreateDialog" v-if="login === true"><v-icon color="grey darken-1">add</v-icon></v-btn>
+                    <v-btn icon @click="showCreateDialog" v-if="login === true && allowUserCreation === true"><v-icon color="grey darken-1">add</v-icon></v-btn>
                 </v-subheader>
                 <v-card v-if="filtered.length > 0" class="m2-card">
                     <v-list two-line subheader>
@@ -116,6 +116,7 @@
                         </v-card-title>
                     </v-card>
                 </div>
+                <LDAP ref="ldap"></LDAP>
                 <div v-if="systemInfo !== '' && appInfo !== ''">
                     <v-subheader inset>About</v-subheader>
                     <v-expansion-panel>
@@ -163,12 +164,15 @@ import GroupDialog from "./dialog/GroupDialog.vue";
 import GenericDeleteDialog from "./dialog/GenericDeleteDialog.vue";
 import GroupSelectDialog from "./dialog/GroupSelectDialog.vue";
 
+import LDAP from "./prop/LDAP.vue";
+
 export default {
     name: "Users",
     components: {
         GroupDialog,
         GenericDeleteDialog,
-        GroupSelectDialog
+        GroupSelectDialog,
+        LDAP
     },
     data() {
         return {
@@ -191,7 +195,8 @@ export default {
             filteredGroups: [],
             groupResults: 0,
             isAdmin: false,
-            login: false
+            login: false,
+            allowUserCreation: true
         }
     },
     mounted: function() {
@@ -386,21 +391,25 @@ export default {
         },
         authChanged(login, admin) {
             this.loadItems();
+            this.checkUserCreate();
             this.isAdmin = false;
             this.login = login;
             if(login === true) {
                 if(admin === true) {
                     this.loadInfo();
+                    this.$refs.ldap.loadProps();
                     this.isAdmin = true;
                 }
                 else {
                     this.systemInfo = '';
                     this.appInfo = '';
+                    this.$refs.ldap.clear();
                 }
             }
             else {
                 this.systemInfo = '';
                 this.appInfo = '';
+                this.$refs.ldap.clear();
             }
         },
         loadFailed() {
@@ -420,6 +429,15 @@ export default {
         openHome: function(event) {
             window.location.href = process.env.VUE_APP_FE_URL;
         },
+        checkUserCreate() {
+            let that = this;
+            axios.get(`${process.env.VUE_APP_BASE_URL}/v2_1/uprop/allow_local`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
+                that.allowUserCreation = r.data;
+            }).catch(function(err) {
+                console.log(err);
+                that.allowUserCreation = true;
+            });
+        }
     }
 };
 </script>

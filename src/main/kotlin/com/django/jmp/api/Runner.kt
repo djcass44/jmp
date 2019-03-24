@@ -9,8 +9,10 @@ import com.django.jmp.api.v2.User
 import com.django.jmp.api.v2_1.Group
 import com.django.jmp.api.v2_1.GroupMod
 import com.django.jmp.api.v2_1.Health
+import com.django.jmp.api.v2_1.Props
 import com.django.jmp.audit.Logger
 import com.django.jmp.auth.JWTContextMapper
+import com.django.jmp.auth.Providers
 import com.django.jmp.auth.TokenProvider
 import com.django.jmp.db.Config
 import com.django.jmp.db.ConfigStore
@@ -56,8 +58,9 @@ fun main(args: Array<String>) {
     else
         Config().loadEnv()
     Runner.store = store
+    val logger = Logger(store.logRequestDir)
     Log.v(Runner::class.java, "Database config: [${store.url}, ${store.driver}]")
-    Log.v(Runner::class.java, "Application config: [${store.BASE_URL}, ${store.logRequestDir}]")
+    Log.v(Runner::class.java, "Application config: [${store.BASE_URL}, ${store.logRequestDir}, ${store.dataPath}]")
     // Do not allow CORS on an https url
     if(store.BASE_URL.startsWith("https") && arguments.enableCors) throw InvalidSecurityConfigurationException()
     val source = when {
@@ -75,7 +78,7 @@ fun main(args: Array<String>) {
         Init() // Ensure that the default admin/roles is created
     }
     val auth = Auth()
-    val logger = Logger(store.logRequestDir)
+    val providers = Providers(store, auth) // Setup user authentication
     Javalin.create().apply {
         disableStartupBanner()
         port(7000)
@@ -101,13 +104,14 @@ fun main(args: Array<String>) {
         routes {
             // General
             Info().addEndpoints()
+            Props(providers).addEndpoints()
 
             // Jumping
             Jump(auth, store).addEndpoints()
             Similar().addEndpoints()
 
             // Users
-            User(auth).addEndpoints()
+            User(auth, providers).addEndpoints()
 
             // Group
             Group().addEndpoints()

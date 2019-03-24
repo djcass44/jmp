@@ -50,7 +50,7 @@
                         </v-list-tile-action>
                         <v-list-tile-title>Settings</v-list-tile-title>
                     </v-list-tile>
-                    <v-list-tile v-if="!loggedIn" v-ripple @click="openCreateDialog">
+                    <v-list-tile v-if="!loggedIn && allowUserCreation === true" v-ripple @click="openCreateDialog">
                         <v-list-tile-action>
                             <v-icon>person_add</v-icon>
                         </v-list-tile-action>
@@ -75,7 +75,7 @@
 </template>
 
 <script>
-import { storageUser } from "../var.js";
+import { storageUser, storageJWT } from "../var.js";
 import axios from "axios";
 
 export default {
@@ -86,7 +86,8 @@ export default {
             searchQuery: '',
             loggedIn: false,
             isAdmin: false,
-            version: ''
+            version: '',
+            allowUserCreation: true
         }
     },
     computed: {
@@ -166,7 +167,17 @@ export default {
                 this.isAdmin = admin;
             else
                 this.isAdmin = false;
+            this.checkUserCreate();
             this.$emit('jumpsSetLoggedIn', login);
+        },
+        checkUserCreate() {
+            let that = this;
+            axios.get(`${process.env.VUE_APP_BASE_URL}/v2_1/uprop/allow_local`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
+                that.allowUserCreation = r.data;
+            }).catch(function(err) {
+                console.log(err);
+                that.allowUserCreation = true;
+            });
         }
     }
 };

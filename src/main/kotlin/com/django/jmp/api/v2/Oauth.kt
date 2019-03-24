@@ -38,7 +38,7 @@ class Oauth(private val auth: Auth): EndpointGroup {
         // Get a users token
         post("${Runner.BASE}/v2/oauth/token", { ctx ->
             val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
-            val token = auth.getUserToken(basicAuth.username, basicAuth.password.toCharArray()) ?: throw NotFoundResponse()
+            val token = auth.loginUser(basicAuth.username, basicAuth.password) ?: throw NotFoundResponse()
             val user = auth.getUser(basicAuth.username, UUID.fromString(token)) ?: throw BadRequestResponse()
             val jwt = TokenProvider.getInstance().create(basicAuth.username, token) ?: throw BadRequestResponse()
             val newRequestToken = TokenProvider.getInstance().create(basicAuth.username) ?: throw BadRequestResponse()
