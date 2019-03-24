@@ -14,15 +14,6 @@
  *    limitations under the License.
  */
 
-package com.django.jmp.auth.provider
+package com.django.jmp.except
 
-import com.django.jmp.db.dao.GroupData
-import com.django.jmp.db.dao.UserData
-
-interface BaseProvider {
-    fun setup()
-    fun getUsers(): ArrayList<UserData>
-    fun getGroups(): ArrayList<GroupData>
-    fun tearDown()
-    fun getLogin(uid: String, password: String): String?
-}
+class MinimalConnectionBreachException: Exception("This query is minimal or nested, it is not allowed for standard queries.")

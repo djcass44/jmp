@@ -16,13 +16,33 @@
 
 package com.django.jmp.auth.provider
 
+import com.django.jmp.api.Auth
 import com.django.jmp.db.dao.GroupData
 import com.django.jmp.db.dao.UserData
 
-interface BaseProvider {
-    fun setup()
-    fun getUsers(): ArrayList<UserData>
-    fun getGroups(): ArrayList<GroupData>
-    fun tearDown()
-    fun getLogin(uid: String, password: String): String?
+class InternalProvider: BaseProvider {
+    companion object {
+        const val SOURCE_NAME = "local"
+    }
+    private val auth = Auth()
+
+    override fun setup() {
+
+    }
+
+    override fun getUsers(): ArrayList<UserData> {
+        return arrayListOf()
+    }
+
+    override fun getGroups(): ArrayList<GroupData> {
+        return arrayListOf()
+    }
+
+    override fun tearDown() {
+
+    }
+
+    override fun getLogin(uid: String, password: String): String? {
+        return auth.getUserToken(uid, password.toCharArray())
+    }
 }

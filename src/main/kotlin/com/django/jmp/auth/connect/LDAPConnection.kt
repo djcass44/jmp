@@ -16,6 +16,7 @@
 
 package com.django.jmp.auth.connect
 
+import com.django.jmp.except.MinimalConnectionBreachException
 import com.django.log2.logging.Log
 import java.util.*
 import javax.naming.Context
@@ -24,7 +25,12 @@ import javax.naming.directory.InitialDirContext
 import javax.naming.directory.SearchControls
 import javax.naming.directory.SearchResult
 
-class LDAPConnection(private val server: String, private val port: Int = 389, private val contextDN: String, private val serviceUserDN: String, private val serviceUserPassword: String) {
+class LDAPConnection(private val server: String,
+                     private val port: Int = 389,
+                     private val contextDN: String,
+                     private val serviceUserDN: String,
+                     private val serviceUserPassword: String,
+                     private val nested: Boolean = false) {
     var connected = false
         private set
     private lateinit var connection: InitialDirContext
@@ -80,6 +86,7 @@ class LDAPConnection(private val server: String, private val port: Int = 389, pr
      * Run an arbitrary search
      */
     fun searchFilter(filter: String): ArrayList<SearchResult> {
+        if(nested) throw MinimalConnectionBreachException()
         val controls = SearchControls()
         controls.searchScope = SearchControls.SUBTREE_SCOPE
         val searchResults = connection.search(contextDN, filter, controls)
@@ -91,14 +98,19 @@ class LDAPConnection(private val server: String, private val port: Int = 389, pr
         else arrayListOf()
     }
 
+    /**
+     * Verify that a users credentials are correct
+     * Attempts to create a new LDAP connection and login as that user
+     */
     fun checkUserAuth(uid: String, password: String): Boolean {
+        if(nested) throw MinimalConnectionBreachException()
         val user = searchFilter("(uid=$uid)")
-        Log.d(javaClass, "Found user: $user")
-        assert(user.size == 1) // There must be only 1 user with a uid
+//        Log.d(javaClass, "Found user: $user")
+        if(user.size == 0 || user.size > 1) return false  // There must be only 1 user with a uid
         val dn = user[0].nameInNamespace
 
         // Open a new connection with the users creds
-        val verifyConnection = LDAPConnection(server, port, contextDN, dn, password)
+        val verifyConnection = LDAPConnection(server, port, contextDN, dn, password, nested = true)
         val connect = verifyConnection.connected
         Log.i(javaClass, "User credential validation: $connect")
 

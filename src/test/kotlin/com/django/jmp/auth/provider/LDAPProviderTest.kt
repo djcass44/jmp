@@ -16,13 +16,14 @@
 
 package com.django.jmp.auth.provider
 
+import com.django.jmp.auth.connect.LDAPConnection
 import com.django.log2.logging.Log
 import org.junit.jupiter.api.Test
 
 class LDAPProviderTest {
     @Test
     fun testGetUsers() {
-        val provider = LDAPProvider()
+        val provider = LDAPProvider("localhost", 389, "ou=Users,dc=elastic,dc=co", "cn=admin,dc=elastic,dc=co", "password")
         provider.setup()
         assert(provider.connected)
         val users = provider.getUsers()
@@ -31,22 +32,20 @@ class LDAPProviderTest {
     }
     @Test
     fun testLoginCorrect() {
-        val provider = LDAPProvider()
-        provider.setup()
-        assert(provider.connected)
-        val validUser = provider.getLogin("bahaaldineazarmi", "bazarmi")
+        val connection = LDAPConnection("localhost", 389, "ou=Users,dc=elastic,dc=co", "cn=admin,dc=elastic,dc=co", "password")
+        assert(connection.connected)
+        val validUser = connection.checkUserAuth("bahaaldineazarmi", "bazarmi")
         Log.d(javaClass, "Valid user: $validUser")
-        provider.tearDown()
+        connection.close()
         assert(validUser)
     }
     @Test
     fun testLoginIncorrect() {
-        val provider = LDAPProvider()
-        provider.setup()
-        assert(provider.connected)
-        val validUser = provider.getLogin("bahaaldineazarmi", "password")
+        val connection = LDAPConnection("localhost", 389, "ou=Users,dc=elastic,dc=co", "cn=admin,dc=elastic,dc=co", "password")
+        assert(connection.connected)
+        val validUser = connection.checkUserAuth("bahaaldineazarmi", "password")
         Log.d(javaClass, "Valid user: $validUser")
-        provider.tearDown()
+        connection.close()
         assert(!validUser)
     }
 }

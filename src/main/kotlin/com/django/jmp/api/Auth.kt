@@ -17,6 +17,7 @@
 package com.django.jmp.api
 
 import com.amdelamar.jhash.Hash
+import com.django.jmp.auth.Providers
 import com.django.jmp.db.dao.Roles
 import com.django.jmp.db.dao.User
 import com.django.jmp.db.dao.Users
@@ -54,9 +55,11 @@ class Auth {
     }
     @Deprecated(message = "Do not use strings when dealing with passwords.")
     fun hashMatches(password: String, expectedHash: String): Boolean {
+        if(expectedHash.isBlank()) return false
         return hashMatches(password.toCharArray(), expectedHash)
     }
     private fun hashMatches(password: CharArray, expectedHash: String): Boolean {
+        if(expectedHash.isBlank()) return false
         return Hash.password(password).verify(expectedHash)
     }
 
@@ -77,6 +80,19 @@ class Auth {
         else
             throw ConflictResponse()
     }
+    fun loginUser(username: String, password: String): String? {
+        var result: String?
+        if(Providers.primaryProvider != null) { // Try to use primary provider if it exists
+            result = Providers.primaryProvider?.getLogin(username, password)
+            if(result != null) return result
+        }
+        Log.v(javaClass, "Failed to locate user in primary provider, checking local provider")
+        // Fallback to internal database checks
+        result = Providers.internalProvider.getLogin(username, password)
+        Log.d(javaClass, "Found local user: $result")
+        return result
+    }
+
     fun validateUserToken(token: UUID): Boolean {
         return transaction {
             val existing = User.find {
@@ -98,6 +114,21 @@ class Auth {
                 user.token.toString()
             else
                 null
+        }
+    }
+
+    /**
+     * Get a users token without checking password
+     * ONLY USE THIS ONCE EXTERNAL AUTHENTICATION HAS SUCCEEDED
+     */
+    fun getUserTokenWithPrivilege(username: String): String {
+        assert(userExists(username)) // Requires users to be synced already
+        return transaction {
+            val existing = User.find {
+                Users.username eq username
+            }.limit(1)
+            val user = existing.elementAtOrNull(0)
+            return@transaction user?.token.toString()
         }
     }
     // This is an action performed by the system.

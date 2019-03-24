@@ -16,6 +16,7 @@
 
 package com.django.jmp.auth.provider
 
+import com.django.jmp.api.Auth
 import com.django.jmp.auth.connect.LDAPConnection
 import com.django.jmp.db.dao.GroupData
 import com.django.jmp.db.dao.UserData
@@ -24,17 +25,22 @@ import java.util.*
 import javax.naming.AuthenticationException
 import javax.naming.NamingException
 
-class LDAPProvider: BaseProvider {
+class LDAPProvider(private val server: String,
+                   private val port: Int = 389,
+                   private val contextDN: String,
+                   private val serviceUserDN: String,
+                   private val serviceUserPassword: String): BaseProvider {
     companion object {
         const val SOURCE_NAME = "ldap"
     }
+    private val auth = Auth()
     private lateinit var connection: LDAPConnection
 
     var connected = false
         private set
 
     override fun setup() = try {
-        connection = LDAPConnection("localhost", 389, "ou=Users,dc=elastic,dc=co", "cn=admin,dc=elastic,dc=co", "password")
+        connection = LDAPConnection(server, port, contextDN, serviceUserDN, serviceUserPassword)
         connected = connection.connected
         Log.i(javaClass, "LDAP connected: $connected")
     }
@@ -65,5 +71,9 @@ class LDAPProvider: BaseProvider {
         connection.close()
     }
 
-    override fun getLogin(uid: String, password: String) = connection.checkUserAuth(uid, password)
+    override fun getLogin(uid: String, password: String): String? {
+        val valid = connection.checkUserAuth(uid, password)
+        return if (valid) auth.getUserTokenWithPrivilege(uid)
+        else null
+    }
 }

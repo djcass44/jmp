@@ -4,5 +4,6 @@
   "logRequestDir": ".",
   "BASE_URL": "http://localhost:8080",
   "DRIVER_USER": "",
-  "DRIVER_PASSWORD": ""
+  "DRIVER_PASSWORD": "",
+  "dataPath": "./data"
 }
