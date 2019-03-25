@@ -76,7 +76,7 @@ class User(private val auth: dev.castive.jmp.api.Auth, private val providers: Pr
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: ""
             val user = if(jwt == "null" || jwt.isBlank()) null else TokenProvider.getInstance().verify(jwt)
             transaction {
-                if ((user == null || auth.getUserRole(user.username, user.token) == dev.castive.jmp.api.Auth.BasicRoles.USER) && providers.keyedProps[Providers.PROP_EXT_ALLOW_LOCAL] == false) {
+                if ((user == null || auth.getUserRole(user.username, user.token) == dev.castive.jmp.api.Auth.BasicRoles.USER) && !providers.keyedProps[Providers.PROP_EXT_ALLOW_LOCAL]!!.toBoolean()) {
                     Log.i(javaClass, "User ${user?.username} is not allowed to create local accounts [reason: POLICY]")
                     throw UnauthorizedResponse("Creating local accounts has been disabled.")
                 }

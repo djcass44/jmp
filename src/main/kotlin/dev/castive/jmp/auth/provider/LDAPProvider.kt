@@ -28,7 +28,9 @@ class LDAPProvider(private val server: String,
                    private val port: Int = 389,
                    private val contextDN: String,
                    private val serviceUserDN: String,
-                   private val serviceUserPassword: String): BaseProvider {
+                   private val serviceUserPassword: String,
+                   private val filter: String,
+                   private val identifier: String): BaseProvider {
     companion object {
         const val SOURCE_NAME = "ldap"
     }
@@ -52,9 +54,9 @@ class LDAPProvider(private val server: String,
         Log.e(javaClass, "LDAP -> Couldn't connect: $e")
     }
 
-    override fun getUsers(): ArrayList<UserData> {
+    override fun getUsers(): ArrayList<UserData>? {
         val users = arrayListOf<UserData>()
-        val result = connection.searchFilter("(objectClass=inetOrgPerson)")
+        val result = connection.searchFilter(filter) ?: return null
         for (r in result) {
             val username = r.attributes.get("uid").get(0).toString()
             val role = r.attributes.get("objectClass").get(0).toString()
@@ -71,8 +73,12 @@ class LDAPProvider(private val server: String,
     }
 
     override fun getLogin(uid: String, password: String): String? {
-        val valid = connection.checkUserAuth(uid, password)
+        val valid = connection.checkUserAuth(uid, password, identifier)
         return if (valid) auth.getUserTokenWithPrivilege(uid)
         else null
+    }
+
+    override fun getName(): String {
+        return SOURCE_NAME
     }
 }

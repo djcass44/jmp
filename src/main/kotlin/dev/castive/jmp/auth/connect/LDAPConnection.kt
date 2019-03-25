@@ -85,7 +85,11 @@ class LDAPConnection(private val server: String,
     /**
      * Run an arbitrary search
      */
-    fun searchFilter(filter: String): ArrayList<SearchResult> {
+    fun searchFilter(filter: String): ArrayList<SearchResult>? {
+        if(!this::connection.isInitialized) {
+            Log.d(javaClass, "LDAP connection not ready...")
+            return null
+        }
         if(nested) throw MinimalConnectionBreachException()
         val controls = SearchControls()
         controls.searchScope = SearchControls.SUBTREE_SCOPE
@@ -102,11 +106,11 @@ class LDAPConnection(private val server: String,
      * Verify that a users credentials are correct
      * Attempts to create a new LDAP connection and login as that user
      */
-    fun checkUserAuth(uid: String, password: String): Boolean {
+    fun checkUserAuth(uid: String, password: String, identifier: String = "uid"): Boolean {
         if(nested) throw MinimalConnectionBreachException()
-        val user = searchFilter("(uid=$uid)")
+        val user = searchFilter("($identifier=$uid)")
 //        Log.d(javaClass, "Found user: $user")
-        if(user.size == 0 || user.size > 1) return false  // There must be only 1 user with a uid
+        if(user == null || user.size == 0 || user.size > 1) return false  // There must be only 1 user with a uid
         val dn = user[0].nameInNamespace
 
         // Open a new connection with the users creds

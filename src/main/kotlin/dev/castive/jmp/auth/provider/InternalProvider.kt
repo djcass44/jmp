@@ -29,7 +29,7 @@ class InternalProvider: BaseProvider {
 
     }
 
-    override fun getUsers(): ArrayList<UserData> {
+    override fun getUsers(): ArrayList<UserData>? {
         return arrayListOf()
     }
 
@@ -43,5 +43,9 @@ class InternalProvider: BaseProvider {
 
     override fun getLogin(uid: String, password: String): String? {
         return auth.getUserToken(uid, password.toCharArray())
+    }
+
+    override fun getName(): String {
+        return SOURCE_NAME
     }
 }

@@ -23,10 +23,10 @@ import org.junit.jupiter.api.Test
 class LDAPProviderTest {
     @Test
     fun testGetUsers() {
-        val provider = LDAPProvider("localhost", 389, "ou=Users,dc=elastic,dc=co", "cn=admin,dc=elastic,dc=co", "password")
+        val provider = LDAPProvider("localhost", 389, "ou=Users,dc=elastic,dc=co", "cn=admin,dc=elastic,dc=co", "password", "(objectClass=inetOrgPerson)", "uid")
         provider.setup()
         assert(provider.connected)
-        val users = provider.getUsers()
+        val users = provider.getUsers()!!
         assert(users.size == 5)
         provider.tearDown()
     }

@@ -21,8 +21,9 @@ import dev.castive.jmp.db.dao.UserData
 
 interface BaseProvider {
     fun setup()
-    fun getUsers(): ArrayList<UserData>
+    fun getUsers(): ArrayList<UserData>?
     fun getGroups(): ArrayList<GroupData>
     fun tearDown()
     fun getLogin(uid: String, password: String): String?
+    fun getName(): String
 }

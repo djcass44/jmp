@@ -61,6 +61,14 @@ export default {
                     value: ''
                 },
                 {
+                    name: 'jmp.ldap.user_query',
+                    value: ''
+                },
+                {
+                    name: 'jmp.ldap.user_uid',
+                    value: ''
+                },
+                {
                     name: 'jmp.ext.allow_local',
                     value: ''
                 }
