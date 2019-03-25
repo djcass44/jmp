@@ -58,7 +58,7 @@ class LDAPProvider(private val server: String,
         val users = arrayListOf<UserData>()
         val result = connection.searchFilter(filter) ?: return null
         for (r in result) {
-            val username = r.attributes.get("uid").get(0).toString()
+            val username = r.attributes.get(identifier).get(0).toString()
             val role = r.attributes.get("objectClass").get(0).toString()
             Log.d(javaClass, "Found user: $username, $role")
             users.add(UserData(UUID.randomUUID(), username, role, arrayListOf(), 0, 0, SOURCE_NAME))

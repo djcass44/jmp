@@ -4,13 +4,13 @@
             <v-flex xs12 sm6 offset-sm3>
                 <v-alert :value="loggedIn === false && loading === false && showLoginBanner === true" outline type="info" class="m2-card">
                     <v-layout fill-height>
-                        <v-flex xs10 class="text-xs-left pa-2">Login or create an account to create &amp; view additional Jumps</v-flex>
+                        <v-flex xs10 class="text-xs-left pa-2">Login or create an account to create &amp; view additional {{ appNoun }}s</v-flex>
                         <v-flex xs2 class="text-xs-right"><v-btn small icon @click="hideLoginBanner"><v-icon small color="info">close</v-icon></v-btn></v-flex>
                     </v-layout>
                 </v-alert>
                 <v-subheader inset v-if="loading === false">
-                    <div v-if="filter !== ''">Jumps ({{ filterResults}} results)</div>
-                    <div v-if="filter === ''">Jumps</div>
+                    <div v-if="filter !== ''">{{ appNoun }}s ({{ filterResults}} results)</div>
+                    <div v-if="filter === ''">{{ appNoun }}s</div>
                     <v-spacer></v-spacer>
                     <v-menu v-if="loading === false && filtered.length > 1" bottom left offset-y origin="top right" transition="scale-transition" min-width="150">
                         <template v-slot:activator="{ on }">
@@ -78,7 +78,7 @@
                             <div>
                                 <h3 class="display-3 font-weight-light">204</h3>
                                 <div class="subheading">Nothing could be found.</div>
-                                <div class="body grey--text" v-if="items.length === 0">Click the user icon to login and start creating Jumps!</div>
+                                <div class="body grey--text" v-if="items.length === 0">Click the user icon to login and start creating {{ appNoun }}s!</div>
                             </div>
                         </v-card-title>
                     </v-card>
@@ -127,7 +127,8 @@ export default {
             items: [],
             filtered: [],
             loading: true,
-            showLoginBanner: true
+            showLoginBanner: true,
+            appNoun: 'Jump'
         }
     },
     mounted: function() {
@@ -142,6 +143,7 @@ export default {
         else
             this.sort = this.sorts[0];
         this.$emit('postInit');
+        this.appNoun = process.env.VUE_APP_BRAND_NOUN;
     },
     methods: {
         hideLoginBanner() {
@@ -162,7 +164,7 @@ export default {
             this.$emit('snackbar', visible, text);
         },
         showCreateDialog() {
-            this.$refs.dialogjump.setVisible(true, 'New jump point', 'Create');
+            this.$refs.dialogjump.setVisible(true, `New ${process.env.VUE_APP_BRAND_NOUN}`, 'Create');
         },
         copyFailed() {
             this.$emit('snackbar', true, "Failed to copy!")
@@ -203,7 +205,7 @@ export default {
         edit(id) {
             let index = this.indexFromId(id);
             let item = this.items[index];
-            this.$refs.dialogjump.setVisible(true, 'Edit jump point', 'Update', true, item.id, item.name, item.location, index);
+            this.$refs.dialogjump.setVisible(true, `Edit ${process.env.VUE_APP_BRAND_NOUN}`, 'Update', true, item.id, item.name, item.location, index);
         },
         highlight(text) {
             return text.replace(new RegExp("https?:\\/\\/(www\\.)?"), match => {
@@ -253,7 +255,7 @@ export default {
                 that.filterItems();
                 that.checkItemsLength();
                 that.loading = false;
-                that.$emit('snackbar', true, `Failed to load jumps: ${error.response.status}`);
+                that.$emit('snackbar', true, `Failed to load ${process.env.VUE_APP_BRAND_NOUN}s: ${error.response.status}`);
             });
         },
         pushItem(item) {

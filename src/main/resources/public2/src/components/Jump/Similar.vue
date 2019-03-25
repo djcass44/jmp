@@ -2,8 +2,8 @@
     <v-container grid-list-md text-xs-center>
         <v-layout row wrap>
             <v-flex xs12><h1 class="mdl-h1">404</h1></v-flex>
-            <v-flex xs12><p class="mdl-h5">That jump doesn't exist, or you don't have access!</p></v-flex>
-            <v-flex xs12 v-cloak v-if="loading === false"><p>{{ status }}</p></v-flex>
+            <v-flex xs12><p class="mdl-h5">That {{ appNoun }} doesn't exist, or you don't have access!</p></v-flex>
+            <v-flex xs12 v-cloak v-if="loading === false"><p class="subheading">{{ status }}</p></v-flex>
             <v-flex xs12 v-cloak v-if="loading === false">
                 <v-spacer></v-spacer>
                 <div v-for="item in items" :key="item.id">
@@ -46,7 +46,8 @@ export default {
         return {
             status: '',
             items: [],
-            loading: true
+            loading: true,
+            appNoun: 'Jump'
         }
     },
     methods: {
@@ -59,6 +60,7 @@ export default {
     },
     mounted: function() {
         this.$emit('postInit');
+        this.appNoun = process.env.VUE_APP_BRAND_NOUN;
     },
     created() {
         this.loading = true;
@@ -72,9 +74,9 @@ export default {
                     that.items.push(item);
                 });
                 if(that.items.length === 0)
-                    that.status = "No similar jumps could be found.";
+                    that.status = `No similar ${process.env.VUE_APP_BRAND_NOUN}s could be found.`;
                 else
-                    that.status = `Found ${that.items.length} similar jumps...`;
+                    that.status = `Found ${that.items.length} similar ${process.env.VUE_APP_BRAND_NOUN}s...`;
                 that.loading = false;
             }).catch(function (error) {
                 console.log(error);

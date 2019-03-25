@@ -91,16 +91,16 @@ export default {
                     a: "HTTP URLs are marked as red to communicate their lack of security. HTTP websites are being phased out all across the internet and your browser probably already shows warnings.</br></br>The red highlight is only a warning and doesn't interfere with your ability to access them."
                 },
                 {
-                    q: "Why can't I access my personal Jumps sometimes?",
-                    a: "Your login only persists for a set period of time, once it expires you won't be able to access your personal/group Jumps until you login again."
+                    q: `Why can't I access my personal ${process.env.VUE_APP_BRAND_NOUN}s sometimes?`,
+                    a: `Your login only persists for a set period of time, once it expires you won't be able to access your personal/group ${process.env.VUE_APP_BRAND_NOUN}s until you login again.`
                 },
                 {
-                    q: "Why can't I create global Jumps?",
-                    a: "Creating global Jumps is a priviledge given only to Admins. Contact your local SysAdmin if you need your account upgraded."
+                    q: `Why can't I create global ${process.env.VUE_APP_BRAND_NOUN}s?`,
+                    a: `Creating global ${process.env.VUE_APP_BRAND_NOUN}s is a priviledge given only to Admins. Contact your local SysAdmin if you need your account upgraded.`
                 },
                 {
-                    q: "How do I share a Jump with select users?",
-                    a: "Create a Group! When you next create a Jump, set the type to <code>Group</code> and select the Group containing your users.</br>The only people who will be able to use this Jump will be the users in the group."
+                    q: `How do I share a ${process.env.VUE_APP_BRAND_NOUN} with select users?`,
+                    a: `Create a Group! When you next create a ${process.env.VUE_APP_BRAND_NOUN}, set the type to <code>Group</code> and select the Group containing your users.</br>The only people who will be able to use this ${process.env.VUE_APP_BRAND_NOUN} will be the users in the group.`
                 },
                 {
                     q: "I found a bug",

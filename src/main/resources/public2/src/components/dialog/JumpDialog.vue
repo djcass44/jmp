@@ -165,7 +165,7 @@ export default {
             }
             if(localToken === null) {
                 // User cannot create jumps if not auth'd
-                this.$emit('snackbar', true, "Login to create jumps!");
+                this.$emit('snackbar', true, `Login to create ${process.env.VUE_APP_BRAND_NOUN}s!`);
                 this.loading = false;
                 return;
             }

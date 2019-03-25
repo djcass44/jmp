@@ -20,7 +20,7 @@ object Version {
     private const val MAJOR = "0"
     private const val MINOR = "3"
     private const val PATCH = "9"
-    private const val BUILD = "22"
+    private const val BUILD = "24"
 
     fun getVersion() = "${dev.castive.jmp.Version.MAJOR}.${dev.castive.jmp.Version.MINOR}.${dev.castive.jmp.Version.PATCH}-build.${dev.castive.jmp.Version.BUILD}"
 }

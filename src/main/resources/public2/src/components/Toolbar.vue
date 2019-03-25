@@ -138,7 +138,7 @@ export default {
         },
         openJumpDialog: function (event) {
             if(event)
-                this.$emit('dialog-create', true, 'New jump point', 'Create')
+                this.$emit('dialog-create', true, `New ${process.env.VUE_APP_BRAND_NOUN}`, 'Create')
         },
         openDialog: function (event) {
             if(event)
