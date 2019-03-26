@@ -9,7 +9,7 @@
                     </v-layout>
                 </v-alert>
                 <v-subheader inset v-if="loading === false">
-                    <div v-if="filter !== ''">{{ appNoun }}s ({{ filterResults}} results)</div>
+                    <div v-if="filter !== ''">{{ appNoun }}s ({{ filterResults }} results)</div>
                     <div v-if="filter === ''">{{ appNoun }}s</div>
                     <v-spacer></v-spacer>
                     <v-menu v-if="loading === false && filtered.length > 1" bottom left offset-y origin="top right" transition="scale-transition" min-width="150">
@@ -66,6 +66,7 @@
                         </v-slide-y-transition>
                     </v-list>
                 </v-card>
+                <div class="text-xs-center py-2"><v-pagination v-if="filterResults > pageSize" v-model="currentPage" :length="pages" circle @input="filterItems"></v-pagination></div>
                 <div v-if="loading === true" class="text-xs-center pa-4">
                     <v-progress-circular :size="100" color="accent" indeterminate></v-progress-circular>
                 </div>
@@ -114,6 +115,9 @@ export default {
         return {
             filter: '',
             filterResults: 0,
+            pages: 1,
+            currentPage: 1,
+            pageSize: 10,
             sort: 'name',
             sorts: [
                 'name',
@@ -222,7 +226,12 @@ export default {
         },
         setFilter(query) {
             this.filter = query;
+            this.currentPage = 1;
             this.filterItems();
+        },
+        updatePage() {
+            this.pages = Math.max(Math.ceil(this.filterResults / this.pageSize), 1);
+            this.filtered = this.filtered.splice((this.currentPage - 1) * this.pageSize, this.currentPage * this.pageSize);
         },
         filterItems() {
             if(this.filter === '')
@@ -233,6 +242,7 @@ export default {
             });
             this.filtered.sort(this.dynamicSort(this.sort));
             this.filterResults = this.filtered.length;
+            this.updatePage();
         },
         loadItems() {
             let url = `${process.env.VUE_APP_BASE_URL}/v1/jumps`;

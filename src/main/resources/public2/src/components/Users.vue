@@ -13,7 +13,7 @@
                     <v-progress-circular :size="100" color="accent" indeterminate></v-progress-circular>
                 </div>
                 <v-subheader inset v-if="loading === false">
-                    <div v-if="filter !== ''">Users ({{ filterResults}} results)</div>
+                    <div v-if="filter !== ''">Users ({{ filterResults }} results)</div>
                     <div v-if="filter === ''">Users</div>
                     <v-spacer></v-spacer>
                     <v-menu bottom left offset-y origin="top right" transition="scale-transition" min-width="150" v-if="filtered.length > 1">
@@ -62,6 +62,7 @@
                         </v-slide-y-transition>
                     </v-list>
                 </v-card>
+                <div class="text-xs-center py-2"><v-pagination v-if="filterResults > pageSize" v-model="currentPage" :length="pages" circle @input="filterItems"></v-pagination></div>
                 <div v-if="filtered.length === 0 && loading === false">
                     <v-card class="m2-card">
                         <v-card-title primary-title>
@@ -202,6 +203,9 @@ export default {
             filterResults: 0,
             items: [],
             filtered: [],
+            pages: 1,
+            currentPage: 1,
+            pageSize: 10,
             sort: 'username',
             sorts: [
                 'username',
@@ -342,7 +346,12 @@ export default {
         },
         setFilter(query) {
             this.filter = query;
+            this.currentPage = 1;
             this.filterItems();
+        },
+        updatePage() {
+            this.pages = Math.max(Math.ceil(this.filterResults / this.pageSize), 1);
+            this.filtered = this.filtered.splice((this.currentPage - 1) * this.pageSize, this.currentPage * this.pageSize);
         },
         filterItems() {
             if(this.filter === '')
@@ -353,6 +362,7 @@ export default {
             });
             this.filtered.sort(this.dynamicSort(this.sort));
             this.filterResults = this.filtered.length;
+            this.updatePage();
             that.filterGroups();
         },
         filterGroups() {
