@@ -4,9 +4,6 @@
             <v-dialog v-model="dialog" max-width="350">
                 <v-card>
                     <v-card-title class="headline">Set groups</v-card-title>
-                    <div v-if="loading === true" class="text-xs-center pa-4">
-                        <v-progress-circular :size="50" color="accent" indeterminate></v-progress-circular>
-                    </div>
                     <v-list>
                         <v-subheader>Groups</v-subheader>
                         <v-list-tile v-for="group in groups" :key="group.id" @click="">
@@ -17,11 +14,15 @@
                                 <v-checkbox :disabled="loading === true" v-model="group.checked"></v-checkbox>
                             </v-list-tile-action>
                         </v-list-tile>
+                        <p v-if="groups.length === 0 && loading === false" class="text-xs-center pa-1">No groups found.</p>
                     </v-list>
+                    <div v-if="loading === true" class="text-xs-center pa-4">
+                        <v-progress-circular :size="50" color="accent" indeterminate></v-progress-circular>
+                    </div>
                     <v-card-actions>
                         <v-spacer></v-spacer>
                         <v-btn color="pink" flat="flat" @click="dialog = false">Cancel</v-btn>
-                        <v-btn color="pink" flat="flat" @click="apply()">Ok</v-btn>
+                        <v-btn color="pink" flat="flat" @click="apply()" :disabled="loading === true">Ok</v-btn>
                     </v-card-actions>
                 </v-card>
             </v-dialog>
@@ -39,7 +40,6 @@ class GroupModPayload {
         this.rm = rm;
     }
 }
-
 export default {
     data() {
         return {
@@ -58,22 +58,17 @@ export default {
             for(let i = 0; i < this.groups.length; i++) {
                 if(this.groups[i].checked === true && this.loadGroups[i].checked === false) {
                     // Add user to group
-                    // axios.patch(`${process.env.VUE_APP_BASE_URL}/v2_1/groupmod/add?uid=${this.uid}&gid=${this.groups[i].id}`, {}, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).catch(e => {
-                    //     console.log(e);
-                    // });
                     add.push(this.groups[i].id);
                 }
                 else if(this.groups[i].checked === false && this.loadGroups[i].checked === true) {
                     // Remove user from group
-                    // axios.delete(`${process.env.VUE_APP_BASE_URL}/v2_1/groupmod/rm?uid=${this.uid}&gid=${this.groups[i].id}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).catch(e => {
-                    //     console.log(e);
-                    // });
                     rm.push(this.groups[i].id);
                 }
             }
             let payload = new GroupModPayload(add, rm);
             axios.patch(`${process.env.VUE_APP_BASE_URL}/v2_1/groupmod?uid=${this.uid}`, JSON.stringify(payload), { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).catch(e => {
                 console.log(e);
+                that.$emit('snackbar', true, `Failed to update 1 or more groups: ${error.response.status}`);
             });
             this.dialog = false;
         },
@@ -100,7 +95,6 @@ export default {
                         item.checked = false;
                     that.groups.push(item);
                 });
-
                 // get groups user is in
                 that.loading = true;
                 return axios.get(`${process.env.VUE_APP_BASE_URL}/v2_1/user/groups?uid=${that.uid}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
