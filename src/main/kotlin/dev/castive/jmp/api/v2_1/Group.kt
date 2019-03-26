@@ -116,6 +116,7 @@ class Group: EndpointGroup {
                 val existing = Group.findById(id) ?: throw NotFoundResponse("Group not found")
                 // Only allow deletion if user belongs to group (or is admin)
                 if(user.role.name != dev.castive.jmp.api.Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
+                Log.i(javaClass, "${user.username} is removing group ${existing.name}")
                 existing.delete()
                 ctx.status(HttpStatus.NO_CONTENT_204)
             }

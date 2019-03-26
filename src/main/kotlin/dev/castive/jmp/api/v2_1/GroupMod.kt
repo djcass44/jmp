@@ -16,17 +16,17 @@
 
 package dev.castive.jmp.api.v2_1
 
+import com.django.log2.logging.Log
+import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Runner
 import dev.castive.jmp.auth.JWTContextMapper
 import dev.castive.jmp.auth.TokenProvider
 import dev.castive.jmp.auth.response.AuthenticateResponse
 import dev.castive.jmp.db.dao.Group
 import dev.castive.jmp.db.dao.User
-import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
 import io.javalin.ForbiddenResponse
 import io.javalin.NotFoundResponse
-import io.javalin.apibuilder.ApiBuilder.delete
 import io.javalin.apibuilder.ApiBuilder.patch
 import io.javalin.apibuilder.EndpointGroup
 import org.jetbrains.exposed.sql.SizedCollection
@@ -35,11 +35,13 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 class GroupMod: EndpointGroup {
+    data class GroupModPayload(val add: ArrayList<String>, val rm: ArrayList<String>)
+
     override fun addEndpoints() {
-        patch("${Runner.BASE}/v2_1/groupmod/add", { ctx ->
-            val addUser = UUID.fromString(ctx.queryParam("uid"))
-            val addGroup = UUID.fromString(ctx.queryParam("gid"))
-            if(addUser == null || addGroup == null) throw BadRequestResponse("Invalid path parameters")
+        patch("${Runner.BASE}/v2_1/groupmod", { ctx ->
+            val addUser = UUID.fromString(ctx.queryParam("uid")) ?: throw BadRequestResponse("UID cannot be null")
+            val mods = ctx.bodyAsClass(GroupModPayload::class.java)
+
             Log.d(javaClass, "add - queryParams valid")
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("Invalid token")
             Log.d(javaClass, "add - JWT parse valid")
@@ -50,40 +52,30 @@ class GroupMod: EndpointGroup {
             Log.d(javaClass, "add - JWT validation passed")
             transaction {
                 val newUser = User.findById(addUser) ?: throw NotFoundResponse("Invalid uid")
-                val group = Group.findById(addGroup) ?: throw NotFoundResponse("Invalid gid")
-                if(user.role.name == dev.castive.jmp.api.Auth.BasicRoles.ADMIN.name || group.users.contains(user)) {
-                    // Add user to GroupUsers
-                    val newUsers = ArrayList<User>()
-                    newUsers.addAll(group.users)
-                    newUsers.add(newUser)
-                    group.users = SizedCollection(newUsers)
-                    Log.i(javaClass, "${user.username} added ${newUser.username} to group ${group.name}")
+                // Add user to groups
+                for (g in mods.add) {
+                    val group = Group.findById(UUID.fromString(g)) ?: throw NotFoundResponse("Invalid gid: $g")
+                    if(user.role.name == Auth.BasicRoles.ADMIN.name || group.users.contains(user)) {
+                        // Add user to GroupUsers
+                        val newUsers = ArrayList<User>()
+                        newUsers.addAll(group.users)
+                        newUsers.add(newUser)
+                        group.users = SizedCollection(newUsers)
+                        Log.i(javaClass, "${user.username} added ${newUser.username} to group ${group.name}")
+                    }
+                }
+                for (g in mods.rm) {
+                    val group = Group.findById(UUID.fromString(g)) ?: throw NotFoundResponse("Invalid gid: $g")
+                    if(user.role.name == Auth.BasicRoles.ADMIN.name || group.users.contains(user)) {
+                        // Remove user from GroupUsers
+                        val newUsers = ArrayList<User>()
+                        newUsers.addAll(group.users)
+                        newUsers.remove(newUser)
+                        group.users = SizedCollection(newUsers)
+                        Log.i(javaClass, "${user.username} removed ${newUser.username} from group ${group.name}")
+                    }
                 }
             }
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
-        delete("${Runner.BASE}/v2_1/groupmod/rm", { ctx ->
-            val rmUser = UUID.fromString(ctx.queryParam("uid"))
-            val rmGroup = UUID.fromString(ctx.queryParam("gid"))
-            if(rmUser == null || rmGroup == null) throw BadRequestResponse("Invalid path parameters")
-            Log.d(javaClass, "rm - queryParams valid")
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("Invalid token")
-            Log.d(javaClass, "rm - JWT parse valid")
-            val user = TokenProvider.getInstance().verify(jwt) ?: run {
-                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
-                throw ForbiddenResponse("Token verification failed")
-            }
-            Log.d(javaClass, "rm - JWT validation passed")
-            transaction {
-                val oldUser = User.findById(rmUser) ?: throw NotFoundResponse("Invalid uid")
-                val group = Group.findById(rmGroup) ?: throw NotFoundResponse("Invalid gid")
-                if(user.role.name == dev.castive.jmp.api.Auth.BasicRoles.ADMIN.name || group.users.contains(user)) {
-                    val newUsers = ArrayList<User>()
-                    newUsers.addAll(group.users)
-                    newUsers.remove(oldUser)
-                    group.users = SizedCollection(newUsers)
-                    Log.i(javaClass, "${user.username} removed ${oldUser.username} from group ${group.name}")
-                }
-            }
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.defaultRoleAccess)
     }
 }

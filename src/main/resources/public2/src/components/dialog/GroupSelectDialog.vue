@@ -33,6 +33,13 @@
 import axios from "axios";
 import { storageUser, storageJWT } from "../../var.js";
 
+class GroupModPayload {
+    constructor(add, rm) {
+        this.add = add;
+        this.rm = rm;
+    }
+}
+
 export default {
     data() {
         return {
@@ -46,20 +53,28 @@ export default {
     methods: {
         apply() {
             let that = this;
+            let add = [];
+            let rm = [];
             for(let i = 0; i < this.groups.length; i++) {
                 if(this.groups[i].checked === true && this.loadGroups[i].checked === false) {
                     // Add user to group
-                    axios.patch(`${process.env.VUE_APP_BASE_URL}/v2_1/groupmod/add?uid=${this.uid}&gid=${this.groups[i].id}`, {}, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).catch(e => {
-                        console.log(e);
-                    });
+                    // axios.patch(`${process.env.VUE_APP_BASE_URL}/v2_1/groupmod/add?uid=${this.uid}&gid=${this.groups[i].id}`, {}, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).catch(e => {
+                    //     console.log(e);
+                    // });
+                    add.push(this.groups[i].id);
                 }
                 else if(this.groups[i].checked === false && this.loadGroups[i].checked === true) {
                     // Remove user from group
-                    axios.delete(`${process.env.VUE_APP_BASE_URL}/v2_1/groupmod/rm?uid=${this.uid}&gid=${this.groups[i].id}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).catch(e => {
-                        console.log(e);
-                    });
+                    // axios.delete(`${process.env.VUE_APP_BASE_URL}/v2_1/groupmod/rm?uid=${this.uid}&gid=${this.groups[i].id}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).catch(e => {
+                    //     console.log(e);
+                    // });
+                    rm.push(this.groups[i].id);
                 }
             }
+            let payload = new GroupModPayload(add, rm);
+            axios.patch(`${process.env.VUE_APP_BASE_URL}/v2_1/groupmod?uid=${this.uid}`, JSON.stringify(payload), { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).catch(e => {
+                console.log(e);
+            });
             this.dialog = false;
         },
         setVisible(visible, uid) {
