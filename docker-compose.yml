@@ -9,7 +9,19 @@ services:
       - ./data:/data
     command: ["using", "env", "--enable-cors", "-d", "0"]
     environment:
-      - DRIVER_URL=jdbc:sqlite:/data/jmp.db
-      - DRIVER_CLASS=org.sqlite.JDBC
+      - DRIVER_URL=jdbc:postgresql://localhost:5432/jmp
+      - DRIVER_CLASS=org.postgresql.Driver
       - ENV_LOG_REQUEST_DIRECTORY="data/logs"
       - BASE_URL=http://localhost:8080
+      - DRIVER_USER="user"
+      - DRIVER_PASSWORD="password
+  db:
+    image: postgres:11.2-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=user
+      - POSTGRES_DB=jmp

@@ -58,7 +58,9 @@ dependencies {
     implementation("com.auth0:java-jwt:3.7.0")
 
     implementation("org.jetbrains.exposed:exposed:0.11.2")
+    implementation("com.zaxxer:HikariCP:3.3.1")
     runtimeOnly("org.xerial:sqlite-jdbc:3.25.2")
+    runtimeOnly("org.postgresql:postgresql:42.2.2")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.2.0")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.2.0")

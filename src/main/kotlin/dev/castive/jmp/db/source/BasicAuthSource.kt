@@ -19,8 +19,10 @@ package dev.castive.jmp.db.source
 import dev.castive.jmp.db.ConfigStore
 import org.jetbrains.exposed.sql.Database
 
-class BasicAuthSource: DataSource {
+class BasicAuthSource: DataSource() {
     override fun connect(store: ConfigStore) {
+        super.preConnect()
         Database.connect(store.url, store.driver, user = store.tableUser!!, password = store.tablePassword!!)
+        super.connect(store)
     }
 }

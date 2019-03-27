@@ -17,6 +17,9 @@
 package dev.castive.jmp.api
 
 import com.django.log2.logging.Log
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
+import dev.castive.jmp.Arguments
 import dev.castive.jmp.api.v1.Jump
 import dev.castive.jmp.api.v2.*
 import dev.castive.jmp.api.v2.Similar
@@ -33,17 +36,12 @@ import dev.castive.jmp.db.Config
 import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.Init
 import dev.castive.jmp.db.dao.*
-import dev.castive.jmp.db.source.BasicAuthSource
-import dev.castive.jmp.db.source.NoAuthSource
+import dev.castive.jmp.db.source.HikariSource
 import dev.castive.jmp.except.InvalidSecurityConfigurationException
 import io.javalin.Javalin
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.sql.Connection
 import java.util.*
 
 
@@ -58,7 +56,7 @@ fun main(args: Array<String>) {
     Runner.args = args
     Runner.START_TIME = System.currentTimeMillis()
     Log.v(Runner::class.java, Arrays.toString(args))
-    val arguments = dev.castive.jmp.Arguments(args)
+    val arguments = Arguments(args)
     if(arguments.enableCors) Log.w(Runner::class.java, "WARNING: CORS access is enable for ALL origins. DO NOT allow this in production: WARNING")
     Log.setPriorityLevel(arguments.debugLevel)
     val configLocation = if(args.size >= 2 && args[0] == "using") {
@@ -77,21 +75,27 @@ fun main(args: Array<String>) {
     Log.v(Runner::class.java, "Application config: [${store.BASE_URL}, ${store.logRequestDir}, ${store.dataPath}]")
     // Do not allow CORS on an https url
     if(store.BASE_URL.startsWith("https") && arguments.enableCors) throw InvalidSecurityConfigurationException()
-    val source = when {
-        !store.tableUser.isNullOrBlank() && !store.tablePassword.isNullOrBlank() -> BasicAuthSource()
-        else -> NoAuthSource()
-    }
-    source.connect(store)
-    TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE // Fix required for SQLite/Oracle DB
-
+    val ds = HikariDataSource(HikariConfig().apply {
+        jdbcUrl = store.url
+        driverClassName = store.driver
+        username = store.tableUser
+        password = store.tablePassword
+    })
+    HikariSource().connect(ds)
+    Runtime.getRuntime().addShutdownHook(Thread {
+        Log.w(Runner::class.java, "Running shutdown hook, DO NOT forcibly close the application")
+        ds.close()
+    })
+    launch(store, arguments, logger)
+}
+private fun launch(store: ConfigStore, arguments: Arguments, logger: Logger) {
     transaction {
-        addLogger(StdOutSqlLogger)
         SchemaUtils.create(Jumps, Users, Roles, Groups, GroupUsers) // Ensure that the tables are created
         Log.i(javaClass, "Running automated database upgrade (if required)")
         SchemaUtils.createMissingTablesAndColumns(Jumps, Users, Roles, Groups, GroupUsers)
         Init() // Ensure that the default admin/roles is created
     }
-    val auth = dev.castive.jmp.api.Auth()
+    val auth = Auth()
     val providers = Providers(store, auth) // Setup user authentication
     Javalin.create().apply {
         disableStartupBanner()
@@ -101,8 +105,8 @@ fun main(args: Array<String>) {
         accessManager { handler, ctx, permittedRoles ->
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx)
             val user = if(TokenProvider.getInstance().mayBeToken(jwt)) TokenProvider.getInstance().verify(jwt!!) else null
-            val userRole = if(user == null) dev.castive.jmp.api.Auth.BasicRoles.USER else transaction {
-                dev.castive.jmp.api.Auth.BasicRoles.valueOf(user.role.name)
+            val userRole = if(user == null) Auth.BasicRoles.USER else transaction {
+                Auth.BasicRoles.valueOf(user.role.name)
             }
             if(permittedRoles.contains(userRole))
                 handler.handle(ctx)

@@ -16,13 +16,16 @@
 
 package dev.castive.jmp.db.source
 
+import com.zaxxer.hikari.HikariDataSource
 import dev.castive.jmp.db.ConfigStore
 import org.jetbrains.exposed.sql.Database
 
-class NoAuthSource: DataSource() {
+class HikariSource(): DataSource() {
     override fun connect(store: ConfigStore) {
-        super.preConnect()
-        Database.connect(store.url, store.driver)
         super.connect(store)
+    }
+    fun connect(ds: HikariDataSource) {
+        Database.connect(ds)
+        super.postConnect(ds.jdbcUrl)
     }
 }

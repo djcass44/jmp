@@ -16,8 +16,23 @@
 
 package dev.castive.jmp.db.source
 
+import com.django.log2.logging.Log
 import dev.castive.jmp.db.ConfigStore
+import org.jetbrains.exposed.sql.transactions.TransactionManager
+import java.sql.Connection
 
-interface DataSource {
-    fun connect(store: ConfigStore)
+abstract class DataSource {
+    open fun preConnect() {
+        Log.v(javaClass, "Connecting to database")
+    }
+    open fun connect(store: ConfigStore) {
+        postConnect(store.url)
+    }
+    open fun postConnect(url: String) {
+        if(url.contains("sqlite", true) || url.contains("oracle", true)) {
+            // Database requires special transaction levels
+            TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+            Log.i(javaClass, "Compensating for SQLite/Oracle database")
+        }
+    }
 }
