@@ -48,4 +48,8 @@ class InternalProvider: BaseProvider {
     override fun getName(): String {
         return SOURCE_NAME
     }
+
+    override fun connected(): Boolean {
+        return true
+    }
 }

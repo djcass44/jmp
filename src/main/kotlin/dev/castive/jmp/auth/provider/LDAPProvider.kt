@@ -60,7 +60,6 @@ class LDAPProvider(private val server: String,
         for (r in result) {
             val username = r.attributes.get(identifier).get(0).toString()
             val role = r.attributes.get("objectClass").get(0).toString()
-            Log.d(javaClass, "Found user: $username, $role")
             users.add(UserData(UUID.randomUUID(), username, role, arrayListOf(), 0, 0, SOURCE_NAME))
         }
         return users
@@ -80,5 +79,9 @@ class LDAPProvider(private val server: String,
 
     override fun getName(): String {
         return SOURCE_NAME
+    }
+
+    override fun connected(): Boolean {
+        return connection.connected
     }
 }

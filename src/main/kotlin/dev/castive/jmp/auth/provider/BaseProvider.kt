@@ -26,4 +26,5 @@ interface BaseProvider {
     fun tearDown()
     fun getLogin(uid: String, password: String): String?
     fun getName(): String
+    fun connected(): Boolean
 }

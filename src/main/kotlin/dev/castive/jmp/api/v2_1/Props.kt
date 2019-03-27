@@ -16,11 +16,16 @@
 
 package dev.castive.jmp.api.v2_1
 
+import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Runner
 import dev.castive.jmp.auth.Providers
+import dev.castive.jmp.auth.provider.LDAPProvider
+import dev.castive.jmp.db.dao.User
+import dev.castive.jmp.db.dao.Users
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
+import org.jetbrains.exposed.sql.transactions.transaction
 
 class Props(private val providers: Providers): EndpointGroup {
     override fun addEndpoints() {
@@ -40,5 +45,11 @@ class Props(private val providers: Providers): EndpointGroup {
             }
             ctx.status(HttpStatus.OK_200).result(result.toString())
         }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        get("${Runner.BASE}/v2_1/provider/main", { ctx ->
+            val connected = Providers.primaryProvider != null && Providers.primaryProvider!!.connected()
+            val users = transaction { return@transaction User.find { Users.from eq LDAPProvider.SOURCE_NAME }.count() }
+            ctx.status(HttpStatus.OK_200).json(LDAPPayload(connected, users))
+        }, Auth.adminRoleAccess)
     }
 }
+data class LDAPPayload(val connected: Boolean, val users: Int)

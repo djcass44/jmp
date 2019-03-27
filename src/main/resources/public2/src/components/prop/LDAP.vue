@@ -7,6 +7,19 @@
                 <div>LDAP (read-only)</div>
               </template>
               <v-card>
+                  <v-list two-line subheader>
+                    <v-slide-y-transition class="py-0" group>
+                        <v-list-tile v-for="i in [1]" :key="i" avatar @click="">
+                            <v-list-tile-avatar size="48" class="mx-2" :color="ldap_status === true ? 'green' : 'red'">
+                                <v-icon large dark>{{ ldap_status === true ? 'security' : 'error' }}</v-icon>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>LDAP Connected: {{ ldap_status }}</v-list-tile-title>
+                                <v-list-tile-sub-title>LDAP is supplying {{ ldap_users }} users</v-list-tile-sub-title>
+                            </v-list-tile-content>
+                        </v-list-tile>
+                    </v-slide-y-transition>
+                  </v-list>
                 <v-card-text>
                     <v-layout>
                         <v-flex xs12>
@@ -31,6 +44,8 @@ export default {
     data() {
         return {
             init: false,
+            ldap_status: false,
+            ldap_users: 0,
             props: [
                 {
                     name: 'ldap',
@@ -86,6 +101,12 @@ export default {
                     this.props[i].value = 'undefined';
                 });
             }
+            axios.get(`${process.env.VUE_APP_BASE_URL}/v2_1/provider/main`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
+                this.ldap_status = r.data['connected'];
+                this.ldap_users = r.data['users'];
+            }).catch(err => {
+                console.log(err);
+            });
         },
         clear() {
             this.init = false;
