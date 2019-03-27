@@ -70,8 +70,7 @@
                                 <v-icon dark>person</v-icon>
                             </v-avatar>
                             <div>
-                                <h3 class="display-3 font-weight-light">204</h3>
-                                <div class="subheading">No users found.</div>
+                                <h3 class="headline">No users found.</h3>
                             </div>
                         </v-card-title>
                     </v-card>
@@ -116,8 +115,7 @@
                                 <v-icon dark>group</v-icon>
                             </v-avatar>
                             <div>
-                                <h3 class="display-3 font-weight-light">204</h3>
-                                <div class="subheading">No groups found.</div>
+                                <h3 class="headline">No groups found.</h3>
                             </div>
                         </v-card-title>
                     </v-card>

@@ -77,9 +77,8 @@
                                 <v-icon large dark>sentiment_dissatisfied</v-icon>
                             </v-avatar>
                             <div>
-                                <h3 class="display-3 font-weight-light">204</h3>
-                                <div class="subheading">Nothing could be found.</div>
-                                <div class="body grey--text" v-if="items.length === 0">Click the user icon to login and start creating {{ appNoun }}s!</div>
+                                <h3 class="headline">Nothing could be found.</h3>
+                                <div class="subheading" v-if="items.length === 0">Click the user icon to login and start creating {{ appNoun }}s!</div>
                             </div>
                         </v-card-title>
                     </v-card>
