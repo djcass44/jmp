@@ -7,7 +7,6 @@ services:
       - "7000:7000"
     volumes:
       - ./data:/data
-    command: ["using", "env", "--enable-cors", "-d", "0"]
     environment:
       - DRIVER_URL=jdbc:postgresql://localhost:5432/jmp
       - DRIVER_CLASS=org.postgresql.Driver
@@ -15,6 +14,8 @@ services:
       - BASE_URL=http://localhost:8080
       - DRIVER_USER="user"
       - DRIVER_PASSWORD="password
+    depends_on:
+      - db
   db:
     image: postgres:11.2-alpine
     ports:

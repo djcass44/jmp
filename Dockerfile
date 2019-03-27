@@ -30,5 +30,12 @@ COPY --from=GRADLE_CACHE /app/build/libs/jmp.jar .
 EXPOSE 7000
 VOLUME ["/data"]
 
-ENTRYPOINT ["java", "-jar", "jmp.jar"]
-CMD ["using", "env"]
+COPY entrypoint.sh /entrypoint.sh
+
+# Add Tini
+ENV TINI_VERSION v0.18.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod +x /tini
+
+ENTRYPOINT ["/tini", "--"]
+CMD ["/entrypoint.sh"]
