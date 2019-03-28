@@ -32,7 +32,7 @@
 <script>
 
 import axios from "axios";
-import { storageUser, storageJWT } from "../../var.js";
+import { storageUser, storageJWT, BASE_URL } from "../../var.js";
 
 class GroupModPayload {
     constructor(add, rm) {
@@ -66,7 +66,7 @@ export default {
                 }
             }
             let payload = new GroupModPayload(add, rm);
-            axios.patch(`${process.env.VUE_APP_BASE_URL}/v2_1/groupmod?uid=${this.uid}`, JSON.stringify(payload), { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).catch(e => {
+            axios.patch(`${BASE_URL}/v2_1/groupmod?uid=${this.uid}`, JSON.stringify(payload), { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).catch(e => {
                 console.log(e);
                 that.$emit('snackbar', true, `Failed to update 1 or more groups: ${error.response.status}`);
             });
@@ -89,7 +89,7 @@ export default {
             this.loadGroups = [];
             // get groups
             let that = this;
-            axios.get(`${process.env.VUE_APP_BASE_URL}/v2_1/groups`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
+            axios.get(`${BASE_URL}/v2_1/groups`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
                 response.data.map(item => {
                     if(item.checked === undefined)
                         item.checked = false;
@@ -97,13 +97,16 @@ export default {
                 });
                 // get groups user is in
                 that.loading = true;
-                return axios.get(`${process.env.VUE_APP_BASE_URL}/v2_1/user/groups?uid=${that.uid}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
+                return axios.get(`${BASE_URL}/v2_1/user/groups?uid=${that.uid}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
                     let userGroups = [];
                     response.data.map(item => {
                         userGroups.push(item.name);
                     });
                     that.setUserGroups(userGroups);
-                    that.loading = false;
+                    // that.loading = false;
+                    setTimeout(function() {
+                        that.loading = false;
+                    }, 300);
                 }).catch(function(error) {
                     console.log(error);
                     that.loading = false;

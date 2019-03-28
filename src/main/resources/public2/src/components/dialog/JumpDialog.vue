@@ -40,7 +40,7 @@
 </template>
 <script>
 import axios from "axios";
-import { storageUser, storageJWT } from "../../var.js";
+import { storageUser, storageJWT, BASE_URL } from "../../var.js";
 
 const urlRegex = new RegExp('https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)');
 const nameRegex= new RegExp('^[a-zA-Z0-9_.-]*$');
@@ -109,9 +109,9 @@ export default {
         },
         loadGroups() {
             let that = this;
-            axios.get(`${process.env.VUE_APP_BASE_URL}/v2_1/user/info`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
+            axios.get(`${BASE_URL}/v2_1/user/info`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
                 let user = response.data;
-                return axios.get(`${process.env.VUE_APP_BASE_URL}/v2_1/user/groups?uid=${user.id}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
+                return axios.get(`${BASE_URL}/v2_1/user/groups?uid=${user.id}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
                     that.groups = [];
                     response.data.map(item => {
                         that.groups.push(item);
@@ -128,7 +128,7 @@ export default {
         update () {
             this.loading = true;
             this.$refs.form.validate();
-            let url = `${process.env.VUE_APP_BASE_URL}/v1/jumps/edit`;
+            let url = `${BASE_URL}/v1/jumps/edit`;
             let that = this;
             axios.patch(
                 url,
@@ -137,7 +137,7 @@ export default {
             ).then(r => {
                 that.loading = false;
                 that.dialog = false;
-                that.$emit('jumpsSetItem', { name: this.name, location: this.location, personal: this.select === this.items[1] }, that.index);
+                // that.$emit('jumpsSetItem', { name: this.name, location: this.location, personal: this.select === this.items[1] }, that.index);
                 that.$emit('snackbar', true, `Updated ${that.name}`);
             }).catch(e => {
                 console.log(e);
@@ -155,7 +155,7 @@ export default {
             else if(this.select === this.items[2])
                 personalJump = 2;
             let owner = null;
-            let url = `${process.env.VUE_APP_BASE_URL}/v1/jumps/add`;
+            let url = `${BASE_URL}/v1/jumps/add`;
             if(this.select === this.items[2]) {// Owned by group
                 for(let i = 0; i < this.groups.length; i++) {
                     if(this.groups[i].name === this.selectGroup)
@@ -177,11 +177,11 @@ export default {
             ).then(r => {
                 that.loading = false;
                 that.dialog = false;
-                that.$emit('jumpsPushItem', {
-                    name: that.name,
-                    location: that.location,
-                    personal: personalJump
-                });
+                // that.$emit('jumpsPushItem', {
+                //     name: that.name,
+                //     location: that.location,
+                //     personal: personalJump
+                // });
                 that.$emit('snackbar', true, `Added ${that.name}`)
             }).catch(e => {
                 console.log(e);

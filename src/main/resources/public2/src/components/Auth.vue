@@ -6,7 +6,7 @@
     </div> -->
     <v-layout>
         <v-flex xs12 sm6 offset-sm3>
-            <v-alert :value="!api" outline type="error" class="m2-card">Failed to reach API</v-alert>
+            <v-alert :value="!api" outline type="error" class="m2-card">Failed to reach Server</v-alert>
             <div v-if="loading === true" class="text-xs-center pa-4">
                 <v-progress-circular :size="50" color="accent" indeterminate></v-progress-circular>
             </div>
@@ -39,7 +39,7 @@ export default {
                 console.log(err);
                 that.api = false;
                 that.loading = false;
-                that.$emit('snackbar', true, "Failed to reach API");
+                that.$emit('snackbar', true, "Failed to reach Server");
             });
         },
         getAuth() {

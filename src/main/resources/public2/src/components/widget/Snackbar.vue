@@ -17,9 +17,12 @@ export default {
         }
     },
     methods: {
-        setVisible(visible, text) {
+        setVisible(visible, text, timeout) {
             this.snackbar = visible;
             this.text = text;
+            if(timeout !== undefined) {
+                this.timeout = timeout;
+            }
         }
     }
 };

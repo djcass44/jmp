@@ -16,6 +16,7 @@
 
 package dev.castive.jmp.api.v2_1
 
+import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Runner
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
@@ -25,6 +26,6 @@ class Health: EndpointGroup {
     override fun addEndpoints() {
         get("${Runner.BASE}/v2_1/health", { ctx ->
             ctx.status(HttpStatus.OK_200).result("OK")
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.defaultRoleAccess)
     }
 }

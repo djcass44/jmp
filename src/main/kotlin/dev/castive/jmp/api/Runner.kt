@@ -24,10 +24,8 @@ import dev.castive.jmp.api.v1.Jump
 import dev.castive.jmp.api.v2.*
 import dev.castive.jmp.api.v2.Similar
 import dev.castive.jmp.api.v2.User
+import dev.castive.jmp.api.v2_1.*
 import dev.castive.jmp.api.v2_1.Group
-import dev.castive.jmp.api.v2_1.GroupMod
-import dev.castive.jmp.api.v2_1.Health
-import dev.castive.jmp.api.v2_1.Props
 import dev.castive.jmp.audit.Logger
 import dev.castive.jmp.auth.JWTContextMapper
 import dev.castive.jmp.auth.Providers
@@ -120,19 +118,21 @@ private fun launch(store: ConfigStore, arguments: Arguments, logger: Logger) {
             ctx.register(JWTContextMapper::class.java, JWTContextMapper())
         }
         routes {
+            val ws = WebSocket()
+            ws.addEndpoints()
             // General
             Info().addEndpoints()
             Props(providers).addEndpoints()
 
             // Jumping
-            Jump(auth, store).addEndpoints()
+            Jump(auth, store, ws).addEndpoints()
             Similar().addEndpoints()
 
             // Users
-            User(auth, providers).addEndpoints()
+            User(auth, providers, ws).addEndpoints()
 
             // Group
-            Group().addEndpoints()
+            Group(ws).addEndpoints()
             GroupMod().addEndpoints()
 
             // Authentication

@@ -17,7 +17,9 @@
 package dev.castive.jmp.api.v2
 
 import com.django.log2.logging.Log
+import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Runner
+import dev.castive.jmp.api.v2_1.WebSocket
 import dev.castive.jmp.auth.JWTContextMapper
 import dev.castive.jmp.auth.Providers
 import dev.castive.jmp.auth.TokenProvider
@@ -36,7 +38,7 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
-class User(private val auth: dev.castive.jmp.api.Auth, private val providers: Providers): EndpointGroup {
+class User(private val auth: Auth, private val providers: Providers, private val ws: WebSocket): EndpointGroup {
     private fun assertUser(ctx: Context): User {
         val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: run {
             ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
@@ -70,37 +72,41 @@ class User(private val auth: dev.castive.jmp.api.Auth, private val providers: Pr
                 }
             }
             ctx.status(HttpStatus.OK_200).json(users)
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.defaultRoleAccess)
         // Add a user
         put("${Runner.BASE}/v2/user/add", { ctx ->
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: ""
             val user = if(jwt == "null" || jwt.isBlank()) null else TokenProvider.getInstance().verify(jwt)
             transaction {
-                if ((user == null || auth.getUserRole(user.username, user.token) == dev.castive.jmp.api.Auth.BasicRoles.USER) && !providers.keyedProps[Providers.PROP_EXT_ALLOW_LOCAL]!!.toBoolean()) {
+                val allowLocal = providers.keyedProps[Providers.PROP_EXT_ALLOW_LOCAL]?.toBoolean() ?: false // default to most secure setting
+                if ((user == null || auth.getUserRole(user.username, user.token) == Auth.BasicRoles.USER) && !allowLocal) {
                     Log.i(javaClass, "User ${user?.username} is not allowed to create local accounts [reason: POLICY]")
                     throw UnauthorizedResponse("Creating local accounts has been disabled.")
                 }
             }
             val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
+            Log.i(javaClass, "$user is creating a user [name: ${basicAuth.username}]")
             auth.createUser(basicAuth.username, basicAuth.password.toCharArray())
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+            ws.fire(WebSocket.EVENT_UPDATE_USER)
+            ctx.status(HttpStatus.CREATED_201).result(basicAuth.username)
+        }, Auth.defaultRoleAccess)
         // Get information about the current user
         get("${Runner.BASE}/v2/user", { ctx ->
             val u = assertUser(ctx)
             transaction {
                 ctx.status(HttpStatus.OK_200).result(u.role.name)
             }
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2_1/user/info", { ctx ->
             val u = assertUser(ctx)
             transaction {
                 ctx.status(HttpStatus.OK_200).json(UserData(u, arrayListOf()))
             }
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.defaultRoleAccess)
         // Get a users token
         post("${Runner.BASE}/v2/user/auth", { ctx ->
             ctx.status(HttpStatus.MOVED_PERMANENTLY_301).result("This has been deprecated in favour of OAuth2 /v2/oauth")
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.defaultRoleAccess)
         // Change the role of a user
         patch("${Runner.BASE}/v2/user/permission", { ctx ->
             val updated = ctx.bodyAsClass(EditUserData::class.java)
@@ -117,9 +123,10 @@ class User(private val auth: dev.castive.jmp.api.Auth, private val providers: Pr
                 Log.i(javaClass, "User role updated [user: ${user.username}, from: ${user.role.name}, to: ${role.name}] by ${u.username}")
                 user.role = role
                 user.metaUpdate = System.currentTimeMillis()
+                ws.fire(WebSocket.EVENT_UPDATE_USER)
                 ctx.status(HttpStatus.NO_CONTENT_204).json(updated)
             }
-        }, roles(dev.castive.jmp.api.Auth.BasicRoles.ADMIN))
+        }, roles(Auth.BasicRoles.ADMIN))
         // Delete a user
         delete("${Runner.BASE}/v2/user/rm/:id", { ctx ->
             val id = UUID.fromString(ctx.pathParam("id"))
@@ -137,8 +144,9 @@ class User(private val auth: dev.castive.jmp.api.Auth, private val providers: Pr
                 } // Stop the users deleting themselves
                 target.delete()
             }
+            ws.fire(WebSocket.EVENT_UPDATE_USER)
             ctx.status(HttpStatus.NO_CONTENT_204)
-        }, roles(dev.castive.jmp.api.Auth.BasicRoles.ADMIN))
+        }, roles(Auth.BasicRoles.ADMIN))
         get("${Runner.BASE}/v2_1/user/groups", { ctx ->
             val uid = runCatching {
                 UUID.fromString(ctx.queryParam("uid"))
@@ -163,6 +171,6 @@ class User(private val auth: dev.castive.jmp.api.Auth, private val providers: Pr
                 }
             }
             ctx.status(HttpStatus.OK_200).json(items)
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.defaultRoleAccess)
     }
 }
