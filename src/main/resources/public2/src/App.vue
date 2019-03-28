@@ -87,8 +87,8 @@ export default {
         dialogDelete(visible, name, index) {
             this.$refs.dialogrm.setVisible(visible, name, index);
         },
-        snackbar(visible, text) {
-            this.$refs.snackbar.setVisible(visible, text);
+        snackbar(visible, text, timeout) {
+            this.$refs.snackbar.setVisible(visible, text, timeout);
         },
         jumpsLoadItems() {
             this.$refs.jumps.loadItems();

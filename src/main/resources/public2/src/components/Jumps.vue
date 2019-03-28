@@ -99,7 +99,7 @@
 
 <script>
 import axios from "axios";
-import { storageUser, storageJWT, storageSortMode, flagSeenLoginBanner } from "../var.js";
+import { storageUser, storageJWT, storageSortMode, flagSeenLoginBanner, BASE_URL } from "../var.js";
 
 import JumpDialog from '../components/dialog/JumpDialog.vue';
 import GenericDeleteDialog from "./dialog/GenericDeleteDialog.vue";
@@ -159,6 +159,14 @@ export default {
                     break;
             }
         }
+        this.ws.onclose = function(event) {
+            console.log('disconnected');
+            that.$emit('snackbar', true, "Lost connection to server", 0);
+        }
+        // this.ws.onopen = function(event) {
+        //     console.log('connected');
+        //     that.$emit('snackbar', false);
+        // }
     },
     methods: {
         hideLoginBanner() {
@@ -206,7 +214,7 @@ export default {
         doRemove(id) {
             let index = this.indexFromId(id);
             let item = this.items[index];
-            const url = `${process.env.VUE_APP_BASE_URL}/v1/jumps/rm/${item.id}`;
+            const url = `${BASE_URL}/v1/jumps/rm/${item.id}`;
             let that = this;
             axios.delete(url, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
                 that.items.splice(index, 1); // Delete the item, making vue update
@@ -256,12 +264,11 @@ export default {
             this.updatePage();
         },
         loadItems() {
-            let url = `${process.env.VUE_APP_BASE_URL}/v1/jumps`;
             let items = this.items;
             let that = this;
             items.length = 0; // Reset in case this is being called later (e.g. from auth)
             this.loading = true;
-            axios.get(url, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
+            axios.get(`${BASE_URL}/v1/jumps`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
                 that.items = [];
                 console.log("Loaded items: " + response.data.length);
                 response.data.map(item => {

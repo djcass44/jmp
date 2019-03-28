@@ -179,7 +179,7 @@
 
 <script>
 import axios from "axios";
-import { storageUser, storageJWT, storageSortMode, flagSeenLoginBanner } from "../var.js";
+import { storageUser, storageJWT, storageSortMode, flagSeenLoginBanner, BASE_URL } from "../var.js";
 
 import GroupDialog from "./dialog/GroupDialog.vue";
 import GenericDeleteDialog from "./dialog/GenericDeleteDialog.vue";
@@ -256,6 +256,14 @@ export default {
                     break;
             }
         }
+        this.ws.onclose = function(event) {
+            console.log('disconnected');
+            that.$emit('snackbar', true, "Lost connection to server", 0);
+        }
+        // this.ws.onopen = function(event) {
+        //     console.log('connected');
+        //     that.$emit('snackbar', false);
+        // }
     },
     methods: {
         hideLoginBanner() {
@@ -309,7 +317,7 @@ export default {
         doRemove(id) {
             let index = this.indexFromId(id);
             let item = this.items[index];
-            const url = `${process.env.VUE_APP_BASE_URL}/v2/user/rm/${item.id}`;
+            const url = `${BASE_URL}/v2/user/rm/${item.id}`;
             let that = this;
             axios.delete(url, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
                 that.items.splice(index, 1); // Delete the item, making vue update
@@ -324,7 +332,7 @@ export default {
             let index = this.indexFromGId(id);
             let item = this.groups[index];
             let that = this;
-            axios.delete(`${process.env.VUE_APP_BASE_URL}/v2_1/group/rm/${item.id}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
+            axios.delete(`${BASE_URL}/v2_1/group/rm/${item.id}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
                 that.groups.splice(index, 1);
                 that.filterItems();
                 that.snackbar(true, "Successfully removed group");
@@ -343,7 +351,7 @@ export default {
             let index = this.indexFromId(id);
             let item = this.items[index];
             let that = this;
-            axios.patch(`${process.env.VUE_APP_BASE_URL}/v2/user/permission`, `{ "id": "${item.id}", "role": "${role}" }`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
+            axios.patch(`${BASE_URL}/v2/user/permission`, `{ "id": "${item.id}", "role": "${role}" }`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
                 console.log(response.status);
                 that.$emit('snackbar', true, `${item.username} is now a ${role.toLowerCase()}!`);
                 that.loadItems();
@@ -388,13 +396,13 @@ export default {
         },
         loadInfo() {
             let that = this;
-            axios.get(`${process.env.VUE_APP_BASE_URL}/v2/info/system`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
+            axios.get(`${BASE_URL}/v2/info/system`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
                 that.systemInfo = r.data;
             }).catch(function(err) {
                 console.log(err);
                 that.$emit('snackbar', true, `Failed to load system info: ${err.response.status}`);
             });
-            axios.get(`${process.env.VUE_APP_BASE_URL}/v2/info/app`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
+            axios.get(`${BASE_URL}/v2/info/app`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
                 that.appInfo = r.data;
             }).catch(function(err) {
                 console.log(err);
@@ -402,7 +410,7 @@ export default {
             });
         },
         loadItems() {
-            let url = `${process.env.VUE_APP_BASE_URL}/v2/users`;
+            let url = `${BASE_URL}/v2/users`;
             let that = this;
             that.items = [];
             this.loading ++;
@@ -424,7 +432,7 @@ export default {
             let that = this;
             that.groups = [];
             that.loading ++;
-            axios.get(`${process.env.VUE_APP_BASE_URL}/v2_1/groups`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
+            axios.get(`${BASE_URL}/v2_1/groups`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
                 console.log(`Loaded groups: ${response.data.length}`);
                 response.data.map(item => {
                     that.groups.push(item);
@@ -494,7 +502,7 @@ export default {
         },
         checkUserCreate() {
             let that = this;
-            axios.get(`${process.env.VUE_APP_BASE_URL}/v2_1/uprop/allow_local`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
+            axios.get(`${BASE_URL}/v2_1/uprop/allow_local`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
                 that.allowUserCreation = r.data;
             }).catch(function(err) {
                 console.log(err);
