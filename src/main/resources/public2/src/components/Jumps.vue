@@ -131,7 +131,8 @@ export default {
             filtered: [],
             loading: true,
             showLoginBanner: true,
-            appNoun: 'Jump'
+            appNoun: 'Jump',
+            ws: null
         }
     },
     mounted: function() {
@@ -147,6 +148,17 @@ export default {
             this.sort = this.sorts[0];
         this.$emit('postInit');
         this.appNoun = process.env.VUE_APP_BRAND_NOUN;
+
+        let that = this;
+        this.ws = new WebSocket(`ws://${process.env.VUE_APP_URL}/ws`);
+        this.ws.onmessage = function(event) {
+            console.log(`message: ${event.data}`);
+            switch(event.data) {
+                case 'EVENT_UPDATE':
+                    that.loadItems();
+                    break;
+            }
+        }
     },
     methods: {
         hideLoginBanner() {
@@ -298,7 +310,7 @@ export default {
                 return result * sortOrder;
             }
         }
-    }
+    },
 };
 </script>
 <style scoped>

@@ -103,7 +103,10 @@ export default {
                         userGroups.push(item.name);
                     });
                     that.setUserGroups(userGroups);
-                    that.loading = false;
+                    // that.loading = false;
+                    setTimeout(function() {
+                        that.loading = false;
+                    }, 300);
                 }).catch(function(error) {
                     console.log(error);
                     that.loading = false;

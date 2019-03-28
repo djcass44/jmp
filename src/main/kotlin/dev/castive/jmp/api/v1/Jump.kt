@@ -17,9 +17,11 @@
 package dev.castive.jmp.api.v1
 
 import com.django.log2.logging.Log
+import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Runner
 import dev.castive.jmp.api.actions.ImageAction
 import dev.castive.jmp.api.actions.OwnerAction
+import dev.castive.jmp.api.v2_1.WebSocket
 import dev.castive.jmp.auth.JWTContextMapper
 import dev.castive.jmp.auth.TokenProvider
 import dev.castive.jmp.auth.response.AuthenticateResponse
@@ -39,7 +41,7 @@ import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
-class Jump(private val auth: dev.castive.jmp.api.Auth, private val config: ConfigStore): EndpointGroup {
+class Jump(private val auth: Auth, private val config: ConfigStore, private val ws: WebSocket): EndpointGroup {
     private fun jumpExists(name: String): Boolean {
         return transaction {
             val existing = Jump.find {
@@ -71,7 +73,7 @@ class Jump(private val auth: dev.castive.jmp.api.Auth, private val config: Confi
                 }
             }
             ctx.json(items).status(HttpStatus.OK_200)
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2/jump/:target", { ctx ->
             try {
                 val target = ctx.pathParam("target")
@@ -110,7 +112,7 @@ class Jump(private val auth: dev.castive.jmp.api.Auth, private val config: Confi
                 Log.e(Runner::class.java, "Empty target")
                 throw NotFoundResponse()
             }
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.defaultRoleAccess)
         // Add a jump point
         put("${Runner.BASE}/v1/jumps/add", { ctx ->
             val add = ctx.bodyAsClass(JumpData::class.java)
@@ -138,10 +140,11 @@ class Jump(private val auth: dev.castive.jmp.api.Auth, private val config: Confi
                     }
                     ImageAction(add.location).get()
                 }
+                ws.fire(WebSocket.EVENT_UPDATE)
                 ctx.status(HttpStatus.CREATED_201).json(add)
             } else
                 throw ConflictResponse()
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.defaultRoleAccess)
         // Edit a jump point
         patch("${Runner.BASE}/v1/jumps/edit", { ctx ->
             val update = ctx.bodyAsClass(EditJumpData::class.java)
@@ -164,11 +167,12 @@ class Jump(private val auth: dev.castive.jmp.api.Auth, private val config: Confi
                         metaUpdate = System.currentTimeMillis()
                     }
                     ImageAction(update.location).get()
+                    ws.fire(WebSocket.EVENT_UPDATE)
                     ctx.status(HttpStatus.NO_CONTENT_204).json(update)
                 }
                 else throw ForbiddenResponse()
             }
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.defaultRoleAccess)
         // Delete a jump point
         delete("${Runner.BASE}/v1/jumps/rm/:id", { ctx ->
             val id = ctx.pathParam("id").toIntOrNull() ?: throw BadRequestResponse()
@@ -188,7 +192,8 @@ class Jump(private val auth: dev.castive.jmp.api.Auth, private val config: Confi
                 if (result.owner != null && result.owner!!.token != user.token) throw ForbiddenResponse()
                 result.delete()
             }
+            ws.fire(WebSocket.EVENT_UPDATE)
             ctx.status(HttpStatus.NO_CONTENT_204)
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.defaultRoleAccess)
     }
 }

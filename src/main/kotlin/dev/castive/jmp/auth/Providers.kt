@@ -94,6 +94,8 @@ class Providers(config: ConfigStore, private val auth: Auth) {
      * Try to setup LDAP provider if it's enabled
      */
     private fun initLDAP() {
+        // Process non-ldap properties before ldap check
+        keyedProps[PROP_EXT_ALLOW_LOCAL] = properties.getOrDefault(PROP_EXT_ALLOW_LOCAL, "true").toString()
         val useLDAP = properties.getOrDefault(PROP_LDAP, "false").toString().toBoolean()
         Log.v(javaClass, "LDAP: $useLDAP")
         if(!useLDAP) return
@@ -110,7 +112,6 @@ class Providers(config: ConfigStore, private val auth: Auth) {
             Log.w(javaClass, "LDAP sync rate must be above 5000")
             keyedProps[PROP_LDAP_SYNC] = "5000"
         }
-        keyedProps[PROP_EXT_ALLOW_LOCAL] = properties.getOrDefault(PROP_EXT_ALLOW_LOCAL, "true").toString()
         keyedProps[PROP_LDAP_USER_FILTER] = properties[PROP_LDAP_USER_FILTER].toString()
         keyedProps[PROP_LDAP_USER_ID] = properties[PROP_LDAP_USER_ID].toString()
 
