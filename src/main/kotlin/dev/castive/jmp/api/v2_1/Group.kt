@@ -17,6 +17,7 @@
 package dev.castive.jmp.api.v2_1
 
 import com.django.log2.logging.Log
+import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Runner
 import dev.castive.jmp.auth.JWTContextMapper
 import dev.castive.jmp.auth.TokenProvider
@@ -29,14 +30,13 @@ import io.javalin.ForbiddenResponse
 import io.javalin.NotFoundResponse
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
-import io.javalin.security.SecurityUtil.roles
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
-class Group: EndpointGroup {
+class Group(private val ws: WebSocket): EndpointGroup {
     override fun addEndpoints() {
         get("${Runner.BASE}/v2_1/groups", { ctx ->
             val items = arrayListOf<GroupData>()
@@ -63,11 +63,11 @@ class Group: EndpointGroup {
                 }
             }
             ctx.status(HttpStatus.OK_200).json(items)
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2_1/group/:id", { ctx ->
             // Only allow users to view groups they're already in
             ctx.status(HttpStatus.FORBIDDEN_403).result("This endpoint is unfinished, or not ready for public use.")
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.defaultRoleAccess)
         put("${Runner.BASE}/v2_1/group/add", { ctx ->
             val add = ctx.bodyAsClass(GroupData::class.java)
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("Invalid token")
@@ -88,8 +88,9 @@ class Group: EndpointGroup {
                     users = SizedCollection(arrayListOf(user))
                 }
             }
+            ws.fire(WebSocket.EVENT_UPDATE_GROUP)
             ctx.status(HttpStatus.CREATED_201).json(add)
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.defaultRoleAccess)
         patch("${Runner.BASE}/v2_1/group/edit", { ctx ->
             val update = ctx.bodyAsClass(GroupData::class.java)
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("JWT couldn't be parsed")
@@ -102,9 +103,10 @@ class Group: EndpointGroup {
                 // Only allow update if user belongs to group (or is admin)
                 if(user.role.name != dev.castive.jmp.api.Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
                 existing.name = update.name
+                ws.fire(WebSocket.EVENT_UPDATE_GROUP)
                 ctx.status(HttpStatus.NO_CONTENT_204).json(update)
             }
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.defaultRoleAccess)
         delete("${Runner.BASE}/v2_1/group/rm/:id", { ctx ->
             val id = UUID.fromString(ctx.pathParam("id"))
             val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("JWT couldn't be parsed")
@@ -118,8 +120,9 @@ class Group: EndpointGroup {
                 if(user.role.name != dev.castive.jmp.api.Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
                 Log.i(javaClass, "${user.username} is removing group ${existing.name}")
                 existing.delete()
+                ws.fire(WebSocket.EVENT_UPDATE_GROUP)
                 ctx.status(HttpStatus.NO_CONTENT_204)
             }
-        }, roles(dev.castive.jmp.api.Auth.BasicRoles.ADMIN))
+        }, Auth.adminRoleAccess)
     }
 }

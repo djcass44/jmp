@@ -129,10 +129,10 @@ private fun launch(store: ConfigStore, arguments: Arguments, logger: Logger) {
             Similar().addEndpoints()
 
             // Users
-            User(auth, providers).addEndpoints()
+            User(auth, providers, ws).addEndpoints()
 
             // Group
-            Group().addEndpoints()
+            Group(ws).addEndpoints()
             GroupMod().addEndpoints()
 
             // Authentication

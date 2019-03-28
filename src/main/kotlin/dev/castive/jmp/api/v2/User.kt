@@ -19,6 +19,7 @@ package dev.castive.jmp.api.v2
 import com.django.log2.logging.Log
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Runner
+import dev.castive.jmp.api.v2_1.WebSocket
 import dev.castive.jmp.auth.JWTContextMapper
 import dev.castive.jmp.auth.Providers
 import dev.castive.jmp.auth.TokenProvider
@@ -37,7 +38,7 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
-class User(private val auth: Auth, private val providers: Providers): EndpointGroup {
+class User(private val auth: Auth, private val providers: Providers, private val ws: WebSocket): EndpointGroup {
     private fun assertUser(ctx: Context): User {
         val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: run {
             ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
@@ -86,6 +87,8 @@ class User(private val auth: Auth, private val providers: Providers): EndpointGr
             val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
             Log.i(javaClass, "$user is creating a user [name: ${basicAuth.username}]")
             auth.createUser(basicAuth.username, basicAuth.password.toCharArray())
+            ws.fire(WebSocket.EVENT_UPDATE_USER)
+            ctx.status(HttpStatus.CREATED_201).result(basicAuth.username)
         }, Auth.defaultRoleAccess)
         // Get information about the current user
         get("${Runner.BASE}/v2/user", { ctx ->
@@ -120,6 +123,7 @@ class User(private val auth: Auth, private val providers: Providers): EndpointGr
                 Log.i(javaClass, "User role updated [user: ${user.username}, from: ${user.role.name}, to: ${role.name}] by ${u.username}")
                 user.role = role
                 user.metaUpdate = System.currentTimeMillis()
+                ws.fire(WebSocket.EVENT_UPDATE_USER)
                 ctx.status(HttpStatus.NO_CONTENT_204).json(updated)
             }
         }, roles(Auth.BasicRoles.ADMIN))
@@ -140,6 +144,7 @@ class User(private val auth: Auth, private val providers: Providers): EndpointGr
                 } // Stop the users deleting themselves
                 target.delete()
             }
+            ws.fire(WebSocket.EVENT_UPDATE_USER)
             ctx.status(HttpStatus.NO_CONTENT_204)
         }, roles(Auth.BasicRoles.ADMIN))
         get("${Runner.BASE}/v2_1/user/groups", { ctx ->

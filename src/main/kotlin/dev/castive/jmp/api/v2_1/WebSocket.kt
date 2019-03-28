@@ -25,6 +25,8 @@ import io.javalin.websocket.WsSession
 class WebSocket: EndpointGroup {
     companion object {
         const val EVENT_UPDATE = "EVENT_UPDATE"
+        const val EVENT_UPDATE_USER = "EVENT_UPDATE_USER"
+        const val EVENT_UPDATE_GROUP = "EVENT_UPDATE_GROUP"
     }
 
     private val sessions = arrayListOf<WsSession>()

@@ -137,7 +137,7 @@ export default {
             ).then(r => {
                 that.loading = false;
                 that.dialog = false;
-                that.$emit('jumpsSetItem', { name: this.name, location: this.location, personal: this.select === this.items[1] }, that.index);
+                // that.$emit('jumpsSetItem', { name: this.name, location: this.location, personal: this.select === this.items[1] }, that.index);
                 that.$emit('snackbar', true, `Updated ${that.name}`);
             }).catch(e => {
                 console.log(e);
@@ -177,11 +177,11 @@ export default {
             ).then(r => {
                 that.loading = false;
                 that.dialog = false;
-                that.$emit('jumpsPushItem', {
-                    name: that.name,
-                    location: that.location,
-                    personal: personalJump
-                });
+                // that.$emit('jumpsPushItem', {
+                //     name: that.name,
+                //     location: that.location,
+                //     personal: personalJump
+                // });
                 that.$emit('snackbar', true, `Added ${that.name}`)
             }).catch(e => {
                 console.log(e);
