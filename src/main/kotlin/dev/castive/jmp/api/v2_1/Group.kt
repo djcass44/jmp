@@ -32,6 +32,7 @@ import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.SizedCollection
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -119,6 +120,9 @@ class Group(private val ws: WebSocket): EndpointGroup {
                 // Only allow deletion if user belongs to group (or is admin)
                 if(user.role.name != dev.castive.jmp.api.Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
                 Log.i(javaClass, "${user.username} is removing group ${existing.name}")
+                GroupUsers.deleteWhere {
+                    GroupUsers.group eq existing.id
+                }
                 existing.delete()
                 ws.fire(WebSocket.EVENT_UPDATE_GROUP)
                 ctx.status(HttpStatus.NO_CONTENT_204)
