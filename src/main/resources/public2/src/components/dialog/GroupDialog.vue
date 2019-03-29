@@ -78,7 +78,7 @@ export default {
             let that = this;
             axios.put(url, `{ "name": "${this.name}" }`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
                 that.dialog = false;
-                // that.$emit("pushItem");
+                that.$emit("pushItem");
                 that.loading = false;
                 that.$emit('snackbar', true, `Created group ${that.name}`);
             }).catch(e => {
@@ -95,7 +95,7 @@ export default {
             that.item.name = that.name;
             axios.patch(`${process.env.VUE_APP_BASE_URL}/v2_1/group/edit`, JSON.stringify(that.item),{ headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
                 that.dialog = false;
-                // that.$emit("pushItem");
+                that.$emit("pushItem");
                 that.loading = false;
                 that.$emit('snackbar', true, `Updated group ${that.name}`);
             }).catch(e => {

@@ -8,6 +8,9 @@
                         <v-flex xs2 class="text-xs-right"><v-btn small icon @click="hideLoginBanner"><v-icon small color="info">close</v-icon></v-btn></v-flex>
                     </v-layout>
                 </v-alert>
+                <div v-if="loading === true" class="text-xs-center pa-4">
+                    <v-progress-circular :size="100" color="accent" indeterminate></v-progress-circular>
+                </div>
                 <v-subheader inset v-if="loading === false">
                     <div v-if="filter !== ''">{{ appNoun }}s ({{ filterResults }} results)</div>
                     <div v-if="filter === ''">{{ appNoun }}s</div>
@@ -67,9 +70,6 @@
                     </v-list>
                 </v-card>
                 <div class="text-xs-center py-2"><v-pagination v-if="filterResults > pageSize" v-model="currentPage" :length="pages" circle @input="filterItems"></v-pagination></div>
-                <div v-if="loading === true" class="text-xs-center pa-4">
-                    <v-progress-circular :size="100" color="accent" indeterminate></v-progress-circular>
-                </div>
                 <div v-if="(showZero === true || filtered.length === 0) && loading === false">
                     <v-card class="m2-card">
                         <v-card-title primary-title>
@@ -132,7 +132,8 @@ export default {
             loading: true,
             showLoginBanner: true,
             appNoun: 'Jump',
-            ws: null
+            ws: null,
+            wsActive: false
         }
     },
     mounted: function() {
@@ -155,20 +156,23 @@ export default {
             console.log(`message: ${event.data}`);
             switch(event.data) {
                 case 'EVENT_UPDATE':
-                    that.loadItems();
+                    that.updateItems();
                     break;
             }
         }
         this.ws.onclose = function(event) {
             console.log('disconnected');
             that.$emit('snackbar', true, "Lost connection to server", 0);
+            that.wsActive = true;
         }
-        // this.ws.onopen = function(event) {
-        //     console.log('connected');
-        //     that.$emit('snackbar', false);
-        // }
+        this.ws.onopen = function(event) {
+            that.wsActive = false;
+        }
     },
     methods: {
+        prod(msg) {
+            this.ws.send(msg);
+        },
         hideLoginBanner() {
             localStorage.setItem(flagSeenLoginBanner, true);
             this.showLoginBanner = false;
@@ -184,9 +188,11 @@ export default {
             this.filterItems();
         },
         snackbar(visible, text) {
+            this.prod();
             this.$emit('snackbar', visible, text);
         },
         showCreateDialog() {
+            this.prod();
             this.$refs.dialogjump.setVisible(true, `New ${process.env.VUE_APP_BRAND_NOUN}`, 'Create');
         },
         copyFailed() {
@@ -206,12 +212,15 @@ export default {
             return -1;
         },
         remove(id) {
+            this.prod();
             this.showGDD(id);
         },
         showGDD(id) {
+            this.prod();
             this.$refs.deleteDialog.setVisible(true, id);
         },
         doRemove(id) {
+            this.prod();
             let index = this.indexFromId(id);
             let item = this.items[index];
             const url = `${BASE_URL}/v1/jumps/rm/${item.id}`;
@@ -226,6 +235,7 @@ export default {
             });
         },
         edit(id) {
+            this.prod();
             let index = this.indexFromId(id);
             let item = this.items[index];
             this.$refs.dialogjump.setVisible(true, `Edit ${process.env.VUE_APP_BRAND_NOUN}`, 'Update', true, item.id, item.name, item.location, index);
@@ -253,6 +263,7 @@ export default {
             this.filtered = this.filtered.splice((this.currentPage - 1) * this.pageSize, this.pageSize);
         },
         filterItems() {
+            this.prod();
             if(this.filter === '')
                 this.filtered = this.items;
             let that = this;
@@ -264,6 +275,12 @@ export default {
             this.updatePage();
         },
         loadItems() {
+            if(this.wsActive === true)
+                return;
+            this.updateItems();
+        },
+        updateItems() {
+            this.prod();
             let items = this.items;
             let that = this;
             items.length = 0; // Reset in case this is being called later (e.g. from auth)
@@ -277,12 +294,16 @@ export default {
                 });
                 that.filterItems();
                 that.checkItemsLength();
-                that.loading = false;
+                setTimeout(() => {
+                    that.loading = false;
+                }, 300);
             }).catch(function(error) {
                 console.log(error); // API is probably unreachable
                 that.filterItems();
                 that.checkItemsLength();
-                that.loading = false;
+                setTimeout(() => {
+                    that.loading = false;
+                }, 300);
                 that.$emit('snackbar', true, `Failed to load ${process.env.VUE_APP_BRAND_NOUN}s: ${error.response.status}`);
             });
         },
@@ -301,7 +322,7 @@ export default {
             this.loggedIn = loggedIn;
         },
         authChanged(login, admin) {
-            this.loadItems();
+            this.updateItems();
         },
         loadFailed() {
             this.loading = false;

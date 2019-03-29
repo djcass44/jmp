@@ -222,7 +222,8 @@ export default {
             login: false,
             allowUserCreation: true,
             showLoginBanner: true,
-            ws: null
+            ws: null,
+            wsActive: false
         }
     },
     computed: {
@@ -249,23 +250,27 @@ export default {
             console.log(`message: ${event.data}`);
             switch(event.data) {
                 case 'EVENT_UPDATE_USER':
-                    that.loadItems();
+                    that.updateItems();
                     break;
                 case 'EVENT_UPDATE_GROUP':
-                    that.loadGroups();
+                    that.updateGroups();
                     break;
             }
         }
         this.ws.onclose = function(event) {
             console.log('disconnected');
             that.$emit('snackbar', true, "Lost connection to server", 0);
+            that.wsActive = false;
         }
-        // this.ws.onopen = function(event) {
-        //     console.log('connected');
-        //     that.$emit('snackbar', false);
-        // }
+        this.ws.onopen = function(event) {
+            console.log('connected');
+            that.wsActive = true;
+        }
     },
     methods: {
+        prod(msg) {
+            this.ws.send(msg);
+        },
         hideLoginBanner() {
             localStorage.setItem(flagSeenLoginBanner, true);
             this.showLoginBanner = false;
@@ -276,18 +281,23 @@ export default {
             this.filterItems();
         },
         showCreateDialog() {
+            this.prod();
             this.$emit('dialog-create', true);
         },
         showGCD(create, item) {
+            this.prod();
             this.$refs.groupDialog.setVisible(true, create, item);
         },
         showGDD(id) {
+            this.prod();
             this.$refs.deleteDialog.setVisible(true, id);
         },
         showGSD(uid) {
+            this.prod();
             this.$refs.groupSelectDialog.setVisible(true, uid);
         },
         snackbar(visible, text) {
+            this.prod();
             this.$emit('snackbar', visible, text);
         },
         capitalize(s) {
@@ -312,9 +322,11 @@ export default {
             return -1;
         },
         remove(id) {
+            this.prod();
             this.$refs.dialogrmuser.setVisible(true, id);
         },
         doRemove(id) {
+            this.prod();
             let index = this.indexFromId(id);
             let item = this.items[index];
             const url = `${BASE_URL}/v2/user/rm/${item.id}`;
@@ -329,6 +341,7 @@ export default {
             });
         },
         removeGroup(id) {
+            this.prod();
             let index = this.indexFromGId(id);
             let item = this.groups[index];
             let that = this;
@@ -348,6 +361,7 @@ export default {
             this.setState(id, "USER");
         },
         setState(id, role) {
+            this.prod();
             let index = this.indexFromId(id);
             let item = this.items[index];
             let that = this;
@@ -375,6 +389,7 @@ export default {
             this.filtered = this.filtered.splice((this.currentPage - 1) * this.pageSize, this.pageSize);
         },
         filterItems() {
+            this.prod();
             if(this.filter === '')
                 this.filtered = this.items;
             let that = this;
@@ -386,6 +401,7 @@ export default {
             this.updatePage();
         },
         filterGroups() {
+            this.prod();
             if(this.filter === '')
                 this.filteredGroups = this.groups;
             let that = this;
@@ -410,6 +426,11 @@ export default {
             });
         },
         loadItems() {
+            if(this.wsActive === true)
+                return;
+            this.updateItems();
+        },
+        updateItems() {
             let url = `${BASE_URL}/v2/users`;
             let that = this;
             that.items = [];
@@ -419,16 +440,25 @@ export default {
                 response.data.map(item => {
                     that.items.push(item);
                 });
-                that.loading --;
+                setTimeout(() => {
+                    that.loading --;
+                }, 300);
                 that.filterItems();
             }).catch(function(error) {
                 console.log(error); // API is probably unreachable
-                that.loading --;
+                setTimeout(() => {
+                    that.loading --;
+                }, 300);
                 that.filterItems();
                 that.$emit('snackbar', true, `Failed to load users: ${error.response.status}`);
             });
         },
         loadGroups() {
+            if(this.wsActive === true)
+                return;
+            this.updateGroups();
+        },
+        updateGroups() {
             let that = this;
             that.groups = [];
             that.loading ++;
@@ -438,30 +468,36 @@ export default {
                     that.groups.push(item);
                 });
                 that.filterGroups();
-                that.loading --;
+                setTimeout(() => {
+                    that.loading --;
+                }, 300);
             }).catch(function(error) {
                 console.log(error);
                 that.filterGroups();
-                that.loading --;
+                setTimeout(() => {
+                    that.loading --;
+                }, 300);
                 that.$emit('snackbar', true, `Failed to load groups: ${error.response.status}`);
             });
         },
         pushItem(item) {
             // this.items.push(item);
             // this.filterItems();
-            // this.loadItems();
+            this.loadItems();
+            this.loadGroups();
         },
         setItem(item, index) {
             // this.$set(this.items, index, item);
             // TODO dont reload everything on edit
-            // this.loadItems();
+            this.loadItems();
+            this.loadGroups();
         },
         setLoggedIn(loggedIn) {
             this.loggedIn = loggedIn;
         },
         authChanged(login, admin) {
-            this.loadItems();
-            this.loadGroups();
+            this.updateItems();
+            this.updateGroups();
             this.checkUserCreate();
             this.isAdmin = false;
             this.login = login;
