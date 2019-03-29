@@ -19,15 +19,12 @@ package dev.castive.jmp.api.v2
 import com.django.log2.logging.Log
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Runner
+import dev.castive.jmp.api.actions.UserAction
 import dev.castive.jmp.api.v2_1.WebSocket
-import dev.castive.jmp.auth.JWTContextMapper
 import dev.castive.jmp.auth.Providers
-import dev.castive.jmp.auth.TokenProvider
-import dev.castive.jmp.auth.response.AuthenticateResponse
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.User
 import io.javalin.BadRequestResponse
-import io.javalin.Context
 import io.javalin.ForbiddenResponse
 import io.javalin.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.*
@@ -39,21 +36,9 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 class User(private val auth: Auth, private val providers: Providers, private val ws: WebSocket): EndpointGroup {
-    private fun assertUser(ctx: Context): User {
-        val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: run {
-            ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
-            throw ForbiddenResponse("Token verification failed")
-        }
-        Log.d(javaClass, "JWT parse valid")
-        return TokenProvider.getInstance().verify(jwt) ?: run {
-            ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
-            throw ForbiddenResponse("Token verification failed")
-        }
-    }
-
     override fun addEndpoints() {
         get("${Runner.BASE}/v2/users", { ctx ->
-            assertUser(ctx)
+            UserAction.get(ctx)
             Log.d(javaClass, "list - JWT validation passed")
             val users = arrayListOf<UserData>()
             transaction {
@@ -75,8 +60,7 @@ class User(private val auth: Auth, private val providers: Providers, private val
         }, Auth.defaultRoleAccess)
         // Add a user
         put("${Runner.BASE}/v2/user/add", { ctx ->
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: ""
-            val user = if(jwt == "null" || jwt.isBlank()) null else TokenProvider.getInstance().verify(jwt)
+            val user = UserAction.getOrNull(ctx)
             transaction {
                 val allowLocal = providers.keyedProps[Providers.PROP_EXT_ALLOW_LOCAL]?.toBoolean() ?: false // default to most secure setting
                 if ((user == null || auth.getUserRole(user.username, user.token) == Auth.BasicRoles.USER) && !allowLocal) {
@@ -92,13 +76,13 @@ class User(private val auth: Auth, private val providers: Providers, private val
         }, Auth.defaultRoleAccess)
         // Get information about the current user
         get("${Runner.BASE}/v2/user", { ctx ->
-            val u = assertUser(ctx)
+            val u = UserAction.get(ctx)
             transaction {
                 ctx.status(HttpStatus.OK_200).result(u.role.name)
             }
         }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2_1/user/info", { ctx ->
-            val u = assertUser(ctx)
+            val u = UserAction.get(ctx)
             transaction {
                 ctx.status(HttpStatus.OK_200).json(UserData(u, arrayListOf()))
             }
@@ -110,7 +94,7 @@ class User(private val auth: Auth, private val providers: Providers, private val
         // Change the role of a user
         patch("${Runner.BASE}/v2/user/permission", { ctx ->
             val updated = ctx.bodyAsClass(EditUserData::class.java)
-            val u = assertUser(ctx)
+            val u = UserAction.get(ctx)
             transaction {
                 val user = User.findById(updated.id) ?: throw BadRequestResponse()
                 // Block dropping the superuser from admin
@@ -130,7 +114,7 @@ class User(private val auth: Auth, private val providers: Providers, private val
         // Delete a user
         delete("${Runner.BASE}/v2/user/rm/:id", { ctx ->
             val id = UUID.fromString(ctx.pathParam("id"))
-            val user = assertUser(ctx)
+            val user = UserAction.get(ctx)
             transaction {
                 val target = User.findById(id) ?: throw BadRequestResponse()
                 Log.i(javaClass, "[${user.username}] is removing ${target.username}")
@@ -154,8 +138,7 @@ class User(private val auth: Auth, private val providers: Providers, private val
                 throw BadRequestResponse("Bad UUID")
             }
             val items = arrayListOf<GroupData>()
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: ""
-            val user = if(jwt == "null" || jwt.isBlank()) null else TokenProvider.getInstance().verify(jwt)
+            val user = UserAction.getOrNull(ctx)
             if(user != null) {
                 transaction {
                     val getUser = User.findById(uid) ?: throw BadRequestResponse("Requested user is null")

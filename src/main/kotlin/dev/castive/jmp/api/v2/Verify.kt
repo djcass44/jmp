@@ -16,22 +16,23 @@
 
 package dev.castive.jmp.api.v2
 
+import com.django.log2.logging.Log
+import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Runner
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
-import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class Verify(private val auth: dev.castive.jmp.api.Auth): EndpointGroup {
+class Verify(private val auth: Auth): EndpointGroup {
     override fun addEndpoints() {
         // Verify a users token is still valid
         get("${Runner.BASE}/v2/verify/token", { ctx ->
             ctx.status(HttpStatus.MOVED_PERMANENTLY_301).result("This has been deprecated in favour of OAuth2 /v2/oauth")
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.defaultRoleAccess)
         // Verify a user still exists
         get("${Runner.BASE}/v2/verify/user/:name", { ctx ->
             val name = ctx.pathParam("name")
@@ -46,18 +47,15 @@ class Verify(private val auth: dev.castive.jmp.api.Auth): EndpointGroup {
                 if (result == null) {
                     Log.w(javaClass, "User: $name failed verification [IP: ${ctx.ip()}, UA: ${ctx.userAgent()}]")
                     throw BadRequestResponse()
-                } else {
-                    if (auth.validateUserToken(result.token)) {
-                        ctx.status(HttpStatus.OK_200).result(name)
-                    } else {
-                        Log.w(
-                            javaClass,
-                            "User: $name exists, however their token is invalid [IP: ${ctx.ip()}, UA: ${ctx.userAgent()}]"
-                        )
+                }
+                else {
+                    if (auth.validateUserToken(result.token)) ctx.status(HttpStatus.OK_200).result(name)
+                    else {
+                        Log.w(javaClass, "User: $name exists, however their token is invalid [IP: ${ctx.ip()}, UA: ${ctx.userAgent()}]")
                         throw BadRequestResponse()
                     }
                 }
             }
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.defaultRoleAccess)
     }
 }

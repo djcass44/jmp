@@ -21,10 +21,8 @@ import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Runner
 import dev.castive.jmp.api.actions.ImageAction
 import dev.castive.jmp.api.actions.OwnerAction
+import dev.castive.jmp.api.actions.UserAction
 import dev.castive.jmp.api.v2_1.WebSocket
-import dev.castive.jmp.auth.JWTContextMapper
-import dev.castive.jmp.auth.TokenProvider
-import dev.castive.jmp.auth.response.AuthenticateResponse
 import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.Jump
@@ -64,8 +62,7 @@ class Jump(private val auth: Auth, private val config: ConfigStore, private val 
         // List all items in Json format
         get("${Runner.BASE}/v1/jumps", { ctx ->
             val items = arrayListOf<JumpData>()
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: ""
-            val user = if(jwt == "null" || jwt.isBlank()) null else TokenProvider.getInstance().verify(jwt)
+            val user = UserAction.getOrNull(ctx)
             val userJumps = OwnerAction.getInstance().getUserVisibleJumps(user)
             transaction {
                 userJumps.forEach {
@@ -81,16 +78,8 @@ class Jump(private val auth: Auth, private val config: ConfigStore, private val 
                     throw EmptyPathException()
                 /**
                  * 1. Try to get JWT token
-                 * 2. Assume no token, redirect to checker
                  */
-                val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: ""
-                // Disabled below due to causing #31 - castive
-//                if (jwt.isBlank()) {
-//                    Log.d(javaClass, "User has no token, redirecting for check...")
-//                    ctx.status(HttpStatus.FOUND_302).redirect("${config.BASE_URL}/jmp?query=$target")
-//                    return@get
-//                }
-                val user = if(jwt.isBlank()) null else TokenProvider.getInstance().verify(jwt)
+                val user = UserAction.getOrNull(ctx)
                 transaction {
                     Log.d(javaClass, "User information: [name: ${user?.username}, token: ${user?.token}]")
                     Log.d(javaClass, "Found user: ${user != null}")
@@ -117,14 +106,7 @@ class Jump(private val auth: Auth, private val config: ConfigStore, private val 
         put("${Runner.BASE}/v1/jumps/add", { ctx ->
             val add = ctx.bodyAsClass(JumpData::class.java)
             val groupID = kotlin.runCatching { UUID.fromString(ctx.queryParam("gid")) }.getOrNull()
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: run {
-                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
-                throw ForbiddenResponse("Token verification failed")
-            }
-            val user = TokenProvider.getInstance().verify(jwt) ?: run {
-                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
-                throw ForbiddenResponse("Token verification failed")
-            }
+            val user = UserAction.get(ctx)
             // Block non-admin user from adding global jumps
             if (add.personal == JumpData.TYPE_GLOBAL && transaction { return@transaction user.role.name != dev.castive.jmp.api.Auth.BasicRoles.ADMIN.name }) throw ForbiddenResponse()
             if (!jumpExists(add.name, user.username, user.token)) {
@@ -148,14 +130,7 @@ class Jump(private val auth: Auth, private val config: ConfigStore, private val 
         // Edit a jump point
         patch("${Runner.BASE}/v1/jumps/edit", { ctx ->
             val update = ctx.bodyAsClass(EditJumpData::class.java)
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: run {
-                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
-                throw ForbiddenResponse("Token verification failed")
-            }
-            val user = TokenProvider.getInstance().verify(jwt) ?: run {
-                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
-                throw ForbiddenResponse("Token verification failed")
-            }
+            val user = UserAction.get(ctx)
             transaction {
                 val existing = Jump.findById(update.id) ?: throw NotFoundResponse()
 
@@ -176,14 +151,7 @@ class Jump(private val auth: Auth, private val config: ConfigStore, private val 
         // Delete a jump point
         delete("${Runner.BASE}/v1/jumps/rm/:id", { ctx ->
             val id = ctx.pathParam("id").toIntOrNull() ?: throw BadRequestResponse()
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: run {
-                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
-                throw ForbiddenResponse("Token verification failed")
-            }
-            val user = TokenProvider.getInstance().verify(jwt) ?: run {
-                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
-                throw ForbiddenResponse("Token verification failed")
-            }
+            val user = UserAction.get(ctx)
             transaction {
                 val result = Jump.findById(id) ?: throw NotFoundResponse()
                 // 403 if jump is global and user ISN'T admin

@@ -19,12 +19,9 @@ package dev.castive.jmp.api.v2_1
 import com.django.log2.logging.Log
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Runner
-import dev.castive.jmp.auth.JWTContextMapper
-import dev.castive.jmp.auth.TokenProvider
-import dev.castive.jmp.auth.response.AuthenticateResponse
+import dev.castive.jmp.api.actions.UserAction
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.Group
-import io.javalin.BadRequestResponse
 import io.javalin.ConflictResponse
 import io.javalin.ForbiddenResponse
 import io.javalin.NotFoundResponse
@@ -41,8 +38,7 @@ class Group(private val ws: WebSocket): EndpointGroup {
     override fun addEndpoints() {
         get("${Runner.BASE}/v2_1/groups", { ctx ->
             val items = arrayListOf<GroupData>()
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: ""
-            val user = if(jwt == "null" || jwt.isBlank()) null else TokenProvider.getInstance().verify(jwt)
+            val user = UserAction.getOrNull(ctx)
             if(user != null) {
                 transaction {
                     if(user.role.name == dev.castive.jmp.api.Auth.BasicRoles.ADMIN.name) {
@@ -71,12 +67,7 @@ class Group(private val ws: WebSocket): EndpointGroup {
         }, Auth.defaultRoleAccess)
         put("${Runner.BASE}/v2_1/group/add", { ctx ->
             val add = ctx.bodyAsClass(GroupData::class.java)
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("Invalid token")
-            Log.d(javaClass, "add - JWT parse valid")
-            val user = TokenProvider.getInstance().verify(jwt) ?: run {
-                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
-                throw ForbiddenResponse("Token verification failed")
-            }
+            val user = UserAction.get(ctx)
             Log.d(javaClass, "add - JWT validation passed")
             transaction {
                 val existing = Group.find {
@@ -94,11 +85,7 @@ class Group(private val ws: WebSocket): EndpointGroup {
         }, Auth.defaultRoleAccess)
         patch("${Runner.BASE}/v2_1/group/edit", { ctx ->
             val update = ctx.bodyAsClass(GroupData::class.java)
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("JWT couldn't be parsed")
-            val user = TokenProvider.getInstance().verify(jwt) ?: run {
-                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
-                throw ForbiddenResponse("Token verification failed")
-            }
+            val user = UserAction.get(ctx)
             transaction {
                 val existing = Group.findById(update.id!!) ?: throw NotFoundResponse("Group not found")
                 // Only allow update if user belongs to group (or is admin)
@@ -110,11 +97,7 @@ class Group(private val ws: WebSocket): EndpointGroup {
         }, Auth.defaultRoleAccess)
         delete("${Runner.BASE}/v2_1/group/rm/:id", { ctx ->
             val id = UUID.fromString(ctx.pathParam("id"))
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("JWT couldn't be parsed")
-            val user = TokenProvider.getInstance().verify(jwt) ?: run {
-                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
-                throw ForbiddenResponse("Token verification failed")
-            }
+            val user = UserAction.get(ctx)
             transaction {
                 val existing = Group.findById(id) ?: throw NotFoundResponse("Group not found")
                 // Only allow deletion if user belongs to group (or is admin)

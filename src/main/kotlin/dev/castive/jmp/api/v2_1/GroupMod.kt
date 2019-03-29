@@ -19,13 +19,10 @@ package dev.castive.jmp.api.v2_1
 import com.django.log2.logging.Log
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Runner
-import dev.castive.jmp.auth.JWTContextMapper
-import dev.castive.jmp.auth.TokenProvider
-import dev.castive.jmp.auth.response.AuthenticateResponse
+import dev.castive.jmp.api.actions.UserAction
 import dev.castive.jmp.db.dao.Group
 import dev.castive.jmp.db.dao.User
 import io.javalin.BadRequestResponse
-import io.javalin.ForbiddenResponse
 import io.javalin.NotFoundResponse
 import io.javalin.apibuilder.ApiBuilder.patch
 import io.javalin.apibuilder.EndpointGroup
@@ -43,12 +40,7 @@ class GroupMod: EndpointGroup {
             val mods = ctx.bodyAsClass(GroupModPayload::class.java)
 
             Log.d(javaClass, "add - queryParams valid")
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: throw BadRequestResponse("Invalid token")
-            Log.d(javaClass, "add - JWT parse valid")
-            val user = TokenProvider.getInstance().verify(jwt) ?: run {
-                ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
-                throw ForbiddenResponse("Token verification failed")
-            }
+            val user = UserAction.get(ctx)
             Log.d(javaClass, "add - JWT validation passed")
             transaction {
                 val newUser = User.findById(addUser) ?: throw NotFoundResponse("Invalid uid")

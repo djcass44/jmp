@@ -16,13 +16,12 @@
 
 package dev.castive.jmp.api.v2
 
+import com.django.log2.logging.Log
 import dev.castive.jmp.api.Runner
 import dev.castive.jmp.api.Similar
 import dev.castive.jmp.api.actions.OwnerAction
-import dev.castive.jmp.auth.JWTContextMapper
-import dev.castive.jmp.auth.TokenProvider
+import dev.castive.jmp.api.actions.UserAction
 import dev.castive.jmp.except.EmptyPathException
-import com.django.log2.logging.Log
 import io.javalin.BadRequestResponse
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
@@ -33,8 +32,7 @@ class Similar : EndpointGroup {
         // Find similar jumps
         get("${Runner.BASE}/v2/similar/:query", { ctx ->
             try {
-                val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: ""
-                val user = if(jwt.isBlank()) null else TokenProvider.getInstance().verify(jwt)
+                val user = UserAction.getOrNull(ctx)
                 val query = ctx.pathParam("query")
                 if (query.isBlank())
                     throw EmptyPathException()
