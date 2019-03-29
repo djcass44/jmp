@@ -114,6 +114,10 @@ private fun launch(store: ConfigStore, arguments: Arguments, logger: Logger) {
         requestLogger { ctx, timeMs ->
             logger.add("${System.currentTimeMillis()} - ${ctx.method()} ${ctx.path()} took $timeMs ms")
         }
+        wsLogger { ws ->
+            ws.onConnect { logger.add("${System.currentTimeMillis()} - [ws] ${it.host()} connected") }
+            ws.onClose { session, statusCode, reason -> logger.add("${System.currentTimeMillis()} - [ws] ${session.host()} disconnected [code: $statusCode, reason: $reason]") }
+        }
         before { ctx ->
             ctx.register(JWTContextMapper::class.java, JWTContextMapper())
         }
