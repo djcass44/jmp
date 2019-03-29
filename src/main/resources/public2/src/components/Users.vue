@@ -372,7 +372,7 @@ export default {
         },
         updatePage() {
             this.pages = Math.max(Math.ceil(this.filterResults / this.pageSize), 1);
-            this.filtered = this.filtered.splice((this.currentPage - 1) * this.pageSize, this.currentPage * this.pageSize);
+            this.filtered = this.filtered.splice((this.currentPage - 1) * this.pageSize, this.pageSize);
         },
         filterItems() {
             if(this.filter === '')
