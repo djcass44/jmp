@@ -55,7 +55,9 @@ export default {
         authChanged() {},
         loadFailed() {},
         open(item) {
-            window.location.replace(`${process.env.VUE_APP_FE_URL}/jmp?query=${item.name}`);
+            // window.location.replace(`${process.env.VUE_APP_FE_URL}/jmp?query=${item.name}`);
+            this.loading = true;
+            window.location.href = item.location;
         }
     },
     mounted: function() {

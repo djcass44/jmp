@@ -132,7 +132,7 @@ export default {
             let that = this;
             axios.patch(
                 url,
-                `{ "id": ${this.id}, "name": "${this.name}", "location": "${this.location}" }`,
+                `{ "id": ${this.id}, "name": "${this.name}", "location": "${this.location}", "alias": [] }`,
                 {headers: {"Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}
             ).then(r => {
                 that.loading = false;
@@ -172,7 +172,7 @@ export default {
             let that = this;
             axios.put(
                 url,
-                `{ "name": "${this.name}", "location": "${this.location}", "personal": "${personalJump}" }`,
+                `{ "name": "${this.name}", "location": "${this.location}", "personal": "${personalJump}", "alias": [] }`,
                 {headers: {"Content-Type": "application/json", "Authorization": `Bearer ${localToken}`}}
             ).then(r => {
                 that.loading = false;

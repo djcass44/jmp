@@ -129,7 +129,7 @@ private fun launch(store: ConfigStore, arguments: Arguments, logger: Logger) {
             Props(providers).addEndpoints()
 
             // Jumping
-            Jump(auth, store, ws).addEndpoints()
+            Jump(store, ws).addEndpoints()
             Similar().addEndpoints()
 
             // Users

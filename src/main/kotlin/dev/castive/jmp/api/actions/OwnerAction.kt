@@ -21,17 +21,7 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class OwnerAction {
-    companion object {
-        private lateinit var instance: OwnerAction
-
-        fun getInstance(): OwnerAction {
-            if(!this::instance.isInitialized)
-                instance = OwnerAction()
-            return instance
-        }
-    }
-
+object OwnerAction {
     fun getUserVisibleJumps(user: User?): ArrayList<Jump> {
         val jumps = arrayListOf<Jump>()
         transaction {
@@ -59,12 +49,13 @@ class OwnerAction {
         }
         return jumps
     }
-    fun getJumpFromUser(user: User?, jump: String): Jump? {
+    fun getJumpFromUser(user: User?, jump: String): ArrayList<Jump> {
         val jumps = getUserVisibleJumps(user)
+        val matches = arrayListOf<Jump>()
         jumps.forEach {
-            if(it.name == jump)
-                return it
+            if(it.name == jump || it.alias.contains(jump))
+                matches.add(it)
         }
-        return null
+        return matches
     }
 }
