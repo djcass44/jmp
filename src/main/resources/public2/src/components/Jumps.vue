@@ -35,7 +35,7 @@
                     <v-list two-line subheader>
                         <v-slide-y-transition class="py-0" group>
                             <v-list-tile v-for="item in filtered" :key="item.id" avatar @click="">
-                                <v-list-tile-avatar color="indigo darken-2">
+                                <v-list-tile-avatar color="secondary darken-2">
                                     <v-icon v-if="item.image === null || item.image === ''" large dark>{{ avatar(item) }}</v-icon>
                                     <v-img v-if="item.image !== null && item.image !== ''" :src="item.image" :lazy-src="item.image" v-on:error="item.image = ''" aspect-ratio="1" class="grey darken-2">
                                         <template v-slot:placeholder>

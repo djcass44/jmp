@@ -7,13 +7,14 @@ services:
       - "7000:7000"
     volumes:
       - ./data:/data
+    command: ["/wait-for-it.sh", "db:5432/jmp", "--", "/entrypoint.sh"]
     environment:
-      - DRIVER_URL=jdbc:postgresql://localhost:5432/jmp
+      - DRIVER_URL=jdbc:postgresql://db:5432/jmp
       - DRIVER_CLASS=org.postgresql.Driver
       - ENV_LOG_REQUEST_DIRECTORY="data/logs"
       - BASE_URL=http://localhost:8080
-      - DRIVER_USER="user"
-      - DRIVER_PASSWORD="password
+      - DRIVER_USER=user
+      - DRIVER_PASSWORD=password
     depends_on:
       - db
   db:
