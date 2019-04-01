@@ -245,7 +245,10 @@ export default {
         this.$emit('postInit');
 
         let that = this;
-        this.ws = new WebSocket(`ws://${process.env.VUE_APP_URL}/ws`);
+        if(process.env.VUE_APP_SCHEME === "https")
+            this.ws = new WebSocket(`wss://${process.env.VUE_APP_URL}/ws`);
+        else
+            this.ws = new WebSocket(`ws://${process.env.VUE_APP_URL}/ws`);
         this.ws.onmessage = function(event) {
             console.log(`message: ${event.data}`);
             switch(event.data) {
@@ -269,6 +272,7 @@ export default {
     },
     methods: {
         prod(msg) {
+            if(this.ws === null || this.ws.readyState !== this.ws.OPEN) return;
             this.ws.send(msg);
         },
         hideLoginBanner() {
@@ -334,6 +338,7 @@ export default {
             axios.delete(url, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
                 that.items.splice(index, 1); // Delete the item, making vue update
                 that.filterItems();
+                that.loadItems();
                 that.$emit('snackbar', true, "Successfully removed user");
             }).catch(e => {
                 console.log(e);
@@ -348,6 +353,7 @@ export default {
             axios.delete(`${BASE_URL}/v2_1/group/rm/${item.id}`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(r => {
                 that.groups.splice(index, 1);
                 that.filterItems();
+                that.loadGroups();
                 that.snackbar(true, "Successfully removed group");
             }).catch(e => {
                 console.log(e);
@@ -426,8 +432,7 @@ export default {
             });
         },
         loadItems() {
-            if(this.wsActive === true)
-                return;
+            if(this.wsActive === true && this.ws.readyState === this.ws.OPEN) return;
             this.updateItems();
         },
         updateItems() {
@@ -454,8 +459,7 @@ export default {
             });
         },
         loadGroups() {
-            if(this.wsActive === true)
-                return;
+            if(this.wsActive === true && this.ws.readyState === this.ws.OPEN) return;
             this.updateGroups();
         },
         updateGroups() {

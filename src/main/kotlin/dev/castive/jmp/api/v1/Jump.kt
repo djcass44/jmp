@@ -40,6 +40,10 @@ import java.util.*
 class Jump(private val config: ConfigStore, private val ws: WebSocket): EndpointGroup {
     private fun jumpExists(name: String, location: String, user: User?): Boolean {
         return transaction {
+            /**
+             * Get Jumps for user
+             * Return TRUE if both name & location matches any
+             */
             val existing = OwnerAction.getJumpFromUser(user, name)
             existing.forEach {
                 if(it.name == name && it.location == location)

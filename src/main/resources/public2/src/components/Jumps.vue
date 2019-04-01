@@ -151,7 +151,10 @@ export default {
         this.appNoun = process.env.VUE_APP_BRAND_NOUN;
 
         let that = this;
-        this.ws = new WebSocket(`ws://${process.env.VUE_APP_URL}/ws`);
+        if(process.env.VUE_APP_SCHEME === "https")
+            this.ws = new WebSocket(`wss://${process.env.VUE_APP_URL}/ws`);
+        else
+            this.ws = new WebSocket(`ws://${process.env.VUE_APP_URL}/ws`);
         this.ws.onmessage = function(event) {
             console.log(`message: ${event.data}`);
             switch(event.data) {
@@ -171,6 +174,7 @@ export default {
     },
     methods: {
         prod(msg) {
+            if(this.ws === null || this.ws.readyState !== this.ws.OPEN) return;
             this.ws.send(msg);
         },
         hideLoginBanner() {
@@ -275,8 +279,7 @@ export default {
             this.updatePage();
         },
         loadItems() {
-            if(this.wsActive === true)
-                return;
+            if(this.wsActive === true && this.ws.readyState === this.ws.OPEN) return;
             this.updateItems();
         },
         updateItems() {
