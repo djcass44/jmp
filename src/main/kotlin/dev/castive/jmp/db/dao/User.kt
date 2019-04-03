@@ -52,4 +52,5 @@ class User(id: EntityID<UUID>): UUIDEntity(id) {
 data class UserData(val id: UUID, val username: String, val role: String, val groups: ArrayList<String>, val metaCreation: Long = 0, val metaUpdate: Long = 0, val from: String = InternalProvider.SOURCE_NAME) {
     constructor(user: User, groups: ArrayList<String>): this(user.id.value, user.username, user.role.name, groups, user.metaCreation, user.metaUpdate, user.from)
 }
+data class PagedUserData(val currentPage: Int, val totalPages: Int, val users: ArrayList<UserData>, val next: Boolean)
 data class EditUserData(val id: UUID, val role: String)

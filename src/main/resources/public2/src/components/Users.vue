@@ -62,7 +62,7 @@
                         </v-slide-y-transition>
                     </v-list>
                 </v-card>
-                <div class="text-xs-center py-2"><v-pagination v-if="filterResults > pageSize" v-model="currentPage" :length="pages" circle @input="filterItems"></v-pagination></div>
+                <div class="text-xs-center py-2"><v-pagination v-if="totalPagesFiltered > 0 && loading === 0 && filtered.length > 0" v-model="currentPageFiltered" :length="totalPagesFiltered" circle @input="filterItems"></v-pagination></div>
                 <div v-if="filtered.length === 0 && loading === 0">
                     <v-card class="m2-card">
                         <v-card-title primary-title>
@@ -201,8 +201,10 @@ export default {
             filterResults: 0,
             items: [],
             filtered: [],
-            pages: 1,
+            currentPageFiltered: 1,
+            totalPagesFiltered: 1,
             currentPage: 1,
+            totalPages: 1,
             pageSize: 10,
             sort: 'username',
             sorts: [
@@ -387,12 +389,12 @@ export default {
         },
         setFilter(query) {
             this.filter = query;
-            this.currentPage = 1;
+            this.currentPageFiltered = 1;
             this.filterItems();
         },
         updatePage() {
-            this.pages = Math.max(Math.ceil(this.filterResults / this.pageSize), 1);
-            this.filtered = this.filtered.splice((this.currentPage - 1) * this.pageSize, this.pageSize);
+            this.totalPagesFiltered = Math.max(Math.ceil(this.filterResults / this.pageSize), 1);
+            this.filtered = this.filtered.splice((this.currentPageFiltered - 1) * this.pageSize, this.pageSize);
         },
         filterItems() {
             this.prod();
@@ -436,13 +438,16 @@ export default {
             this.updateItems();
         },
         updateItems() {
-            let url = `${BASE_URL}/v2/users`;
             let that = this;
             that.items = [];
             this.loading ++;
-            axios.get(url, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
-                console.log("Loaded items: " + response.data.length);
-                response.data.map(item => {
+            axios.get(`${BASE_URL}/v2/users?count=9999&offset=0`, { headers: { "Authorization": `Bearer ${localStorage.getItem(storageJWT)}`}}).then(function(response) {
+                that.currentPage = response.data['currentPage'];
+                that.totalPages = response.data['totalPages'];
+                console.log(`page state: [current: ${that.currentPage}, total: ${that.totalPages}]`);
+                let items = response.data['users'];
+                console.log("Loaded items: " + items.length);
+                items.map(item => {
                     that.items.push(item);
                 });
                 setTimeout(() => {

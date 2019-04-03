@@ -40,9 +40,12 @@ class User(private val auth: Auth, private val providers: Providers, private val
         get("${Runner.BASE}/v2/users", { ctx ->
             UserAction.get(ctx)
             Log.d(javaClass, "list - JWT validation passed")
+            val count = ctx.queryParam<Int>("count").value?.coerceAtLeast(5) ?: 10
+            val offset = ctx.queryParam<Int>("offset").value?.coerceAtLeast(0) ?: 0
+            Log.d(javaClass, "/v2/users [count: $count, offset: $offset]")
             val users = arrayListOf<UserData>()
-            transaction {
-                User.all().forEach {
+            val userCount = transaction {
+                User.all().limit(count, offset).forEach {
                     val res = (Groups innerJoin GroupUsers innerJoin Users)
                         .slice(Groups.columns)
                         .select {
@@ -55,8 +58,13 @@ class User(private val auth: Auth, private val providers: Providers, private val
                     }
                     users.add(UserData(it, groups))
                 }
+                //Determine if there is a next page
+                return@transaction User.all().count()
             }
-            ctx.status(HttpStatus.OK_200).json(users)
+            val currentPage = (offset / userCount) + 1
+            val totalPages = Math.ceil(userCount / count.toDouble()).toInt()
+            Log.d(javaClass, "Returning ${users.size} users")
+            ctx.status(HttpStatus.OK_200).json(PagedUserData(currentPage, totalPages, users, offset + (count * 2) < userCount))
         }, Auth.defaultRoleAccess)
         // Add a user
         put("${Runner.BASE}/v2/user/add", { ctx ->
