@@ -1,5 +1,5 @@
 # STAGE 1 - BUILD
-FROM openjdk:11.0.1-slim-stretch as GRADLE_CACHE
+FROM openjdk:12-jdk-oraclelinux7 as GRADLE_CACHE
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ COPY . .
 RUN ./gradlew buildPackage
 
 # STAGE 2 - RUN
-FROM openjdk:11.0.1-slim-stretch
+FROM openjdk:12-jdk-oraclelinux7
 LABEL maintainer="dj.cass44@gmail.com"
 
 ENV DRIVER_URL="jdbc:sqlite:jmp.db"
