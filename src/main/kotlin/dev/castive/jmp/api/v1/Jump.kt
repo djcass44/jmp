@@ -76,7 +76,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
                  */
                 val user = UserAction.getOrNull(ctx)
                 transaction {
-                    Log.d(javaClass, "User information: [name: ${user?.username}, token: ${user?.token}]")
+                    Log.d(javaClass, "User information: [name: ${user?.username}, token: ${user?.id?.value}]")
                     Log.d(javaClass, "Found user: ${user != null}")
                     val jump = OwnerAction.getJumpFromUser(user, target)
                     if(jump.size == 1) {
@@ -155,7 +155,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
                 // 403 if jump is global and user ISN'T admin
                 if (result.owner == null && user.role.name != Auth.BasicRoles.ADMIN.name) throw ForbiddenResponse()
                 // 403 if jump is personal and tokens don't match
-                if (result.owner != null && result.owner!!.token != user.token) throw ForbiddenResponse()
+                if (result.owner != null && result.owner!!.id != user.id) throw ForbiddenResponse()
                 result.delete()
             }
             ws.fire(WebSocket.EVENT_UPDATE)

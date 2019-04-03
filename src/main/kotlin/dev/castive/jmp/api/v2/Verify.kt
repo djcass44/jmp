@@ -49,7 +49,7 @@ class Verify(private val auth: Auth): EndpointGroup {
                     throw BadRequestResponse()
                 }
                 else {
-                    if (auth.validateUserToken(result.token)) ctx.status(HttpStatus.OK_200).result(name)
+                    if (auth.validateUserToken(result.id.value)) ctx.status(HttpStatus.OK_200).result(name)
                     else {
                         Log.w(javaClass, "User: $name exists, however their token is invalid [IP: ${ctx.ip()}, UA: ${ctx.userAgent()}]")
                         throw BadRequestResponse()

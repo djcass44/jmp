@@ -26,7 +26,6 @@ import java.util.*
 object Users: UUIDTable() {
     val username = varchar("username", 36).uniqueIndex()
     val hash = text("hash")
-    val token = uuid("token")
     val role = reference("role", Roles)
     val requestToken = text("request_token").nullable()
 
@@ -40,7 +39,6 @@ class User(id: EntityID<UUID>): UUIDEntity(id) {
 
     var username by Users.username
     var hash by Users.hash
-    var token by Users.token
     var role by Role referencedOn Users.role
     var requestToken by Users.requestToken
 

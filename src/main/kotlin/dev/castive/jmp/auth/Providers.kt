@@ -145,7 +145,6 @@ class Providers(config: ConfigStore, private val auth: Auth) {
                     User.new {
                         username = u.username
                         hash = ""
-                        token = UUID.randomUUID()
                         role = auth.getDAOUserRole()
                         from = u.from
                     }

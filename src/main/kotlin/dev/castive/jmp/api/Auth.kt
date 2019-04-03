@@ -25,7 +25,6 @@ import dev.castive.jmp.db.dao.Users
 import io.javalin.ConflictResponse
 import io.javalin.security.Role
 import io.javalin.security.SecurityUtil
-import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -74,7 +73,6 @@ class Auth {
                 User.new {
                     this.username = username
                     this.hash = hash
-                    token = UUID.randomUUID() // Generate an initial token
                     role = if(admin) getDAOAdminRole() else getDAOUserRole()
                     metaCreation = System.currentTimeMillis()
                     metaUpdate = System.currentTimeMillis()
@@ -99,9 +97,7 @@ class Auth {
 
     fun validateUserToken(token: UUID): Boolean {
         return transaction {
-            val existing = User.find {
-                Users.token eq token
-            }.elementAtOrNull(0)
+            val existing = User.findById(token)
             return@transaction existing != null
         }
     }
@@ -115,7 +111,7 @@ class Auth {
             val user = existing.elementAtOrNull(0)
             // Only return if hashes match (and user was found)
             return@transaction if(user != null && hashMatches(password, user.hash))
-                user.token.toString()
+                user.id.value.toString()
             else
                 null
         }
@@ -132,21 +128,9 @@ class Auth {
                 Users.username eq username
             }.limit(1)
             val user = existing.elementAtOrNull(0)
-            return@transaction user?.token.toString()
+            return@transaction user?.id?.value.toString()
         }
     }
-    // This is an action performed by the system.
-    fun putUserToken(username: String) {
-        assert(userExists(username))
-        transaction {
-            val existing = User.find {
-                Users.username.lowerCase() eq username.toLowerCase()
-            }
-            val user = existing.elementAtOrNull(0)
-            user?.token = UUID.randomUUID() // Chance of collision is extremely low
-        }
-    }
-
     fun userExists(username: String): Boolean {
         return transaction {
             val existing = User.find {
@@ -167,47 +151,45 @@ class Auth {
         if(username == null || token == null)
             return null
         return transaction {
-            return@transaction User.find {
-                Users.username eq username and Users.token.eq(token)
-            }.elementAtOrNull(0)
+            return@transaction User.findById(token)
         }
     }
 
     // Determine role based on request
     fun getUserRole(username: String? = null): Role {
         if(username == null)
-            return dev.castive.jmp.api.Auth.BasicRoles.USER
-        val user = getUser(username) ?: return dev.castive.jmp.api.Auth.BasicRoles.USER
+            return Auth.BasicRoles.USER
+        val user = getUser(username) ?: return Auth.BasicRoles.USER
         return transaction {
             when (user.role.name) {
-                dev.castive.jmp.api.Auth.BasicRoles.ADMIN.name -> dev.castive.jmp.api.Auth.BasicRoles.ADMIN
-                dev.castive.jmp.api.Auth.BasicRoles.USER.name -> dev.castive.jmp.api.Auth.BasicRoles.USER
-                else -> dev.castive.jmp.api.Auth.BasicRoles.USER
+                Auth.BasicRoles.ADMIN.name -> Auth.BasicRoles.ADMIN
+                Auth.BasicRoles.USER.name -> Auth.BasicRoles.USER
+                else -> Auth.BasicRoles.USER
             }
         }
     }
     // Determine role based on request
     fun getUserRole(username: String, token: UUID): Role {
-        val user = getUser(username) ?: return dev.castive.jmp.api.Auth.BasicRoles.USER
-        if(user.token != token) {
+        val user = getUser(username) ?: return Auth.BasicRoles.USER
+        if(user.id.value != token) {
             Log.w(javaClass, "getUserRole -> $user provided invalid token")
-            return dev.castive.jmp.api.Auth.BasicRoles.USER
+            return Auth.BasicRoles.USER
         }
         return transaction {
             when (user.role.name) {
-                dev.castive.jmp.api.Auth.BasicRoles.ADMIN.name -> dev.castive.jmp.api.Auth.BasicRoles.ADMIN
-                dev.castive.jmp.api.Auth.BasicRoles.USER.name -> dev.castive.jmp.api.Auth.BasicRoles.USER
-                else -> dev.castive.jmp.api.Auth.BasicRoles.USER
+                Auth.BasicRoles.ADMIN.name -> Auth.BasicRoles.ADMIN
+                Auth.BasicRoles.USER.name -> Auth.BasicRoles.USER
+                else -> Auth.BasicRoles.USER
             }
         }
     }
     fun getDAOUserRole(): dev.castive.jmp.db.dao.Role {
-        return getDAORole(dev.castive.jmp.api.Auth.BasicRoles.USER)
+        return getDAORole(Auth.BasicRoles.USER)
     }
     fun getDAOAdminRole(): dev.castive.jmp.db.dao.Role {
-        return getDAORole(dev.castive.jmp.api.Auth.BasicRoles.ADMIN)
+        return getDAORole(Auth.BasicRoles.ADMIN)
     }
-    private fun getDAORole(role: dev.castive.jmp.api.Auth.BasicRoles): dev.castive.jmp.db.dao.Role {
+    private fun getDAORole(role: Auth.BasicRoles): dev.castive.jmp.db.dao.Role {
         return transaction {
             return@transaction dev.castive.jmp.db.dao.Role.find {
                 Roles.name eq role.name

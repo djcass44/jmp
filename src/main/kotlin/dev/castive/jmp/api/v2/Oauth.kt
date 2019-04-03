@@ -57,7 +57,7 @@ class Oauth(private val auth: dev.castive.jmp.api.Auth): EndpointGroup {
             val user = TokenProvider.getInstance().decode(jwt) ?: throw BadRequestResponse()
             // Check if users request token matched expected
             if(user.requestToken != refresh) throw UnauthorizedResponse("Invalid refresh token")
-            val newToken = TokenProvider.getInstance().create(user.username, user.token.toString()) ?: throw BadRequestResponse()
+            val newToken = TokenProvider.getInstance().create(user.username, user.id.value.toString()) ?: throw BadRequestResponse()
             val newRequestToken = TokenProvider.getInstance().create(user.username) ?: throw BadRequestResponse()
             transaction {
                 user.requestToken = newRequestToken
@@ -73,7 +73,7 @@ class Oauth(private val auth: dev.castive.jmp.api.Auth): EndpointGroup {
             if (!TokenProvider.getInstance().mayBeToken(jwt)) throw BadRequestResponse()
             val user = TokenProvider.getInstance().verify(jwt) ?: throw ForbiddenResponse()
             transaction {
-                ctx.status(HttpStatus.OK_200).result(auth.validateUserToken(user.token).toString())
+                ctx.status(HttpStatus.OK_200).result(auth.validateUserToken(user.id.value).toString())
             }
         }, dev.castive.jmp.api.Auth.defaultRoleAccess)
     }

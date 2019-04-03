@@ -71,7 +71,7 @@ class User(private val auth: Auth, private val providers: Providers, private val
             val user = UserAction.getOrNull(ctx)
             transaction {
                 val allowLocal = providers.keyedProps[Providers.PROP_EXT_ALLOW_LOCAL]?.toBoolean() ?: false // default to most secure setting
-                if ((user == null || auth.getUserRole(user.username, user.token) == Auth.BasicRoles.USER) && !allowLocal) {
+                if ((user == null || auth.getUserRole(user.username, user.id.value) == Auth.BasicRoles.USER) && !allowLocal) {
                     Log.i(javaClass, "User ${user?.username} is not allowed to create local accounts [reason: POLICY]")
                     throw UnauthorizedResponse("Creating local accounts has been disabled.")
                 }

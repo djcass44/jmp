@@ -19,6 +19,7 @@ package dev.castive.jmp.auth
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.django.log2.logging.Log
+import dev.castive.jmp.api.Auth
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
 import dev.castive.securepass3.PasswordGenerator
@@ -43,8 +44,8 @@ class TokenProvider {
         val expiry = Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(8))
         JWT.create()
             .withIssuer(javaClass.name)
-            .withClaim(dev.castive.jmp.api.Auth.headerUser, user)
-            .withClaim(dev.castive.jmp.api.Auth.headerToken, UUID.randomUUID().toString())
+            .withClaim(Auth.headerUser, user)
+            .withClaim(Auth.headerToken, UUID.randomUUID().toString())
             .withExpiresAt(expiry)
             .withIssuedAt(Date(System.currentTimeMillis()))
             .sign(algorithm)
@@ -58,8 +59,8 @@ class TokenProvider {
         val expiry = Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1))
         JWT.create()
             .withIssuer(javaClass.name)
-            .withClaim(dev.castive.jmp.api.Auth.headerUser, user)
-            .withClaim(dev.castive.jmp.api.Auth.headerToken, userToken)
+            .withClaim(Auth.headerUser, user)
+            .withClaim(Auth.headerToken, userToken)
             .withExpiresAt(expiry)
             .withIssuedAt(Date(System.currentTimeMillis()))
             .sign(algorithm)
@@ -77,8 +78,8 @@ class TokenProvider {
             val result = verify.verify(token)
             transaction {
                 User.find {
-                    Users.username eq result.getClaim(dev.castive.jmp.api.Auth.headerUser).asString() and
-                            Users.token.eq(UUID.fromString(result.getClaim(dev.castive.jmp.api.Auth.headerToken).asString()))
+                    Users.username eq result.getClaim(Auth.headerUser).asString() and
+                            Users.id.eq(UUID.fromString(result.getClaim(Auth.headerToken).asString()))
                 }.limit(1).elementAtOrNull(0)
             }
         }
@@ -98,8 +99,8 @@ class TokenProvider {
                 return null
             transaction {
                 User.find {
-                    Users.username eq result.getClaim(dev.castive.jmp.api.Auth.headerUser).asString() and
-                            Users.token.eq(UUID.fromString(result.getClaim(dev.castive.jmp.api.Auth.headerToken).asString()))
+                    Users.username eq result.getClaim(Auth.headerUser).asString() and
+                            Users.id.eq(UUID.fromString(result.getClaim(Auth.headerToken).asString()))
                 }.limit(1).elementAtOrNull(0)
             }
         }
