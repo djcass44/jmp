@@ -14,11 +14,11 @@ RUN ./gradlew buildPackage
 
 # STAGE 2 - RUN
 FROM openjdk:12-jdk-oraclelinux7
-LABEL maintainer="dj.cass44@gmail.com"
+LABEL maintainer="Django Cass <dj.cass44@gmail.com>"
 
 ENV DRIVER_URL="jdbc:sqlite:jmp.db"
 ENV DRIVER_CLASS="org.sqlite.JDBC"
-ENV ENV_LOG_REQUEST_DIRECTORY="."
+ENV LOG_DIRECTORY="."
 ENV BASE_URL="localhost:8080"
 ENV DRIVER_USER=""
 ENV DRIVER_PASSWORD=""

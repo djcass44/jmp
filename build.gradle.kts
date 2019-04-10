@@ -42,7 +42,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
 
     implementation("com.gitlab.django-sandbox:log2:8b941edd1a")
-    implementation("com.github.djcass44:fav2:0.2.0")
+    implementation("com.github.djcass44:fav2:v0.2.1")
 
     implementation("io.javalin:javalin:2.8.0")
     implementation("org.slf4j:slf4j-simple:1.7.25")

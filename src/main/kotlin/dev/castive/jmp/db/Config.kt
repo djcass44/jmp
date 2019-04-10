@@ -33,7 +33,7 @@ class Config {
         private const val envBaseUrl = "BASE_URL"
         private const val envDataPath = "JMP_HOME"
 
-        private const val logRequestDir = "ENV_LOG_REQUEST_DIRECTORY"
+        private const val logRequestDir = "LOG_DIRECTORY"
     }
     fun load(name: String): ConfigStore {
         val fileContent = Config::class.java.getResource("/$name").readText()
