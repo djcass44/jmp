@@ -37,7 +37,7 @@
                             <v-list-tile v-for="item in filtered" :key="item.id" avatar @click="">
                                 <v-list-tile-avatar color="secondary darken-2">
                                     <v-icon v-if="item.image === null || item.image === ''" large dark>{{ avatar(item) }}</v-icon>
-                                    <v-img v-if="item.image !== null && item.image !== ''" :src="item.image" :lazy-src="item.image" v-on:error="item.image = ''" aspect-ratio="1" class="grey darken-2">
+                                    <v-img v-if="item.image !== null && item.image !== ''" :src="item.image" :lazy-src="item.image" v-on:error="item.image = ''" aspect-ratio="1" class="primary darken-2">
                                         <template v-slot:placeholder>
                                             <v-layout fill-height align-center justify-center ma-0>
                                                 <v-progress-circular indeterminate color="grey lighten-5"></v-progress-circular>
@@ -99,7 +99,16 @@
 
 <script>
 import axios from "axios";
-import { storageUser, storageJWT, storageSortMode, flagSeenLoginBanner, BASE_URL } from "../var.js";
+import { 
+    storageUser, 
+    storageJWT, 
+    storageSortMode, 
+    flagSeenLoginBanner, 
+    BASE_URL,
+    TAG_UPDATE,
+    TAG_UPDATE_USER,
+    TAG_UPDATE_GROUP
+} from "../var.js";
 
 import JumpDialog from '../components/dialog/JumpDialog.vue';
 import GenericDeleteDialog from "./dialog/GenericDeleteDialog.vue";
@@ -150,26 +159,18 @@ export default {
         this.$emit('postInit');
         this.appNoun = process.env.VUE_APP_BRAND_NOUN;
 
-        let that = this;
-        if(process.env.VUE_APP_SCHEME === "https")
-            this.ws = new WebSocket(`wss://${process.env.VUE_APP_URL}/ws`);
-        else
-            this.ws = new WebSocket(`ws://${process.env.VUE_APP_URL}/ws`);
-        this.ws.onmessage = function(event) {
-            console.log(`message: ${event.data}`);
-            switch(event.data) {
-                case 'EVENT_UPDATE':
-                    that.updateItems();
-                    break;
-            }
-        }
-        this.ws.onclose = function(event) {
-            console.log('disconnected');
-            that.$emit('snackbar', true, "Lost connection to server", 0);
-            that.wsActive = true;
-        }
-        this.ws.onopen = function(event) {
-            that.wsActive = false;
+        this.sockets.subscribe(TAG_UPDATE, (data) => {
+            this.updateItems();
+        });
+    },
+    sockets: {
+        connect: function() {
+            console.log('socket connected');
+            this.$emit('snackbar', true, "Dynamic updates are enabled", 6000);
+        },
+        disconnect: function() {
+            console.log('socket disconnected');
+            this.$emit('snackbar', true, "Dynamic updates are temporarily unavailable", 0);
         }
     },
     methods: {

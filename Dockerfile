@@ -16,13 +16,16 @@ RUN ./gradlew buildPackage
 FROM openjdk:12-jdk-oraclelinux7
 LABEL maintainer="Django Cass <dj.cass44@gmail.com>"
 
-ENV DRIVER_URL="jdbc:sqlite:jmp.db"
-ENV DRIVER_CLASS="org.sqlite.JDBC"
-ENV LOG_DIRECTORY="."
-ENV BASE_URL="localhost:8080"
-ENV DRIVER_USER=""
-ENV DRIVER_PASSWORD=""
-ENV JMP_HOME="/data/"
+ENV DRIVER_URL="jdbc:sqlite:jmpdb" \
+    DRIVER_CLASS="org.sqlite.JDBC" \
+    DRIVER_USER="" \
+    DRIVER_PASSWORD="" \
+    LOG_DIRECTORY="." \
+    BASE_URL="localhost:8080" \
+    JMP_HOME="/data/" \
+    SOCKET_ENABLED=true \
+    SOCKET_HOST=0.0.0.0 \
+    SOCKET_PORT=7001
 
 WORKDIR /app
 COPY --from=GRADLE_CACHE /app/build/libs/jmp.jar .

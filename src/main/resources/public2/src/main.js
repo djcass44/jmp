@@ -11,16 +11,27 @@ import Token from "./components/Jump/Token.vue";
 import Similar from "./components/Jump/Similar.vue";
 import Setup from "./components/Jump/Setup.vue";
 
+import SocketIO from "socket.io-client";
+import VueSocketIO from "vue-socket.io";
+import { BASE_URL } from "./var.js";
+
 Vue.use(VueRouter);
 Vue.use(VueClipboard);
 
 Vue.config.productionTip = false;
 
+// Setup Socket.IO
+const options = {
+    secure: process.env.VUE_APP_SCHEME === "https"
+}
+Vue.use(new VueSocketIO({
+    debug: process.env.NODE_ENV === "development",
+    connection: SocketIO("http://localhost:7001", options)
+}));
 // Disable logging in production
 if(process.env.NODE_ENV === "production") {
     console.log = function() {}
 }
-
 const router = new VueRouter({
     mode: 'history',
     routes: [

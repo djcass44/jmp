@@ -179,7 +179,16 @@
 
 <script>
 import axios from "axios";
-import { storageUser, storageJWT, storageSortMode, flagSeenLoginBanner, BASE_URL } from "../var.js";
+import { 
+    storageUser, 
+    storageJWT, 
+    storageSortMode, 
+    flagSeenLoginBanner, 
+    BASE_URL,
+    TAG_UPDATE,
+    TAG_UPDATE_USER,
+    TAG_UPDATE_GROUP
+} from "../var.js";
 
 import GroupDialog from "./dialog/GroupDialog.vue";
 import GenericDeleteDialog from "./dialog/GenericDeleteDialog.vue";
@@ -245,31 +254,22 @@ export default {
         else
             this.sort = this.sorts[0];
         this.$emit('postInit');
-
-        let that = this;
-        if(process.env.VUE_APP_SCHEME === "https")
-            this.ws = new WebSocket(`wss://${process.env.VUE_APP_URL}/ws`);
-        else
-            this.ws = new WebSocket(`ws://${process.env.VUE_APP_URL}/ws`);
-        this.ws.onmessage = function(event) {
-            console.log(`message: ${event.data}`);
-            switch(event.data) {
-                case 'EVENT_UPDATE_USER':
-                    that.updateItems();
-                    break;
-                case 'EVENT_UPDATE_GROUP':
-                    that.updateGroups();
-                    break;
-            }
-        }
-        this.ws.onclose = function(event) {
-            console.log('disconnected');
-            that.$emit('snackbar', true, "Lost connection to server", 0);
-            that.wsActive = false;
-        }
-        this.ws.onopen = function(event) {
-            console.log('connected');
-            that.wsActive = true;
+        // SocketIO setup
+        this.sockets.subscribe(TAG_UPDATE_USER, (data) => {
+            this.updateItems();
+        });
+        this.sockets.subscribe(TAG_UPDATE_GROUP, (data) => {
+            this.updateGroups();
+        });
+    },
+    sockets: {
+        connect: function() {
+            console.log('socket connected');
+            this.$emit('snackbar', true, "Dynamic updates are enabled", 6000);
+        },
+        disconnect: function() {
+            console.log('socket disconnected');
+            this.$emit('snackbar', true, "Dynamic updates are temporarily unavailable", 0);
         }
     },
     methods: {

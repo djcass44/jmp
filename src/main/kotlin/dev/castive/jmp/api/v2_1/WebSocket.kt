@@ -16,37 +16,42 @@
 
 package dev.castive.jmp.api.v2_1
 
+import com.corundumstudio.socketio.Configuration
+import com.corundumstudio.socketio.SocketConfig
+import com.corundumstudio.socketio.SocketIOServer
 import com.django.log2.logging.Log
-import dev.castive.jmp.api.Runner
-import io.javalin.apibuilder.ApiBuilder.ws
+import dev.castive.jmp.db.Util
 import io.javalin.apibuilder.EndpointGroup
-import io.javalin.websocket.WsSession
 
-class WebSocket: EndpointGroup {
+class WebSocket : EndpointGroup {
     companion object {
         const val EVENT_UPDATE = "EVENT_UPDATE"
-        const val EVENT_UPDATE_USER = "EVENT_UPDATE_USER"
-        const val EVENT_UPDATE_GROUP = "EVENT_UPDATE_GROUP"
+        const val EVENT_UPDATE_USER = "${EVENT_UPDATE}_USER"
+        const val EVENT_UPDATE_GROUP = "${EVENT_UPDATE}_GROUP"
+        val allowSockets = Util.getEnv("SOCKET_ENABLED", "true").toBoolean()
     }
-
-    private val sessions = arrayListOf<WsSession>()
+    private val server = SocketIOServer(Configuration().apply {
+        hostname = Util.getEnv("SOCKET_HOST", "0.0.0.0")
+        port = (Util.getEnv("SOCKET_PORT", "7001").toLongOrNull() ?: 7001).toInt()
+        socketConfig = SocketConfig().apply { isReuseAddress = true }
+    })
 
     override fun addEndpoints() {
-        ws("${Runner.BASE}/ws") { ws ->
-            ws.onConnect {
-                Log.d(javaClass, "WebSocket connected: ${it.host()}")
-                sessions.add(it)
+        server.apply {
+            addConnectListener {
+                Log.d(javaClass, "WebSocket connected: ${it.remoteAddress}")
             }
-            ws.onClose { session, statusCode, reason ->
-                Log.d(javaClass, "WebSocket disconnected: ${session.host()}, $statusCode, $reason")
-                sessions.remove(session)
+            addDisconnectListener {
+                Log.d(javaClass, "WebSocket disconnected: ${it.remoteAddress}")
             }
-            ws.onMessage { session, msg -> Log.d(javaClass, "WebSocket message: $msg from ${session.host()}") }
-        }
+        }.startAsync()
     }
 
-    fun fire(msg: String) {
-        Log.v(javaClass, "Firing $msg to ${sessions.size} listeners")
-        sessions.forEach { it.send(msg) }
+    fun fire(tag: String, data: Any) {
+        if(!allowSockets) {
+            Log.i(javaClass, "Unable to broadcast as Sockets are disabled")
+        }
+        Log.v(javaClass, "Broadcasting $tag event to ${server.allClients.size} listeners")
+        server.allClients.forEach { it.sendEvent(tag, data) }
     }
 }

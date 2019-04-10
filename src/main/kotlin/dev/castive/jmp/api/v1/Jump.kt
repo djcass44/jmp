@@ -118,7 +118,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
                     }
                     ImageAction(add.location).get()
                 }
-                ws.fire(WebSocket.EVENT_UPDATE)
+                ws.fire(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
                 ctx.status(HttpStatus.CREATED_201).json(add)
             } else
                 throw ConflictResponse()
@@ -140,7 +140,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
                         metaUpdate = System.currentTimeMillis()
                     }
                     ImageAction(update.location).get()
-                    ws.fire(WebSocket.EVENT_UPDATE)
+                    ws.fire(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
                     ctx.status(HttpStatus.NO_CONTENT_204).json(update)
                 }
                 else throw ForbiddenResponse()
@@ -158,7 +158,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
                 if (result.owner != null && result.owner!!.id != user.id) throw ForbiddenResponse()
                 result.delete()
             }
-            ws.fire(WebSocket.EVENT_UPDATE)
+            ws.fire(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
             ctx.status(HttpStatus.NO_CONTENT_204)
         }, Auth.defaultRoleAccess)
     }

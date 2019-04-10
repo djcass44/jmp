@@ -79,7 +79,7 @@ class User(private val auth: Auth, private val providers: Providers, private val
             val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
             Log.i(javaClass, "$user is creating a user [name: ${basicAuth.username}]")
             auth.createUser(basicAuth.username, basicAuth.password.toCharArray())
-            ws.fire(WebSocket.EVENT_UPDATE_USER)
+            ws.fire(WebSocket.EVENT_UPDATE_USER, WebSocket.EVENT_UPDATE_USER)
             ctx.status(HttpStatus.CREATED_201).result(basicAuth.username)
         }, Auth.defaultRoleAccess)
         // Get information about the current user
@@ -115,7 +115,7 @@ class User(private val auth: Auth, private val providers: Providers, private val
                 Log.i(javaClass, "User role updated [user: ${user.username}, from: ${user.role.name}, to: ${role.name}] by ${u.username}")
                 user.role = role
                 user.metaUpdate = System.currentTimeMillis()
-                ws.fire(WebSocket.EVENT_UPDATE_USER)
+                ws.fire(WebSocket.EVENT_UPDATE_USER, WebSocket.EVENT_UPDATE_USER)
                 ctx.status(HttpStatus.NO_CONTENT_204).json(updated)
             }
         }, roles(Auth.BasicRoles.ADMIN))
@@ -136,7 +136,7 @@ class User(private val auth: Auth, private val providers: Providers, private val
                 } // Stop the users deleting themselves
                 target.delete()
             }
-            ws.fire(WebSocket.EVENT_UPDATE_USER)
+            ws.fire(WebSocket.EVENT_UPDATE_USER, WebSocket.EVENT_UPDATE_USER)
             ctx.status(HttpStatus.NO_CONTENT_204)
         }, roles(Auth.BasicRoles.ADMIN))
         get("${Runner.BASE}/v2_1/user/groups", { ctx ->

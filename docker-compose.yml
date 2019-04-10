@@ -5,6 +5,7 @@ services:
     build: .
     ports:
       - "7000:7000"
+      - "7001:7001"
     volumes:
       - ./data:/data
     command: ["/wait-for-it.sh", "db:5432/jmp", "--", "/entrypoint.sh"]
@@ -15,6 +16,9 @@ services:
       - BASE_URL=http://localhost:8080
       - DRIVER_USER=user
       - DRIVER_PASSWORD=password
+      - SOCKET_ENABLED=true
+      - SOCKET_HOST=0.0.0.0
+      - SOCKET_PORT=7001
     depends_on:
       - db
   db:

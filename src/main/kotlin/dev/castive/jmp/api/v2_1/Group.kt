@@ -80,7 +80,7 @@ class Group(private val ws: WebSocket): EndpointGroup {
                     users = SizedCollection(arrayListOf(user))
                 }
             }
-            ws.fire(WebSocket.EVENT_UPDATE_GROUP)
+            ws.fire(WebSocket.EVENT_UPDATE_GROUP, WebSocket.EVENT_UPDATE_GROUP)
             ctx.status(HttpStatus.CREATED_201).json(add)
         }, Auth.defaultRoleAccess)
         patch("${Runner.BASE}/v2_1/group/edit", { ctx ->
@@ -91,7 +91,7 @@ class Group(private val ws: WebSocket): EndpointGroup {
                 // Only allow update if user belongs to group (or is admin)
                 if(user.role.name != dev.castive.jmp.api.Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
                 existing.name = update.name
-                ws.fire(WebSocket.EVENT_UPDATE_GROUP)
+                ws.fire(WebSocket.EVENT_UPDATE_GROUP, WebSocket.EVENT_UPDATE_GROUP)
                 ctx.status(HttpStatus.NO_CONTENT_204).json(update)
             }
         }, Auth.defaultRoleAccess)
@@ -107,7 +107,7 @@ class Group(private val ws: WebSocket): EndpointGroup {
                     GroupUsers.group eq existing.id
                 }
                 existing.delete()
-                ws.fire(WebSocket.EVENT_UPDATE_GROUP)
+                ws.fire(WebSocket.EVENT_UPDATE_GROUP, WebSocket.EVENT_UPDATE_GROUP)
                 ctx.status(HttpStatus.NO_CONTENT_204)
             }
         }, Auth.adminRoleAccess)
