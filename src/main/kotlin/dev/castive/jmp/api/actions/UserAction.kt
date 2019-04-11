@@ -17,7 +17,7 @@
 package dev.castive.jmp.api.actions
 
 import com.django.log2.logging.Log
-import dev.castive.jmp.auth.JWTContextMapper
+import dev.castive.jmp.auth.JWT
 import dev.castive.jmp.auth.TokenProvider
 import dev.castive.jmp.auth.response.AuthenticateResponse
 import dev.castive.jmp.db.dao.User
@@ -26,7 +26,7 @@ import io.javalin.ForbiddenResponse
 
 object UserAction {
     internal fun get(ctx: Context): User {
-        val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: run {
+        val jwt = JWT.map(ctx) ?: run {
             ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
             throw ForbiddenResponse("Token verification failed")
         }
@@ -37,7 +37,7 @@ object UserAction {
         }
     }
     internal fun getOrNull(ctx: Context): User? {
-        val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: ""
+        val jwt = JWT.map(ctx) ?: ""
         return if(jwt == "null" || jwt.isBlank()) null else TokenProvider.getInstance().verify(jwt)
     }
 }

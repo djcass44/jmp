@@ -27,7 +27,7 @@ import dev.castive.jmp.api.v2.User
 import dev.castive.jmp.api.v2_1.*
 import dev.castive.jmp.api.v2_1.Group
 import dev.castive.jmp.audit.Logger
-import dev.castive.jmp.auth.JWTContextMapper
+import dev.castive.jmp.auth.JWT
 import dev.castive.jmp.auth.Providers
 import dev.castive.jmp.auth.TokenProvider
 import dev.castive.jmp.db.Config
@@ -101,7 +101,7 @@ private fun launch(store: ConfigStore, arguments: Arguments, logger: Logger) {
         if(arguments.enableCors) enableCorsForAllOrigins()
         enableCaseSensitiveUrls()
         accessManager { handler, ctx, permittedRoles ->
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx)
+            val jwt = JWT.map(ctx)
             val user = if(TokenProvider.getInstance().mayBeToken(jwt)) TokenProvider.getInstance().verify(jwt!!) else null
             val userRole = if(user == null) Auth.BasicRoles.USER else transaction {
                 Auth.BasicRoles.valueOf(user.role.name)
@@ -117,9 +117,6 @@ private fun launch(store: ConfigStore, arguments: Arguments, logger: Logger) {
         wsLogger { ws ->
             ws.onConnect { logger.add("${System.currentTimeMillis()} - [ws] ${it.host()} connected") }
             ws.onClose { session, statusCode, reason -> logger.add("${System.currentTimeMillis()} - [ws] ${session.host()} disconnected [code: $statusCode, reason: $reason]") }
-        }
-        before { ctx ->
-            ctx.register(JWTContextMapper::class.java, JWTContextMapper())
         }
         routes {
             val ws = WebSocket()

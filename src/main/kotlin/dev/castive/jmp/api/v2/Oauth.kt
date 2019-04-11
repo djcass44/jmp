@@ -17,7 +17,7 @@
 package dev.castive.jmp.api.v2
 
 import dev.castive.jmp.api.Runner
-import dev.castive.jmp.auth.JWTContextMapper
+import dev.castive.jmp.auth.JWT
 import dev.castive.jmp.auth.TokenProvider
 import dev.castive.jmp.auth.response.AuthenticateResponse
 import io.javalin.BadRequestResponse
@@ -49,7 +49,7 @@ class Oauth(private val auth: dev.castive.jmp.api.Auth): EndpointGroup {
         get("${Runner.BASE}/v2/oauth/refresh", { ctx ->
             val refresh = ctx.queryParam("refresh_token", "")
             if(refresh.isNullOrBlank()) throw BadRequestResponse()
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: run {
+            val jwt = JWT.map(ctx) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
@@ -66,7 +66,7 @@ class Oauth(private val auth: dev.castive.jmp.api.Auth): EndpointGroup {
         }, dev.castive.jmp.api.Auth.defaultRoleAccess)
         // Verify a users token is still valid
         get("${Runner.BASE}/v2/oauth/valid", { ctx ->
-            val jwt = ctx.use(JWTContextMapper::class.java).tokenAuthCredentials(ctx) ?: run {
+            val jwt = JWT.map(ctx) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }

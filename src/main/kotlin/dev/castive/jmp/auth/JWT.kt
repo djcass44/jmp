@@ -18,8 +18,8 @@ package dev.castive.jmp.auth
 
 import io.javalin.Context
 
-class JWTContextMapper {
-    fun tokenAuthCredentials(ctx: Context): String? {
+object JWT {
+    fun map(ctx: Context): String? {
         val authHeader = ctx.header("Authorization")
         if(authHeader.isNullOrBlank())
             return null
