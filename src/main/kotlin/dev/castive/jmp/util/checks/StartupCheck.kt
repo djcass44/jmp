@@ -14,18 +14,20 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.api.v2_1
+package dev.castive.jmp.util.checks
 
-import dev.castive.jmp.api.Auth
-import dev.castive.jmp.Runner
-import io.javalin.apibuilder.ApiBuilder.get
-import io.javalin.apibuilder.EndpointGroup
-import org.eclipse.jetty.http.HttpStatus
+import dev.castive.jmp.util.LogUtil
 
-class Health: EndpointGroup {
-    override fun addEndpoints() {
-        get("${Runner.BASE}/v2_1/health", { ctx ->
-            ctx.status(HttpStatus.OK_200).result("OK")
-        }, Auth.defaultRoleAccess)
+abstract class StartupCheck(private val name: String) {
+    abstract fun runCheck(): Boolean
+
+    protected fun onFail() {
+        println("$name.. ${LogUtil.ANSI_RED}FAILED${LogUtil.ANSI_RESET}")
+    }
+    protected fun onSuccess() {
+        println("$name.. ${LogUtil.ANSI_GREEN}OK${LogUtil.ANSI_RESET}")
+    }
+    protected fun onWarning() {
+        println("$name.. ${LogUtil.ANSI_YELLOW}WARNING${LogUtil.ANSI_RESET}")
     }
 }

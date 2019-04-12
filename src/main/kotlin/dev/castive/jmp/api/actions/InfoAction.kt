@@ -16,7 +16,7 @@
 
 package dev.castive.jmp.api.actions
 
-import dev.castive.jmp.api.Runner
+import dev.castive.jmp.Runner
 import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.dao.Group
 import dev.castive.jmp.db.dao.Jump

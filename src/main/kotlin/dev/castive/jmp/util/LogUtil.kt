@@ -14,18 +14,16 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.api.v2_1
+package dev.castive.jmp.util
 
-import dev.castive.jmp.api.Auth
-import dev.castive.jmp.Runner
-import io.javalin.apibuilder.ApiBuilder.get
-import io.javalin.apibuilder.EndpointGroup
-import org.eclipse.jetty.http.HttpStatus
-
-class Health: EndpointGroup {
-    override fun addEndpoints() {
-        get("${Runner.BASE}/v2_1/health", { ctx ->
-            ctx.status(HttpStatus.OK_200).result("OK")
-        }, Auth.defaultRoleAccess)
-    }
+object LogUtil {
+    const val ANSI_RESET = "\u001B[0m"
+    const val ANSI_BLACK = "\u001B[30m"
+    const val ANSI_RED = "\u001B[31m"
+    const val ANSI_GREEN = "\u001B[32m"
+    const val ANSI_YELLOW = "\u001B[33m"
+    const val ANSI_BLUE = "\u001B[34m"
+    const val ANSI_PURPLE = "\u001B[35m"
+    const val ANSI_CYAN = "\u001B[36m"
+    const val ANSI_WHITE = "\u001B[37m"
 }

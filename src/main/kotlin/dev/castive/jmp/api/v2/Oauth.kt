@@ -16,7 +16,7 @@
 
 package dev.castive.jmp.api.v2
 
-import dev.castive.jmp.api.Runner
+import dev.castive.jmp.Runner
 import dev.castive.jmp.auth.JWT
 import dev.castive.jmp.auth.TokenProvider
 import dev.castive.jmp.auth.response.AuthenticateResponse

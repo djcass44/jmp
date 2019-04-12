@@ -70,7 +70,7 @@ dependencies {
 }
 
 application {
-    mainClassName = "dev.castive.jmp.api.RunnerKt"
+    mainClassName = "dev.castive.jmp.api.EntrypointKt"
 }
 
 tasks.withType<KotlinCompile> {

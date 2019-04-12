@@ -18,7 +18,7 @@ package dev.castive.jmp.api.v2_1
 
 import com.django.log2.logging.Log
 import dev.castive.jmp.api.Auth
-import dev.castive.jmp.api.Runner
+import dev.castive.jmp.Runner
 import dev.castive.jmp.api.actions.UserAction
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.Group

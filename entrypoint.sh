@@ -1,2 +1,2 @@
 #!/bin/sh
-java -jar jmp.jar using env
+java -jar jmp.jar using env -d 0

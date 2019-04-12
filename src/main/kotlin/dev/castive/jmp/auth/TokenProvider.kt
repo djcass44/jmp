@@ -37,7 +37,7 @@ class TokenProvider {
             return tokenProvider
         }
     }
-    private val algorithm: Algorithm = Algorithm.HMAC256(PasswordGenerator.getInstance().get(32, true).toString())
+    private val algorithm: Algorithm = Algorithm.HMAC256(PasswordGenerator.getInstance().get(32, false).toString()) // Strong causes blocking issues in Docker
 
     // This should only be used for request tokens
     fun create(user: String): String? = try {

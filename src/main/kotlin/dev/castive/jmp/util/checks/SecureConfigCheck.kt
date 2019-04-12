@@ -14,18 +14,19 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.api.v2_1
+package dev.castive.jmp.util.checks
 
-import dev.castive.jmp.api.Auth
-import dev.castive.jmp.Runner
-import io.javalin.apibuilder.ApiBuilder.get
-import io.javalin.apibuilder.EndpointGroup
-import org.eclipse.jetty.http.HttpStatus
+import dev.castive.jmp.Arguments
 
-class Health: EndpointGroup {
-    override fun addEndpoints() {
-        get("${Runner.BASE}/v2_1/health", { ctx ->
-            ctx.status(HttpStatus.OK_200).result("OK")
-        }, Auth.defaultRoleAccess)
+class SecureConfigCheck(private val BASE_URL: String, private val arguments: Arguments): StartupCheck("Security configuration") {
+    override fun runCheck(): Boolean {
+        return if(BASE_URL.startsWith("https") && arguments.enableCors) {
+            onFail()
+            false
+        }
+        else {
+            onSuccess()
+            true
+        }
     }
 }

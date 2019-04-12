@@ -26,7 +26,7 @@ const options = {
 }
 Vue.use(new VueSocketIO({
     debug: process.env.NODE_ENV === "development",
-    connection: SocketIO("http://localhost:7001", options)
+    connection: SocketIO(process.env.VUE_APP_SOCKET_URL, options)
 }));
 // Disable logging in production
 if(process.env.NODE_ENV === "production") {

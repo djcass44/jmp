@@ -18,7 +18,7 @@ package dev.castive.jmp.api.v2
 
 import dev.castive.jmp.Version
 import dev.castive.jmp.api.Auth
-import dev.castive.jmp.api.Runner
+import dev.castive.jmp.Runner
 import dev.castive.jmp.api.actions.InfoAction
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup

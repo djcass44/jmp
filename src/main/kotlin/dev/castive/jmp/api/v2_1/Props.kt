@@ -17,7 +17,7 @@
 package dev.castive.jmp.api.v2_1
 
 import dev.castive.jmp.api.Auth
-import dev.castive.jmp.api.Runner
+import dev.castive.jmp.Runner
 import dev.castive.jmp.auth.Providers
 import dev.castive.jmp.auth.provider.LDAPProvider
 import dev.castive.jmp.db.dao.User
