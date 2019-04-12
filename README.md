@@ -1,5 +1,7 @@
 # JMP
 
+[![Build Status](https://ci.castive.dev/api/badges/djcass44/jmp/status.svg)](https://ci.castive.dev/djcass44/jmp)
+
 JMP is a utility used for quickly navigating to select websites/addresses.
 
 It is made up of 2 main components; the UI and API. For setting up the UI and more info, see the UI [README](src/main/resources/public2/README.md)
