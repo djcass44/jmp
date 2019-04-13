@@ -28,7 +28,7 @@ object SystemUtil {
             try {
                 val process = ProcessBuilder("cat", "/proc/sys/kernel/random/entropy_avail").start()
                 val result = process.inputStream.bufferedReader(StandardCharsets.UTF_8).use {
-                    val text = it.readText().strip()
+                    val text = it.readText().replace("\n", "")
                     Log.d(javaClass, "Entropy size: '$text'")
                     return@use text.toIntOrNull() ?: -1
                 }
