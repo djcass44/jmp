@@ -16,7 +16,6 @@
 
 package dev.castive.jmp.api
 
-import dev.castive.log2.Log
 import dev.castive.jmp.Arguments
 import dev.castive.jmp.api.v1.Jump
 import dev.castive.jmp.api.v2.*
@@ -31,12 +30,13 @@ import dev.castive.jmp.auth.TokenProvider
 import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.Init
 import dev.castive.jmp.db.dao.*
+import dev.castive.log2.Log
 import io.javalin.Javalin
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class App {
+class App(val port: Int = 7000) {
     fun start(store: ConfigStore, arguments: Arguments, logger: Logger) {
         transaction {
             SchemaUtils.create(Jumps, Users, Roles, Groups, GroupUsers) // Ensure that the tables are created
@@ -48,7 +48,7 @@ class App {
         val providers = Providers(store, auth) // Setup user authentication
         Javalin.create().apply {
             disableStartupBanner()
-            port(7000)
+            port(port)
             if(arguments.enableCors) enableCorsForAllOrigins()
             enableCaseSensitiveUrls()
             accessManager { handler, ctx, permittedRoles ->
