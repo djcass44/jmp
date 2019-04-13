@@ -16,9 +16,8 @@
 
 package dev.castive.jmp.api.v1
 
-import com.django.log2.logging.Log
-import dev.castive.jmp.api.Auth
 import dev.castive.jmp.Runner
+import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.actions.ImageAction
 import dev.castive.jmp.api.actions.OwnerAction
 import dev.castive.jmp.api.actions.UserAction
@@ -27,6 +26,7 @@ import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.Jump
 import dev.castive.jmp.except.EmptyPathException
+import dev.castive.log2.Log
 import io.javalin.BadRequestResponse
 import io.javalin.ConflictResponse
 import io.javalin.ForbiddenResponse
@@ -89,11 +89,11 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
                 }
             }
             catch (e: IndexOutOfBoundsException) {
-                Log.e(Runner::class.java, "Invalid target: ${ctx.path()}")
+                Log.e(javaClass, "Invalid target: ${ctx.path()}")
                 throw BadRequestResponse()
             }
             catch (e: EmptyPathException) {
-                Log.e(Runner::class.java, "Empty target")
+                Log.e(javaClass, "Empty target")
                 throw NotFoundResponse()
             }
         }, Auth.defaultRoleAccess)

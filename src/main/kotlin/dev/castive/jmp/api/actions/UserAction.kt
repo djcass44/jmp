@@ -16,7 +16,7 @@
 
 package dev.castive.jmp.api.actions
 
-import com.django.log2.logging.Log
+import dev.castive.log2.Log
 import dev.castive.jmp.auth.JWT
 import dev.castive.jmp.auth.TokenProvider
 import dev.castive.jmp.auth.response.AuthenticateResponse

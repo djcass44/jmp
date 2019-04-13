@@ -19,7 +19,7 @@ package dev.castive.jmp.api.v2_1
 import com.corundumstudio.socketio.Configuration
 import com.corundumstudio.socketio.SocketConfig
 import com.corundumstudio.socketio.SocketIOServer
-import com.django.log2.logging.Log
+import dev.castive.log2.Log
 import dev.castive.jmp.db.Util
 import io.javalin.apibuilder.EndpointGroup
 

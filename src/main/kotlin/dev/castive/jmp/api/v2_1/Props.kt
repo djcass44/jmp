@@ -16,8 +16,8 @@
 
 package dev.castive.jmp.api.v2_1
 
-import dev.castive.jmp.api.Auth
 import dev.castive.jmp.Runner
+import dev.castive.jmp.api.Auth
 import dev.castive.jmp.auth.Providers
 import dev.castive.jmp.auth.provider.LDAPProvider
 import dev.castive.jmp.db.dao.User
@@ -36,7 +36,7 @@ class Props(private val providers: Providers): EndpointGroup {
                 else -> providers.properties.getOrDefault(targetProp, "undefined")
             }
             ctx.status(HttpStatus.OK_200).result(result.toString())
-        }, dev.castive.jmp.api.Auth.adminRoleAccess)
+        }, Auth.adminRoleAccess)
         get("${Runner.BASE}/v2_1/uprop/allow_local", { ctx ->
             val targetProp = "jmp.ext.allow_local"
             val result = when {
@@ -44,7 +44,7 @@ class Props(private val providers: Providers): EndpointGroup {
                 else -> providers.properties.getOrDefault(targetProp, "undefined")
             }
             ctx.status(HttpStatus.OK_200).result(result.toString())
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2_1/provider/main", { ctx ->
             val connected = Providers.primaryProvider != null && Providers.primaryProvider!!.connected()
             val users = transaction { return@transaction User.find { Users.from eq LDAPProvider.SOURCE_NAME }.count() }

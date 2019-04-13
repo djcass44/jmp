@@ -16,7 +16,7 @@
 
 package dev.castive.jmp.util
 
-import com.django.log2.logging.Log
+import dev.castive.log2.Log
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 

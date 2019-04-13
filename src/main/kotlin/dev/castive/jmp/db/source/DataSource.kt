@@ -16,7 +16,7 @@
 
 package dev.castive.jmp.db.source
 
-import com.django.log2.logging.Log
+import dev.castive.log2.Log
 import dev.castive.jmp.db.ConfigStore
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.Connection

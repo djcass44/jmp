@@ -16,7 +16,7 @@
 
 package dev.castive.jmp.auth
 
-import com.django.log2.logging.Log
+import dev.castive.log2.Log
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.auth.provider.BaseProvider
 import dev.castive.jmp.auth.provider.InternalProvider

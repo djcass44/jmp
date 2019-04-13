@@ -16,7 +16,7 @@
 
 package dev.castive.jmp
 
-import com.django.log2.logging.Log
+import dev.castive.log2.Log
 import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.HelpFormatter
 import org.apache.commons.cli.Options
@@ -44,7 +44,7 @@ class Arguments(args: Array<String>) {
             Log.v(javaClass, "Arguments parser will receive: ${Arrays.toString(relevantArgs)}")
             val cl = parser.parse(options, relevantArgs)
             if(cl.hasOption("h")) {
-                helpFormatter.printHelp("jmp", "jmp-${dev.castive.jmp.Version.getVersion()}", options, "", true)
+                helpFormatter.printHelp("jmp", "jmp-${Version.getVersion()}", options, "", true)
                 Log.w(javaClass, "Printed help, application will now exit!")
                 System.exit(0)
             }

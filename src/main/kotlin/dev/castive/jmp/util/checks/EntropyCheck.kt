@@ -16,7 +16,7 @@
 
 package dev.castive.jmp.util.checks
 
-import com.django.log2.logging.Log
+import dev.castive.log2.Log
 import dev.castive.jmp.util.SystemUtil
 
 class EntropyCheck: StartupCheck("Entropy pool") {

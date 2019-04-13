@@ -17,7 +17,7 @@
 package dev.castive.jmp.audit
 
 import dev.castive.jmp.io.NOutputStream
-import com.django.log2.logging.Log
+import dev.castive.log2.Log
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintStream

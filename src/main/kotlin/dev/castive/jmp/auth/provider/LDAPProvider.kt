@@ -16,7 +16,7 @@
 
 package dev.castive.jmp.auth.provider
 
-import com.django.log2.logging.Log
+import dev.castive.log2.Log
 import dev.castive.jmp.auth.connect.LDAPConnection
 import dev.castive.jmp.db.dao.GroupData
 import dev.castive.jmp.db.dao.UserData

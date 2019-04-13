@@ -16,7 +16,7 @@
 
 package dev.castive.jmp.api.actions
 
-import com.django.log2.logging.Log
+import dev.castive.log2.Log
 import dev.castive.jmp.db.dao.Jump
 import dev.castive.jmp.db.dao.Jumps
 import dev.castive.jmp.net.Favicon

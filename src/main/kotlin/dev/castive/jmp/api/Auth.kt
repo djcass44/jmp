@@ -17,7 +17,7 @@
 package dev.castive.jmp.api
 
 import com.amdelamar.jhash.Hash
-import com.django.log2.logging.Log
+import dev.castive.log2.Log
 import dev.castive.jmp.auth.Providers
 import dev.castive.jmp.db.dao.Roles
 import dev.castive.jmp.db.dao.User

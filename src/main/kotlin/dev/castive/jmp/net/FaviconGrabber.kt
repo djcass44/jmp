@@ -17,7 +17,7 @@
 package dev.castive.jmp.net
 
 import dev.castive.jmp.except.InsecureDomainException
-import com.django.log2.logging.Log
+import dev.castive.log2.Log
 import dev.castive.fav2.Fav
 
 class FaviconGrabber(private val domain: String) {

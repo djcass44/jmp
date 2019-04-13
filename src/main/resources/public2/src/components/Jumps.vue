@@ -34,7 +34,7 @@
                 <v-card v-if="filtered.length > 0" class="m2-card">
                     <v-list two-line subheader>
                         <v-slide-y-transition class="py-0" group>
-                            <v-list-tile v-for="item in filtered" :key="item.id" avatar @click="">
+                            <v-list-tile v-for="(item, index) in filtered" :key="index" avatar @click="">
                                 <v-list-tile-avatar color="secondary darken-2">
                                     <v-icon v-if="item.image === null || item.image === ''" large dark>{{ avatar(item) }}</v-icon>
                                     <v-img v-if="item.image !== null && item.image !== ''" :src="item.image" :lazy-src="item.image" v-on:error="item.image = ''" aspect-ratio="1" class="primary darken-2">
@@ -68,6 +68,7 @@
                             </v-list-tile>
                         </v-slide-y-transition>
                     </v-list>
+                    <v-progress-circular class="ma-2" size="50" color="accent" indeterminate></v-progress-circular>
                 </v-card>
                 <div class="text-xs-center py-2"><v-pagination v-if="filterResults > pageSize" v-model="currentPage" :length="pages" circle @input="filterItems"></v-pagination></div>
                 <div v-if="(showZero === true || filtered.length === 0) && loading === false">

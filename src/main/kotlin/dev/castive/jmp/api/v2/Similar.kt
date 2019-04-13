@@ -16,12 +16,12 @@
 
 package dev.castive.jmp.api.v2
 
-import com.django.log2.logging.Log
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Similar
 import dev.castive.jmp.api.actions.OwnerAction
 import dev.castive.jmp.api.actions.UserAction
 import dev.castive.jmp.except.EmptyPathException
+import dev.castive.log2.Log
 import io.javalin.BadRequestResponse
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
@@ -42,7 +42,7 @@ class Similar : EndpointGroup {
                 ctx.status(HttpStatus.OK_200).json(similar.get())
             }
             catch (e: EmptyPathException) {
-                Log.e(Runner::class.java, "Empty target")
+                Log.e(javaClass, "Empty target")
                 throw BadRequestResponse()
             }
         }, dev.castive.jmp.api.Auth.defaultRoleAccess)

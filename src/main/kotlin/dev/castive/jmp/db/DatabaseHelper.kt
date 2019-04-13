@@ -16,16 +16,15 @@
 
 package dev.castive.jmp.db
 
-import com.django.log2.logging.Log
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import dev.castive.jmp.Runner
 import dev.castive.jmp.db.source.HikariSource
+import dev.castive.log2.Log
 
 class DatabaseHelper {
     fun start(store: ConfigStore) {
-        Log.v(Runner::class.java, "Database config: [${store.url}, ${store.driver}]")
-        Log.v(Runner::class.java, "Application config: [${store.BASE_URL}, ${store.logRequestDir}, ${store.dataPath}]")
+        Log.v(javaClass, "Database config: [${store.url}, ${store.driver}]")
+        Log.v(javaClass, "Application config: [${store.BASE_URL}, ${store.logRequestDir}, ${store.dataPath}]")
         val ds = HikariDataSource(HikariConfig().apply {
             jdbcUrl = store.url
             driverClassName = store.driver
@@ -34,7 +33,7 @@ class DatabaseHelper {
         })
         HikariSource().connect(ds)
         Runtime.getRuntime().addShutdownHook(Thread {
-            Log.w(Runner::class.java, "Running shutdown hook, DO NOT forcibly close the application")
+            Log.w(javaClass, "Running shutdown hook, DO NOT forcibly close the application")
             ds.close()
         })
     }

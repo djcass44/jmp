@@ -16,7 +16,6 @@
 
 package dev.castive.jmp
 
-import com.django.log2.logging.Log
 import dev.castive.jmp.api.App
 import dev.castive.jmp.audit.Logger
 import dev.castive.jmp.db.Config
@@ -24,6 +23,7 @@ import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.DatabaseHelper
 import dev.castive.jmp.util.checks.EntropyCheck
 import dev.castive.jmp.util.checks.SecureConfigCheck
+import dev.castive.log2.Log
 import java.util.*
 
 
@@ -34,7 +34,7 @@ class Runner {
         lateinit var store: ConfigStore
         lateinit var args: Array<String>
     }
-    fun runInitialChecks(store: ConfigStore, arguments: Arguments) {
+    private fun runInitialChecks(store: ConfigStore, arguments: Arguments) {
         Log.i(javaClass, "Checking security configuration")
         println("Running setup checks\n")
         val checks = arrayListOf(SecureConfigCheck(store.BASE_URL, arguments), EntropyCheck())
@@ -44,28 +44,31 @@ class Runner {
         }
         println("Setup checks completed ($count/${checks.size} passed)\n")
     }
+    fun start(args: Array<String>) {
+        Runner.args = args
+        START_TIME = System.currentTimeMillis()
+        Log.v(javaClass, Arrays.toString(args))
+        val arguments = Arguments(args)
+        if(arguments.enableCors) Log.w(javaClass, "WARNING: CORS access is enable for ALL origins. DO NOT allow this in production: WARNING")
+        Log.setPriorityLevel(arguments.debugLevel)
+        val configLocation = if(args.size >= 2 && args[0] == "using") {
+            args[1]
+        }
+        else
+            "env"
+        Log.i(javaClass, "Using database path: $configLocation")
+        val store = if(configLocation.isNotBlank() && configLocation != "env")
+            Config().load(configLocation)
+        else
+            Config().loadEnv()
+        Runner.store = store
+        val logger = Logger(store.logRequestDir)
+        runInitialChecks(store, arguments)
+        DatabaseHelper().start(store)
+        App().start(store, arguments, logger)
+    }
 }
 
 fun main(args: Array<String>) {
-    Runner.args = args
-    Runner.START_TIME = System.currentTimeMillis()
-    Log.v(Runner::class.java, Arrays.toString(args))
-    val arguments = Arguments(args)
-    if(arguments.enableCors) Log.w(Runner::class.java, "WARNING: CORS access is enable for ALL origins. DO NOT allow this in production: WARNING")
-    Log.setPriorityLevel(arguments.debugLevel)
-    val configLocation = if(args.size >= 2 && args[0] == "using") {
-        args[1]
-    }
-    else
-        "env"
-    Log.i(Runner::class.java, "Using database path: $configLocation")
-    val store = if(configLocation.isNotBlank() && configLocation != "env")
-        Config().load(configLocation)
-    else
-        Config().loadEnv()
-    Runner.store = store
-    val logger = Logger(store.logRequestDir)
-    Runner().runInitialChecks(store, arguments)
-    DatabaseHelper().start(store)
-    App().start(store, arguments, logger)
+    Runner().start(args)
 }

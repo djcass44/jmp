@@ -16,7 +16,7 @@
 
 package dev.castive.jmp.auth.connect
 
-import com.django.log2.logging.Log
+import dev.castive.log2.Log
 import dev.castive.jmp.except.MinimalConnectionBreachException
 import java.util.*
 import javax.naming.Context

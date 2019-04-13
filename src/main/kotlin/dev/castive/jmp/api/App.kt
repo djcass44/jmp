@@ -16,7 +16,7 @@
 
 package dev.castive.jmp.api
 
-import com.django.log2.logging.Log
+import dev.castive.log2.Log
 import dev.castive.jmp.Arguments
 import dev.castive.jmp.api.v1.Jump
 import dev.castive.jmp.api.v2.*

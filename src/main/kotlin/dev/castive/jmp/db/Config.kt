@@ -17,7 +17,7 @@
 package dev.castive.jmp.db
 
 import com.beust.klaxon.Klaxon
-import com.django.log2.logging.Log
+import dev.castive.log2.Log
 
 data class ConfigStore(val url: String, val driver: String, val logRequestDir: String, val BASE_URL: String, val tableUser: String? = "", val tablePassword: String? = "", val dataPath: String = ".")
 

@@ -16,7 +16,7 @@
 
 package dev.castive.jmp.util
 
-import com.django.log2.logging.Log
+import dev.castive.log2.Log
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 

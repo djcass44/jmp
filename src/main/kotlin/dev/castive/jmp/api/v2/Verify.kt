@@ -16,11 +16,11 @@
 
 package dev.castive.jmp.api.v2
 
-import com.django.log2.logging.Log
-import dev.castive.jmp.api.Auth
 import dev.castive.jmp.Runner
+import dev.castive.jmp.api.Auth
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
+import dev.castive.log2.Log
 import io.javalin.BadRequestResponse
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
@@ -37,7 +37,7 @@ class Verify(private val auth: Auth): EndpointGroup {
         get("${Runner.BASE}/v2/verify/user/:name", { ctx ->
             val name = ctx.pathParam("name")
             if (name.isBlank()) {
-                Log.v(Runner::class.java, "User made null/empty request")
+                Log.v(javaClass, "User made null/empty request")
                 throw BadRequestResponse()
             }
             transaction {

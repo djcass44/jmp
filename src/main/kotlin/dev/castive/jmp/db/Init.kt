@@ -16,7 +16,7 @@
 
 package dev.castive.jmp.db
 
-import com.django.log2.logging.Log
+import dev.castive.log2.Log
 import dev.castive.jmp.db.dao.Role
 import dev.castive.jmp.db.dao.User
 import dev.castive.securepass3.PasswordGenerator
