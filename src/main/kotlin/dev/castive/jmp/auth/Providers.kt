@@ -16,7 +16,6 @@
 
 package dev.castive.jmp.auth
 
-import dev.castive.log2.Log
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.auth.provider.BaseProvider
 import dev.castive.jmp.auth.provider.InternalProvider
@@ -24,6 +23,7 @@ import dev.castive.jmp.auth.provider.LDAPProvider
 import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
+import dev.castive.log2.Log
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
@@ -45,6 +45,7 @@ class Providers(config: ConfigStore, private val auth: Auth) {
         const val PROP_LDAP_PASS = "ldap.password"
         const val PROP_LDAP_USER_FILTER = "jmp.ldap.user_query"
         const val PROP_LDAP_USER_ID = "jmp.ldap.user_uid"
+        const val PROP_LDAP_MAX_FAILURE = "jmp.ldap.max_failure"
 
         const val PROP_LDAP_RM_STALE = "jmp.ldap.remove_stale"
         const val PROP_LDAP_SYNC = "jmp.ldap.sync_rate"
@@ -54,6 +55,9 @@ class Providers(config: ConfigStore, private val auth: Auth) {
     val properties = Properties()
 
     val keyedProps = HashMap<String, String>()
+
+    private var syncAttempts = 0
+    private lateinit var syncTimer: Timer
 
     init {
         val data = File(config.dataPath, "jmp.properties")
@@ -84,6 +88,7 @@ class Providers(config: ConfigStore, private val auth: Auth) {
                 "$PROP_LDAP_PASS=password\n" +
                 "$PROP_LDAP_USER_FILTER=\n" +
                 "$PROP_LDAP_USER_ID=uid\n" +
+                "$PROP_LDAP_MAX_FAILURE=5" +
                 "$PROP_LDAP_RM_STALE=true\n" +
                 "$PROP_LDAP_SYNC=300000\n" +
                 "$PROP_EXT_ALLOW_LOCAL=true",
@@ -112,6 +117,7 @@ class Providers(config: ConfigStore, private val auth: Auth) {
             Log.w(javaClass, "LDAP sync rate must be above 5000")
             keyedProps[PROP_LDAP_SYNC] = "5000"
         }
+        keyedProps[PROP_LDAP_MAX_FAILURE] = properties[PROP_LDAP_MAX_FAILURE].toString()
         keyedProps[PROP_LDAP_USER_FILTER] = properties[PROP_LDAP_USER_FILTER].toString()
         keyedProps[PROP_LDAP_USER_ID] = properties[PROP_LDAP_USER_ID].toString()
 
@@ -120,14 +126,24 @@ class Providers(config: ConfigStore, private val auth: Auth) {
         startCRON()
     }
 
-    private fun startCRON() = fixedRateTimer(javaClass.name, true, 0, (keyedProps[PROP_LDAP_SYNC]!!.toLong())) { sync() }
+    private fun startCRON() {
+        syncTimer = fixedRateTimer(javaClass.name, true, 0, (keyedProps[PROP_LDAP_SYNC]!!.toLong())) { sync() }
+    }
 
     private fun sync() {
+        val maxAttempts = keyedProps[PROP_LDAP_MAX_FAILURE]?.toIntOrNull() ?: 5
+        if(syncAttempts >= maxAttempts) { // Give up if we fail more than 5 times (default 25 minutes)
+            Log.f(javaClass, "Reached maximum failure rate for LDAP sync, giving up")
+            syncTimer.cancel()
+            return
+        }
+        syncAttempts++
         if(primaryProvider == null) {
             Log.i(javaClass, "Skipping user sync, no provider setup")
             return
         }
         Log.i(javaClass, "Running batch update using ${primaryProvider!!::class.java.name}")
+        Log.v(javaClass, "${primaryProvider!!::class.java.name} attempt $syncAttempts/$maxAttempts")
         primaryProvider!!.setup()
         val users = primaryProvider!!.getUsers()
         if(users == null) {
@@ -135,6 +151,7 @@ class Providers(config: ConfigStore, private val auth: Auth) {
             return
         }
         Log.i(javaClass, "External provider: ${primaryProvider?.getName()} found ${users.size} users")
+        syncAttempts = 0 // Reset counter because we got a valid connection
         val names = arrayListOf<String>()
         transaction {
             users.forEach { u ->

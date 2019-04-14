@@ -41,7 +41,7 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
 
-    implementation("com.github.djcass44:log2:3.1")
+    implementation("com.github.djcass44:log2:3.2")
     implementation("com.github.djcass44:fav2:v0.2.1")
 
     implementation("io.javalin:javalin:2.8.0")
