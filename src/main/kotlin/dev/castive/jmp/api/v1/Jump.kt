@@ -107,27 +107,31 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
             if (!jumpExists(add.name, add.location, user)) {
                 transaction {
                     val group = if(groupID != null) Group.findById(groupID) else null
-                    Jump.new {
+                    val jump = Jump.new {
                         name = add.name
                         location = add.location
                         owner = if (add.personal == JumpData.TYPE_PERSONAL) user else null
                         ownerGroup = group
-                        alias = add.alias.joinToString(",")
                         metaCreation = System.currentTimeMillis()
                         metaUpdate = System.currentTimeMillis()
                     }
+                    // Create aliases for newly added Jump
+                    add.alias.forEach { Alias.new {
+                        name = it.name
+                        parent = jump
+                    } }
                     ImageAction(add.location).get()
                 }
                 ws.fire(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
                 ctx.status(HttpStatus.CREATED_201).json(add)
-            } else
-                throw ConflictResponse()
+            }
+            else throw ConflictResponse()
         }, Auth.defaultRoleAccess)
         // Edit a jump point
         patch("${Runner.BASE}/v1/jump", { ctx ->
             val update = ctx.bodyAsClass(EditJumpData::class.java)
             val user = UserAction.get(ctx)
-            if(jumpExists(update.name, update.location, user)) throw ConflictResponse()
+//            if(jumpExists(update.name, update.location, user)) throw ConflictResponse()
             transaction {
                 val existing = Jump.findById(update.id) ?: throw NotFoundResponse()
 
@@ -136,8 +140,20 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
                     existing.apply {
                         name = update.name
                         location = update.location
-                        alias = update.alias.joinToString(",")
                         metaUpdate = System.currentTimeMillis()
+                    }
+                    // Add aliases
+                    update.alias.forEach {
+                        val alias = Alias.findById(it.id)
+                        if(it.id == 0 || alias == null) {
+                            // Create the alias if it doesn't exist
+                            Alias.new {
+                                name = it.name
+                                parent = existing
+                            }
+                        }
+                        // Update the alias name (needs investigation into ability to abuse)
+                        else alias.name = it.name
                     }
                     ImageAction(update.location).get()
                     ws.fire(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
@@ -156,6 +172,8 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
                 if (result.owner == null && user.role.name != Auth.BasicRoles.ADMIN.name) throw ForbiddenResponse()
                 // 403 if jump is personal and tokens don't match
                 if (result.owner != null && result.owner!!.id != user.id) throw ForbiddenResponse()
+                // Delete all aliased children so that they don't become orphans
+                Alias.find { Aliases.parent eq result.id }.forEach { it.delete() }
                 result.delete()
             }
             ws.fire(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)

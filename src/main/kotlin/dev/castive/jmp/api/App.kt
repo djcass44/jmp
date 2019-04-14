@@ -39,9 +39,9 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class App(val port: Int = 7000) {
     fun start(store: ConfigStore, arguments: Arguments, logger: Logger) {
         transaction {
-            SchemaUtils.create(Jumps, Users, Roles, Groups, GroupUsers) // Ensure that the tables are created
+            SchemaUtils.create(Jumps, Users, Roles, Groups, GroupUsers, Aliases) // Ensure that the tables are created
             Log.i(javaClass, "Running automated database upgrade (if required)")
-            SchemaUtils.createMissingTablesAndColumns(Jumps, Users, Roles, Groups, GroupUsers)
+            SchemaUtils.createMissingTablesAndColumns(Jumps, Users, Roles, Groups, GroupUsers, Aliases)
             Init() // Ensure that the default admin/roles is created
         }
         val auth = Auth()

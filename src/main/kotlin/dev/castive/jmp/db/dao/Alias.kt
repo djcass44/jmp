@@ -14,13 +14,23 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp
+package dev.castive.jmp.db.dao
 
-object Version {
-    private const val MAJOR = "0"
-    private const val MINOR = "4"
-    private const val PATCH = "11"
-    private const val BUILD = "68"
+import org.jetbrains.exposed.dao.EntityID
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.IntIdTable
 
-    fun getVersion() = "$MAJOR.$MINOR.$PATCH-build.$BUILD"
+object Aliases: IntIdTable() {
+    val name = varchar("name", 50)
+    val parent = reference("jump", Jumps)
+}
+class Alias(id: EntityID<Int>): IntEntity(id) {
+    companion object: IntEntityClass<Alias>(Aliases)
+
+    var name by Aliases.name
+    var parent by Jump referencedOn Aliases.parent
+}
+data class AliasData(val id: Int, val name: String) {
+    constructor(alias: Alias): this(alias.id.value, alias.name)
 }

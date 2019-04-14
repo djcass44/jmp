@@ -20,6 +20,7 @@ import dev.castive.jmp.db.dao.*
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.*
 
 object OwnerAction {
     fun getUserVisibleJumps(user: User?): ArrayList<Jump> {
@@ -52,9 +53,18 @@ object OwnerAction {
     fun getJumpFromUser(user: User?, jump: String): ArrayList<Jump> {
         val jumps = getUserVisibleJumps(user)
         val matches = arrayListOf<Jump>()
-        jumps.forEach {
-            if(it.name == jump || it.alias.contains(jump))
-                matches.add(it)
+        jumps.forEach { jmp ->
+            if(jmp.name == jump) {
+                matches.add(jmp)
+            }
+            // Check if any aliases match
+            val aliases = Alias.find { Aliases.parent eq jmp.id }
+            for (i in 0 until aliases.count()) {
+                if(aliases.elementAt(i).name == jump) {
+                    matches.add(jmp)
+                    return@forEach
+                }
+            }
         }
         return matches
     }

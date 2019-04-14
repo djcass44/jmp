@@ -29,8 +29,6 @@ object Jumps : IntIdTable() {
     val ownerGroup = optReference("ownerGroup", Groups)
     val image = varchar("image", 2083).nullable()
 
-    val alias = text("alias").default("")
-
     val metaCreation = long("metaCreation").default(System.currentTimeMillis())
     val metaUpdate = long("metaUpdate").default(System.currentTimeMillis())
     val metaUsage = integer("metaUsage").default(0)
@@ -45,14 +43,12 @@ class Jump(id: EntityID<Int>) : IntEntity(id) {
     var ownerGroup by Group optionalReferencedOn Jumps.ownerGroup
     var image by Jumps.image
 
-    var alias by Jumps.alias
-
     var metaCreation by Jumps.metaCreation
     var metaUpdate by Jumps.metaUpdate
     var metaUsage by Jumps.metaUsage
 }
 data class JumpData(val id: Int, val name: String, val location: String, val personal: Int = 0, val owner: String? = null, val image: String? = null,
-                    val alias: ArrayList<String>,
+                    val alias: ArrayList<AliasData>,
                     val metaCreation: Long = 0,
                     val metaUpdate: Long = 0,
                     val metaUsage: Int = 0) {
@@ -81,16 +77,12 @@ data class JumpData(val id: Int, val name: String, val location: String, val per
                 return@transaction jump.owner!!.username
             return@transaction null
         }
-        fun getAlias(jump: Jump): ArrayList<String> = transaction {
-            val alias = arrayListOf<String>()
-            if(jump.alias.isBlank())
-                return@transaction alias
-            val bits = kotlin.runCatching {
-                jump.alias.split(",")
-            }.getOrNull()
-            if(bits != null) alias.addAll(bits)
+        fun getAlias(jump: Jump): ArrayList<AliasData> = transaction {
+            val alias = arrayListOf<AliasData>()
+            // Get all the aliases which are owned by @param jump
+            Alias.find { Aliases.parent eq jump.id }.forEach { alias.add(AliasData(it)) }
             return@transaction alias
         }
     }
 }
-data class EditJumpData(val id: Int, val name: String, val alias: ArrayList<String>, val location: String)
+data class EditJumpData(val id: Int, val name: String, val alias: ArrayList<AliasData>, val location: String)
