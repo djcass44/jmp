@@ -98,7 +98,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
             }
         }, Auth.defaultRoleAccess)
         // Add a jump point
-        put("${Runner.BASE}/v1/jumps/add", { ctx ->
+        put("${Runner.BASE}/v1/jump", { ctx ->
             val add = ctx.bodyAsClass(JumpData::class.java)
             val groupID = kotlin.runCatching { UUID.fromString(ctx.queryParam("gid")) }.getOrNull()
             val user = UserAction.get(ctx)
@@ -124,7 +124,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
                 throw ConflictResponse()
         }, Auth.defaultRoleAccess)
         // Edit a jump point
-        patch("${Runner.BASE}/v1/jumps/edit", { ctx ->
+        patch("${Runner.BASE}/v1/jump", { ctx ->
             val update = ctx.bodyAsClass(EditJumpData::class.java)
             val user = UserAction.get(ctx)
             if(jumpExists(update.name, update.location, user)) throw ConflictResponse()
@@ -147,7 +147,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
             }
         }, Auth.defaultRoleAccess)
         // Delete a jump point
-        delete("${Runner.BASE}/v1/jumps/rm/:id", { ctx ->
+        delete("${Runner.BASE}/v1/jump/:id", { ctx ->
             val id = ctx.pathParam("id").toIntOrNull() ?: throw BadRequestResponse()
             val user = UserAction.get(ctx)
             transaction {

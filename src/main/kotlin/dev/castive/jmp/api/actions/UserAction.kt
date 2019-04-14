@@ -16,11 +16,11 @@
 
 package dev.castive.jmp.api.actions
 
-import dev.castive.log2.Log
 import dev.castive.jmp.auth.JWT
 import dev.castive.jmp.auth.TokenProvider
 import dev.castive.jmp.auth.response.AuthenticateResponse
 import dev.castive.jmp.db.dao.User
+import dev.castive.log2.Log
 import io.javalin.Context
 import io.javalin.ForbiddenResponse
 
@@ -30,7 +30,7 @@ object UserAction {
             ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
             throw ForbiddenResponse("Token verification failed")
         }
-        Log.d(javaClass, "JWT parse valid")
+        Log.ok(javaClass, "JWT parse valid")
         return TokenProvider.getInstance().verify(jwt) ?: run {
             ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
             throw ForbiddenResponse("Token verification failed")

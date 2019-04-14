@@ -18,10 +18,10 @@ package dev.castive.jmp.auth
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import dev.castive.log2.Log
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
+import dev.castive.log2.Log
 import dev.castive.securepass3.PasswordGenerator
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -97,11 +97,14 @@ class TokenProvider {
             val result = verify.verify(token)
             if(result.expiresAt.before(Date(System.currentTimeMillis()))) // Token has expired
                 return null
-            transaction {
-                User.find {
-                    Users.username eq result.getClaim(Auth.headerUser).asString() and
-                            Users.id.eq(UUID.fromString(result.getClaim(Auth.headerToken).asString()))
-                }.limit(1).elementAtOrNull(0)
+            return transaction {
+                val user = User.findById(UUID.fromString(result.getClaim(Auth.headerToken).asString()))
+                // User must exist AND username must match
+                if(user != null && user.username == result.getClaim(Auth.headerUser).asString()) {
+                    Log.good(javaClass, "JWT carries valid user: ${user.username}")
+                    return@transaction user
+                }
+                else return@transaction null
             }
         }
         catch (e: Exception) {

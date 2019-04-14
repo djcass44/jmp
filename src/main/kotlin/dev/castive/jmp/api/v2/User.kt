@@ -16,14 +16,14 @@
 
 package dev.castive.jmp.api.v2
 
-import dev.castive.log2.Log
-import dev.castive.jmp.api.Auth
 import dev.castive.jmp.Runner
+import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.actions.UserAction
 import dev.castive.jmp.api.v2_1.WebSocket
 import dev.castive.jmp.auth.Providers
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.User
+import dev.castive.log2.Log
 import io.javalin.BadRequestResponse
 import io.javalin.ForbiddenResponse
 import io.javalin.UnauthorizedResponse
@@ -67,7 +67,7 @@ class User(private val auth: Auth, private val providers: Providers, private val
             ctx.status(HttpStatus.OK_200).json(PagedUserData(currentPage, totalPages, users, offset + (count * 2) < userCount))
         }, Auth.defaultRoleAccess)
         // Add a user
-        put("${Runner.BASE}/v2/user/add", { ctx ->
+        put("${Runner.BASE}/v2/user", { ctx ->
             val user = UserAction.getOrNull(ctx)
             transaction {
                 val allowLocal = providers.keyedProps[Providers.PROP_EXT_ALLOW_LOCAL]?.toBoolean() ?: false // default to most secure setting
@@ -95,12 +95,8 @@ class User(private val auth: Auth, private val providers: Providers, private val
                 ctx.status(HttpStatus.OK_200).json(UserData(u, arrayListOf()))
             }
         }, Auth.defaultRoleAccess)
-        // Get a users token
-        post("${Runner.BASE}/v2/user/auth", { ctx ->
-            ctx.status(HttpStatus.MOVED_PERMANENTLY_301).result("This has been deprecated in favour of OAuth2 /v2/oauth")
-        }, Auth.defaultRoleAccess)
         // Change the role of a user
-        patch("${Runner.BASE}/v2/user/permission", { ctx ->
+        patch("${Runner.BASE}/v2/user", { ctx ->
             val updated = ctx.bodyAsClass(EditUserData::class.java)
             val u = UserAction.get(ctx)
             transaction {
@@ -120,7 +116,7 @@ class User(private val auth: Auth, private val providers: Providers, private val
             }
         }, roles(Auth.BasicRoles.ADMIN))
         // Delete a user
-        delete("${Runner.BASE}/v2/user/rm/:id", { ctx ->
+        delete("${Runner.BASE}/v2/user/:id", { ctx ->
             val id = UUID.fromString(ctx.pathParam("id"))
             val user = UserAction.get(ctx)
             transaction {
