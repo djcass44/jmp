@@ -20,7 +20,6 @@ import dev.castive.jmp.db.dao.*
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.util.*
 
 object OwnerAction {
     fun getUserVisibleJumps(user: User?): ArrayList<Jump> {
@@ -49,6 +48,38 @@ object OwnerAction {
             }
         }
         return jumps
+    }
+    fun getUserVisibleJumps(user: User?, includeAliases: Boolean): ArrayList<JumpData> {
+        val jumps = getUserVisibleJumps(user)
+        val results = arrayListOf<JumpData>()
+        transaction {
+            jumps.forEach { jmp ->
+                val data = JumpData(jmp)
+                if (includeAliases) {
+                    val aliases = Alias.find { Aliases.parent eq jmp.id }
+                    // Add a munted version of the JumpData but with the alias name
+                    // TODO ensure using duplicate IDs doesn't bork the ui
+                    aliases.forEach {
+                        results.add(
+                            JumpData(
+                                data.id,
+                                it.name,
+                                data.location,
+                                data.personal,
+                                data.owner,
+                                data.image,
+                                data.alias,
+                                data.metaCreation,
+                                data.metaUpdate,
+                                data.metaUsage
+                            )
+                        )
+                    }
+                }
+                results.add(data)
+            }
+        }
+        return results
     }
     fun getJumpFromUser(user: User?, jump: String): ArrayList<Jump> {
         val jumps = getUserVisibleJumps(user)

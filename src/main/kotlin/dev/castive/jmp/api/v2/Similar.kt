@@ -36,10 +36,10 @@ class Similar : EndpointGroup {
                 val query = ctx.pathParam("query")
                 if (query.isBlank())
                     throw EmptyPathException()
-                val userJumps = OwnerAction.getUserVisibleJumps(user)
+                val userJumps = OwnerAction.getUserVisibleJumps(user, includeAliases = true)
                 val similar = Similar(query, userJumps)
                 similar.compute()
-                ctx.status(HttpStatus.OK_200).json(similar.get())
+                ctx.status(HttpStatus.OK_200).json(similar.results)
             }
             catch (e: EmptyPathException) {
                 Log.e(javaClass, "Empty target")

@@ -16,18 +16,17 @@
 
 package dev.castive.jmp.api
 
-import dev.castive.jmp.db.dao.Jump
 import dev.castive.jmp.db.dao.JumpData
 import info.debatty.java.stringsimilarity.JaroWinkler
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class Similar(private val query: String, private val dict: ArrayList<Jump>, private val threshold: Double = 0.75) {
-    private val results = arrayListOf<Jump>()
+class Similar(private val query: String, private val dict: ArrayList<JumpData>, private val threshold: Double = 0.75) {
+    internal val results = arrayListOf<JumpData>()
     fun compute() {
         transaction {
             val jw = JaroWinkler()
             results.clear()
-            var best: Jump? = null
+            var best: JumpData? = null
             var bestIndex = 0.0
             for (s in dict) {
                 val metric = jw.similarity(query, s.name)
@@ -43,10 +42,5 @@ class Similar(private val query: String, private val dict: ArrayList<Jump>, priv
                 results.add(best)
             }
         }
-    }
-    fun get(): ArrayList<JumpData> {
-        val jumps = arrayListOf<JumpData>()
-        transaction { results.forEach { jumps.add(JumpData(it)) } }
-        return jumps
     }
 }
