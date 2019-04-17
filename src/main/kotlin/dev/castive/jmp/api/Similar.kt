@@ -18,29 +18,37 @@ package dev.castive.jmp.api
 
 import dev.castive.jmp.db.dao.JumpData
 import info.debatty.java.stringsimilarity.JaroWinkler
-import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.*
 
 class Similar(private val query: String, private val dict: ArrayList<JumpData>, private val threshold: Double = 0.75) {
     internal val results = arrayListOf<JumpData>()
     fun compute() {
-        transaction {
-            val jw = JaroWinkler()
-            results.clear()
-            var best: JumpData? = null
-            var bestIndex = 0.0
-            for (s in dict) {
-                val metric = jw.similarity(query, s.name)
-                if (metric > threshold)
-                    results.add(s)
-                if (metric > 0.65 && metric > bestIndex) {
-                    bestIndex = metric
-                    best = s
-                }
-            }
-            if (results.size == 0 && best != null) {
-                results.clear()
-                results.add(best)
+        if(checkForDuplicates()) return
+        val jw = JaroWinkler()
+        results.clear()
+        var best: JumpData? = null
+        var bestIndex = 0.0
+        for (s in dict) {
+            val metric = jw.similarity(query, s.name)
+            if (metric > threshold)
+                results.add(s)
+            if (metric > 0.65 && metric > bestIndex) {
+                bestIndex = metric
+                best = s
             }
         }
+        if (results.size == 0 && best != null) {
+            results.clear()
+            results.add(best)
+        }
+    }
+    // Check to see if any Jumps are exact matches
+    // See #70
+    private fun checkForDuplicates(): Boolean {
+        results.clear()
+        for (j in dict) {
+            if(j.name == query) results.add(j)
+        }
+        return results.isNotEmpty()
     }
 }
