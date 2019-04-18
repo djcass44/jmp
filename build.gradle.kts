@@ -18,7 +18,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.3.20-eap-52"
+    kotlin("jvm") version "1.3.30"
     id("com.github.johnrengelman.shadow") version "4.0.3"
     application
 }
@@ -31,16 +31,15 @@ apply(plugin = "java")
 ant.importBuild("version.xml")
 
 repositories {
-    maven { setUrl("https://dl.bintray.com/kotlin/kotlin-eap") }
     maven(url = "https://dl.bintray.com/kotlin/exposed")
     maven(url = "https://jitpack.io")
     jcenter()
-    mavenCentral()
 }
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
 
+    implementation("com.github.djcass44:jmp-auth:52ca6d7cb3")
     implementation("com.github.djcass44:log2:3.2")
     implementation("com.github.djcass44:fav2:v0.2.1")
 
@@ -73,7 +72,7 @@ application {
     mainClassName = "dev.castive.jmp.EntrypointKt"
 }
 
-tasks.withType<KotlinCompile> {
+tasks.withType<KotlinCompile>().all {
     kotlinOptions.jvmTarget = "1.8"
 }
 

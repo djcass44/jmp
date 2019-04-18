@@ -16,7 +16,7 @@
 
 package dev.castive.jmp.db.dao
 
-import dev.castive.jmp.auth.provider.InternalProvider
+import dev.castive.javalin_auth.auth.provider.InternalProvider
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass

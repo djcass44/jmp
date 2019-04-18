@@ -17,11 +17,11 @@
 package dev.castive.jmp.api
 
 import com.amdelamar.jhash.Hash
-import dev.castive.log2.Log
-import dev.castive.jmp.auth.Providers
+import dev.castive.javalin_auth.auth.Providers
 import dev.castive.jmp.db.dao.Roles
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
+import dev.castive.log2.Log
 import io.javalin.ConflictResponse
 import io.javalin.security.Role
 import io.javalin.security.SecurityUtil

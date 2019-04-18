@@ -30,7 +30,7 @@ class Init {
         val superName = "admin" // Hardcoded into FE, don't change
         transaction {
             if(User.all().empty()) {
-                val password = PasswordGenerator.getInstance().get(32, false) // Strong causes blocking issues in Docker
+                val password = PasswordGenerator().generate(32, strong = false) // Strong causes blocking issues in Docker
                 dev.castive.jmp.api.Auth().createUser(superName, password, true)
                 Log.w(javaClass, "Created superuser with access: [username: $superName]\nPlease change this ASAP!\nThis will also be stored in the current directory in 'initialAdminPassword'")
                 Files.writeString(Path.of("initialAdminPassword"), String(password), StandardCharsets.UTF_8)

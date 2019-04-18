@@ -16,6 +16,9 @@
 
 package dev.castive.jmp.api
 
+import dev.castive.javalin_auth.auth.JWT
+import dev.castive.javalin_auth.auth.Providers
+import dev.castive.javalin_auth.auth.TokenProvider
 import dev.castive.jmp.Arguments
 import dev.castive.jmp.api.v1.Jump
 import dev.castive.jmp.api.v2.*
@@ -24,9 +27,10 @@ import dev.castive.jmp.api.v2.User
 import dev.castive.jmp.api.v2_1.*
 import dev.castive.jmp.api.v2_1.Group
 import dev.castive.jmp.audit.Logger
-import dev.castive.jmp.auth.JWT
-import dev.castive.jmp.auth.Providers
-import dev.castive.jmp.auth.TokenProvider
+import dev.castive.jmp.auth.ClaimConverter
+import dev.castive.jmp.auth.LDAPConfigBuilder
+import dev.castive.jmp.auth.UserValidator
+import dev.castive.jmp.auth.UserVerification
 import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.Init
 import dev.castive.jmp.db.dao.*
@@ -45,15 +49,17 @@ class App(val port: Int = 7000) {
             Init() // Ensure that the default admin/roles is created
         }
         val auth = Auth()
-        val providers = Providers(store, auth) // Setup user authentication
+        val builder = LDAPConfigBuilder(store)
+        Providers(builder.core, builder.extra).init(UserVerification(auth)) // Setup user authentication
+        Providers.validator = UserValidator(auth, builder.extra)
         Javalin.create().apply {
             disableStartupBanner()
             port(port)
             if(arguments.enableCors) enableCorsForAllOrigins()
             enableCaseSensitiveUrls()
             accessManager { handler, ctx, permittedRoles ->
-                val jwt = JWT.map(ctx)
-                val user = if(TokenProvider.getInstance().mayBeToken(jwt)) TokenProvider.getInstance().verify(jwt!!) else null
+                val jwt = JWT.get().map(ctx)
+                val user = if(TokenProvider.get().mayBeToken(jwt)) ClaimConverter.getUser(TokenProvider.get().verify(jwt!!, Providers.verification)) else null
                 val userRole = if(user == null) Auth.BasicRoles.USER else transaction {
                     Auth.BasicRoles.valueOf(user.role.name)
                 }
@@ -70,14 +76,14 @@ class App(val port: Int = 7000) {
                 ws.addEndpoints()
                 // General
                 Info().addEndpoints()
-                Props(providers).addEndpoints()
+                Props(builder).addEndpoints()
 
                 // Jumping
                 Jump(store, ws).addEndpoints()
                 Similar().addEndpoints()
 
                 // Users
-                User(auth, providers, ws).addEndpoints()
+                User(auth, ws, builder.extra).addEndpoints()
 
                 // Group
                 Group(ws).addEndpoints()

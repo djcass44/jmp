@@ -16,10 +16,11 @@
 
 package dev.castive.jmp.api.v2_1
 
+import dev.castive.javalin_auth.auth.Providers
+import dev.castive.javalin_auth.auth.provider.LDAPProvider
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
-import dev.castive.jmp.auth.Providers
-import dev.castive.jmp.auth.provider.LDAPProvider
+import dev.castive.jmp.auth.LDAPConfigBuilder
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
 import io.javalin.apibuilder.ApiBuilder.get
@@ -27,23 +28,18 @@ import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class Props(private val providers: Providers): EndpointGroup {
+class Props(private val builder: LDAPConfigBuilder): EndpointGroup {
     override fun addEndpoints() {
         get("${Runner.BASE}/v2_1/prop/:target", { ctx ->
             val targetProp = ctx.pathParam("target")
             val result = when {
-                providers.keyedProps.containsKey(targetProp) -> providers.keyedProps[targetProp]
-                else -> providers.properties.getOrDefault(targetProp, "undefined")
+                builder.properties.containsKey(targetProp) -> builder.properties.getProperty(targetProp)
+                else -> builder.properties.getOrDefault(targetProp, "undefined")
             }
             ctx.status(HttpStatus.OK_200).result(result.toString())
         }, Auth.adminRoleAccess)
         get("${Runner.BASE}/v2_1/uprop/allow_local", { ctx ->
-            val targetProp = "jmp.ext.allow_local"
-            val result = when {
-                providers.keyedProps.containsKey(targetProp) -> providers.keyedProps[targetProp]
-                else -> providers.properties.getOrDefault(targetProp, "undefined")
-            }
-            ctx.status(HttpStatus.OK_200).result(result.toString())
+            ctx.status(HttpStatus.OK_200).result(builder.extra.blockLocal.not().toString())
         }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2_1/provider/main", { ctx ->
             val connected = Providers.primaryProvider != null && Providers.primaryProvider!!.connected()

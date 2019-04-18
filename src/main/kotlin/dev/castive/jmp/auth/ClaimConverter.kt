@@ -14,13 +14,16 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp
+package dev.castive.jmp.auth
 
-object Version {
-    private const val MAJOR = "0"
-    private const val MINOR = "4"
-    private const val PATCH = "11"
-    private const val BUILD = "105"
+import dev.castive.javalin_auth.auth.external.ValidUserClaim
+import dev.castive.jmp.db.dao.User
+import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.*
 
-    fun getVersion() = "$MAJOR.$MINOR.$PATCH-build.$BUILD"
+object ClaimConverter {
+    fun getUser(claim: ValidUserClaim?): User? = transaction {
+        if(claim == null) return@transaction null
+        return@transaction User.findById(UUID.fromString(claim.token))
+    }
 }

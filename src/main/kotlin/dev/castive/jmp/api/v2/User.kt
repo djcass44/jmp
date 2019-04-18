@@ -16,11 +16,11 @@
 
 package dev.castive.jmp.api.v2
 
+import dev.castive.javalin_auth.auth.connect.LDAPConfig
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.actions.UserAction
 import dev.castive.jmp.api.v2_1.WebSocket
-import dev.castive.jmp.auth.Providers
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.User
 import dev.castive.log2.Log
@@ -35,7 +35,11 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
-class User(private val auth: Auth, private val providers: Providers, private val ws: WebSocket): EndpointGroup {
+class User(
+    private val auth: Auth,
+    private val ws: WebSocket,
+    private val ldapConfigExtra: LDAPConfig.Extras
+): EndpointGroup {
     override fun addEndpoints() {
         get("${Runner.BASE}/v2/users", { ctx ->
             UserAction.get(ctx)
@@ -70,7 +74,7 @@ class User(private val auth: Auth, private val providers: Providers, private val
         put("${Runner.BASE}/v2/user", { ctx ->
             val user = UserAction.getOrNull(ctx)
             transaction {
-                val allowLocal = providers.keyedProps[Providers.PROP_EXT_ALLOW_LOCAL]?.toBoolean() ?: false // default to most secure setting
+                val allowLocal = !ldapConfigExtra.blockLocal
                 if ((user == null || auth.getUserRole(user.username, user.id.value) == Auth.BasicRoles.USER) && !allowLocal) {
                     Log.i(javaClass, "User ${user?.username} is not allowed to create local accounts [reason: POLICY]")
                     throw UnauthorizedResponse("Creating local accounts has been disabled.")

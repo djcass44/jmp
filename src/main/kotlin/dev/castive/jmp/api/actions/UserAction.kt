@@ -16,28 +16,32 @@
 
 package dev.castive.jmp.api.actions
 
-import dev.castive.jmp.auth.JWT
-import dev.castive.jmp.auth.TokenProvider
-import dev.castive.jmp.auth.response.AuthenticateResponse
+import dev.castive.javalin_auth.auth.JWT
+import dev.castive.javalin_auth.auth.Providers
+import dev.castive.javalin_auth.auth.TokenProvider
+import dev.castive.javalin_auth.auth.response.AuthenticateResponse
+import dev.castive.jmp.auth.ClaimConverter
 import dev.castive.jmp.db.dao.User
 import dev.castive.log2.Log
 import io.javalin.Context
 import io.javalin.ForbiddenResponse
 
 object UserAction {
+    private val verification = Providers.verification
+
     internal fun get(ctx: Context): User {
-        val jwt = JWT.map(ctx) ?: run {
+        val jwt = JWT.get().map(ctx) ?: run {
             ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
             throw ForbiddenResponse("Token verification failed")
         }
         Log.ok(javaClass, "JWT parse valid")
-        return TokenProvider.getInstance().verify(jwt) ?: run {
+        return ClaimConverter.getUser(TokenProvider.get().verify(jwt, verification)) ?: run {
             ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
             throw ForbiddenResponse("Token verification failed")
         }
     }
     internal fun getOrNull(ctx: Context): User? {
-        val jwt = JWT.map(ctx) ?: ""
-        return if(jwt == "null" || jwt.isBlank()) null else TokenProvider.getInstance().verify(jwt)
+        val jwt = JWT.get().map(ctx) ?: ""
+        return if(jwt == "null" || jwt.isBlank()) null else ClaimConverter.getUser(TokenProvider.get().verify(jwt, verification))
     }
 }

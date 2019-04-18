@@ -14,13 +14,22 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp
+package dev.castive.jmp.auth
 
-object Version {
-    private const val MAJOR = "0"
-    private const val MINOR = "4"
-    private const val PATCH = "11"
-    private const val BUILD = "105"
+import dev.castive.javalin_auth.auth.external.UserVerification
+import dev.castive.jmp.api.Auth
+import java.util.*
 
-    fun getVersion() = "$MAJOR.$MINOR.$PATCH-build.$BUILD"
+class UserVerification(private val auth: Auth): UserVerification {
+    override fun verify(userClaim: String, tokenClaim: String): Boolean {
+        return auth.getUser(userClaim, UUID.fromString(tokenClaim)) != null
+    }
+
+    override fun getToken(uid: String): String {
+        return auth.getUserTokenWithPrivilege(uid)
+    }
+
+    override fun getToken(uid: String, password: String): String {
+        return auth.getUserToken(uid, password.toCharArray()) ?: ""
+    }
 }
