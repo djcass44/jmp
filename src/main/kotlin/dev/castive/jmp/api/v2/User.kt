@@ -16,11 +16,12 @@
 
 package dev.castive.jmp.api.v2
 
+import dev.castive.javalin_auth.actions.UserAction
 import dev.castive.javalin_auth.auth.connect.LDAPConfig
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
-import dev.castive.jmp.api.actions.UserAction
 import dev.castive.jmp.api.v2_1.WebSocket
+import dev.castive.jmp.auth.ClaimConverter
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.User
 import dev.castive.log2.Log
@@ -72,7 +73,7 @@ class User(
         }, Auth.defaultRoleAccess)
         // Add a user
         put("${Runner.BASE}/v2/user", { ctx ->
-            val user = UserAction.getOrNull(ctx)
+            val user = ClaimConverter.getUser(UserAction.getOrNull(ctx))
             transaction {
                 val allowLocal = !ldapConfigExtra.blockLocal
                 if ((user == null || auth.getUserRole(user.username, user.id.value) == Auth.BasicRoles.USER) && !allowLocal) {
@@ -88,13 +89,13 @@ class User(
         }, Auth.defaultRoleAccess)
         // Get information about the current user
         get("${Runner.BASE}/v2/user", { ctx ->
-            val u = UserAction.get(ctx)
+            val u = ClaimConverter.getUser(UserAction.get(ctx))!!
             transaction {
                 ctx.status(HttpStatus.OK_200).result(u.role.name)
             }
         }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2_1/user/info", { ctx ->
-            val u = UserAction.get(ctx)
+            val u = ClaimConverter.getUser(UserAction.get(ctx))!!
             transaction {
                 ctx.status(HttpStatus.OK_200).json(UserData(u, arrayListOf()))
             }
@@ -122,7 +123,7 @@ class User(
         // Delete a user
         delete("${Runner.BASE}/v2/user/:id", { ctx ->
             val id = UUID.fromString(ctx.pathParam("id"))
-            val user = UserAction.get(ctx)
+            val user = ClaimConverter.getUser(UserAction.get(ctx))!!
             transaction {
                 val target = User.findById(id) ?: throw BadRequestResponse()
                 Log.i(javaClass, "[${user.username}] is removing ${target.username}")
@@ -146,7 +147,7 @@ class User(
                 throw BadRequestResponse("Bad UUID")
             }
             val items = arrayListOf<GroupData>()
-            val user = UserAction.getOrNull(ctx)
+            val user = ClaimConverter.getUser(UserAction.getOrNull(ctx))
             if(user != null) {
                 transaction {
                     val getUser = User.findById(uid) ?: throw BadRequestResponse("Requested user is null")

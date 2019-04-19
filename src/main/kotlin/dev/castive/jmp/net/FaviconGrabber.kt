@@ -73,7 +73,7 @@ class Favicon(val domain: String, val icons: Array<Icon>?) {
             return result
         }
         catch (e: Exception) {
-            Log.e(javaClass, "Failed to get favicon [$domain]: $e")
+            Log.e(javaClass, "Failed to generate favicon [$domain]: $e")
             return null
         }
     }

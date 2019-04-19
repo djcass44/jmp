@@ -22,6 +22,7 @@ import dev.castive.javalin_auth.auth.TokenProvider
 import dev.castive.javalin_auth.auth.response.AuthenticateResponse
 import dev.castive.jmp.Runner
 import dev.castive.jmp.auth.ClaimConverter
+import dev.castive.jmp.db.Util
 import io.javalin.BadRequestResponse
 import io.javalin.ForbiddenResponse
 import io.javalin.NotFoundResponse
@@ -40,7 +41,7 @@ class Oauth(private val auth: dev.castive.jmp.api.Auth): EndpointGroup {
         post("${Runner.BASE}/v2/oauth/token", { ctx ->
             val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
             val token = auth.loginUser(basicAuth.username, basicAuth.password) ?: throw NotFoundResponse()
-            val user = auth.getUser(basicAuth.username, UUID.fromString(token)) ?: throw BadRequestResponse()
+            val user = auth.getUser(basicAuth.username, Util.getSafeUUID(token)) ?: throw UnauthorizedResponse()
             val jwt = TokenProvider.get().create(basicAuth.username, token) ?: throw BadRequestResponse()
             val newRequestToken = TokenProvider.get().create(basicAuth.username) ?: throw BadRequestResponse()
             transaction {

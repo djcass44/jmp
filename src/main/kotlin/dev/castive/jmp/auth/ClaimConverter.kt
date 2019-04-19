@@ -17,6 +17,7 @@
 package dev.castive.jmp.auth
 
 import dev.castive.javalin_auth.auth.external.ValidUserClaim
+import dev.castive.jmp.db.Util
 import dev.castive.jmp.db.dao.User
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -24,6 +25,7 @@ import java.util.*
 object ClaimConverter {
     fun getUser(claim: ValidUserClaim?): User? = transaction {
         if(claim == null) return@transaction null
-        return@transaction User.findById(UUID.fromString(claim.token))
+        val id = Util.getSafeUUID(claim.token) ?: return@transaction null
+        return@transaction User.findById(id)
     }
 }

@@ -39,7 +39,7 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
 
-    implementation("com.github.djcass44:jmp-auth:52ca6d7cb3")
+    implementation("com.github.djcass44:jmp-auth:d4b520d46e")
     implementation("com.github.djcass44:log2:3.2")
     implementation("com.github.djcass44:fav2:v0.2.1")
 

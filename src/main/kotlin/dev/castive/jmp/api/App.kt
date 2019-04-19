@@ -16,10 +16,12 @@
 
 package dev.castive.jmp.api
 
+import dev.castive.javalin_auth.actions.UserAction
 import dev.castive.javalin_auth.auth.JWT
 import dev.castive.javalin_auth.auth.Providers
 import dev.castive.javalin_auth.auth.TokenProvider
 import dev.castive.jmp.Arguments
+import dev.castive.jmp.Version
 import dev.castive.jmp.api.v1.Jump
 import dev.castive.jmp.api.v2.*
 import dev.castive.jmp.api.v2.Similar
@@ -52,6 +54,7 @@ class App(val port: Int = 7000) {
         val builder = LDAPConfigBuilder(store)
         Providers(builder.core, builder.extra).init(UserVerification(auth)) // Setup user authentication
         Providers.validator = UserValidator(auth, builder.extra)
+        UserAction.verification = Providers.verification
         Javalin.create().apply {
             disableStartupBanner()
             port(port)
@@ -105,6 +108,6 @@ class App(val port: Int = 7000) {
                 " | |__| | |  | | |     \n" +
                 "  \\____/|_|  |_|_|     \n" +
                 "                       \n" +
-                "JMP v${dev.castive.jmp.Version.getVersion()} is ready.")
+                "JMP v${Version.getVersion()} is ready.")
     }
 }
