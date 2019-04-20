@@ -18,6 +18,7 @@ package dev.castive.jmp.api.v2
 
 import dev.castive.javalin_auth.actions.UserAction
 import dev.castive.jmp.Runner
+import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Similar
 import dev.castive.jmp.api.actions.OwnerAction
 import dev.castive.jmp.auth.ClaimConverter
@@ -46,6 +47,6 @@ class Similar : EndpointGroup {
                 Log.e(javaClass, "Empty target")
                 throw BadRequestResponse()
             }
-        }, dev.castive.jmp.api.Auth.defaultRoleAccess)
+        }, Auth.openAccessRole)
     }
 }

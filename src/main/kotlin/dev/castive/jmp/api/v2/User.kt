@@ -75,8 +75,9 @@ class User(
         put("${Runner.BASE}/v2/user", { ctx ->
             val user = ClaimConverter.getUser(UserAction.getOrNull(ctx))
             transaction {
-                val allowLocal = !ldapConfigExtra.blockLocal
-                if ((user == null || auth.getUserRole(user.username, user.id.value) == Auth.BasicRoles.USER) && !allowLocal) {
+                val blockLocal = ldapConfigExtra.blockLocal
+                Log.d(javaClass, "Block local accounts: $blockLocal")
+                if ((user == null || auth.getUserRole(user.username, user.id.value) != Auth.BasicRoles.ADMIN) && blockLocal) {
                     Log.i(javaClass, "User ${user?.username} is not allowed to create local accounts [reason: POLICY]")
                     throw UnauthorizedResponse("Creating local accounts has been disabled.")
                 }
@@ -86,7 +87,7 @@ class User(
             auth.createUser(basicAuth.username, basicAuth.password.toCharArray())
             ws.fire(WebSocket.EVENT_UPDATE_USER, WebSocket.EVENT_UPDATE_USER)
             ctx.status(HttpStatus.CREATED_201).result(basicAuth.username)
-        }, Auth.defaultRoleAccess)
+        }, Auth.openAccessRole)
         // Get information about the current user
         get("${Runner.BASE}/v2/user", { ctx ->
             val u = ClaimConverter.getUser(UserAction.get(ctx))!!

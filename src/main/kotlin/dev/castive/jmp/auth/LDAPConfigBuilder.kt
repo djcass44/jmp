@@ -40,7 +40,7 @@ class LDAPConfigBuilder(private val config: ConfigStore) {
         const val PROP_LDAP_RM_STALE = "jmp.ldap.remove_stale"
         const val PROP_LDAP_SYNC = "jmp.ldap.sync_rate"
 
-        const val PROP_EXT_ALLOW_LOCAL = "jmp.ext.allow_local"
+        const val PROP_EXT_BLOCK_LOCAL = "jmp.ext.block_local"
     }
     val properties = Properties()
 
@@ -81,7 +81,7 @@ class LDAPConfigBuilder(private val config: ConfigStore) {
                     "$PROP_LDAP_MAX_FAILURE=5" +
                     "$PROP_LDAP_RM_STALE=true\n" +
                     "$PROP_LDAP_SYNC=300000\n" +
-                    "$PROP_EXT_ALLOW_LOCAL=true",
+                    "$PROP_EXT_BLOCK_LOCAL=false",
             StandardCharsets.UTF_8)
     }
     private fun compute() {
@@ -97,7 +97,7 @@ class LDAPConfigBuilder(private val config: ConfigStore) {
             removeStale = properties.getOrDefault(PROP_LDAP_RM_STALE, true).toString().toBoolean(),
             syncRate = properties.getOrDefault(PROP_LDAP_SYNC, 300000).toString().toLongOrNull() ?: 300000,
             uid = properties[PROP_LDAP_USER_ID].toString(),
-            blockLocal =  properties.getOrDefault(PROP_EXT_ALLOW_LOCAL, true).toString().toBoolean(),
+            blockLocal =  properties.getOrDefault(PROP_EXT_BLOCK_LOCAL, false).toString().toBoolean(),
             maxConnectAttempts = properties.getOrDefault(PROP_LDAP_MAX_FAILURE, 5).toString().toIntOrNull() ?: 5
         )
     }

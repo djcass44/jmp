@@ -40,8 +40,8 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
 
-    implementation("com.github.djcass44:jmp-auth:027437e605")
-//    implementation("dev.castive:jmp-auth:2.1.8")
+    implementation("com.github.djcass44:jmp-auth:f69f9938dd")
+//    implementation("dev.castive:jmp-auth:2.1.9")
     implementation("com.github.djcass44:log2:3.2")
     implementation("com.github.djcass44:fav2:v0.2.1")
 
@@ -59,6 +59,7 @@ dependencies {
     implementation("commons-cli:commons-cli:1.4")
 
     implementation("com.auth0:java-jwt:3.7.0")
+    implementation("com.github.kmehrunes:javalin-jwt:v0.1")
 
     implementation("org.jetbrains.exposed:exposed:0.11.2")
     implementation("com.zaxxer:HikariCP:3.3.1")

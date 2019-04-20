@@ -21,6 +21,7 @@ import dev.castive.javalin_auth.auth.JWT
 import dev.castive.javalin_auth.auth.Providers
 import dev.castive.javalin_auth.auth.TokenProvider
 import dev.castive.jmp.Arguments
+import dev.castive.jmp.Runner
 import dev.castive.jmp.Version
 import dev.castive.jmp.api.v1.Jump
 import dev.castive.jmp.api.v2.*
@@ -38,10 +39,12 @@ import dev.castive.jmp.db.Init
 import dev.castive.jmp.db.dao.*
 import dev.castive.log2.Log
 import io.javalin.Javalin
+import io.javalin.security.Role
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.util.concurrent.TimeUnit
+
+
 
 class App(val port: Int = 7000) {
     fun start(store: ConfigStore, arguments: Arguments, logger: Logger) {
@@ -59,12 +62,16 @@ class App(val port: Int = 7000) {
         Javalin.create().apply {
             disableStartupBanner()
             port(port)
-            if(arguments.enableCors) enableCorsForAllOrigins()
+            if(arguments.enableCors) {
+                enableCorsForAllOrigins()
+                enableRouteOverview(Runner.BASE, setOf<Role>(Auth.BasicRoles.ANYONE))
+            }
             enableCaseSensitiveUrls()
+//            accessManager(JWTAccessManager(JWT.headerRole, Auth.roleMapping, Auth.BasicRoles.ANYONE))
             accessManager { handler, ctx, permittedRoles ->
-                val jwt = JWT.get().map(ctx)
-                val user = if(TokenProvider.get().mayBeToken(jwt)) ClaimConverter.getUser(TokenProvider.get().verify(jwt!!, Providers.verification)) else null
-                val userRole = if(user == null) Auth.BasicRoles.USER else transaction {
+                val jwt = JWT.map(ctx)
+                val user = if(TokenProvider.mayBeToken(jwt)) ClaimConverter.getUser(TokenProvider.verify(jwt!!, Providers.verification)) else null
+                val userRole = if(user == null) Auth.BasicRoles.ANYONE else transaction {
                     Auth.BasicRoles.valueOf(user.role.name)
                 }
                 if(permittedRoles.contains(userRole))

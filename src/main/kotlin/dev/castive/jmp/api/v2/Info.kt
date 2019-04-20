@@ -16,9 +16,9 @@
 
 package dev.castive.jmp.api.v2
 
+import dev.castive.jmp.Runner
 import dev.castive.jmp.Version
 import dev.castive.jmp.api.Auth
-import dev.castive.jmp.Runner
 import dev.castive.jmp.api.actions.InfoAction
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
@@ -30,7 +30,7 @@ class Info: EndpointGroup {
         // Version/info
         get("${Runner.BASE}/v2/version", { ctx ->
             ctx.status(HttpStatus.OK_200).result("v${Version.getVersion()}")
-        }, Auth.defaultRoleAccess)
+        }, Auth.openAccessRole)
         get("${Runner.BASE}/v2/info/system", { ctx ->
             ctx.status(HttpStatus.OK_200).json(InfoAction().getSystem())
         }, roles(Auth.BasicRoles.ADMIN))

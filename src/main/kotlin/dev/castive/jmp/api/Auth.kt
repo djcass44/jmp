@@ -28,6 +28,7 @@ import io.javalin.security.SecurityUtil
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
+import dev.castive.jmp.db.dao.Role as DaoRole
 
 class Auth {
     @Deprecated(message = "Use 'Authorization' headers instead", level = DeprecationLevel.ERROR)
@@ -36,17 +37,25 @@ class Auth {
         class Insecure(val username: String, val password: String)
     }
     enum class BasicRoles: Role {
-        USER, ADMIN
+        USER, ADMIN, ANYONE
     }
     companion object {
-        const val headerToken = "X-Auth-Token"
-        const val headerUser = "X-Auth-User"
 
-        val defaultRoleAccess = SecurityUtil.roles(
-            Auth.BasicRoles.USER,
-            Auth.BasicRoles.ADMIN
+        val openAccessRole = SecurityUtil.roles(
+            BasicRoles.ANYONE,
+            BasicRoles.USER,
+            BasicRoles.ADMIN
         )
-        val adminRoleAccess = SecurityUtil.roles(Auth.BasicRoles.ADMIN)
+        val defaultRoleAccess = SecurityUtil.roles(
+            BasicRoles.USER,
+            BasicRoles.ADMIN
+        )
+        val adminRoleAccess = SecurityUtil.roles(BasicRoles.ADMIN)
+        val roleMapping = hashMapOf<String, Role>(
+            Pair(BasicRoles.ANYONE.name, BasicRoles.ANYONE),
+            Pair(BasicRoles.USER.name, BasicRoles.USER),
+            Pair(BasicRoles.ADMIN.name, BasicRoles.ADMIN)
+        )
     }
 
     @Deprecated(message = "Do not use strings when dealing with passwords.")
@@ -158,43 +167,43 @@ class Auth {
     // Determine role based on request
     fun getUserRole(username: String? = null): Role {
         if(username == null)
-            return Auth.BasicRoles.USER
-        val user = getUser(username) ?: return Auth.BasicRoles.USER
+            return BasicRoles.USER
+        val user = getUser(username) ?: return BasicRoles.USER
         return transaction {
             when (user.role.name) {
-                Auth.BasicRoles.ADMIN.name -> Auth.BasicRoles.ADMIN
-                Auth.BasicRoles.USER.name -> Auth.BasicRoles.USER
-                else -> Auth.BasicRoles.USER
+                BasicRoles.ADMIN.name -> BasicRoles.ADMIN
+                BasicRoles.USER.name -> BasicRoles.USER
+                else -> BasicRoles.USER
             }
         }
     }
     // Determine role based on request
     fun getUserRole(username: String, token: UUID): Role {
-        val user = getUser(username) ?: return Auth.BasicRoles.USER
+        val user = getUser(username) ?: return BasicRoles.USER
         if(user.id.value != token) {
             Log.w(javaClass, "getUserRole -> $user provided invalid token")
-            return Auth.BasicRoles.USER
+            return BasicRoles.USER
         }
         return transaction {
             when (user.role.name) {
-                Auth.BasicRoles.ADMIN.name -> Auth.BasicRoles.ADMIN
-                Auth.BasicRoles.USER.name -> Auth.BasicRoles.USER
-                else -> Auth.BasicRoles.USER
+                BasicRoles.ADMIN.name -> BasicRoles.ADMIN
+                BasicRoles.USER.name -> BasicRoles.USER
+                else -> BasicRoles.USER
             }
         }
     }
-    fun getDAOUserRole(): dev.castive.jmp.db.dao.Role {
-        return getDAORole(Auth.BasicRoles.USER)
+    fun getDAOUserRole(): DaoRole {
+        return getDAORole(BasicRoles.USER)
     }
-    fun getDAOAdminRole(): dev.castive.jmp.db.dao.Role {
-        return getDAORole(Auth.BasicRoles.ADMIN)
+    fun getDAOAdminRole(): DaoRole {
+        return getDAORole(BasicRoles.ADMIN)
     }
-    private fun getDAORole(role: Auth.BasicRoles): dev.castive.jmp.db.dao.Role {
+    private fun getDAORole(role: BasicRoles): DaoRole {
         return transaction {
-            return@transaction dev.castive.jmp.db.dao.Role.find {
+            return@transaction DaoRole.find {
                 Roles.name eq role.name
             }.elementAtOrNull(0)?: // If role is null, create it
-            dev.castive.jmp.db.dao.Role.new {
+            DaoRole.new {
                 name = role.name
             }
         }

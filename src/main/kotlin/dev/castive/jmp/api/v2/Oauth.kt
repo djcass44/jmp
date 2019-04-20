@@ -46,32 +46,32 @@ class Oauth(private val auth: Auth): EndpointGroup {
             val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
             val token = auth.loginUser(basicAuth.username, basicAuth.password) ?: throw NotFoundResponse()
             val user = auth.getUser(basicAuth.username, Util.getSafeUUID(token)) ?: throw UnauthorizedResponse()
-            val jwt = TokenProvider.get().createRequestToken(basicAuth.username, token) ?: throw BadRequestResponse()
-            val refreshToken = TokenProvider.get().createRefreshToken(basicAuth.username, token) ?: throw BadRequestResponse()
-            Log.ok(javaClass, "Generated refresh token: $refreshToken")
-            transaction {
+            val result = transaction {
+                val jwt = TokenProvider.createRequestToken(basicAuth.username, token, user.role.name) ?: throw BadRequestResponse()
+                val refreshToken = TokenProvider.createRefreshToken(basicAuth.username, token, user.role.name) ?: throw BadRequestResponse()
                 Session.new {
                     this.refreshToken = refreshToken
                     this.createdAt = System.currentTimeMillis()
                     this.user = user
                 }
                 Log.i(javaClass, "Creating session for ${user.username}")
+                return@transaction TokenResponse(jwt, refreshToken)
             }
-            ctx.status(HttpStatus.OK_200).json(TokenResponse(jwt, refreshToken))
-        }, Auth.defaultRoleAccess)
+            ctx.status(HttpStatus.OK_200).json(result)
+        }, Auth.openAccessRole)
         get("${Runner.BASE}/v2/oauth/refresh", { ctx ->
             val refresh = ctx.queryParam("refresh_token", "")
             if(refresh.isNullOrBlank()) {
                 Log.d(javaClass, "Refresh token is null or blank")
                 throw BadRequestResponse()
             }
-            val jwt = JWT.get().map(ctx) ?: run {
+            val jwt = JWT.map(ctx) ?: run {
                 Log.d(javaClass, "Token verification failed")
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
-            if (!TokenProvider.get().mayBeToken(jwt)) throw BadRequestResponse()
-            val user = ClaimConverter.getUser(TokenProvider.get().verifyLax(jwt, Providers.verification)) ?: throw BadRequestResponse()
+            if (!TokenProvider.mayBeToken(jwt)) throw BadRequestResponse()
+            val user = ClaimConverter.getUser(TokenProvider.verifyLax(jwt, Providers.verification)) ?: throw BadRequestResponse()
             val response = transaction {
                 val existingRefreshToken = Session.find {
                     Sessions.user eq user.id and(Sessions.refreshToken eq refresh)
@@ -80,11 +80,11 @@ class Oauth(private val auth: Auth): EndpointGroup {
                     throw UnauthorizedResponse("Invalid refresh token")
                 }
                 // Check if users request token matched expected
-                if(TokenProvider.get().verify(existingRefreshToken.refreshToken, Providers.verification) == null) {
+                if(TokenProvider.verify(existingRefreshToken.refreshToken, Providers.verification) == null) {
                     throw BadRequestResponse("Expired refresh token")
                 }
-                val newToken = TokenProvider.get().createRequestToken(user.username, user.id.value.toString()) ?: throw BadRequestResponse()
-                val refreshToken = TokenProvider.get().createRefreshToken(user.username, user.id.value.toString()) ?: throw BadRequestResponse()
+                val newToken = TokenProvider.createRequestToken(user.username, user.id.value.toString(), user.role.name) ?: throw BadRequestResponse()
+                val refreshToken = TokenProvider.createRefreshToken(user.username, user.id.value.toString(), user.role.name) ?: throw BadRequestResponse()
                 Session.new {
                     this.refreshToken = refreshToken
                     this.createdAt = System.currentTimeMillis()
@@ -94,18 +94,18 @@ class Oauth(private val auth: Auth): EndpointGroup {
                 return@transaction TokenResponse(newToken, refreshToken)
             }
             ctx.status(HttpStatus.OK_200).json(response)
-        }, Auth.defaultRoleAccess)
+        }, Auth.openAccessRole)
         // Verify a users token is still valid
         get("${Runner.BASE}/v2/oauth/valid", { ctx ->
-            val jwt = JWT.get().map(ctx) ?: run {
+            val jwt = JWT.map(ctx) ?: run {
                 ctx.header(AuthenticateResponse.header, AuthenticateResponse.response)
                 throw ForbiddenResponse("Token verification failed")
             }
-            if (!TokenProvider.get().mayBeToken(jwt)) throw BadRequestResponse()
-            val user = ClaimConverter.getUser(TokenProvider.get().verify(jwt, Providers.verification)) ?: throw ForbiddenResponse()
+            if (!TokenProvider.mayBeToken(jwt)) throw BadRequestResponse()
+            val user = ClaimConverter.getUser(TokenProvider.verify(jwt, Providers.verification)) ?: throw ForbiddenResponse()
             transaction {
                 ctx.status(HttpStatus.OK_200).result(auth.validateUserToken(user.id.value).toString())
             }
-        }, Auth.defaultRoleAccess)
+        }, Auth.openAccessRole)
     }
 }

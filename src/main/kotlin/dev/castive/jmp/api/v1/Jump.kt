@@ -66,7 +66,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
                 }
             }
             ctx.json(items).status(HttpStatus.OK_200)
-        }, Auth.defaultRoleAccess)
+        }, Auth.openAccessRole)
         get("${Runner.BASE}/v2/jump/:target", { ctx ->
             try {
                 val target = ctx.pathParam("target")
@@ -97,7 +97,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
                 Log.e(javaClass, "Empty target")
                 throw NotFoundResponse()
             }
-        }, Auth.defaultRoleAccess)
+        }, Auth.openAccessRole)
         // Add a jump point
         put("${Runner.BASE}/v1/jump", { ctx ->
             val add = ctx.bodyAsClass(JumpData::class.java)
@@ -127,7 +127,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
                 ctx.status(HttpStatus.CREATED_201).json(add)
             }
             else throw ConflictResponse()
-        }, Auth.defaultRoleAccess)
+        }, Auth.openAccessRole)
         // Edit a jump point
         patch("${Runner.BASE}/v1/jump", { ctx ->
             val update = ctx.bodyAsClass(EditJumpData::class.java)
