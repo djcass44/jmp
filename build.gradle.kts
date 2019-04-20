@@ -34,12 +34,14 @@ repositories {
     maven(url = "https://dl.bintray.com/kotlin/exposed")
     maven(url = "https://jitpack.io")
     jcenter()
+//    mavenLocal()
 }
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
 
-    implementation("com.github.djcass44:jmp-auth:d4b520d46e")
+    implementation("com.github.djcass44:jmp-auth:027437e605")
+//    implementation("dev.castive:jmp-auth:2.1.8")
     implementation("com.github.djcass44:log2:3.2")
     implementation("com.github.djcass44:fav2:v0.2.1")
 

@@ -37,7 +37,6 @@ import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.util.*
 
 class Jump(private val config: ConfigStore, private val ws: WebSocket): EndpointGroup {
     private fun jumpExists(name: String, location: String, user: User?): Boolean {

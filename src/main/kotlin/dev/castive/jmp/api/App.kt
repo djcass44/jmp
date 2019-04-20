@@ -41,13 +41,14 @@ import io.javalin.Javalin
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.concurrent.TimeUnit
 
 class App(val port: Int = 7000) {
     fun start(store: ConfigStore, arguments: Arguments, logger: Logger) {
         transaction {
             SchemaUtils.create(Jumps, Users, Roles, Groups, GroupUsers, Aliases) // Ensure that the tables are created
             Log.i(javaClass, "Running automated database upgrade (if required)")
-            SchemaUtils.createMissingTablesAndColumns(Jumps, Users, Roles, Groups, GroupUsers, Aliases)
+            SchemaUtils.createMissingTablesAndColumns(Jumps, Users, Roles, Groups, GroupUsers, Aliases, Sessions)
             Init() // Ensure that the default admin/roles is created
         }
         val auth = Auth()
