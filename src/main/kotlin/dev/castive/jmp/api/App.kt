@@ -67,7 +67,6 @@ class App(val port: Int = 7000) {
                 enableRouteOverview(Runner.BASE, setOf<Role>(Auth.BasicRoles.ANYONE))
             }
             enableCaseSensitiveUrls()
-//            accessManager(JWTAccessManager(JWT.headerRole, Auth.roleMapping, Auth.BasicRoles.ANYONE))
             accessManager { handler, ctx, permittedRoles ->
                 val jwt = JWT.map(ctx)
                 val user = if(TokenProvider.mayBeToken(jwt)) ClaimConverter.getUser(TokenProvider.verify(jwt!!, Providers.verification)) else null

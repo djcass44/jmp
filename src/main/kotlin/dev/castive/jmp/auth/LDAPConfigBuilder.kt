@@ -78,7 +78,7 @@ class LDAPConfigBuilder(private val config: ConfigStore) {
                     "$PROP_LDAP_PASS=password\n" +
                     "$PROP_LDAP_USER_FILTER=\n" +
                     "$PROP_LDAP_USER_ID=uid\n" +
-                    "$PROP_LDAP_MAX_FAILURE=5" +
+                    "$PROP_LDAP_MAX_FAILURE=5\n" +
                     "$PROP_LDAP_RM_STALE=true\n" +
                     "$PROP_LDAP_SYNC=300000\n" +
                     "$PROP_EXT_BLOCK_LOCAL=false",
@@ -86,6 +86,7 @@ class LDAPConfigBuilder(private val config: ConfigStore) {
     }
     private fun compute() {
         core = LDAPConfig(
+            enabled = properties.getOrDefault(PROP_LDAP, false).toString().toBoolean(),
             server = properties.getOrDefault(PROP_LDAP_HOST, "localhost").toString(),
             port = properties.getOrDefault(PROP_LDAP_PORT, 389).toString().toIntOrNull() ?: 389,
             contextDN = properties[PROP_LDAP_CTX].toString(),

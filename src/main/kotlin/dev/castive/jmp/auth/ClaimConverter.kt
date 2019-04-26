@@ -24,8 +24,12 @@ import java.util.*
 
 object ClaimConverter {
     fun getUser(claim: ValidUserClaim?): User? = transaction {
-        if(claim == null) return@transaction null
+        if (claim == null) return@transaction null
         val id = Util.getSafeUUID(claim.token) ?: return@transaction null
         return@transaction User.findById(id)
+    }
+
+    fun get(claim: ValidUserClaim): User = transaction {
+        return@transaction User.findById(UUID.fromString(claim.token))!!
     }
 }

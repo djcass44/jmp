@@ -40,7 +40,7 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
 
-    implementation("com.github.djcass44:jmp-auth:f69f9938dd")
+    implementation("com.github.djcass44:jmp-auth:86a0efec08")
 //    implementation("dev.castive:jmp-auth:2.1.9")
     implementation("com.github.djcass44:log2:3.2")
     implementation("com.github.djcass44:fav2:v0.2.1")
@@ -63,8 +63,13 @@ dependencies {
 
     implementation("org.jetbrains.exposed:exposed:0.11.2")
     implementation("com.zaxxer:HikariCP:3.3.1")
+
+    // JDBC drivers
     runtimeOnly("org.xerial:sqlite-jdbc:3.25.2")
     runtimeOnly("org.postgresql:postgresql:42.2.2")
+    runtimeOnly("mysql:mysql-connector-java:8.0.15")
+    runtimeOnly("com.h2database:h2:1.4.199")
+    runtimeOnly("com.microsoft.sqlserver:mssql-jdbc:7.3.0.jre11-preview")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.2.0")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.2.0")
