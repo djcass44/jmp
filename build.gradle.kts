@@ -42,7 +42,7 @@ dependencies {
 
     implementation("com.github.djcass44:jmp-auth:86a0efec08")
 //    implementation("dev.castive:jmp-auth:2.1.9")
-    implementation("com.github.djcass44:log2:3.2")
+    implementation("com.github.djcass44:log2:3.3")
     implementation("com.github.djcass44:fav2:v0.2.1")
 
     implementation("io.javalin:javalin:2.8.0")

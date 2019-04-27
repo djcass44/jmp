@@ -144,18 +144,33 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
                         metaUpdate = System.currentTimeMillis()
                     }
                     // Add aliases
+                    val updated = arrayListOf<Int>()
                     update.alias.forEach {
                         val alias = Alias.findById(it.id)
                         if(it.id == 0 || alias == null) {
                             // Create the alias if it doesn't exist
-                            Alias.new {
+                            val a = Alias.new {
                                 name = it.name
                                 parent = existing
                             }
+                            updated.add(a.id.value)
                         }
                         // Update the alias name (needs investigation into ability to abuse)
-                        else alias.name = it.name
+                        else {
+                            alias.name = it.name
+                            updated.add(alias.id.value)
+                        }
                     }
+                    // Remove any dangling aliases
+                    val matches = Alias.find { Aliases.parent eq existing.id }
+                    var gc = 0
+                    matches.forEach {
+                        if(!updated.contains(it.id.value)) {
+                            it.delete()
+                            gc++
+                        }
+                    }
+                    Log.a(javaClass, "GC cleaned up $gc orphaned aliases for ${existing.id.value}, ${existing.name}")
                     ImageAction(update.location).get()
                     ws.fire(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
                     ctx.status(HttpStatus.NO_CONTENT_204).json(update)
