@@ -104,7 +104,7 @@ class App(val port: Int = 7000) {
                 Verify(auth).addEndpoints()
 
                 // Health
-                Health().addEndpoints()
+                Health(builder.core).addEndpoints()
             }
             start()
         }

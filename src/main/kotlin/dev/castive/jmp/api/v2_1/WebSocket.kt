@@ -19,8 +19,8 @@ package dev.castive.jmp.api.v2_1
 import com.corundumstudio.socketio.Configuration
 import com.corundumstudio.socketio.SocketConfig
 import com.corundumstudio.socketio.SocketIOServer
-import dev.castive.log2.Log
 import dev.castive.jmp.db.Util
+import dev.castive.log2.Log
 import io.javalin.apibuilder.EndpointGroup
 
 class WebSocket : EndpointGroup {
@@ -28,6 +28,8 @@ class WebSocket : EndpointGroup {
         const val EVENT_UPDATE = "EVENT_UPDATE"
         const val EVENT_UPDATE_USER = "${EVENT_UPDATE}_USER"
         const val EVENT_UPDATE_GROUP = "${EVENT_UPDATE}_GROUP"
+        const val EVENT_UPDATE_FAVICON = "${EVENT_UPDATE}_FAVICON"
+
         val allowSockets = Util.getEnv("SOCKET_ENABLED", "true").toBoolean()
     }
     private val server = SocketIOServer(Configuration().apply {
@@ -55,3 +57,4 @@ class WebSocket : EndpointGroup {
         server.allClients.forEach { it.sendEvent(tag, data) }
     }
 }
+data class FaviconPayload(val name: String, val url: String)

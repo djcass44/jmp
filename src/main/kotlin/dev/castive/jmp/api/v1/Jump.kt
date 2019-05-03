@@ -121,7 +121,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
                         name = it.name
                         parent = jump
                     } }
-                    ImageAction(add.location).get()
+                    ImageAction(add.location, ws).get()
                 }
                 ws.fire(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
                 ctx.status(HttpStatus.CREATED_201).json(add)
@@ -171,7 +171,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
                         }
                     }
                     Log.a(javaClass, "GC cleaned up $gc orphaned aliases for ${existing.id.value}, ${existing.name}")
-                    ImageAction(update.location).get()
+                    ImageAction(update.location, ws).get()
                     ws.fire(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
                     ctx.status(HttpStatus.NO_CONTENT_204).json(update)
                 }

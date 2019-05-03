@@ -25,6 +25,7 @@ import dev.castive.jmp.db.dao.Users
 import dev.castive.log2.Log
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
+import dev.castive.jmp.db.dao.User as DaoUser
 
 class UserValidator(private val auth: Auth, private val ldapConfigExtras: LDAPConfig.Extras): UserIngress {
     override fun ingestUsers(users: ArrayList<User>) {
@@ -32,10 +33,10 @@ class UserValidator(private val auth: Auth, private val ldapConfigExtras: LDAPCo
         transaction {
             users.forEach { u ->
                 names.add(u.username)
-                val match = dev.castive.jmp.db.dao.User.find { Users.username eq u.username and Users.from.eq(LDAPProvider.SOURCE_NAME) }
+                val match = DaoUser.find { Users.username eq u.username and Users.from.eq(LDAPProvider.SOURCE_NAME) }
                 if(match.empty()) {
                     // User doesn't exist yet
-                    dev.castive.jmp.db.dao.User.new {
+                    DaoUser.new {
                         username = u.username
                         hash = ""
                         role = auth.getDAOUserRole()
@@ -47,8 +48,8 @@ class UserValidator(private val auth: Auth, private val ldapConfigExtras: LDAPCo
                 }
             }
             // Get LDAP users which weren't in the most recent search and delete them
-            val externalUsers = dev.castive.jmp.db.dao.User.find { Users.from eq LDAPProvider.SOURCE_NAME }
-            val invalid = arrayListOf<dev.castive.jmp.db.dao.User>()
+            val externalUsers = DaoUser.find { Users.from eq LDAPProvider.SOURCE_NAME }
+            val invalid = arrayListOf<DaoUser>()
             externalUsers.forEach { if(!names.contains(it.username)) invalid.add(it) }
             Log.i(javaClass, "Found ${invalid.size} stale users")
             if(ldapConfigExtras.removeStale) {

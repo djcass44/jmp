@@ -16,7 +16,7 @@ RUN ./gradlew buildPackage
 FROM openjdk:12-jdk-oraclelinux7
 LABEL maintainer="Django Cass <dj.cass44@gmail.com>"
 
-ENV DRIVER_URL="jdbc:sqlite:jmpdb" \
+ENV DRIVER_URL="jdbc:sqlite:jmp.db" \
     DRIVER_CLASS="org.sqlite.JDBC" \
     DRIVER_USER="" \
     DRIVER_PASSWORD="" \
