@@ -25,6 +25,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 object Jumps : IntIdTable() {
     val name = varchar("name", 50)
     val location = varchar("location", 2083)
+    val title = text("title").nullable()
     val owner = optReference("owner", Users)
     val ownerGroup = optReference("ownerGroup", Groups)
     val image = varchar("image", 2083).nullable()
@@ -39,6 +40,7 @@ class Jump(id: EntityID<Int>) : IntEntity(id) {
 
     var name by Jumps.name
     var location by Jumps.location
+    var title by Jumps.title
     var owner by User optionalReferencedOn Jumps.owner
     var ownerGroup by Group optionalReferencedOn Jumps.ownerGroup
     var image by Jumps.image
@@ -48,11 +50,12 @@ class Jump(id: EntityID<Int>) : IntEntity(id) {
     var metaUsage by Jumps.metaUsage
 }
 data class JumpData(val id: Int, val name: String, val location: String, val personal: Int = 0, val owner: String? = null, val image: String? = null,
+                    val title: String? = null,
                     val alias: ArrayList<AliasData>,
                     val metaCreation: Long = 0,
                     val metaUpdate: Long = 0,
                     val metaUsage: Int = 0) {
-    constructor(jump: Jump): this(jump.id.value, jump.name, jump.location, getType(jump), getOwner(jump), jump.image, getAlias(jump), jump.metaCreation, jump.metaUpdate, jump.metaUsage)
+    constructor(jump: Jump): this(jump.id.value, jump.name, jump.location, getType(jump), getOwner(jump), jump.image, jump.title, getAlias(jump), jump.metaCreation, jump.metaUpdate, jump.metaUsage)
 
     companion object {
         const val TYPE_GLOBAL = 0

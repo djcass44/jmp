@@ -24,6 +24,7 @@ import org.jetbrains.exposed.dao.UUIDTable
 import java.util.*
 
 object Users: UUIDTable() {
+    // TODO greatly increase username length
     val username = varchar("username", 36).uniqueIndex()
     val hash = text("hash")
     val role = reference("role", Roles)

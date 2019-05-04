@@ -21,6 +21,7 @@ import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.actions.ImageAction
 import dev.castive.jmp.api.actions.OwnerAction
+import dev.castive.jmp.api.actions.TitleAction
 import dev.castive.jmp.api.v2_1.WebSocket
 import dev.castive.jmp.auth.ClaimConverter
 import dev.castive.jmp.db.ConfigStore
@@ -122,6 +123,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
                         parent = jump
                     } }
                     ImageAction(add.location, ws).get()
+                    TitleAction(add.location, ws).get()
                 }
                 ws.fire(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
                 ctx.status(HttpStatus.CREATED_201).json(add)
@@ -172,6 +174,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
                     }
                     Log.a(javaClass, "GC cleaned up $gc orphaned aliases for ${existing.id.value}, ${existing.name}")
                     ImageAction(update.location, ws).get()
+                    TitleAction(update.location, ws).get()
                     ws.fire(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
                     ctx.status(HttpStatus.NO_CONTENT_204).json(update)
                 }

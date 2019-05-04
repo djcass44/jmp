@@ -39,6 +39,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1")
 
     implementation("com.github.djcass44:jmp-auth:86a0efec08")
 //    implementation("dev.castive:jmp-auth:2.1.9")
@@ -55,6 +56,7 @@ dependencies {
     implementation("com.amdelamar:jhash:2.1.0")
     implementation("io.github.rybalkinsd:kohttp:0.7.1")
     implementation("com.google.code.gson:gson:2.8.5")
+    implementation("org.jsoup:jsoup:1.11.3")
 
     implementation("commons-cli:commons-cli:1.4")
 

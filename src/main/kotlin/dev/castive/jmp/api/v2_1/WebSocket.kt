@@ -29,6 +29,7 @@ class WebSocket : EndpointGroup {
         const val EVENT_UPDATE_USER = "${EVENT_UPDATE}_USER"
         const val EVENT_UPDATE_GROUP = "${EVENT_UPDATE}_GROUP"
         const val EVENT_UPDATE_FAVICON = "${EVENT_UPDATE}_FAVICON"
+        const val EVENT_UPDATE_TITLE = "${EVENT_UPDATE}_TITLE"
 
         val allowSockets = Util.getEnv("SOCKET_ENABLED", "true").toBoolean()
     }
@@ -57,4 +58,4 @@ class WebSocket : EndpointGroup {
         server.allClients.forEach { it.sendEvent(tag, data) }
     }
 }
-data class FaviconPayload(val name: String, val url: String)
+data class FaviconPayload(val id: Int, val url: String)

@@ -34,9 +34,9 @@ class ImageAction(private val address: String, private val ws: WebSocket) {
                     if(f != null) transaction {
                         val results = Jump.find { Jumps.location eq address }
                         for (r in results) if(r.image == null || r.image != f.src) {
-                            Log.v(javaClass, "Updating icon for ${r.name} [previous: ${r.image}, new: ${f.src}")
+                            Log.v(javaClass, "Updating icon for ${r.name} [previous: ${r.image}, new: ${f.src}]")
                             r.image = f.src
-                            ws.fire(WebSocket.EVENT_UPDATE_FAVICON, FaviconPayload(r.name, f.src))
+                            ws.fire(WebSocket.EVENT_UPDATE_FAVICON, FaviconPayload(r.id.value, f.src))
                         }
                     }
                 }

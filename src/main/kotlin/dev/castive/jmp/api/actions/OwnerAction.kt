@@ -68,6 +68,7 @@ object OwnerAction {
                                 data.personal,
                                 data.owner,
                                 data.image,
+                                data.title,
                                 data.alias,
                                 data.metaCreation,
                                 data.metaUpdate,
