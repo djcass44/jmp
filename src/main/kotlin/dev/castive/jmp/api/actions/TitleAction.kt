@@ -4,6 +4,7 @@ import dev.castive.jmp.api.v2_1.FaviconPayload
 import dev.castive.jmp.api.v2_1.WebSocket
 import dev.castive.jmp.db.dao.Jump
 import dev.castive.jmp.db.dao.Jumps
+import dev.castive.jmp.except.InsecureDomainException
 import dev.castive.log2.Log
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jsoup.Jsoup
@@ -11,6 +12,7 @@ import org.jsoup.Jsoup
 class TitleAction(private val address: String, private val ws: WebSocket) {
     fun get() = Thread {
         try {
+            if(address.startsWith("http://")) throw InsecureDomainException()
             val document = Jsoup.connect(address).get()
             val title = document.head().getElementsByTag("title").text()
             transaction {
