@@ -27,7 +27,7 @@ import org.eclipse.jetty.http.HttpStatus
 
 class Health(private val config: LDAPConfig): EndpointGroup {
     override fun addEndpoints() {
-        get("${Runner.BASE}/v2_1/health", { ctx ->
+        get("${Runner.BASE}/v3/health", { ctx ->
             ctx.status(HttpStatus.OK_200).json(runChecks())
         }, Auth.openAccessRole)
     }

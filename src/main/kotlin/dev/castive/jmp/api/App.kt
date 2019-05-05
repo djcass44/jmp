@@ -102,6 +102,7 @@ class App(val port: Int = 7000) {
                 // Authentication
                 Oauth(auth).addEndpoints()
                 Verify(auth).addEndpoints()
+                UserMod(auth).addEndpoints()
 
                 // Health
                 Health(builder.core).addEndpoints()
