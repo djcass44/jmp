@@ -39,7 +39,7 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class Oauth(private val auth: Auth): EndpointGroup {
-    data class TokenResponse(val jwt: String, val request: String)
+    data class TokenResponse(val request: String, val refresh: String)
     override fun addEndpoints() {
         // Get a users token
         post("${Runner.BASE}/v2/oauth/token", { ctx ->
@@ -97,7 +97,9 @@ class Oauth(private val auth: Auth): EndpointGroup {
         }, Auth.openAccessRole)
         // Verify a users token is still valid
         get("${Runner.BASE}/v2/oauth/valid", { ctx ->
+            Log.d(javaClass, "Checking session for ${ctx.host()}")
             val user = ClaimConverter.get(UserAction.get(ctx))
+            Log.d(javaClass, "Session for ${user.username} is valid")
             transaction {
                 ctx.status(HttpStatus.OK_200).json(UserData(user))
             }
