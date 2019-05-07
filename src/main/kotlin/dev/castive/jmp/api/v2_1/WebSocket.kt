@@ -19,12 +19,14 @@ package dev.castive.jmp.api.v2_1
 import com.corundumstudio.socketio.Configuration
 import com.corundumstudio.socketio.SocketConfig
 import com.corundumstudio.socketio.SocketIOServer
+import dev.castive.jmp.api.App
 import dev.castive.jmp.db.Util
 import dev.castive.log2.Log
 import io.javalin.apibuilder.EndpointGroup
 
 class WebSocket : EndpointGroup {
     companion object {
+        const val INIT_APP = "INIT_APP"
         const val EVENT_UPDATE = "EVENT_UPDATE"
         const val EVENT_UPDATE_USER = "${EVENT_UPDATE}_USER"
         const val EVENT_UPDATE_GROUP = "${EVENT_UPDATE}_GROUP"
@@ -43,6 +45,7 @@ class WebSocket : EndpointGroup {
         server.apply {
             addConnectListener {
                 Log.d(javaClass, "WebSocket connected: ${it.remoteAddress}")
+                it.sendEvent(INIT_APP, App.id)
             }
             addDisconnectListener {
                 Log.d(javaClass, "WebSocket disconnected: ${it.remoteAddress}")

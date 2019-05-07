@@ -43,10 +43,13 @@ import io.javalin.security.Role
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
-
+import java.util.*
 
 
 class App(val port: Int = 7000) {
+    companion object {
+        val id = UUID.randomUUID().toString()
+    }
     fun start(store: ConfigStore, arguments: Arguments, logger: Logger) {
         transaction {
             SchemaUtils.create(Jumps, Users, Roles, Groups, GroupUsers, Aliases) // Ensure that the tables are created

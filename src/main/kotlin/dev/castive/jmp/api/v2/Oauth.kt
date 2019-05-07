@@ -67,11 +67,11 @@ class Oauth(private val auth: Auth): EndpointGroup {
         }, Auth.openAccessRole)
         get("${Runner.BASE}/v2/oauth/refresh", { ctx ->
             val refresh = ctx.queryParam("refreshToken", "")
-            Log.d(javaClass, "Refresh token: $refresh")
             if(refresh.isJSNullOrBlank()) {
                 Log.d(javaClass, "Refresh token is null or blank")
                 throw BadRequestResponse()
             }
+            Log.d(javaClass, "Found refresh token")
             refresh!!
             val user = kotlin.runCatching {
                 ClaimConverter.get(UserAction.get(ctx, lax = true))
