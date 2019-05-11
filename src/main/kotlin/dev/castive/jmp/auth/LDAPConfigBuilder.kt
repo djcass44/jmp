@@ -34,7 +34,10 @@ class LDAPConfigBuilder(private val config: ConfigStore) {
         const val PROP_LDAP_USER = "ldap.user"
         const val PROP_LDAP_PASS = "ldap.password"
         const val PROP_LDAP_USER_FILTER = "jmp.ldap.user_query"
+        const val PROP_LDAP_GROUP_FILTER = "jmp.ldap.group_filter"
+        const val PROP_LDAP_GROUP_QUERY = "jmp.ldap.group_query"
         const val PROP_LDAP_USER_ID = "jmp.ldap.user_uid"
+        const val PROP_LDAP_GROUP_ID = "jmp.ldap.group_uid"
         const val PROP_LDAP_MAX_FAILURE = "jmp.ldap.max_failure"
 
         const val PROP_LDAP_RM_STALE = "jmp.ldap.remove_stale"
@@ -47,6 +50,8 @@ class LDAPConfigBuilder(private val config: ConfigStore) {
     lateinit var core: LDAPConfig
         private set
     lateinit var extra: LDAPConfig.Extras
+        private set
+    lateinit var group: LDAPConfig.Groups
         private set
 
     init {
@@ -77,7 +82,10 @@ class LDAPConfigBuilder(private val config: ConfigStore) {
                     "$PROP_LDAP_USER=admin\n" +
                     "$PROP_LDAP_PASS=password\n" +
                     "$PROP_LDAP_USER_FILTER=\n" +
+                    "$PROP_LDAP_GROUP_FILTER=\n" +
+                    "$PROP_LDAP_GROUP_QUERY=\n" +
                     "$PROP_LDAP_USER_ID=uid\n" +
+                    "$PROP_LDAP_GROUP_ID=\n" +
                     "$PROP_LDAP_MAX_FAILURE=5\n" +
                     "$PROP_LDAP_RM_STALE=true\n" +
                     "$PROP_LDAP_SYNC=300000\n" +
@@ -100,6 +108,11 @@ class LDAPConfigBuilder(private val config: ConfigStore) {
             uid = properties[PROP_LDAP_USER_ID].toString(),
             blockLocal =  properties.getOrDefault(PROP_EXT_BLOCK_LOCAL, false).toString().toBoolean(),
             maxConnectAttempts = properties.getOrDefault(PROP_LDAP_MAX_FAILURE, 5).toString().toIntOrNull() ?: 5
+        )
+        group = LDAPConfig.Groups(
+            groupFilter = properties[PROP_LDAP_GROUP_FILTER].toString(),
+            groupQuery = properties[PROP_LDAP_GROUP_QUERY].toString(),
+            gid = properties[PROP_LDAP_GROUP_ID].toString()
         )
     }
 }

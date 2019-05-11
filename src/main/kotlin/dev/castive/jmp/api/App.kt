@@ -59,7 +59,7 @@ class App(val port: Int = 7000) {
         }
         val auth = Auth()
         val builder = LDAPConfigBuilder(store)
-        Providers(builder.core, builder.extra).init(UserVerification(auth)) // Setup user authentication
+        Providers(builder.core, builder.extra, builder.group).init(UserVerification(auth)) // Setup user authentication
         Providers.validator = UserValidator(auth, builder.extra)
         UserAction.verification = Providers.verification
         Javalin.create().apply {

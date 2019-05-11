@@ -16,9 +16,10 @@
 
 package dev.castive.jmp.db
 
-import dev.castive.log2.Log
+import dev.castive.jmp.api.Auth
 import dev.castive.jmp.db.dao.Role
 import dev.castive.jmp.db.dao.User
+import dev.castive.log2.Log
 import dev.castive.securepass3.PasswordGenerator
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.nio.charset.StandardCharsets
@@ -31,7 +32,7 @@ class Init {
         transaction {
             if(User.all().empty()) {
                 val password = PasswordGenerator().generate(32, strong = false) // Strong causes blocking issues in Docker
-                dev.castive.jmp.api.Auth().createUser(superName, password, true)
+                Auth().createUser(superName, password, true)
                 Log.w(javaClass, "Created superuser with access: [username: $superName]\nPlease change this ASAP!\nThis will also be stored in the current directory in 'initialAdminPassword'")
                 Files.writeString(Path.of("initialAdminPassword"), String(password), StandardCharsets.UTF_8)
                 for (c in password) // Probably useless if converted to a string above
@@ -39,7 +40,7 @@ class Init {
                 println()
             }
             if(Role.all().empty()) {
-                for (r in dev.castive.jmp.api.Auth.BasicRoles.values()) {
+                for (r in Auth.BasicRoles.values()) {
                     Role.new {
                         name = r.name
                     }

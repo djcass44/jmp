@@ -21,6 +21,8 @@ import dev.castive.javalin_auth.auth.provider.LDAPProvider
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.auth.LDAPConfigBuilder
+import dev.castive.jmp.db.dao.Group
+import dev.castive.jmp.db.dao.Groups
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
 import io.javalin.apibuilder.ApiBuilder.get
@@ -44,8 +46,9 @@ class Props(private val builder: LDAPConfigBuilder): EndpointGroup {
         get("${Runner.BASE}/v2_1/provider/main", { ctx ->
             val connected = Providers.primaryProvider != null && Providers.primaryProvider!!.connected()
             val users = transaction { return@transaction User.find { Users.from eq LDAPProvider.SOURCE_NAME }.count() }
-            ctx.status(HttpStatus.OK_200).json(LDAPPayload(connected, users))
+            val groups = transaction { return@transaction Group.find { Groups.from eq LDAPProvider.SOURCE_NAME }.count() }
+            ctx.status(HttpStatus.OK_200).json(LDAPPayload(connected, users, groups))
         }, Auth.adminRoleAccess)
     }
 }
-data class LDAPPayload(val connected: Boolean, val users: Int)
+data class LDAPPayload(val connected: Boolean, val users: Int, val groups: Int)

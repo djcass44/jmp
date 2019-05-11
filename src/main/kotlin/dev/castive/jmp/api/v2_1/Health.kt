@@ -21,6 +21,7 @@ import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.util.checks.DatabaseCheck
 import dev.castive.jmp.util.checks.LDAPCheck
+import dev.castive.log2.Log
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
@@ -28,7 +29,9 @@ import org.eclipse.jetty.http.HttpStatus
 class Health(private val config: LDAPConfig): EndpointGroup {
     override fun addEndpoints() {
         get("${Runner.BASE}/v3/health", { ctx ->
-            ctx.status(HttpStatus.OK_200).json(runChecks())
+            val check = runChecks()
+            Log.d(javaClass, check.toString())
+            ctx.status(HttpStatus.OK_200).json(check)
         }, Auth.openAccessRole)
     }
     private fun runChecks(): HealthPayload {

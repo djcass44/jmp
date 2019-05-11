@@ -31,3 +31,15 @@ services:
       - POSTGRES_PASSWORD=password
       - POSTGRES_USER=user
       - POSTGRES_DB=jmp
+  ldap-service:
+    image: osixia/openldap:1.1.8
+    hostname: ldap-service
+  phpldapadmin:
+    image: osixia/phpldapadmin:0.7.2
+    hostname: phpldapadmin-service
+    ports:
+      - 8443:443
+    links:
+      - ldap-service:ldap-host
+    environment:
+      - PHPLDAPADMIN_LDAP_HOSTS=ldap-host
