@@ -24,7 +24,7 @@ import org.jetbrains.exposed.sql.Table
 import java.util.*
 
 object Groups: UUIDTable() {
-    val name = varchar("name", 24).uniqueIndex()
+    val name = varchar("name", 255).uniqueIndex()
 
     val from = varchar("from", 24).default("local")
 }
