@@ -20,8 +20,15 @@ steps:
       tag: ${DRONE_COMMIT_SHA}
       container: jmp-api
       namespace: default
-      kubernetes_server: "https://10.0.1.30:6443"
+      kubernetes_server:
+        from_secret: KUBERNETES_SERVER
       kubernetes_cert:
         from_secret: KUBERNETES_CERT
       kubernetes_token:
         from_secret: KUBERNETES_TOKEN
+trigger:
+  when:
+    branch:
+      - master
+      - develop
+    event: push
