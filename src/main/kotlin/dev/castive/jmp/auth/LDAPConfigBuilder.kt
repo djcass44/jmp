@@ -114,5 +114,6 @@ class LDAPConfigBuilder(private val config: ConfigStore) {
 			groupQuery = properties[PROP_LDAP_GROUP_QUERY].toString(),
 			gid = properties[PROP_LDAP_GROUP_ID].toString()
 		)
+		if(extra.blockLocal) Log.w(javaClass, "Local account creation is disabled by application policy")
 	}
 }

@@ -41,8 +41,8 @@ class Props(private val builder: LDAPConfigBuilder): EndpointGroup {
             ctx.status(HttpStatus.OK_200).result(result.toString())
         }, Auth.adminRoleAccess)
         get("${Runner.BASE}/v2_1/uprop/allow_local", { ctx ->
-            ctx.status(HttpStatus.OK_200).result(builder.extra.blockLocal.not().toString())
-        }, Auth.defaultRoleAccess)
+            ctx.status(HttpStatus.OK_200).result(builder.extra.blockLocal.toString())
+        }, Auth.openAccessRole)
         get("${Runner.BASE}/v2_1/provider/main", { ctx ->
             val connected = Providers.primaryProvider != null && Providers.primaryProvider!!.connected()
             val users = transaction { return@transaction User.find { Users.from eq LDAPProvider.SOURCE_NAME }.count() }
