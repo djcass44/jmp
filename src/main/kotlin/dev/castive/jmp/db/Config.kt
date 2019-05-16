@@ -33,6 +33,7 @@ class Config {
         private const val envBaseUrl = "BASE_URL"
         private const val envDataPath = "JMP_HOME"
 
+        const val logEnabled = "LOG_ENABLED"
         private const val logRequestDir = "LOG_DIRECTORY"
     }
     fun load(name: String): ConfigStore {
