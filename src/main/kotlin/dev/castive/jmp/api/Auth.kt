@@ -31,184 +31,179 @@ import java.util.*
 import dev.castive.jmp.db.dao.Role as DaoRole
 
 class Auth {
-    @Deprecated(message = "Use 'Authorization' headers instead", level = DeprecationLevel.ERROR)
-    class BasicAuth(val username: String, val password: CharArray) {
-        constructor(insecure: Insecure): this(insecure.username, insecure.password.toCharArray())
-        class Insecure(val username: String, val password: String)
-    }
-    enum class BasicRoles: Role {
-        USER, ADMIN, ANYONE
-    }
-    companion object {
+	enum class BasicRoles: Role {
+		USER, ADMIN, ANYONE
+	}
+	companion object {
 
-        val openAccessRole = SecurityUtil.roles(
-            BasicRoles.ANYONE,
-            BasicRoles.USER,
-            BasicRoles.ADMIN
-        )
-        val defaultRoleAccess = SecurityUtil.roles(
-            BasicRoles.USER,
-            BasicRoles.ADMIN
-        )
-        val adminRoleAccess = SecurityUtil.roles(BasicRoles.ADMIN)
-        val roleMapping = hashMapOf<String, Role>(
-            Pair(BasicRoles.ANYONE.name, BasicRoles.ANYONE),
-            Pair(BasicRoles.USER.name, BasicRoles.USER),
-            Pair(BasicRoles.ADMIN.name, BasicRoles.ADMIN)
-        )
-    }
+		val openAccessRole = SecurityUtil.roles(
+			BasicRoles.ANYONE,
+			BasicRoles.USER,
+			BasicRoles.ADMIN
+		)
+		val defaultRoleAccess = SecurityUtil.roles(
+			BasicRoles.USER,
+			BasicRoles.ADMIN
+		)
+		val adminRoleAccess = SecurityUtil.roles(BasicRoles.ADMIN)
+		val roleMapping = hashMapOf<String, Role>(
+			Pair(BasicRoles.ANYONE.name, BasicRoles.ANYONE),
+			Pair(BasicRoles.USER.name, BasicRoles.USER),
+			Pair(BasicRoles.ADMIN.name, BasicRoles.ADMIN)
+		)
+	}
 
-    @Deprecated(message = "Do not use strings when dealing with passwords.")
-    fun computeHash(password: String): String {
-        return computeHash(password.toCharArray())
-    }
-    fun computeHash(password: CharArray): String {
-        return Hash.password(password).create()
-    }
-    @Deprecated(message = "Do not use strings when dealing with passwords.")
-    fun hashMatches(password: String, expectedHash: String): Boolean {
-        if(expectedHash.isBlank()) return false
-        return hashMatches(password.toCharArray(), expectedHash)
-    }
-    private fun hashMatches(password: CharArray, expectedHash: String): Boolean {
-        if(expectedHash.isBlank()) return false
-        return Hash.password(password).verify(expectedHash)
-    }
+	@Deprecated(message = "Do not use strings when dealing with passwords.")
+	fun computeHash(password: String): String {
+		return computeHash(password.toCharArray())
+	}
+	fun computeHash(password: CharArray): String {
+		return Hash.password(password).create()
+	}
+	@Deprecated(message = "Do not use strings when dealing with passwords.")
+	fun hashMatches(password: String, expectedHash: String): Boolean {
+		if(expectedHash.isBlank()) return false
+		return hashMatches(password.toCharArray(), expectedHash)
+	}
+	private fun hashMatches(password: CharArray, expectedHash: String): Boolean {
+		if(expectedHash.isBlank()) return false
+		return Hash.password(password).verify(expectedHash)
+	}
 
-    fun createUser(username: String, password: CharArray, admin: Boolean = false) {
-        val hash = computeHash(password)
-        if(!userExists(username)) { // Assume the user hasn't been added
-            transaction {
-                User.new {
-                    this.username = username
-                    this.hash = hash
-                    role = if(admin) getDAOAdminRole() else getDAOUserRole()
-                    metaCreation = System.currentTimeMillis()
-                    metaUpdate = System.currentTimeMillis()
-                }
-            }
-        }
-        else
-            throw ConflictResponse()
-    }
-    fun loginUser(username: String, password: String): String? {
-        var result: String?
-        if(Providers.primaryProvider != null) { // Try to use primary provider if it exists
-            result = Providers.primaryProvider?.getLogin(username, password)
-            if(result != null) return result
-        }
-        Log.v(javaClass, "Failed to locate user in primary provider, checking local provider")
-        // Fallback to internal database checks
-        result = Providers.internalProvider.getLogin(username, password)
-        Log.d(javaClass, "Found local user: $result")
-        return result
-    }
+	fun createUser(username: String, password: CharArray, admin: Boolean = false) {
+		val hash = computeHash(password)
+		if(!userExists(username)) { // Assume the user hasn't been added
+			transaction {
+				User.new {
+					this.username = username
+					this.hash = hash
+					role = if(admin) getDAOAdminRole() else getDAOUserRole()
+					metaCreation = System.currentTimeMillis()
+					metaUpdate = System.currentTimeMillis()
+				}
+			}
+		}
+		else
+			throw ConflictResponse()
+	}
+	fun loginUser(username: String, password: String): String? {
+		var result: String?
+		if(Providers.primaryProvider != null) { // Try to use primary provider if it exists
+			result = Providers.primaryProvider?.getLogin(username, password)
+			if(result != null) return result
+		}
+		Log.v(javaClass, "Failed to locate user in primary provider, checking local provider")
+		// Fallback to internal database checks
+		result = Providers.internalProvider.getLogin(username, password)
+		Log.d(javaClass, "Found local user: $result")
+		return result
+	}
 
-    fun validateUserToken(token: UUID): Boolean {
-        return transaction {
-            val existing = User.findById(token)
-            return@transaction existing != null
-        }
-    }
+	fun validateUserToken(token: UUID): Boolean {
+		return transaction {
+			val existing = User.findById(token)
+			return@transaction existing != null
+		}
+	}
 
-    fun getUserToken(username: String, password: CharArray): String? {
-        assert(userExists(username))
-        return transaction {
-            val existing = User.find {
-                Users.username eq username
-            }.limit(1)
-            val user = existing.elementAtOrNull(0)
-            // Only return if hashes match (and user was found)
-            return@transaction if(user != null && hashMatches(password, user.hash))
-                user.id.value.toString()
-            else
-                null
-        }
-    }
+	fun getUserToken(username: String, password: CharArray): String? {
+		assert(userExists(username))
+		return transaction {
+			val existing = User.find {
+				Users.username eq username
+			}.limit(1)
+			val user = existing.elementAtOrNull(0)
+			// Only return if hashes match (and user was found)
+			return@transaction if(user != null && hashMatches(password, user.hash))
+				user.id.value.toString()
+			else
+				null
+		}
+	}
 
-    /**
-     * Get a users token without checking password
-     * ONLY USE THIS ONCE EXTERNAL AUTHENTICATION HAS SUCCEEDED
-     */
-    fun getUserTokenWithPrivilege(username: String): String {
-        assert(userExists(username)) // Requires users to be synced already
-        return transaction {
-            val existing = User.find {
-                Users.username eq username
-            }.limit(1)
-            val user = existing.elementAtOrNull(0)
-            return@transaction user?.id?.value.toString()
-        }
-    }
-    fun userExists(username: String): Boolean {
-        return transaction {
-            val existing = User.find {
-                Users.username.lowerCase() eq username.toLowerCase()
-            }
-            return@transaction !existing.empty()
-        }
-    }
+	/**
+	 * Get a users token without checking password
+	 * ONLY USE THIS ONCE EXTERNAL AUTHENTICATION HAS SUCCEEDED
+	 */
+	fun getUserTokenWithPrivilege(username: String): String {
+		assert(userExists(username)) // Requires users to be synced already
+		return transaction {
+			val existing = User.find {
+				Users.username eq username
+			}.limit(1)
+			val user = existing.elementAtOrNull(0)
+			return@transaction user?.id?.value.toString()
+		}
+	}
+	fun userExists(username: String): Boolean {
+		return transaction {
+			val existing = User.find {
+				Users.username.lowerCase() eq username.toLowerCase()
+			}
+			return@transaction !existing.empty()
+		}
+	}
 
-    private fun getUser(username: String): User? {
-        return transaction {
-            return@transaction User.find {
-                Users.username eq username
-            }.elementAtOrNull(0)
-        }
-    }
-    fun getUser(username: String?, token: UUID?): User? {
-        if(username == null || token == null)
-            return null
-        return transaction {
-            return@transaction User.findById(token)
-        }
-    }
+	private fun getUser(username: String): User? {
+		return transaction {
+			return@transaction User.find {
+				Users.username eq username
+			}.elementAtOrNull(0)
+		}
+	}
+	fun getUser(username: String?, token: UUID?): User? {
+		if(username == null || token == null)
+			return null
+		return transaction {
+			return@transaction User.findById(token)
+		}
+	}
 
-    // Determine role based on request
-    fun getUserRole(username: String? = null): Role {
-        if(username == null)
-            return BasicRoles.USER
-        val user = getUser(username) ?: return BasicRoles.USER
-        return transaction {
-            when (user.role.name) {
-                BasicRoles.ADMIN.name -> BasicRoles.ADMIN
-                BasicRoles.USER.name -> BasicRoles.USER
-                else -> BasicRoles.USER
-            }
-        }
-    }
-    // Determine role based on request
-    fun getUserRole(username: String, token: UUID): Role {
-        val user = getUser(username) ?: return BasicRoles.USER
-        if(user.id.value != token) {
-            Log.w(javaClass, "getUserRole -> $user provided invalid token")
-            return BasicRoles.USER
-        }
-        return transaction {
-            when (user.role.name) {
-                BasicRoles.ADMIN.name -> BasicRoles.ADMIN
-                BasicRoles.USER.name -> BasicRoles.USER
-                else -> BasicRoles.USER
-            }
-        }
-    }
-    fun isAdmin(user: User): Boolean = transaction {
-        return@transaction user.role.name == getDAOAdminRole().name
-    }
-    fun getDAOUserRole(): DaoRole {
-        return getDAORole(BasicRoles.USER)
-    }
-    fun getDAOAdminRole(): DaoRole {
-        return getDAORole(BasicRoles.ADMIN)
-    }
-    private fun getDAORole(role: BasicRoles): DaoRole {
-        return transaction {
-            return@transaction DaoRole.find {
-                Roles.name eq role.name
-            }.elementAtOrNull(0)?: // If role is null, create it
-            DaoRole.new {
-                name = role.name
-            }
-        }
-    }
+	// Determine role based on request
+	fun getUserRole(username: String? = null): Role {
+		if(username == null)
+			return BasicRoles.USER
+		val user = getUser(username) ?: return BasicRoles.USER
+		return transaction {
+			when (user.role.name) {
+				BasicRoles.ADMIN.name -> BasicRoles.ADMIN
+				BasicRoles.USER.name -> BasicRoles.USER
+				else -> BasicRoles.USER
+			}
+		}
+	}
+	// Determine role based on request
+	fun getUserRole(username: String, token: UUID): Role {
+		val user = getUser(username) ?: return BasicRoles.USER
+		if(user.id.value != token) {
+			Log.w(javaClass, "getUserRole -> $user provided invalid token")
+			return BasicRoles.USER
+		}
+		return transaction {
+			when (user.role.name) {
+				BasicRoles.ADMIN.name -> BasicRoles.ADMIN
+				BasicRoles.USER.name -> BasicRoles.USER
+				else -> BasicRoles.USER
+			}
+		}
+	}
+	fun isAdmin(user: User): Boolean = transaction {
+		return@transaction user.role.name == getDAOAdminRole().name
+	}
+	fun getDAOUserRole(): DaoRole {
+		return getDAORole(BasicRoles.USER)
+	}
+	fun getDAOAdminRole(): DaoRole {
+		return getDAORole(BasicRoles.ADMIN)
+	}
+	private fun getDAORole(role: BasicRoles): DaoRole {
+		return transaction {
+			return@transaction DaoRole.find {
+				Roles.name eq role.name
+			}.elementAtOrNull(0)?: // If role is null, create it
+			DaoRole.new {
+				name = role.name
+			}
+		}
+	}
 }

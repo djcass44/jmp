@@ -3,34 +3,21 @@ version: '2'
 services:
   jmp:
     build: .
+    image: jmp
+    command: ["java", "-jar", "jmp.jar", "using", "env", "-d", "0", "--enable-cors"]
     ports:
       - "7000:7000"
       - "7001:7001"
     volumes:
       - ./data:/data
-    command: ["/wait-for-it.sh", "db:5432/jmp", "--", "/entrypoint.sh"]
     environment:
-      - DRIVER_URL=jdbc:postgresql://db:5432/jmp
-      - DRIVER_CLASS=org.postgresql.Driver
+      - DRIVER_URL=jdbc:sqlite:/data/jmp.db
+      - DRIVER_CLASS=org.sqlite.JDBC
       - ENV_LOG_REQUEST_DIRECTORY="data/logs"
       - BASE_URL=http://localhost:8080
-      - DRIVER_USER=user
-      - DRIVER_PASSWORD=password
       - SOCKET_ENABLED=true
       - SOCKET_HOST=0.0.0.0
       - SOCKET_PORT=7001
-    depends_on:
-      - db
-  db:
-    image: postgres:11.2-alpine
-    ports:
-      - "5432:5432"
-    volumes:
-      - ./data/pgdata:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_USER=user
-      - POSTGRES_DB=jmp
   ldap-service:
     image: osixia/openldap:1.1.8
     hostname: ldap-service

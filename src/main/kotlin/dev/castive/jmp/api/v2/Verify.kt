@@ -28,34 +28,34 @@ import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class Verify(private val auth: Auth): EndpointGroup {
-    override fun addEndpoints() {
-        // Verify a users token is still valid
-        get("${Runner.BASE}/v2/verify/token", { ctx ->
-            ctx.status(HttpStatus.MOVED_PERMANENTLY_301).result("This has been deprecated in favour of OAuth2 /v2/oauth")
-        }, Auth.defaultRoleAccess)
-        // Verify a user still exists
-        get("${Runner.BASE}/v2/verify/user/:name", { ctx ->
-            val name = ctx.pathParam("name")
-            if (name.isBlank()) {
-                Log.v(javaClass, "User made null/empty request")
-                throw BadRequestResponse()
-            }
-            transaction {
-                val result = User.find {
-                    Users.username eq name
-                }.elementAtOrNull(0)
-                if (result == null) {
-                    Log.w(javaClass, "User: $name failed verification [IP: ${ctx.ip()}, UA: ${ctx.userAgent()}]")
-                    throw BadRequestResponse()
-                }
-                else {
-                    if (auth.validateUserToken(result.id.value)) ctx.status(HttpStatus.OK_200).result(name)
-                    else {
-                        Log.w(javaClass, "User: $name exists, however their token is invalid [IP: ${ctx.ip()}, UA: ${ctx.userAgent()}]")
-                        throw BadRequestResponse()
-                    }
-                }
-            }
-        }, Auth.defaultRoleAccess)
-    }
+	override fun addEndpoints() {
+		// Verify a users token is still valid
+		get("${Runner.BASE}/v2/verify/token", { ctx ->
+			ctx.status(HttpStatus.MOVED_PERMANENTLY_301).result("This has been deprecated in favour of OAuth2 /v2/oauth")
+		}, Auth.defaultRoleAccess)
+		// Verify a user still exists
+		get("${Runner.BASE}/v2/verify/user/:name", { ctx ->
+			val name = ctx.pathParam("name")
+			if (name.isBlank()) {
+				Log.v(javaClass, "User made null/empty request")
+				throw BadRequestResponse()
+			}
+			transaction {
+				val result = User.find {
+					Users.username eq name
+				}.elementAtOrNull(0)
+				if (result == null) {
+					Log.w(javaClass, "User: $name failed verification [IP: ${ctx.ip()}, UA: ${ctx.userAgent()}]")
+					throw BadRequestResponse()
+				}
+				else {
+					if (auth.validateUserToken(result.id.value)) ctx.status(HttpStatus.OK_200).result(name)
+					else {
+						Log.w(javaClass, "User: $name exists, however their token is invalid [IP: ${ctx.ip()}, UA: ${ctx.userAgent()}]")
+						throw BadRequestResponse()
+					}
+				}
+			}
+		}, Auth.defaultRoleAccess)
+	}
 }
