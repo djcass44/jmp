@@ -27,11 +27,14 @@ steps:
       kubernetes_token:
         from_secret: KUBERNETES_TOKEN
     when:
-      branch: master
+      branch:
+        - staging
+        - master
       event: push
 trigger:
   when:
     branch:
       - master
+      - staging
       - develop
     event: push
