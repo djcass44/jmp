@@ -39,6 +39,7 @@ class LDAPConfigBuilder(private val config: ConfigStore) {
 		const val PROP_LDAP_USER_ID = "jmp.ldap.user_uid"
 		const val PROP_LDAP_GROUP_ID = "jmp.ldap.group_uid"
 		const val PROP_LDAP_MAX_FAILURE = "jmp.ldap.max_failure"
+		const val PROP_LDAP_AUTH_RECONNECT = "jmp.ldap.auth_reconnect"
 
 		const val PROP_LDAP_RM_STALE = "jmp.ldap.remove_stale"
 		const val PROP_LDAP_SYNC = "jmp.ldap.sync_rate"
@@ -87,6 +88,7 @@ class LDAPConfigBuilder(private val config: ConfigStore) {
 					"$PROP_LDAP_USER_ID=uid\n" +
 					"$PROP_LDAP_GROUP_ID=\n" +
 					"$PROP_LDAP_MAX_FAILURE=5\n" +
+					"$PROP_LDAP_AUTH_RECONNECT=false" +
 					"$PROP_LDAP_RM_STALE=true\n" +
 					"$PROP_LDAP_SYNC=300000\n" +
 					"$PROP_EXT_BLOCK_LOCAL=false",
@@ -107,7 +109,8 @@ class LDAPConfigBuilder(private val config: ConfigStore) {
 			syncRate = properties.getOrDefault(PROP_LDAP_SYNC, 300000).toString().toLongOrNull() ?: 300000,
 			uid = properties[PROP_LDAP_USER_ID].toString(),
 			blockLocal =  properties.getOrDefault(PROP_EXT_BLOCK_LOCAL, false).toString().toBoolean(),
-			maxConnectAttempts = properties.getOrDefault(PROP_LDAP_MAX_FAILURE, 5).toString().toIntOrNull() ?: 5
+			maxConnectAttempts = properties.getOrDefault(PROP_LDAP_MAX_FAILURE, 5).toString().toIntOrNull() ?: 5,
+			reconnectOnAuth = properties.getOrDefault(PROP_LDAP_AUTH_RECONNECT, false).toString().toBoolean()
 		)
 		group = LDAPConfig.Groups(
 			groupFilter = properties[PROP_LDAP_GROUP_FILTER].toString(),
