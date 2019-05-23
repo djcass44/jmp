@@ -22,11 +22,13 @@ import dev.castive.javalin_auth.auth.data.User
 import dev.castive.javalin_auth.auth.external.UserIngress
 import dev.castive.javalin_auth.auth.provider.LDAPProvider
 import dev.castive.jmp.api.Auth
+import dev.castive.jmp.db.dao.GroupUsers
 import dev.castive.jmp.db.dao.Groups
 import dev.castive.jmp.db.dao.Users
 import dev.castive.log2.Log
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import dev.castive.jmp.db.dao.Group as DaoGroup
 import dev.castive.jmp.db.dao.User as DaoUser
@@ -94,10 +96,29 @@ class UserValidator(private val auth: Auth, private val ldapConfigExtras: LDAPCo
 			externalUsers.forEach { if(!names.contains(it.username)) invalid.add(it) }
 			Log.i(javaClass, "Found ${invalid.size} stale users")
 			if(ldapConfigExtras.removeStale) {
-				invalid.forEach { it.delete() }
+				invalid.forEach {
+					// Remove the user first (see #76)
+					removeUserFromGroups(it)
+					it.delete()
+				}
 				if(invalid.size > 0) Log.w(javaClass, "Removed ${invalid.size} stale users")
 			}
 			else Log.i(javaClass, "Stale user removal blocked by application policy")
+		}
+	}
+	private fun removeUserFromGroups(user: DaoUser) = transaction {
+		val res = (Groups innerJoin GroupUsers innerJoin Users)
+			.slice(Groups.columns)
+			.select {
+				Users.id eq user.id
+			}
+			.withDistinct()
+		DaoGroup.wrapRows(res).toList().forEach {
+			val newUsers = ArrayList<DaoUser>()
+			newUsers.addAll(it.users)
+			newUsers.remove(user)
+			it.users = SizedCollection(newUsers)
+			Log.v(javaClass, "Purged ${user.username} from ${it.name} [reason: stale]")
 		}
 	}
 }

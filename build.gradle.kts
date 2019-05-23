@@ -66,7 +66,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed:0.11.2")
     implementation("com.zaxxer:HikariCP:3.3.1")
 
-    // JDBC drivers
+    // JDBC drivers (only includes those supported by github.com/JetBrains/Exposed)
     runtimeOnly("org.xerial:sqlite-jdbc:3.25.2")
     runtimeOnly("org.postgresql:postgresql:42.2.2")
     runtimeOnly("mysql:mysql-connector-java:8.0.15")
@@ -83,7 +83,7 @@ application {
 }
 
 tasks.withType<KotlinCompile>().all {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "11"
 }
 
 tasks.withType<ShadowJar> {
