@@ -1,5 +1,5 @@
 # STAGE 1 - BUILD
-FROM openjdk:12-jdk-oraclelinux7 as GRADLE_CACHE
+FROM adoptopenjdk/openjdk12:jdk-12.0.1_12-alpine-slim as GRADLE_CACHE
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ COPY . .
 RUN ./gradlew buildPackage
 
 # STAGE 2 - RUN
-FROM openjdk:12-jdk-oraclelinux7
+FROM adoptopenjdk/openjdk12:jre-12.0.1_12-alpine
 LABEL maintainer="Django Cass <dj.cass44@gmail.com>"
 
 ENV DRIVER_URL="jdbc:sqlite:jmp.db" \
