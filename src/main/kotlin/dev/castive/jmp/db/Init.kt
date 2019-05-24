@@ -34,7 +34,12 @@ class Init {
                 val password = PasswordGenerator().generate(32, strong = false) // Strong causes blocking issues in Docker
                 Auth().createUser(superName, password, true)
                 Log.w(javaClass, "Created superuser with access: [username: $superName]\nPlease change this ASAP!\nThis will also be stored in the current directory in 'initialAdminPassword'")
-                Files.writeString(Path.of("initialAdminPassword"), String(password), StandardCharsets.UTF_8)
+                try {
+                    Files.writeString(Path.of("initialAdminPassword"), String(password), StandardCharsets.UTF_8)
+                }
+                catch (e: Exception) {
+                    Log.e(javaClass, "Failed to save admin password")
+                }
                 for (c in password) // Probably useless if converted to a string above
                     print(c)
                 println()

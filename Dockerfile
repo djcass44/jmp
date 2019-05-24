@@ -1,5 +1,6 @@
 # STAGE 1 - BUILD
 FROM adoptopenjdk/openjdk12:jdk-12.0.1_12-alpine-slim as GRADLE_CACHE
+LABEL maintainer="Django Cass <dj.cass44@gmail.com>"
 
 WORKDIR /app
 

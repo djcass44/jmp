@@ -68,6 +68,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 					items.add(JumpData(it))
 				}
 			}
+			Log.v(javaClass, "Found ${items.size} jumps for ${user?.username}")
 			ctx.json(items).status(HttpStatus.OK_200)
 		}, Auth.openAccessRole)
 		get("${Runner.BASE}/v2/jump/:target", { ctx ->
