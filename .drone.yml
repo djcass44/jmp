@@ -19,7 +19,8 @@ steps:
       repo: docker.castive.dev/jmp
       tag: ${DRONE_COMMIT_SHA}
       container: jmp-api
-      namespace: default
+      namespace:
+        from_secret: NAMESPACE
       kubernetes_server:
         from_secret: KUBERNETES_SERVER
       kubernetes_cert:
