@@ -22,11 +22,12 @@ import dev.castive.jmp.db.dao.User
 import dev.castive.log2.Log
 import dev.castive.securepass3.PasswordGenerator
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 
-class Init {
+class Init(private val store: ConfigStore) {
     init {
         val superName = "admin" // Hardcoded into FE, don't change
         transaction {
@@ -35,7 +36,9 @@ class Init {
                 Auth().createUser(superName, password, true)
                 Log.w(javaClass, "Created superuser with access: [username: $superName]\nPlease change this ASAP!\nThis will also be stored in the current directory in 'initialAdminPassword'")
                 try {
-                    Files.writeString(Path.of("initialAdminPassword"), String(password), StandardCharsets.UTF_8)
+	                var path = store.dataPath
+	                if(!path.endsWith(File.separatorChar)) path += File.separatorChar
+                    Files.writeString(Path.of("${path}initialAdminPassword"), String(password), StandardCharsets.UTF_8)
                 }
                 catch (e: Exception) {
                     Log.e(javaClass, "Failed to save admin password")

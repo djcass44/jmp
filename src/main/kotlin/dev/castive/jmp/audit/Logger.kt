@@ -26,7 +26,7 @@ import java.io.PrintStream
 import java.nio.charset.StandardCharsets
 
 class Logger(logPath: String) {
-	private val logDir = File(logPath, "logs")
+	private val logDir = File(logPath)
 
 	private val logRequest = File(logDir, "jmp.request.out")
 	private val logOut = File(logDir, "jmp.std.out")

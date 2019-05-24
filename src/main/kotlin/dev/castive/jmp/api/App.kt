@@ -55,7 +55,7 @@ class App(val port: Int = 7000) {
             SchemaUtils.create(Jumps, Users, Roles, Groups, GroupUsers, Aliases) // Ensure that the tables are created
             Log.i(javaClass, "Running automated database upgrade (if required)")
             SchemaUtils.createMissingTablesAndColumns(Jumps, Users, Roles, Groups, GroupUsers, Aliases, Sessions)
-            Init() // Ensure that the default admin/roles is created
+            Init(store) // Ensure that the default admin/roles is created
         }
         val auth = Auth()
         val builder = LDAPConfigBuilder(store)
