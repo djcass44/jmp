@@ -28,6 +28,7 @@ steps:
         from_secret: KUBERNETES_TOKEN
     when:
       branch:
+        - develop # for now
         - staging
         - master
       event: push
