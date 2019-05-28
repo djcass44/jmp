@@ -42,7 +42,7 @@ class Group(private val ws: WebSocket): EndpointGroup {
             val user = ClaimConverter.getUser(UserAction.getOrNull(ctx))
             if(user != null) {
                 transaction {
-                    if(user.role.name == dev.castive.jmp.api.Auth.BasicRoles.ADMIN.name) {
+                    if(user.role.name == Auth.BasicRoles.ADMIN.name) {
                         Group.all().forEach {
                             items.add(GroupData((it)))
                         }
@@ -90,7 +90,7 @@ class Group(private val ws: WebSocket): EndpointGroup {
             transaction {
                 val existing = Group.findById(update.id!!) ?: throw NotFoundResponse("Group not found")
                 // Only allow update if user belongs to group (or is admin)
-                if(user.role.name != dev.castive.jmp.api.Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
+                if(user.role.name != Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
                 existing.name = update.name
                 ws.fire(WebSocket.EVENT_UPDATE_GROUP, WebSocket.EVENT_UPDATE_GROUP)
                 ctx.status(HttpStatus.NO_CONTENT_204).json(update)
@@ -102,7 +102,7 @@ class Group(private val ws: WebSocket): EndpointGroup {
             transaction {
                 val existing = Group.findById(id) ?: throw NotFoundResponse("Group not found")
                 // Only allow deletion if user belongs to group (or is admin)
-                if(user.role.name != dev.castive.jmp.api.Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
+                if(user.role.name != Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
                 Log.i(javaClass, "${user.username} is removing group ${existing.name}")
                 GroupUsers.deleteWhere {
                     GroupUsers.group eq existing.id

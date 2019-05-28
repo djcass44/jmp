@@ -148,15 +148,15 @@ class User(
                 throw BadRequestResponse("Bad UUID")
             }
             val items = arrayListOf<GroupData>()
-            val user = ClaimConverter.get(UserAction.get(ctx))
+//            val user = ClaimConverter.get(UserAction.get(ctx))
             transaction {
                 val getUser = User.findById(uid) ?: throw BadRequestResponse("Requested user is null")
                 // Only allow an admin to see admin groups
-                if(auth.isAdmin(user) && auth.isAdmin(getUser)) {
-                    // The admin is in every group
-                    Group.all().forEach { items.add(GroupData(it)) }
-                    return@transaction
-                }
+//                if(auth.isAdmin(user) && auth.isAdmin(getUser)) {
+//                    // The admin is in every group
+//                    Group.all().forEach { items.add(GroupData(it)) }
+//                    return@transaction
+//                }
                 val res = (Groups innerJoin GroupUsers innerJoin Users)
                     .slice(Groups.columns)
                     .select {
