@@ -37,6 +37,8 @@ import dev.castive.jmp.auth.UserVerification
 import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.Init
 import dev.castive.jmp.db.dao.*
+import dev.castive.jmp.except.ExceptionTracker
+import dev.castive.jmp.except.TrackedExceptionHandler
 import dev.castive.log2.Log
 import io.javalin.Javalin
 import io.javalin.security.Role
@@ -47,78 +49,87 @@ import java.util.*
 
 
 class App(val port: Int = 7000) {
-    companion object {
-        val id = UUID.randomUUID().toString()
-    }
-    fun start(store: ConfigStore, arguments: Arguments, logger: Logger) {
-        transaction {
-            SchemaUtils.create(Jumps, Users, Roles, Groups, GroupUsers, Aliases) // Ensure that the tables are created
-            Log.i(javaClass, "Running automated database upgrade (if required)")
-            SchemaUtils.createMissingTablesAndColumns(Jumps, Users, Roles, Groups, GroupUsers, Aliases, Sessions)
-            Init(store) // Ensure that the default admin/roles is created
-        }
-        val auth = Auth()
-        val builder = LDAPConfigBuilder(store)
-        Providers(builder.core, builder.extra, builder.group).init(UserVerification(auth)) // Setup user authentication
-        Providers.validator = UserValidator(auth, builder.extra)
-        UserAction.verification = Providers.verification
-        Javalin.create().apply {
-            disableStartupBanner()
-            port(port)
-            if(arguments.enableCors) {
-                enableCorsForAllOrigins()
-                enableRouteOverview(Runner.BASE, setOf<Role>(Auth.BasicRoles.ANYONE))
-            }
-            enableCaseSensitiveUrls()
-            accessManager { handler, ctx, permittedRoles ->
-                val jwt = JWT.map(ctx)
-                val user = if(TokenProvider.mayBeToken(jwt)) ClaimConverter.getUser(TokenProvider.verify(jwt!!, Providers.verification)) else null
-                val userRole = if(user == null) Auth.BasicRoles.ANYONE else transaction {
-                    Auth.BasicRoles.valueOf(user.role.name)
-                }
-                if(permittedRoles.contains(userRole))
-                    handler.handle(ctx)
-                else
-                    ctx.status(HttpStatus.UNAUTHORIZED_401).result("Unauthorised")
-            }
-            requestLogger { ctx, timeMs ->
-                logger.add("${System.currentTimeMillis()} - ${ctx.method()} ${ctx.path()} took $timeMs ms")
-            }
-            routes {
-                val ws = WebSocket()
-                ws.addEndpoints()
-                // General
-                Info().addEndpoints()
-                Props(builder).addEndpoints()
+	companion object {
+		val id = UUID.randomUUID().toString()
+		var exceptionTracker = ExceptionTracker(blockLeak = true)
+	}
+	fun start(store: ConfigStore, arguments: Arguments, logger: Logger) {
+		transaction {
+			SchemaUtils.create(Jumps, Users, Roles, Groups, GroupUsers, Aliases) // Ensure that the tables are created
+			Log.i(javaClass, "Running automated database upgrade (if required)")
+			SchemaUtils.createMissingTablesAndColumns(Jumps, Users, Roles, Groups, GroupUsers, Aliases, Sessions)
+			Init(store) // Ensure that the default admin/roles is created
+		}
+		val auth = Auth()
+		val builder = LDAPConfigBuilder(store)
+		Providers(builder.core, builder.extra, builder.group).init(UserVerification(auth)) // Setup user authentication
+		Providers.validator = UserValidator(auth, builder.extra)
+//	    TokenProvider.ageProfile = TokenProvider.TokenAgeProfile.DEV
+		UserAction.verification = Providers.verification
+		Javalin.create().apply {
+			disableStartupBanner()
+			port(port)
+			if(arguments.enableCors) {
+				enableCorsForAllOrigins()
+				enableRouteOverview(Runner.BASE, setOf<Role>(Auth.BasicRoles.ANYONE))
+			}
+			enableCaseSensitiveUrls()
+			accessManager { handler, ctx, permittedRoles ->
+				val jwt = JWT.map(ctx)
+				val user = if(TokenProvider.mayBeToken(jwt)) ClaimConverter.getUser(TokenProvider.verify(jwt!!, Providers.verification)) else null
+				val userRole = if(user == null) Auth.BasicRoles.ANYONE else transaction {
+					Auth.BasicRoles.valueOf(user.role.name)
+				}
+				if(permittedRoles.contains(userRole))
+					handler.handle(ctx)
+				else
+					ctx.status(HttpStatus.UNAUTHORIZED_401).result("Unauthorised")
+			}
+			requestLogger { ctx, timeMs ->
+				logger.add("${System.currentTimeMillis()} - ${ctx.method()} ${ctx.path()} took $timeMs ms")
+			}
+			routes {
+				val ws = WebSocket()
+				ws.addEndpoints()
+				// General
+				Info().addEndpoints()
+				Props(builder, exceptionTracker).addEndpoints()
 
-                // Jumping
-                Jump(store, ws).addEndpoints()
-                Similar().addEndpoints()
+				// Jumping
+				Jump(store, ws).addEndpoints()
+				Similar().addEndpoints()
 
-                // Users
-                User(auth, ws, builder.extra).addEndpoints()
+				// Users
+				User(auth, ws, builder.extra).addEndpoints()
 
-                // Group
-                Group(ws).addEndpoints()
-                GroupMod().addEndpoints()
+				// Group
+				Group(ws).addEndpoints()
+				GroupMod().addEndpoints()
 
-                // Authentication
-                Oauth(auth).addEndpoints()
-                Verify(auth).addEndpoints()
-                UserMod(auth).addEndpoints()
+				// Authentication
+				Oauth(auth).addEndpoints()
+				Verify(auth).addEndpoints()
+				UserMod(auth).addEndpoints()
 
-                // Health
-                Health(builder.core).addEndpoints()
-            }
-            start()
-        }
-        println("       _ __  __ _____  \n" +
-                "      | |  \\/  |  __ \\ \n" +
-                "      | | \\  / | |__) |\n" +
-                "  _   | | |\\/| |  ___/ \n" +
-                " | |__| | |  | | |     \n" +
-                "  \\____/|_|  |_|_|     \n" +
-                "                       \n" +
-                "JMP v${Version.getVersion()} is ready.")
-    }
+				// Health
+				Health(builder.core).addEndpoints()
+			}
+			start()
+		}
+		println("       _ __  __ _____  \n" +
+				"      | |  \\/  |  __ \\ \n" +
+				"      | | \\  / | |__) |\n" +
+				"  _   | | |\\/| |  ___/ \n" +
+				" | |__| | |  | | |     \n" +
+				"  \\____/|_|  |_|_|     \n" +
+				"                       \n" +
+				"JMP v${Version.getVersion()} is ready.")
+	}
+
+	/**
+	 * Set environmental configuration (JVM options)
+	 */
+	private fun setJVMContext() {
+		Thread.setDefaultUncaughtExceptionHandler(TrackedExceptionHandler())
+	}
 }

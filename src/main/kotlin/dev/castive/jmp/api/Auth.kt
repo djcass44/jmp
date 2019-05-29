@@ -89,7 +89,10 @@ class Auth {
 	fun loginUser(username: String, password: String): String? {
 		var result: String?
 		if(Providers.primaryProvider != null) { // Try to use primary provider if it exists
-			result = Providers.primaryProvider?.getLogin(username, password)
+			val primaryAttempt = runCatching { Providers.primaryProvider?.getLogin(username, password) }
+			// This is for logging
+//			App.exceptionTracker.onExceptionTriggered(primaryAttempt.exceptionOrNull() ?: Exception("Failed to load actual exception class"))
+			result = primaryAttempt.getOrNull()
 			if(result != null) return result
 		}
 		Log.v(javaClass, "Failed to locate user in primary provider, checking local provider")

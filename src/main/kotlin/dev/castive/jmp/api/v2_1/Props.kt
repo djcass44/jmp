@@ -25,12 +25,14 @@ import dev.castive.jmp.db.dao.Group
 import dev.castive.jmp.db.dao.Groups
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
+import dev.castive.jmp.except.ExceptionTracker
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.concurrent.CompletableFuture
 
-class Props(private val builder: LDAPConfigBuilder): EndpointGroup {
+class Props(private val builder: LDAPConfigBuilder, private val tracker: ExceptionTracker): EndpointGroup {
     override fun addEndpoints() {
         get("${Runner.BASE}/v2_1/prop/:target", { ctx ->
             val targetProp = ctx.pathParam("target")
@@ -48,6 +50,11 @@ class Props(private val builder: LDAPConfigBuilder): EndpointGroup {
             val users = transaction { return@transaction User.find { Users.from eq LDAPProvider.SOURCE_NAME }.count() }
             val groups = transaction { return@transaction Group.find { Groups.from eq LDAPProvider.SOURCE_NAME }.count() }
             ctx.status(HttpStatus.OK_200).json(LDAPPayload(connected, users, groups))
+        }, Auth.adminRoleAccess)
+        get("${Runner.BASE}/v2_1/statistics/exception", { ctx ->
+            val future = CompletableFuture<ArrayList<Pair<String, Long>>>()
+            tracker.getData(future = future)
+            ctx.result(future)
         }, Auth.adminRoleAccess)
     }
 }
