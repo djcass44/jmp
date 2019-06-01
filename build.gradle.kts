@@ -45,6 +45,7 @@ dependencies {
 //    implementation("dev.castive:jmp-auth:0.2.2")
     implementation("com.github.djcass44:log2:3.3")
     implementation("com.github.djcass44:fav2:v0.2.1")
+    implementation("com.github.djcass44:eventlog:72b6dac4e2")
 
     implementation("io.javalin:javalin:2.8.0")
     implementation("com.corundumstudio.socketio:netty-socketio:1.7.17")

@@ -16,6 +16,9 @@
 
 package dev.castive.jmp.api.v2
 
+import dev.castive.eventlog.EventLog
+import dev.castive.eventlog.schema.Event
+import dev.castive.eventlog.schema.EventType
 import dev.castive.javalin_auth.actions.UserAction
 import dev.castive.javalin_auth.auth.connect.LDAPConfig
 import dev.castive.jmp.Runner
@@ -66,6 +69,7 @@ class User(
                 //Determine if there is a next page
                 return@transaction User.all().count()
             }
+            EventLog.post(Event(type = EventType.READ, resource = UserData::class.java, causedBy = javaClass))
             val currentPage = (offset / userCount) + 1
             val totalPages = Math.ceil(userCount / count.toDouble()).toInt()
             Log.d(javaClass, "Returning ${users.size} users")
@@ -85,6 +89,7 @@ class User(
             val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
             Log.i(javaClass, "$user is creating a user [name: ${basicAuth.username}]")
             auth.createUser(basicAuth.username, basicAuth.password.toCharArray())
+            EventLog.post(Event(type = EventType.CREATE, resource = UserData::class.java, causedBy = javaClass))
             ws.fire(WebSocket.EVENT_UPDATE_USER, WebSocket.EVENT_UPDATE_USER)
             ctx.status(HttpStatus.CREATED_201).result(basicAuth.username)
         }, Auth.openAccessRole)
@@ -94,6 +99,7 @@ class User(
             transaction {
                 ctx.status(HttpStatus.OK_200).result(u.role.name)
             }
+            EventLog.post(Event(type = EventType.READ, resource = UserData::class.java, causedBy = javaClass))
         }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2_1/user/info", { ctx ->
             val u = ClaimConverter.getUser(UserAction.get(ctx))!!
@@ -115,6 +121,7 @@ class User(
                     Roles.name eq updated.role
                 }.elementAtOrNull(0) ?: throw BadRequestResponse()
                 Log.i(javaClass, "User role updated [user: ${user.username}, from: ${user.role.name}, to: ${role.name}] by ${u.username}")
+                EventLog.post(Event(type = EventType.UPDATE, resource = UserData::class.java, causedBy = javaClass))
                 user.role = role
                 user.metaUpdate = System.currentTimeMillis()
                 ws.fire(WebSocket.EVENT_UPDATE_USER, WebSocket.EVENT_UPDATE_USER)
@@ -137,6 +144,7 @@ class User(
                     throw ForbiddenResponse()
                 } // Stop the users deleting themselves
                 target.delete()
+                EventLog.post(Event(type = EventType.DESTROY, resource = UserData::class.java, causedBy = dev.castive.jmp.api.v2.User::class.java))
             }
             ws.fire(WebSocket.EVENT_UPDATE_USER, WebSocket.EVENT_UPDATE_USER)
             ctx.status(HttpStatus.NO_CONTENT_204)

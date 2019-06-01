@@ -16,6 +16,7 @@
 
 package dev.castive.jmp.api
 
+import dev.castive.eventlog.EventLog
 import dev.castive.javalin_auth.actions.UserAction
 import dev.castive.javalin_auth.auth.JWT
 import dev.castive.javalin_auth.auth.Providers
@@ -54,6 +55,7 @@ class App(val port: Int = 7000) {
 		var exceptionTracker = ExceptionTracker(blockLeak = true)
 	}
 	fun start(store: ConfigStore, arguments: Arguments, logger: Logger) {
+		EventLog.stream.add(System.out)
 		transaction {
 			SchemaUtils.create(Jumps, Users, Roles, Groups, GroupUsers, Aliases) // Ensure that the tables are created
 			Log.i(javaClass, "Running automated database upgrade (if required)")

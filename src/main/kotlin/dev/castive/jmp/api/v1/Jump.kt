@@ -16,6 +16,9 @@
 
 package dev.castive.jmp.api.v1
 
+import dev.castive.eventlog.EventLog
+import dev.castive.eventlog.schema.Event
+import dev.castive.eventlog.schema.EventType
 import dev.castive.javalin_auth.actions.UserAction
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
@@ -50,7 +53,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 			 */
 			val existing = OwnerAction.getJumpFromUser(user, name, caseSensitive)
 			existing.forEach {
-				if(it.name.equals(name, ignoreCase = !caseSensitive) && it.location == location)
+				if(it.name.equals(name, ignoreCase = !caseSensitive) && it.location == location && !(it.owner == null && it.ownerGroup == null))
 					return@transaction true
 			}
 			return@transaction false
@@ -68,6 +71,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 					items.add(JumpData(it))
 				}
 			}
+			EventLog.post(Event(type = EventType.READ, resource = JumpData::class.java, causedBy = javaClass))
 			Log.v(javaClass, "Found ${items.size} jumps for ${user?.username}")
 			ctx.json(items).status(HttpStatus.OK_200)
 		}, Auth.openAccessRole)
@@ -125,13 +129,17 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 						name = it.name
 						parent = jump
 					} }
+					EventLog.post(Event(type = EventType.CREATE, resource = JumpData::class.java, causedBy = dev.castive.jmp.api.v1.Jump::class.java))
 					ImageAction(add.location, ws).get()
 					TitleAction(add.location, ws).get()
 				}
 				ws.fire(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
 				ctx.status(HttpStatus.CREATED_201).json(add)
 			}
-			else throw ConflictResponse()
+			else {
+				EventLog.post(Event(type = "CONFLICT", resource = JumpData::class.java, causedBy = javaClass))
+				throw ConflictResponse()
+			}
 		}, Auth.openAccessRole)
 		// Edit a jump point
 		patch("${Runner.BASE}/v1/jump", { ctx ->
@@ -148,6 +156,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 						location = update.location
 						metaUpdate = System.currentTimeMillis()
 					}
+					EventLog.post(Event(type = EventType.UPDATE, resource = JumpData::class.java, causedBy = javaClass))
 					// Add aliases
 					val updated = arrayListOf<Int>()
 					update.alias.forEach {
@@ -197,6 +206,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 				// Delete all aliased children so that they don't become orphans
 				Alias.find { Aliases.parent eq result.id }.forEach { it.delete() }
 				result.delete()
+				EventLog.post(Event(type = EventType.DESTROY, resource = JumpData::class.java, causedBy = javaClass))
 			}
 			ws.fire(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
 			ctx.status(HttpStatus.NO_CONTENT_204)
