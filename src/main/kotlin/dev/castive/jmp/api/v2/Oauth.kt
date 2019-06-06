@@ -17,11 +17,11 @@
 package dev.castive.jmp.api.v2
 
 import dev.castive.javalin_auth.actions.UserAction
-import dev.castive.javalin_auth.auth.Providers
 import dev.castive.javalin_auth.auth.TokenProvider
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.auth.ClaimConverter
+import dev.castive.jmp.auth.UserVerification
 import dev.castive.jmp.db.Util
 import dev.castive.jmp.db.dao.Session
 import dev.castive.jmp.db.dao.Sessions
@@ -38,7 +38,7 @@ import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class Oauth(private val auth: Auth): EndpointGroup {
+class Oauth(private val auth: Auth, private val verify: UserVerification): EndpointGroup {
 	data class TokenResponse(val request: String, val refresh: String)
 	override fun addEndpoints() {
 		// Get a users token
@@ -82,7 +82,7 @@ class Oauth(private val auth: Auth): EndpointGroup {
 					throw UnauthorizedResponse("Invalid refresh token")
 				}
 				// Check if the users request token matched expected
-				if(TokenProvider.verify(existingRefreshToken.refreshToken, Providers.verification) == null) throw BadRequestResponse("Expired refresh token")
+				if(TokenProvider.verify(existingRefreshToken.refreshToken, verify) == null) throw BadRequestResponse("Expired refresh token")
 				val requestToken = TokenProvider.createRequestToken(user.username, user.id.value.toString(), user.role.name) ?: throw InternalServerErrorResponse()
 				val refreshToken = TokenProvider.createRefreshToken(user.username, user.id.value.toString(), user.role.name) ?: throw InternalServerErrorResponse()
 				Session.new {

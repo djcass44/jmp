@@ -34,15 +34,15 @@ repositories {
     maven(url = "https://dl.bintray.com/kotlin/exposed")
     maven(url = "https://jitpack.io")
     jcenter()
-//    mavenLocal()
+    mavenLocal()
 }
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1")
 
-    implementation("com.github.djcass44:jmp-auth:beed7dad4d")
-//    implementation("dev.castive:jmp-auth:0.2.2")
+//    implementation("com.github.djcass44:jmp-auth:1293803642")
+    implementation("dev.castive:jmp-auth:0.3.3")
     implementation("com.github.djcass44:log2:3.3")
     implementation("com.github.djcass44:fav2:v0.2.1")
     implementation("com.github.djcass44:eventlog:72b6dac4e2")

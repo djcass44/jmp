@@ -16,7 +16,7 @@
 
 package dev.castive.jmp.auth
 
-import dev.castive.javalin_auth.auth.connect.LDAPConfig
+import dev.castive.javalin_auth.auth.connect.MinimalConfig
 import dev.castive.javalin_auth.auth.data.Group
 import dev.castive.javalin_auth.auth.data.User
 import dev.castive.javalin_auth.auth.external.UserIngress
@@ -33,7 +33,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import dev.castive.jmp.db.dao.Group as DaoGroup
 import dev.castive.jmp.db.dao.User as DaoUser
 
-class UserValidator(private val auth: Auth, private val ldapConfigExtras: LDAPConfig.Extras): UserIngress {
+class UserValidator(private val auth: Auth, private val min: MinimalConfig): UserIngress {
 	override fun ingestGroups(groups: ArrayList<Group>) {
 		val names = arrayListOf<String>()
 		transaction {
@@ -62,7 +62,7 @@ class UserValidator(private val auth: Auth, private val ldapConfigExtras: LDAPCo
 			val invalid = arrayListOf<DaoGroup>()
 			externalGroups.forEach { if(!names.contains(it.name)) invalid.add(it) }
 			Log.i(javaClass, "Found ${invalid.size} stale groups")
-			if(ldapConfigExtras.removeStale) {
+			if(min.removeStale) {
 				invalid.forEach { it.delete() }
 				if(invalid.size > 0) Log.w(javaClass, "Removed ${invalid.size} stale groups")
 			}
@@ -95,7 +95,7 @@ class UserValidator(private val auth: Auth, private val ldapConfigExtras: LDAPCo
 			val invalid = arrayListOf<DaoUser>()
 			externalUsers.forEach { if(!names.contains(it.username)) invalid.add(it) }
 			Log.i(javaClass, "Found ${invalid.size} stale users")
-			if(ldapConfigExtras.removeStale) {
+			if(min.removeStale) {
 				invalid.forEach {
 					// Remove the user first (see #76)
 					removeUserFromGroups(it)

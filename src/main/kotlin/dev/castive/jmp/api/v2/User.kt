@@ -20,7 +20,7 @@ import dev.castive.eventlog.EventLog
 import dev.castive.eventlog.schema.Event
 import dev.castive.eventlog.schema.EventType
 import dev.castive.javalin_auth.actions.UserAction
-import dev.castive.javalin_auth.auth.connect.LDAPConfig
+import dev.castive.javalin_auth.auth.connect.MinimalConfig
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.v2_1.WebSocket
@@ -42,7 +42,7 @@ import java.util.*
 class User(
     private val auth: Auth,
     private val ws: WebSocket,
-    private val ldapConfigExtra: LDAPConfig.Extras
+    private val configMin: MinimalConfig
 ): EndpointGroup {
     override fun addEndpoints() {
         get("${Runner.BASE}/v2/users", { ctx ->
@@ -79,7 +79,7 @@ class User(
         put("${Runner.BASE}/v2/user", { ctx ->
             val user = ClaimConverter.getUser(UserAction.getOrNull(ctx))
             transaction {
-                val blockLocal = ldapConfigExtra.blockLocal
+                val blockLocal = configMin.blockLocal
                 Log.d(javaClass, "Block local accounts: $blockLocal")
                 if ((user == null || auth.getUserRole(user.username, user.id.value) != Auth.BasicRoles.ADMIN) && blockLocal) {
                     Log.i(javaClass, "User ${user?.username} is not allowed to create local accounts [reason: POLICY]")

@@ -43,7 +43,7 @@ class Props(private val builder: LDAPConfigBuilder, private val tracker: Excepti
             ctx.status(HttpStatus.OK_200).result(result.toString())
         }, Auth.adminRoleAccess)
         get("${Runner.BASE}/v2_1/uprop/allow_local", { ctx ->
-            ctx.status(HttpStatus.OK_200).result(builder.extra.blockLocal.toString())
+            ctx.status(HttpStatus.OK_200).result(builder.min.blockLocal.toString())
         }, Auth.openAccessRole)
         get("${Runner.BASE}/v2_1/provider/main", { ctx ->
             val connected = Providers.primaryProvider != null && Providers.primaryProvider!!.connected()

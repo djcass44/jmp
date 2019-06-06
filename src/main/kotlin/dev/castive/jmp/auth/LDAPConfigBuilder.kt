@@ -17,6 +17,9 @@
 package dev.castive.jmp.auth
 
 import dev.castive.javalin_auth.auth.connect.LDAPConfig
+import dev.castive.javalin_auth.auth.connect.LDAPConfig2
+import dev.castive.javalin_auth.auth.connect.MinimalConfig
+import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.BasicAuthentication
 import dev.castive.jmp.db.ConfigStore
 import dev.castive.log2.Log
 import java.io.File
@@ -26,7 +29,6 @@ import java.util.*
 
 class LDAPConfigBuilder(private val config: ConfigStore) {
 	companion object {
-
 		const val PROP_LDAP = "ldap"
 		const val PROP_LDAP_HOST = "ldap.host"
 		const val PROP_LDAP_PORT = "ldap.port"
@@ -48,12 +50,13 @@ class LDAPConfigBuilder(private val config: ConfigStore) {
 	}
 	val properties = Properties()
 
-	lateinit var core: LDAPConfig
+	lateinit var min: MinimalConfig
 		private set
-	lateinit var extra: LDAPConfig.Extras
+	lateinit var ldapConfig: LDAPConfig2
 		private set
-	lateinit var group: LDAPConfig.Groups
-		private set
+	private lateinit var core: LDAPConfig
+	private lateinit var extra: LDAPConfig.Extras
+	private lateinit var group: LDAPConfig.Groups
 
 	init {
 		validateFile()
@@ -95,21 +98,22 @@ class LDAPConfigBuilder(private val config: ConfigStore) {
 			StandardCharsets.UTF_8)
 	}
 	private fun compute() {
-		core = LDAPConfig(
+		min = MinimalConfig(
 			enabled = properties.getOrDefault(PROP_LDAP, false).toString().toBoolean(),
+			serviceAccount = BasicAuthentication(properties[PROP_LDAP_USER].toString(), properties[PROP_LDAP_PASS].toString()),
+			syncRate = properties.getOrDefault(PROP_LDAP_SYNC, 300000).toString().toLongOrNull() ?: 300000,
+			maxConnectAttempts = properties.getOrDefault(PROP_LDAP_MAX_FAILURE, 5).toString().toIntOrNull() ?: 5,
+			removeStale = properties.getOrDefault(PROP_LDAP_RM_STALE, true).toString().toBoolean(),
+			blockLocal =  properties.getOrDefault(PROP_EXT_BLOCK_LOCAL, false).toString().toBoolean()
+		)
+		core = LDAPConfig(
 			server = properties.getOrDefault(PROP_LDAP_HOST, "localhost").toString(),
 			port = properties.getOrDefault(PROP_LDAP_PORT, 389).toString().toIntOrNull() ?: 389,
-			contextDN = properties[PROP_LDAP_CTX].toString(),
-			serviceUserDN = properties[PROP_LDAP_USER].toString(),
-			serviceUserPassword = properties[PROP_LDAP_PASS].toString()
+			contextDN = properties[PROP_LDAP_CTX].toString()
 		)
 		extra = LDAPConfig.Extras(
 			userFilter = properties[PROP_LDAP_USER_FILTER].toString(),
-			removeStale = properties.getOrDefault(PROP_LDAP_RM_STALE, true).toString().toBoolean(),
-			syncRate = properties.getOrDefault(PROP_LDAP_SYNC, 300000).toString().toLongOrNull() ?: 300000,
 			uid = properties[PROP_LDAP_USER_ID].toString(),
-			blockLocal =  properties.getOrDefault(PROP_EXT_BLOCK_LOCAL, false).toString().toBoolean(),
-			maxConnectAttempts = properties.getOrDefault(PROP_LDAP_MAX_FAILURE, 5).toString().toIntOrNull() ?: 5,
 			reconnectOnAuth = properties.getOrDefault(PROP_LDAP_AUTH_RECONNECT, false).toString().toBoolean()
 		)
 		group = LDAPConfig.Groups(
@@ -117,6 +121,12 @@ class LDAPConfigBuilder(private val config: ConfigStore) {
 			groupQuery = properties[PROP_LDAP_GROUP_QUERY].toString(),
 			gid = properties[PROP_LDAP_GROUP_ID].toString()
 		)
-		if(extra.blockLocal) Log.w(javaClass, "Local account creation is disabled by application policy")
+		ldapConfig = LDAPConfig2(
+			min,
+			baseConfig = core,
+			extraConfig = extra,
+			groupConfig = group
+		)
+		if(min.blockLocal) Log.w(javaClass, "Local account creation is disabled by application policy")
 	}
 }
