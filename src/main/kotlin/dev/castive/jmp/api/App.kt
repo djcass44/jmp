@@ -21,6 +21,7 @@ import dev.castive.javalin_auth.actions.UserAction
 import dev.castive.javalin_auth.auth.JWT
 import dev.castive.javalin_auth.auth.Providers
 import dev.castive.javalin_auth.auth.TokenProvider
+import dev.castive.javalin_auth.auth.provider.CrowdProvider
 import dev.castive.javalin_auth.auth.provider.LDAPProvider
 import dev.castive.jmp.Arguments
 import dev.castive.jmp.Runner
@@ -66,7 +67,11 @@ class App(val port: Int = 7000) {
 		val auth = Auth()
 		val builder = LDAPConfigBuilder(store)
 		val verify = UserVerification(auth)
-		val provider = LDAPProvider(builder.ldapConfig, verify)
+		val provider = when(builder.type) {
+			"ldap" -> LDAPProvider(builder.ldapConfig, verify)
+			"crowd" -> CrowdProvider(builder.crowdConfig)
+			else -> null
+		}
 		Providers(builder.min, provider).init(verify) // Setup user authentication
 		Providers.validator = UserValidator(auth, builder.min)
 //	    TokenProvider.ageProfile = TokenProvider.TokenAgeProfile.DEV

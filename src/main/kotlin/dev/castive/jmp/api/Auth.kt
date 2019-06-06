@@ -98,6 +98,7 @@ class Auth {
 		Log.v(javaClass, "Failed to locate user in primary provider, checking local provider")
 		// Fallback to internal database checks
 		result = Providers.internalProvider.getLogin(username, password)
+		if(result != null && result.isBlank()) result = null
 		Log.d(javaClass, "Found local user: $result")
 		return result
 	}
@@ -147,7 +148,7 @@ class Auth {
 		}
 	}
 
-	private fun getUser(username: String): User? {
+	fun getUser(username: String): User? {
 		return transaction {
 			return@transaction User.find {
 				Users.username eq username

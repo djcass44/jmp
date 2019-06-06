@@ -22,7 +22,6 @@ import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.auth.ClaimConverter
 import dev.castive.jmp.auth.UserVerification
-import dev.castive.jmp.db.Util
 import dev.castive.jmp.db.dao.Session
 import dev.castive.jmp.db.dao.Sessions
 import dev.castive.jmp.db.dao.UserData
@@ -51,7 +50,10 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				Log.d(javaClass, "${basicAuth.username} request attempt failed: notfound")
 				throw NotFoundResponse()
 			}
-			val user = auth.getUser(basicAuth.username, Util.getSafeUUID(token)) ?: throw UnauthorizedResponse()
+			val user = auth.getUser(basicAuth.username) ?: throw UnauthorizedResponse()
+			transaction {
+				user.requestToken = token
+			}
 			val result = transaction {
 				val requestToken = TokenProvider.createRequestToken(basicAuth.username, token, user.role.name) ?: throw BadRequestResponse()
 				val refreshToken = TokenProvider.createRefreshToken(basicAuth.username, token, user.role.name) ?: throw BadRequestResponse()
@@ -83,8 +85,8 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				}
 				// Check if the users request token matched expected
 				if(TokenProvider.verify(existingRefreshToken.refreshToken, verify) == null) throw BadRequestResponse("Expired refresh token")
-				val requestToken = TokenProvider.createRequestToken(user.username, user.id.value.toString(), user.role.name) ?: throw InternalServerErrorResponse()
-				val refreshToken = TokenProvider.createRefreshToken(user.username, user.id.value.toString(), user.role.name) ?: throw InternalServerErrorResponse()
+				val requestToken = TokenProvider.createRequestToken(user.username, user.requestToken ?: "", user.role.name) ?: throw InternalServerErrorResponse()
+				val refreshToken = TokenProvider.createRefreshToken(user.username, user.requestToken ?: "", user.role.name) ?: throw InternalServerErrorResponse()
 				Session.new {
 					this.refreshToken = refreshToken
 					this.createdAt = System.currentTimeMillis()
