@@ -14,7 +14,7 @@ services:
       - DRIVER_URL=jdbc:sqlite:/data/jmp.db
       - DRIVER_CLASS=org.sqlite.JDBC
       - ENV_LOG_REQUEST_DIRECTORY="data/logs"
-      - BASE_URL=http://localhost:8080
+      - BASE_URL=http://localhost:3000
       - SOCKET_ENABLED=true
       - SOCKET_HOST=0.0.0.0
       - SOCKET_PORT=7001

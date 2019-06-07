@@ -19,6 +19,7 @@ package dev.castive.jmp.auth
 import dev.castive.javalin_auth.auth.external.ValidUserClaim
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
+import dev.castive.log2.Log
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -31,6 +32,7 @@ object ClaimConverter {
     }
 
     fun get(claim: ValidUserClaim): User = transaction {
+        Log.d(javaClass, "ClaimConverter is checking claim for ${claim.username}")
         return@transaction User.find {
             Users.username eq claim.username and(Users.requestToken.eq(claim.token))
         }.elementAt(0)

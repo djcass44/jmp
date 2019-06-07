@@ -25,6 +25,7 @@ import dev.castive.log2.Log
 import io.javalin.ConflictResponse
 import io.javalin.security.Role
 import io.javalin.security.SecurityUtil
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -93,7 +94,10 @@ class Auth {
 			// This is for logging
 //			App.exceptionTracker.onExceptionTriggered(primaryAttempt.exceptionOrNull() ?: Exception("Failed to load actual exception class"))
 			result = primaryAttempt.getOrNull()
-			if(result != null) return result
+			if(result != null) {
+				Log.v(javaClass, "Found user in primary provider: $result")
+				return result
+			}
 		}
 		Log.v(javaClass, "Failed to locate user in primary provider, checking local provider")
 		// Fallback to internal database checks
@@ -152,6 +156,14 @@ class Auth {
 		return transaction {
 			return@transaction User.find {
 				Users.username eq username
+			}.elementAtOrNull(0)
+		}
+	}
+	fun getUser(username: String, token: String): User? {
+		if(username.isBlank() || token.isBlank()) return null
+		return transaction {
+			return@transaction User.find {
+				Users.username eq username and(Users.requestToken.eq(token))
 			}.elementAtOrNull(0)
 		}
 	}

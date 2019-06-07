@@ -18,12 +18,10 @@ package dev.castive.jmp.auth
 
 import dev.castive.javalin_auth.auth.external.UserVerification
 import dev.castive.jmp.api.Auth
-import dev.castive.jmp.db.Util
-import java.util.*
 
 class UserVerification(private val auth: Auth): UserVerification {
     override fun verify(userClaim: String, tokenClaim: String): Boolean {
-        return auth.getUser(userClaim, Util.getSafeUUID(tokenClaim)) != null
+        return auth.getUser(userClaim, tokenClaim) != null
     }
 
     override fun getToken(uid: String): String {

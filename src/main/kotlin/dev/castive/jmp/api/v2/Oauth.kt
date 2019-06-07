@@ -17,7 +17,10 @@
 package dev.castive.jmp.api.v2
 
 import dev.castive.javalin_auth.actions.UserAction
+import dev.castive.javalin_auth.auth.Providers
 import dev.castive.javalin_auth.auth.TokenProvider
+import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.Factor
+import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.ValidateRequest
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.auth.ClaimConverter
@@ -103,6 +106,11 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 			val user = ClaimConverter.get(UserAction.get(ctx))
 			Log.d(javaClass, "Session for ${user.username} is valid")
 			transaction {
+				if(user.requestToken != null) {
+					if(Providers.primaryProvider?.validate(user.requestToken!!, ValidateRequest(arrayOf(Factor("remote_address", ctx.ip())))) == false) {
+						Log.e(javaClass, "Primary provider validation failed")
+					}
+				}
 				ctx.status(HttpStatus.OK_200).json(UserData(user))
 			}
 		}, Auth.openAccessRole)
