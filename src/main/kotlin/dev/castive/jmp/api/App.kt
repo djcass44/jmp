@@ -72,6 +72,7 @@ class App(val port: Int = 7000) {
 		val provider = when(builder.type) {
 			"ldap" -> LDAPProvider(builder.ldapConfig, verify)
 			"crowd" -> CrowdProvider(builder.crowdConfig).apply {
+				this.setup()
 				crowdCookieConfig = this.getSSOConfig() as CrowdCookieConfig?
 			}
 			else -> null
