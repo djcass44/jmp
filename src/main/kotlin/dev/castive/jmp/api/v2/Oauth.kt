@@ -113,11 +113,6 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				// Check if the users request token matched expected
 				if(TokenProvider.verify(existingRefreshToken.refreshToken, verify) == null) throw BadRequestResponse("Expired refresh token")
 				val result = AuthAction.createSession(user, user.requestToken!!)
-				Session.new {
-					this.refreshToken = refreshToken
-					this.createdAt = System.currentTimeMillis()
-					this.user = user
-				}
 				Log.i(Oauth::class.java, "Refreshing session for ${user.username}")
 				return@transaction result
 			}
@@ -132,6 +127,16 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				if(user.requestToken != null) {
 					if(Providers.primaryProvider?.validate(user.requestToken!!, ValidateRequest(arrayOf(Factor("remote_address", ctx.ip())))) == false) {
 						Log.e(Oauth::class.java, "Primary provider validation failed")
+						if(App.crowdCookieConfig != null) {
+							// Set an invalid cookie
+							val ck = Cookie(App.crowdCookieConfig!!.name, "").apply {
+								this.domain = App.crowdCookieConfig!!.domain
+								this.secure = App.crowdCookieConfig!!.secure
+								this.path = "/"
+							}
+							Log.a(Oauth::class.java, "Setting invalid SSO cookie for ${user.username}")
+							ctx.cookie(ck)
+						}
 						throw UnauthorizedResponse("Invalid SSO token")
 					}
 					else if(App.crowdCookieConfig != null) {
