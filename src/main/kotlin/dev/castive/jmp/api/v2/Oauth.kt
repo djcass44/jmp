@@ -50,7 +50,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 		// Get a users token
 		post("${Runner.BASE}/v2/oauth/token", { ctx ->
 			val basicAuth = ctx.basicAuthCredentials()
-			val authHeader = ctx.header("X-Auth-Token-SSO")
+			val authHeader = if(App.crowdCookieConfig != null) ctx.cookie(App.crowdCookieConfig!!.name) else null
 			if(basicAuth == null && authHeader == null) {
 				Log.e(javaClass, "Not given any form of identification, cannot authenticate user")
 				throw BadRequestResponse("No auth form given")
@@ -85,7 +85,6 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				val ck = Cookie(cookie.name, cookie.token).apply {
 					this.domain = cookie.host
 					this.secure = cookie.secure
-					this.isHttpOnly = false
 					this.path = "/"
 				}
 				Log.d(javaClass, "Setting cookie to: $ck")
@@ -144,7 +143,6 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 							this.domain = App.crowdCookieConfig!!.domain
 							this.secure = App.crowdCookieConfig!!.secure
 							this.path = "/"
-							this.isHttpOnly = false
 						}
 						Log.v(Oauth::class.java, "Setting SSO cookie for ${user.username}")
 						ctx.cookie(ck)
