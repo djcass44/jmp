@@ -49,16 +49,20 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 	override fun addEndpoints() {
 		// Get a users token
 		post("${Runner.BASE}/v2/oauth/token", { ctx ->
-			val basicAuth = ctx.basicAuthCredentials() ?: run {
-				Log.d(javaClass, "Oauth request attempt failed: invalid basic auth")
-				throw BadRequestResponse()
+			val basicAuth = ctx.basicAuthCredentials()
+			val authHeader = ctx.header("X-Auth-Token-SSO")
+			if(basicAuth == null && authHeader == null) {
+				Log.e(javaClass, "Not given any form of identification, cannot authenticate user")
+				throw BadRequestResponse("No auth form given")
 			}
-			val token = auth.loginUser(basicAuth.username, basicAuth.password) ?: run {
-				Log.d(javaClass, "${basicAuth.username} request attempt failed: notfound")
+			val token = if(basicAuth != null) auth.loginUser(basicAuth.username, basicAuth.password) else auth.loginUser(authHeader!!, ctx)
+			if(token == null) {
+				Log.d(javaClass, "Request attempt failed: notfound")
 				throw NotFoundResponse()
 			}
 			val sso: AuthenticateResponse?
 			val cookie: CrowdCookie?
+			val name: String
 			when(Providers.primaryProvider) {
 				is CrowdProvider -> {
 					sso = SystemUtil.gson.fromJson(token, AuthenticateResponse::class.java)
@@ -69,10 +73,12 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 						App.crowdCookieConfig!!.name,
 						sso!!.token
 					)
+					name = sso.user.name
 				}
 				else -> {
 					sso = null
 					cookie = null
+					name = basicAuth!!.username
 				}
 			}
 			if(cookie != null) {
@@ -84,7 +90,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				Log.d(javaClass, "Setting cookie to: $ck")
 				ctx.cookie(ck)
 			}
-			val user = auth.getUser(basicAuth.username) ?: throw UnauthorizedResponse()
+			val user = auth.getUser(name) ?: throw UnauthorizedResponse()
 			val actualToken = sso?.token ?: token
 			transaction {
 				user.requestToken = actualToken

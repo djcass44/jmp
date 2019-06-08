@@ -42,7 +42,8 @@ class Group(private val ws: WebSocket): EndpointGroup {
     override fun addEndpoints() {
         get("${Runner.BASE}/v2_1/groups", { ctx ->
             val items = arrayListOf<GroupData>()
-            val user = ClaimConverter.getUser(UserAction.getOrNull(ctx), ctx)
+            val user = ClaimConverter.getUser(ctx)
+            Log.d(javaClass, "Listing groups visible to actual user: ${user != null}")
             if(user != null) {
                 transaction {
                     if(user.role.name == Auth.BasicRoles.ADMIN.name) {
@@ -67,11 +68,11 @@ class Group(private val ws: WebSocket): EndpointGroup {
         }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2_1/group/:id", { ctx ->
             // Only allow users to view groups they're already in
-            ctx.status(HttpStatus.FORBIDDEN_403).result("This endpoint is unfinished, or not ready for public use.")
+            ctx.status(HttpStatus.NOT_IMPLEMENTED_501).result("This endpoint is unfinished, or not ready for public use.")
         }, Auth.defaultRoleAccess)
         put("${Runner.BASE}/v2_1/group", { ctx ->
             val add = ctx.bodyAsClass(GroupData::class.java)
-            val user = ClaimConverter.get(UserAction.get(ctx), ctx)
+            val user = ClaimConverter.get(ctx)
             Log.d(javaClass, "add - JWT validation passed")
             transaction {
                 val existing = Group.find {

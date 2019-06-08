@@ -26,6 +26,7 @@ import dev.castive.jmp.db.dao.Users
 import dev.castive.jmp.util.SystemUtil
 import dev.castive.log2.Log
 import io.javalin.Context
+import io.javalin.UnauthorizedResponse
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -74,6 +75,6 @@ object ClaimConverter {
 		return get(UserAction.getOrNull(ctx), ctx)
 	}
 	fun get(claim: ValidUserClaim?, ctx: Context): User {
-		return getUser(claim, ctx)!!
+		return getUser(claim, ctx) ?: throw UnauthorizedResponse("Invalid token")
 	}
 }

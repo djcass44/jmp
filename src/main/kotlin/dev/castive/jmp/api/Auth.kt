@@ -18,11 +18,13 @@ package dev.castive.jmp.api
 
 import com.amdelamar.jhash.Hash
 import dev.castive.javalin_auth.auth.Providers
+import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.db.dao.Roles
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
 import dev.castive.log2.Log
 import io.javalin.ConflictResponse
+import io.javalin.Context
 import io.javalin.security.Role
 import io.javalin.security.SecurityUtil
 import org.jetbrains.exposed.sql.and
@@ -87,7 +89,19 @@ class Auth {
 		else
 			throw ConflictResponse()
 	}
+	fun loginUser(token: String, ctx: Context): String? {
+		Log.v(javaClass, "Attempting to login user via SSO token")
+		if(Providers.primaryProvider != null) {
+			val primaryAttempt = AuthAction.isValidToken(token, ctx)
+			if(primaryAttempt.isNotEmpty()) {
+				Log.v(javaClass, "Found user using token: $primaryAttempt")
+				return primaryAttempt
+			}
+		}
+		return null
+	}
 	fun loginUser(username: String, password: String): String? {
+		Log.v(javaClass, "Attempting to login user via basic authentication")
 		var result: String?
 		if(Providers.primaryProvider != null) { // Try to use primary provider if it exists
 			val primaryAttempt = runCatching { Providers.primaryProvider?.getLogin(username, password) }
