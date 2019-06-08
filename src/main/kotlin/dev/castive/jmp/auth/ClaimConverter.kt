@@ -16,6 +16,7 @@
 
 package dev.castive.jmp.auth
 
+import dev.castive.javalin_auth.actions.UserAction
 import dev.castive.javalin_auth.auth.external.ValidUserClaim
 import dev.castive.jmp.api.App
 import dev.castive.jmp.db.dao.User
@@ -26,6 +27,9 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object ClaimConverter {
+	fun getUser(ctx: Context): User? {
+		return getUser(UserAction.getOrNull(ctx), ctx)
+	}
 	fun getUser(claim: ValidUserClaim?, ctx: Context): User? {
 		val user = transaction {
 			return@transaction if (claim == null) null
@@ -48,6 +52,9 @@ object ClaimConverter {
 			}
 		}
 		else user
+	}
+	fun get(ctx: Context): User {
+		return get(UserAction.getOrNull(ctx), ctx)
 	}
 	fun get(claim: ValidUserClaim?, ctx: Context): User {
 		return getUser(claim, ctx)!!

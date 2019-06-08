@@ -148,6 +148,18 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				ctx.status(HttpStatus.OK_200).json(UserData(user))
 			}
 		}, Auth.openAccessRole)
+		// Logout the user and invalidate tokens if needed
+		post("${Runner.BASE}/v2/oauth/logout", { ctx ->
+			val user = ClaimConverter.get(ctx)
+			transaction {
+				if(user.requestToken != null) {
+					Providers.primaryProvider?.invalidateLogin(user.requestToken!!)
+					Log.i(Oauth::class.java, "Invalidating login for ${user.username}, ${user.requestToken}")
+				}
+				else Log.v(javaClass, "User has no token to invalidate: ${user.username}")
+			}
+			ctx.status(HttpStatus.OK_200)
+		}, Auth.defaultRoleAccess)
 	}
 }
 
