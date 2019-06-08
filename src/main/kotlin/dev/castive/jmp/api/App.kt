@@ -18,9 +18,7 @@ package dev.castive.jmp.api
 
 import dev.castive.eventlog.EventLog
 import dev.castive.javalin_auth.actions.UserAction
-import dev.castive.javalin_auth.auth.JWT
 import dev.castive.javalin_auth.auth.Providers
-import dev.castive.javalin_auth.auth.TokenProvider
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.CrowdCookieConfig
 import dev.castive.javalin_auth.auth.provider.CrowdProvider
 import dev.castive.javalin_auth.auth.provider.LDAPProvider
@@ -90,8 +88,7 @@ class App(val port: Int = 7000) {
 			}
 			enableCaseSensitiveUrls()
 			accessManager { handler, ctx, permittedRoles ->
-				val jwt = JWT.map(ctx)
-				val user = ClaimConverter.getUser(TokenProvider.verify(jwt!!, verify), ctx)
+				val user = ClaimConverter.getUser(ctx)
 				val userRole = if(user == null) Auth.BasicRoles.ANYONE else transaction {
 					Auth.BasicRoles.valueOf(user.role.name)
 				}
