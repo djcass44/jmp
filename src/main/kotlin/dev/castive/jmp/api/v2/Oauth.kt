@@ -114,7 +114,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 			Log.d(javaClass, "Found refresh token")
 			refresh!!
 			val user = kotlin.runCatching {
-				ClaimConverter.get(UserAction.get(ctx, lax = true), ctx, auth)
+				ClaimConverter.get(UserAction.get(ctx, lax = true), ctx)
 			}.getOrNull() ?: throw UnauthorizedResponse()
 			val response = transaction {
 				val existingRefreshToken = Session.find { Sessions.user eq user.id and(Sessions.refreshToken eq refresh) }.limit(1).elementAtOrNull(0) ?: run {
@@ -138,7 +138,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 		// Verify a users token is still valid
 		get("${Runner.BASE}/v2/oauth/valid", { ctx ->
 			Log.d(javaClass, "Checking session for ${ctx.host()}")
-			val user = ClaimConverter.get(UserAction.get(ctx), ctx, auth)
+			val user = ClaimConverter.get(UserAction.get(ctx), ctx)
 			Log.d(javaClass, "Session for ${user.username} is valid")
 			transaction {
 				if(user.requestToken != null) {
