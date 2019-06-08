@@ -79,9 +79,10 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				}
 			}
 			if(cookie != null) {
-				val ck = Cookie(cookie.name, SystemUtil.gson.toJson(cookie)).apply {
+				val ck = Cookie(cookie.name, "token=${cookie.token};").apply {
 					this.domain = cookie.host
 					this.secure = cookie.secure
+					this.path = "/"
 				}
 				Log.d(javaClass, "Setting cookie to: $ck")
 				ctx.cookie(ck)
