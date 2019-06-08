@@ -44,8 +44,6 @@ import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 import javax.servlet.http.Cookie
 
 class Oauth(private val auth: Auth, private val verify: UserVerification): EndpointGroup {
@@ -81,7 +79,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				}
 			}
 			if(cookie != null) {
-				val ck = Cookie(cookie.name, URLEncoder.encode("token=${cookie.token};", StandardCharsets.UTF_8)).apply {
+				val ck = Cookie(cookie.name, cookie.token).apply {
 					this.domain = cookie.host
 					this.secure = cookie.secure
 					this.path = "/"
@@ -143,14 +141,14 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 			val claimedUser = ClaimConverter.getUser(UserAction.getOrNull(ctx))
 			val user = (if(App.crowdCookieConfig != null) {
 				// Check for Crowd SSO cookie
-				val cookie = kotlin.runCatching {
-					SystemUtil.gson.fromJson(ctx.cookie(App.crowdCookieConfig!!.name), CrowdCookie::class.java)
+				val ssoToken = kotlin.runCatching {
+					ctx.cookie(App.crowdCookieConfig!!.name)
 				}.getOrNull()
-				if(cookie == null) {
+				if(ssoToken == null || ssoToken.isJSNullOrBlank()) {
 					Log.e(javaClass, "Failed to deserialise CrowdCookie")
 					claimedUser
 				}
-				else auth.getUserWithSSOToken(cookie.token) ?: claimedUser
+				else auth.getUserWithSSOToken(ssoToken) ?: claimedUser
 			} else {
 				throw UnauthorizedResponse("Invalid token")
 			}) ?: throw UnauthorizedResponse("Not a valid user")
