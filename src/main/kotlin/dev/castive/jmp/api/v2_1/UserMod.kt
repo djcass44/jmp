@@ -17,7 +17,7 @@ class UserMod(private val auth: Auth): EndpointGroup {
     data class PasswdPayload(val currentPassword: String, val newPassword: String)
     override fun addEndpoints() {
         get("${Runner.BASE}/v3/user/modpw", { ctx ->
-            val user = ClaimConverter.get(UserAction.get(ctx))
+            val user = ClaimConverter.get(UserAction.get(ctx), ctx)
             val res = transaction {
                 // TODO check if LDAP is r/w
                 return@transaction user.from == InternalProvider.SOURCE_NAME
@@ -25,7 +25,7 @@ class UserMod(private val auth: Auth): EndpointGroup {
             ctx.status(HttpStatus.OK_200).result(res.toString())
         }, Auth.defaultRoleAccess)
         patch("${Runner.BASE}/v3/user/modpw", { ctx ->
-            val user = ClaimConverter.get(UserAction.get(ctx))
+            val user = ClaimConverter.get(UserAction.get(ctx), ctx)
             val password = ctx.bodyAsClass(PasswdPayload::class.java)
             val currentHash = auth.computeHash(password.currentPassword.toCharArray())
             val nextHash = auth.computeHash(password.newPassword.toCharArray())

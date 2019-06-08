@@ -57,6 +57,7 @@ class App(val port: Int = 7000) {
 		val id = UUID.randomUUID().toString()
 		var exceptionTracker = ExceptionTracker(blockLeak = true)
 		var crowdCookieConfig: CrowdCookieConfig? = null
+		val auth = Auth()
 	}
 	fun start(store: ConfigStore, arguments: Arguments, logger: Logger) {
 		EventLog.stream.add(System.out)
@@ -66,7 +67,6 @@ class App(val port: Int = 7000) {
 			SchemaUtils.createMissingTablesAndColumns(Jumps, Users, Roles, Groups, GroupUsers, Aliases, Sessions)
 			Init(store) // Ensure that the default admin/roles is created
 		}
-		val auth = Auth()
 		val builder = LDAPConfigBuilder(store)
 		val verify = UserVerification(auth)
 		val provider = when(builder.type) {
@@ -91,7 +91,7 @@ class App(val port: Int = 7000) {
 			enableCaseSensitiveUrls()
 			accessManager { handler, ctx, permittedRoles ->
 				val jwt = JWT.map(ctx)
-				val user = if(TokenProvider.mayBeToken(jwt)) ClaimConverter.getUser(TokenProvider.verify(jwt!!, verify)) else null
+				val user = if(TokenProvider.mayBeToken(jwt)) ClaimConverter.getUser(TokenProvider.verify(jwt!!, verify), ctx) else null
 				val userRole = if(user == null) Auth.BasicRoles.ANYONE else transaction {
 					Auth.BasicRoles.valueOf(user.role.name)
 				}

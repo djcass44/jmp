@@ -114,7 +114,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 			Log.d(javaClass, "Found refresh token")
 			refresh!!
 			val user = kotlin.runCatching {
-				ClaimConverter.get(UserAction.get(ctx, lax = true))
+				ClaimConverter.get(UserAction.get(ctx, lax = true), ctx, auth)
 			}.getOrNull() ?: throw UnauthorizedResponse()
 			val response = transaction {
 				val existingRefreshToken = Session.find { Sessions.user eq user.id and(Sessions.refreshToken eq refresh) }.limit(1).elementAtOrNull(0) ?: run {
@@ -138,20 +138,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 		// Verify a users token is still valid
 		get("${Runner.BASE}/v2/oauth/valid", { ctx ->
 			Log.d(javaClass, "Checking session for ${ctx.host()}")
-			val claimedUser = ClaimConverter.getUser(UserAction.getOrNull(ctx))
-			val user = (if(App.crowdCookieConfig != null) {
-				// Check for Crowd SSO cookie
-				val ssoToken = kotlin.runCatching {
-					ctx.cookie(App.crowdCookieConfig!!.name)
-				}.getOrNull()
-				if(ssoToken == null || ssoToken.isJSNullOrBlank()) {
-					Log.e(javaClass, "Failed to deserialise CrowdCookie")
-					claimedUser
-				}
-				else auth.getUserWithSSOToken(ssoToken) ?: claimedUser
-			} else {
-				throw UnauthorizedResponse("Invalid token")
-			}) ?: throw UnauthorizedResponse("Not a valid user")
+			val user = ClaimConverter.get(UserAction.get(ctx), ctx, auth)
 			Log.d(javaClass, "Session for ${user.username} is valid")
 			transaction {
 				if(user.requestToken != null) {

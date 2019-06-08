@@ -46,7 +46,7 @@ class User(
 ): EndpointGroup {
     override fun addEndpoints() {
         get("${Runner.BASE}/v2/users", { ctx ->
-            UserAction.get(ctx)
+            ClaimConverter.get(UserAction.get(ctx), ctx)
             Log.d(javaClass, "list - JWT validation passed")
             val count = ctx.queryParam<Int>("count").value?.coerceAtLeast(5) ?: 10
             val offset = ctx.queryParam<Int>("offset").value?.coerceAtLeast(0) ?: 0
@@ -77,7 +77,7 @@ class User(
         }, Auth.defaultRoleAccess)
         // Add a user
         put("${Runner.BASE}/v2/user", { ctx ->
-            val user = ClaimConverter.getUser(UserAction.getOrNull(ctx))
+            val user = ClaimConverter.getUser(UserAction.getOrNull(ctx), ctx)
             transaction {
                 val blockLocal = configMin.blockLocal
                 Log.d(javaClass, "Block local accounts: $blockLocal")
@@ -95,7 +95,7 @@ class User(
         }, Auth.openAccessRole)
         // Get information about the current user
         get("${Runner.BASE}/v2/user", { ctx ->
-            val u = ClaimConverter.getUser(UserAction.get(ctx))!!
+            val u = ClaimConverter.get(UserAction.get(ctx), ctx)
             transaction {
                 ctx.status(HttpStatus.OK_200).result(u.role.name)
             }
@@ -110,7 +110,7 @@ class User(
         // Change the role of a user
         patch("${Runner.BASE}/v2/user", { ctx ->
             val updated = ctx.bodyAsClass(EditUserData::class.java)
-            val u = UserAction.get(ctx)
+            val u = ClaimConverter.get(UserAction.get(ctx), ctx)
             transaction {
                 val user = User.findById(updated.id) ?: throw BadRequestResponse()
                 // Block dropping the superuser from admin
@@ -131,7 +131,7 @@ class User(
         // Delete a user
         delete("${Runner.BASE}/v2/user/:id", { ctx ->
             val id = UUID.fromString(ctx.pathParam("id"))
-            val user = ClaimConverter.getUser(UserAction.get(ctx))!!
+            val user = ClaimConverter.get(UserAction.get(ctx), ctx)
             transaction {
                 val target = User.findById(id) ?: throw BadRequestResponse()
                 Log.i(javaClass, "[${user.username}] is removing ${target.username}")
