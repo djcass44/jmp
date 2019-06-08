@@ -21,6 +21,7 @@ import dev.castive.javalin_auth.actions.UserAction
 import dev.castive.javalin_auth.auth.JWT
 import dev.castive.javalin_auth.auth.Providers
 import dev.castive.javalin_auth.auth.TokenProvider
+import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.CrowdCookieConfig
 import dev.castive.javalin_auth.auth.provider.CrowdProvider
 import dev.castive.javalin_auth.auth.provider.LDAPProvider
 import dev.castive.jmp.Arguments
@@ -55,6 +56,7 @@ class App(val port: Int = 7000) {
 	companion object {
 		val id = UUID.randomUUID().toString()
 		var exceptionTracker = ExceptionTracker(blockLeak = true)
+		var crowdCookieConfig: CrowdCookieConfig? = null
 	}
 	fun start(store: ConfigStore, arguments: Arguments, logger: Logger) {
 		EventLog.stream.add(System.out)
@@ -69,7 +71,9 @@ class App(val port: Int = 7000) {
 		val verify = UserVerification(auth)
 		val provider = when(builder.type) {
 			"ldap" -> LDAPProvider(builder.ldapConfig, verify)
-			"crowd" -> CrowdProvider(builder.crowdConfig)
+			"crowd" -> CrowdProvider(builder.crowdConfig).apply {
+				crowdCookieConfig = this.getSSOConfig() as CrowdCookieConfig?
+			}
 			else -> null
 		}
 		Providers(builder.min, provider).init(verify) // Setup user authentication

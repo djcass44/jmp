@@ -19,15 +19,20 @@ package dev.castive.jmp.api.v2
 import dev.castive.javalin_auth.actions.UserAction
 import dev.castive.javalin_auth.auth.Providers
 import dev.castive.javalin_auth.auth.TokenProvider
+import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.AuthenticateResponse
+import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.CrowdCookie
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.Factor
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.ValidateRequest
+import dev.castive.javalin_auth.auth.provider.CrowdProvider
 import dev.castive.jmp.Runner
+import dev.castive.jmp.api.App
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.auth.ClaimConverter
 import dev.castive.jmp.auth.UserVerification
 import dev.castive.jmp.db.dao.Session
 import dev.castive.jmp.db.dao.Sessions
 import dev.castive.jmp.db.dao.UserData
+import dev.castive.jmp.util.SystemUtil
 import dev.castive.log2.Log
 import io.javalin.BadRequestResponse
 import io.javalin.InternalServerErrorResponse
@@ -39,9 +44,11 @@ import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
+import javax.servlet.http.Cookie
 
 class Oauth(private val auth: Auth, private val verify: UserVerification): EndpointGroup {
 	data class TokenResponse(val request: String, val refresh: String)
+	data class SSOResponse(val request: String, val refresh: String, val sso: Any?)
 	override fun addEndpoints() {
 		// Get a users token
 		post("${Runner.BASE}/v2/oauth/token", { ctx ->
@@ -53,20 +60,47 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				Log.d(javaClass, "${basicAuth.username} request attempt failed: notfound")
 				throw NotFoundResponse()
 			}
+			val sso: AuthenticateResponse?
+			val cookie: CrowdCookie?
+			when(Providers.primaryProvider) {
+				is CrowdProvider -> {
+					sso = SystemUtil.gson.fromJson(token, AuthenticateResponse::class.java)
+					cookie = CrowdCookie(App.crowdCookieConfig!!.domain,
+						"TRUE",
+						App.crowdCookieConfig!!.secure,
+						"",
+						App.crowdCookieConfig!!.name,
+						sso!!.token
+					)
+				}
+				else -> {
+					sso = null
+					cookie = null
+				}
+			}
+			if(cookie != null) {
+				val ck = Cookie(cookie.name, SystemUtil.gson.toJson(cookie)).apply {
+					this.domain = cookie.host
+					this.secure = cookie.secure
+				}
+				Log.d(javaClass, "Setting cookie to: $ck")
+				ctx.cookie(ck)
+			}
 			val user = auth.getUser(basicAuth.username) ?: throw UnauthorizedResponse()
+			val actualToken = sso?.token ?: token
 			transaction {
-				user.requestToken = token
+				user.requestToken = actualToken
 			}
 			val result = transaction {
-				val requestToken = TokenProvider.createRequestToken(basicAuth.username, token, user.role.name) ?: throw BadRequestResponse()
-				val refreshToken = TokenProvider.createRefreshToken(basicAuth.username, token, user.role.name) ?: throw BadRequestResponse()
+				val requestToken = TokenProvider.createRequestToken(basicAuth.username, actualToken, user.role.name) ?: throw BadRequestResponse()
+				val refreshToken = TokenProvider.createRefreshToken(basicAuth.username, actualToken, user.role.name) ?: throw BadRequestResponse()
 				Session.new {
 					this.refreshToken = refreshToken
 					this.createdAt = System.currentTimeMillis()
 					this.user = user
 				}
 				Log.i(javaClass, "Creating session for ${user.username}")
-				return@transaction TokenResponse(requestToken, refreshToken)
+				return@transaction SSOResponse(requestToken, refreshToken, sso)
 			}
 			ctx.status(HttpStatus.OK_200).json(result)
 		}, Auth.openAccessRole)
@@ -103,12 +137,26 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 		// Verify a users token is still valid
 		get("${Runner.BASE}/v2/oauth/valid", { ctx ->
 			Log.d(javaClass, "Checking session for ${ctx.host()}")
-			val user = ClaimConverter.get(UserAction.get(ctx))
+			val claimedUser = ClaimConverter.getUser(UserAction.getOrNull(ctx))
+			val user = (if(App.crowdCookieConfig != null) {
+				// Check for Crowd SSO cookie
+				val cookie = kotlin.runCatching {
+					SystemUtil.gson.fromJson(ctx.cookie(App.crowdCookieConfig!!.name), CrowdCookie::class.java)
+				}.getOrNull()
+				if(cookie == null) {
+					Log.e(javaClass, "Failed to deserialise CrowdCookie")
+					claimedUser
+				}
+				else auth.getUserWithSSOToken(cookie.token) ?: claimedUser
+			} else {
+				throw UnauthorizedResponse("Invalid token")
+			}) ?: throw UnauthorizedResponse("Not a valid user")
 			Log.d(javaClass, "Session for ${user.username} is valid")
 			transaction {
 				if(user.requestToken != null) {
 					if(Providers.primaryProvider?.validate(user.requestToken!!, ValidateRequest(arrayOf(Factor("remote_address", ctx.ip())))) == false) {
 						Log.e(javaClass, "Primary provider validation failed")
+						throw UnauthorizedResponse("Invalid SSO token")
 					}
 				}
 				ctx.status(HttpStatus.OK_200).json(UserData(user))

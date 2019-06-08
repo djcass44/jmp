@@ -159,6 +159,13 @@ class Auth {
 			}.elementAtOrNull(0)
 		}
 	}
+	fun getUserWithSSOToken(token: String): User? {
+		return transaction {
+			return@transaction User.find {
+				Users.requestToken eq token
+			}.elementAtOrNull(0)
+		}
+	}
 	fun getUser(username: String, token: String): User? {
 		if(username.isBlank() || token.isBlank()) return null
 		return transaction {
