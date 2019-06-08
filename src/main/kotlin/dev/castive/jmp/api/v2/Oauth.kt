@@ -143,8 +143,18 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 			transaction {
 				if(user.requestToken != null) {
 					if(Providers.primaryProvider?.validate(user.requestToken!!, ValidateRequest(arrayOf(Factor("remote_address", ctx.ip())))) == false) {
-						Log.e(javaClass, "Primary provider validation failed")
+						Log.e(Oauth::class.java, "Primary provider validation failed")
 						throw UnauthorizedResponse("Invalid SSO token")
+					}
+					else if(App.crowdCookieConfig != null) {
+						// Re-apply the cookie
+						val ck = Cookie(App.crowdCookieConfig!!.name, user.requestToken).apply {
+							this.domain = App.crowdCookieConfig!!.domain
+							this.secure = App.crowdCookieConfig!!.secure
+							this.path = "/"
+						}
+						Log.v(Oauth::class.java, "Setting SSO cookie for ${user.username}")
+						ctx.cookie(ck)
 					}
 				}
 				ctx.status(HttpStatus.OK_200).json(UserData(user))
