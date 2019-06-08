@@ -36,6 +36,7 @@ object AuthAction {
 				this.domain = App.crowdCookieConfig!!.domain
 				this.secure = App.crowdCookieConfig!!.secure
 				this.path = "/"
+				this.isHttpOnly = false
 			}
 			Log.a(Oauth::class.java, "Setting invalid SSO cookie for ${username ?: "[not given]"}")
 			ctx.cookie(ck)
