@@ -53,7 +53,7 @@ object ClaimConverter {
 				// Check that crowd is aware of our token
 				val token = kotlin.runCatching {
 					SystemUtil.gson.fromJson(AuthAction.isValidToken(ssoToken, ctx), AuthenticateResponse::class.java)
-				}.getOrNull() ?: return user
+				}.getOrNull() ?: return null
 				// This should always be true
 				if(ssoToken == token.token) {
 					// Get the user from Crowds response
@@ -65,7 +65,7 @@ object ClaimConverter {
 					}
 				}
 				Log.d(javaClass, "Searching for active user with token: $ssoToken")
-				App.auth.getUserWithSSOToken(ssoToken) ?: user
+				App.auth.getUserWithSSOToken(ssoToken)
 			}
 		}
 		else user
