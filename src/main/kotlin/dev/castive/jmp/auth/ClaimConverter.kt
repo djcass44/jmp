@@ -26,55 +26,30 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object ClaimConverter {
-    fun getUser(claim: ValidUserClaim?, ctx: Context): User? {
-        val user = transaction {
-            return@transaction if (claim == null) return@transaction null
-            else User.find {
-                Users.username eq claim.username and(Users.requestToken.eq(claim.token))
-            }.elementAtOrNull(0)
-        }
-        return if(App.crowdCookieConfig != null) {
-            // Check for Crowd SSO cookie
-            val ssoToken = kotlin.runCatching {
-                ctx.cookie(App.crowdCookieConfig!!.name)
-            }.getOrNull()
-            if(ssoToken == null || ssoToken.isBlank()) {
-                Log.e(javaClass, "Failed to deserialise CrowdCookie")
-                user
-            }
-            else App.auth.getUserWithSSOToken(ssoToken) ?: user
-        }
-        else user
-    }
-    fun getUser(claim: ValidUserClaim?): User? = transaction {
-        if (claim == null) return@transaction null
-        return@transaction User.find {
-            Users.username eq claim.username and(Users.requestToken.eq(claim.token))
-        }.elementAtOrNull(0)
-    }
-    fun get(claim: ValidUserClaim, ctx: Context): User {
-        val user = transaction {
-            return@transaction User.find {
-                Users.username eq claim.username and(Users.requestToken.eq(claim.token))
-            }.elementAt(0)
-        }
-        return if(App.crowdCookieConfig != null) {
-            // Check for Crowd SSO cookie
-            val ssoToken = kotlin.runCatching {
-                ctx.cookie(App.crowdCookieConfig!!.name)
-            }.getOrNull()
-            if(ssoToken == null || ssoToken.isBlank()) {
-                Log.e(javaClass, "Failed to deserialise CrowdCookie")
-                user
-            }
-            else App.auth.getUserWithSSOToken(ssoToken) ?: user
-        }
-        else user
-    }
-    fun get(claim: ValidUserClaim): User = transaction {
-        Log.d(javaClass, "ClaimConverter is checking claim for ${claim.username}")
-        return@transaction User.find {
-            Users.username eq claim.username and(Users.requestToken.eq(claim.token))
-        }.elementAt(0)
-    }
+	fun getUser(claim: ValidUserClaim?, ctx: Context): User? {
+		val user = transaction {
+			return@transaction if (claim == null) null
+			else User.find {
+				Users.username eq claim.username and(Users.requestToken.eq(claim.token))
+			}.elementAtOrNull(0)
+		}
+		return if(App.crowdCookieConfig != null) {
+			// Check for Crowd SSO cookie
+			val ssoToken = kotlin.runCatching {
+				return@runCatching ctx.cookie(App.crowdCookieConfig!!.name)
+			}.getOrNull()
+			if(ssoToken == null || ssoToken.isBlank()) {
+				Log.e(javaClass, "Failed to get CrowdCookie: $ssoToken")
+				user
+			}
+			else {
+				Log.d(javaClass, "Searching for active user with token: $ssoToken")
+				App.auth.getUserWithSSOToken(ssoToken) ?: user
+			}
+		}
+		else user
+	}
+	fun get(claim: ValidUserClaim?, ctx: Context): User {
+		return getUser(claim, ctx)!!
+	}
 }

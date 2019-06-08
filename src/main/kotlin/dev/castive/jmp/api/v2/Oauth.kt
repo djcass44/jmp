@@ -27,6 +27,7 @@ import dev.castive.javalin_auth.auth.provider.CrowdProvider
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.App
 import dev.castive.jmp.api.Auth
+import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.auth.ClaimConverter
 import dev.castive.jmp.auth.UserVerification
 import dev.castive.jmp.db.dao.Session
@@ -35,7 +36,6 @@ import dev.castive.jmp.db.dao.UserData
 import dev.castive.jmp.util.SystemUtil
 import dev.castive.log2.Log
 import io.javalin.BadRequestResponse
-import io.javalin.InternalServerErrorResponse
 import io.javalin.NotFoundResponse
 import io.javalin.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.get
@@ -48,7 +48,6 @@ import javax.servlet.http.Cookie
 
 class Oauth(private val auth: Auth, private val verify: UserVerification): EndpointGroup {
 	data class TokenResponse(val request: String, val refresh: String)
-	data class SSOResponse(val request: String, val refresh: String, val sso: Any?)
 	override fun addEndpoints() {
 		// Get a users token
 		post("${Runner.BASE}/v2/oauth/token", { ctx ->
@@ -92,17 +91,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 			transaction {
 				user.requestToken = actualToken
 			}
-			val result = transaction {
-				val requestToken = TokenProvider.createRequestToken(basicAuth.username, actualToken, user.role.name) ?: throw BadRequestResponse()
-				val refreshToken = TokenProvider.createRefreshToken(basicAuth.username, actualToken, user.role.name) ?: throw BadRequestResponse()
-				Session.new {
-					this.refreshToken = refreshToken
-					this.createdAt = System.currentTimeMillis()
-					this.user = user
-				}
-				Log.i(javaClass, "Creating session for ${user.username}")
-				return@transaction SSOResponse(requestToken, refreshToken, sso)
-			}
+			val result = AuthAction.createSession(user, actualToken)
 			ctx.status(HttpStatus.OK_200).json(result)
 		}, Auth.openAccessRole)
 		get("${Runner.BASE}/v2/oauth/refresh", { ctx ->
@@ -123,15 +112,14 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				}
 				// Check if the users request token matched expected
 				if(TokenProvider.verify(existingRefreshToken.refreshToken, verify) == null) throw BadRequestResponse("Expired refresh token")
-				val requestToken = TokenProvider.createRequestToken(user.username, user.requestToken ?: "", user.role.name) ?: throw InternalServerErrorResponse()
-				val refreshToken = TokenProvider.createRefreshToken(user.username, user.requestToken ?: "", user.role.name) ?: throw InternalServerErrorResponse()
+				val result = AuthAction.createSession(user, user.requestToken!!)
 				Session.new {
 					this.refreshToken = refreshToken
 					this.createdAt = System.currentTimeMillis()
 					this.user = user
 				}
 				Log.i(Oauth::class.java, "Refreshing session for ${user.username}")
-				return@transaction TokenResponse(requestToken, refreshToken)
+				return@transaction result
 			}
 			ctx.status(HttpStatus.OK_200).json(response)
 		}, Auth.openAccessRole)

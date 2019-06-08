@@ -102,7 +102,7 @@ class User(
             EventLog.post(Event(type = EventType.READ, resource = UserData::class.java, causedBy = javaClass))
         }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2_1/user/info", { ctx ->
-            val u = ClaimConverter.getUser(UserAction.get(ctx))!!
+            val u = ClaimConverter.get(UserAction.get(ctx), ctx)
             transaction {
                 ctx.status(HttpStatus.OK_200).json(UserData(u, arrayListOf()))
             }
