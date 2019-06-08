@@ -44,6 +44,8 @@ import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import javax.servlet.http.Cookie
 
 class Oauth(private val auth: Auth, private val verify: UserVerification): EndpointGroup {
@@ -79,7 +81,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				}
 			}
 			if(cookie != null) {
-				val ck = Cookie(cookie.name, "token=${cookie.token};").apply {
+				val ck = Cookie(cookie.name, URLEncoder.encode("token=${cookie.token};", StandardCharsets.UTF_8)).apply {
 					this.domain = cookie.host
 					this.secure = cookie.secure
 					this.path = "/"
