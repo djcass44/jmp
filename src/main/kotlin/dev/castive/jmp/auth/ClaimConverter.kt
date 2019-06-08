@@ -17,10 +17,13 @@
 package dev.castive.jmp.auth
 
 import dev.castive.javalin_auth.actions.UserAction
+import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.AuthenticateResponse
 import dev.castive.javalin_auth.auth.external.ValidUserClaim
 import dev.castive.jmp.api.App
+import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
+import dev.castive.jmp.util.SystemUtil
 import dev.castive.log2.Log
 import io.javalin.Context
 import org.jetbrains.exposed.sql.and
@@ -43,10 +46,24 @@ object ClaimConverter {
 				return@runCatching ctx.cookie(App.crowdCookieConfig!!.name)
 			}.getOrNull()
 			if(ssoToken == null || ssoToken.isBlank()) {
-				Log.e(javaClass, "Failed to get CrowdCookie: $ssoToken")
+				Log.v(javaClass, "Failed to get CrowdCookie: $ssoToken")
 				user
 			}
 			else {
+				// Check that crowd is aware of our token
+				val token = kotlin.runCatching {
+					SystemUtil.gson.fromJson(AuthAction.isValidToken(ssoToken, ctx), AuthenticateResponse::class.java)
+				}.getOrNull() ?: return user
+				// This should always be true
+				if(ssoToken == token.token) {
+					// Get the user from Crowds response
+					val foundUser = App.auth.getUser(token.user.name)
+					transaction {
+						// Update the users token to match Crowd
+						Log.d(javaClass, "Updating user with discovered SSO token: ${claim?.username}, ${token.user.name}")
+						foundUser?.requestToken = token.token
+					}
+				}
 				Log.d(javaClass, "Searching for active user with token: $ssoToken")
 				App.auth.getUserWithSSOToken(ssoToken) ?: user
 			}

@@ -41,7 +41,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1")
 
-    implementation("com.github.djcass44:jmp-auth:1a401dc15d")
+    implementation("com.github.djcass44:jmp-auth:ecc39af7aa")
 //    implementation("dev.castive:jmp-auth:0.3.3")
     implementation("com.github.djcass44:log2:3.3")
     implementation("com.github.djcass44:fav2:v0.2.1")

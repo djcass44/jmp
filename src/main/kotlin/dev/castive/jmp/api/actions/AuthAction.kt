@@ -1,11 +1,15 @@
 package dev.castive.jmp.api.actions
 
+import dev.castive.javalin_auth.auth.Providers
 import dev.castive.javalin_auth.auth.TokenProvider
+import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.Factor
+import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.ValidateRequest
 import dev.castive.jmp.api.v2.Oauth
 import dev.castive.jmp.db.dao.Session
 import dev.castive.jmp.db.dao.User
 import dev.castive.log2.Log
 import io.javalin.BadRequestResponse
+import io.javalin.Context
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object AuthAction {
@@ -19,5 +23,8 @@ object AuthAction {
 		}
 		Log.i(javaClass, "Creating session for ${user.username}")
 		return@transaction Oauth.TokenResponse(requestToken, refreshToken)
+	}
+	fun isValidToken(token: String, ctx: Context): String {
+		return Providers.primaryProvider?.validate(token, ValidateRequest(arrayOf(Factor("remote_address", ctx.ip())))) ?: ""
 	}
 }

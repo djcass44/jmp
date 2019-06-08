@@ -21,8 +21,6 @@ import dev.castive.javalin_auth.auth.Providers
 import dev.castive.javalin_auth.auth.TokenProvider
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.AuthenticateResponse
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.CrowdCookie
-import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.Factor
-import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.ValidateRequest
 import dev.castive.javalin_auth.auth.provider.CrowdProvider
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.App
@@ -125,11 +123,11 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 			Log.d(javaClass, "Session for ${user.username} is valid")
 			transaction {
 				if(user.requestToken != null) {
-					if(Providers.primaryProvider?.validate(user.requestToken!!, ValidateRequest(arrayOf(Factor("remote_address", ctx.ip())))) == false) {
+					if(AuthAction.isValidToken(user.requestToken!!, ctx).isEmpty()) {
 						Log.e(Oauth::class.java, "Primary provider validation failed")
 						if(App.crowdCookieConfig != null) {
 							// Set an invalid cookie
-							val ck = Cookie(App.crowdCookieConfig!!.name, "").apply {
+							val ck = Cookie(App.crowdCookieConfig!!.name, "NO_CONTENT").apply {
 								this.domain = App.crowdCookieConfig!!.domain
 								this.secure = App.crowdCookieConfig!!.secure
 								this.path = "/"
