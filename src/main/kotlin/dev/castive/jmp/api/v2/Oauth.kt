@@ -53,6 +53,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				return@get
 			}
 			val ck = ctx.cookie(App.crowdCookieConfig!!.name)
+			Log.d(javaClass, "Users HTTP cookie: $ck, valid: ${ck != null && ck != "NO_CONTENT"}")
 			ctx.status(HttpStatus.OK_200).json(ck != null && ck != "NO_CONTENT")
 		}, Auth.openAccessRole)
 		// Get a users token
