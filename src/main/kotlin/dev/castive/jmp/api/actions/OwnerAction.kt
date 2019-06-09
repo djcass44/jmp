@@ -82,6 +82,12 @@ object OwnerAction {
         }
         return results
     }
+    fun getJumpById(user: User?, id: Int): ArrayList<Jump> {
+        val jumps = getUserVisibleJumps(user)
+        val results = arrayListOf<Jump>()
+        transaction { jumps.forEach { if(it.id.value == id) results.add(it) } }
+        return results
+    }
     fun getJumpFromUser(user: User?, jump: String, caseSensitive: Boolean = true): ArrayList<Jump> {
         val jumps = getUserVisibleJumps(user)
         val matches = arrayListOf<Jump>()
