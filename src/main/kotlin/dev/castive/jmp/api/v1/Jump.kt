@@ -89,10 +89,11 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 					Log.d(javaClass, "Found user: ${user != null}")
 					val id = ctx.queryParam<Int>("id")
 					val jump = if(id.value != null) {
+						Log.i(javaClass, "User is specifying jump id: ${id.get()}")
 						OwnerAction.getJumpById(user, id.get())
 					}
 					else OwnerAction.getJumpFromUser(user, target, caseSensitive)
-					if(jump.size == 1) {
+					if(jump.isNotEmpty()) {
 						val location = jump[0].location
 						jump[0].metaUsage++ // Increment usage count for statistics
 						Log.v(javaClass, "v2: moving to point: $location")
