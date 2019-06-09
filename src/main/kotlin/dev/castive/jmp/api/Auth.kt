@@ -18,10 +18,13 @@ package dev.castive.jmp.api
 
 import com.amdelamar.jhash.Hash
 import dev.castive.javalin_auth.auth.Providers
+import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.Factor
+import dev.castive.javalin_auth.auth.provider.CrowdProvider
 import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.db.dao.Roles
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
+import dev.castive.jmp.util.SystemUtil
 import dev.castive.log2.Log
 import io.javalin.ConflictResponse
 import io.javalin.Context
@@ -100,11 +103,18 @@ class Auth {
 		}
 		return null
 	}
-	fun loginUser(username: String, password: String): String? {
+	fun loginUser(username: String, password: String, ctx: Context): String? {
 		Log.v(javaClass, "Attempting to login user via basic authentication")
 		var result: String?
 		if(Providers.primaryProvider != null) { // Try to use primary provider if it exists
-			val primaryAttempt = runCatching { Providers.primaryProvider?.getLogin(username, password) }
+			// If the provider wants additional data, generate it here
+			val data = when(Providers.primaryProvider) {
+				is CrowdProvider -> {
+					SystemUtil.gson.toJson(arrayListOf(Factor("remote_address", ctx.ip())))
+				}
+				else -> null
+			}
+			val primaryAttempt = runCatching { Providers.primaryProvider?.getLogin(username, password, data) }
 			// This is for logging
 //			App.exceptionTracker.onExceptionTriggered(primaryAttempt.exceptionOrNull() ?: Exception("Failed to load actual exception class"))
 			result = primaryAttempt.getOrNull()

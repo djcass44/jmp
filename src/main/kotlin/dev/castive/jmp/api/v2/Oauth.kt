@@ -55,7 +55,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				Log.e(javaClass, "Not given any form of identification, cannot authenticate user")
 				throw BadRequestResponse("No auth form given")
 			}
-			val token = if(basicAuth != null) auth.loginUser(basicAuth.username, basicAuth.password) else auth.loginUser(authHeader!!, ctx)
+			val token = if(basicAuth != null) auth.loginUser(basicAuth.username, basicAuth.password, ctx) else auth.loginUser(authHeader!!, ctx)
 			if(token == null) {
 				Log.d(javaClass, "Request attempt failed: notfound")
 				throw NotFoundResponse()
