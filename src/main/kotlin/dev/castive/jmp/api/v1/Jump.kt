@@ -87,10 +87,10 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 				transaction {
 					Log.d(javaClass, "User information: [name: ${user?.username}, token: ${user?.id?.value}]")
 					Log.d(javaClass, "Found user: ${user != null}")
-					val id = ctx.queryParam<Int>("id")
-					val jump = if(id.value != null) {
-						Log.i(javaClass, "User is specifying jump id: ${id.get()}")
-						OwnerAction.getJumpById(user, id.get())
+					val id = ctx.queryParam("id")?.toIntOrNull()
+					val jump = if(id != null) {
+						Log.i(javaClass, "User is specifying jump id: $id")
+						OwnerAction.getJumpById(user, id)
 					}
 					else OwnerAction.getJumpFromUser(user, target, caseSensitive)
 					if(jump.isNotEmpty()) {
