@@ -47,6 +47,14 @@ import javax.servlet.http.Cookie
 class Oauth(private val auth: Auth, private val verify: UserVerification): EndpointGroup {
 	data class TokenResponse(val request: String, val refresh: String)
 	override fun addEndpoints() {
+		get("${Runner.BASE}/v2/oauth/cookie", { ctx ->
+			if(App.crowdCookieConfig == null) {
+				ctx.status(HttpStatus.NOT_FOUND_404).result("No SSO config has been loaded")
+				return@get
+			}
+			val ck = ctx.cookie(App.crowdCookieConfig!!.name)
+			ctx.status(HttpStatus.OK_200).json(ck != null && ck != "NO_CONTENT")
+		}, Auth.openAccessRole)
 		// Get a users token
 		post("${Runner.BASE}/v2/oauth/token", { ctx ->
 			val basicAuth = ctx.basicAuthCredentials()
