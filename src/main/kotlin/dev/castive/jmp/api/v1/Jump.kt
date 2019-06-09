@@ -93,7 +93,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 						OwnerAction.getJumpById(user, id)
 					}
 					else OwnerAction.getJumpFromUser(user, target, caseSensitive)
-					if(jump.isNotEmpty()) {
+					if(jump.size == 1) {
 						val location = jump[0].location
 						jump[0].metaUsage++ // Increment usage count for statistics
 						Log.v(javaClass, "v2: moving to point: $location")
