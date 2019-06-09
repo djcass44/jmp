@@ -82,6 +82,9 @@ object OwnerAction {
         }
         return results
     }
+    fun isPublic(jump: Jump): Boolean = transaction {
+        return@transaction jump.owner == null && jump.ownerGroup == null
+    }
     fun getJumpById(user: User?, id: Int): ArrayList<Jump> {
         val jumps = getUserVisibleJumps(user)
         val results = arrayListOf<Jump>()

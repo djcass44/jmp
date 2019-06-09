@@ -154,7 +154,8 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 				val existing = Jump.findById(update.id) ?: throw NotFoundResponse()
 
 				// User can change personal jumps
-				if(existing.owner == user || user.role.name == Auth.BasicRoles.ADMIN.name) {
+				if(existing.owner == user || user.role.name == Auth.BasicRoles.ADMIN.name ||
+					(OwnerAction.getJumpById(user, existing.id.value).isNotEmpty() && !OwnerAction.isPublic(existing))) {
 					existing.apply {
 						name = update.name
 						location = update.location
