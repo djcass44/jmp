@@ -22,6 +22,7 @@ import dev.castive.javalin_auth.auth.TokenProvider
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.AuthenticateResponse
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.CrowdCookie
 import dev.castive.javalin_auth.auth.provider.CrowdProvider
+import dev.castive.javalin_auth.auth.provider.InternalProvider
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.App
 import dev.castive.jmp.api.Auth
@@ -134,14 +135,14 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 		}, Auth.openAccessRole)
 		// Verify a users token is still valid
 		get("${Runner.BASE}/v2/oauth/valid", { ctx ->
-			Log.d(javaClass, "Checking session for ${ctx.host()}")
+			Log.d(javaClass, "Checking session for ${ctx.ip()}")
 			val user = ClaimConverter.getUser(ctx) ?: run {
 				AuthAction.writeInvalidCookie(ctx)
 				throw UnauthorizedResponse("Invalid authentication")
 			}
 			Log.d(javaClass, "Session for ${user.username} is valid")
 			transaction {
-				if(user.requestToken != null && Providers.primaryProvider != null) {
+				if(user.requestToken != null && Providers.primaryProvider != null && user.from != InternalProvider.SOURCE_NAME) {
 					if(AuthAction.isValidToken(user.requestToken!!, ctx).isEmpty()) {
 						Log.e(Oauth::class.java, "Primary provider validation failed")
 						AuthAction.writeInvalidCookie(ctx, user.username)
