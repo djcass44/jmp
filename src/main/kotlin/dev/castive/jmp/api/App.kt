@@ -67,7 +67,7 @@ class App(val port: Int = 7000) {
 		}
 		val builder = LDAPConfigBuilder(store)
 		val verify = UserVerification(auth)
-		val provider = when(builder.type) {
+		val provider = if(!builder.min.enabled) null else when(builder.type) {
 			"ldap" -> LDAPProvider(builder.ldapConfig, verify)
 			"crowd" -> CrowdProvider(builder.crowdConfig).apply {
 				this.setup()

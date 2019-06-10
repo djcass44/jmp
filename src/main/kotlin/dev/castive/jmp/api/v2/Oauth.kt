@@ -140,7 +140,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 			}
 			Log.d(javaClass, "Session for ${user.username} is valid")
 			transaction {
-				if(user.requestToken != null) {
+				if(user.requestToken != null && Providers.primaryProvider != null) {
 					if(AuthAction.isValidToken(user.requestToken!!, ctx).isEmpty()) {
 						Log.e(Oauth::class.java, "Primary provider validation failed")
 						AuthAction.writeInvalidCookie(ctx, user.username)

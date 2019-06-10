@@ -8,12 +8,16 @@ import dev.castive.jmp.except.InsecureDomainException
 import dev.castive.log2.Log
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jsoup.Jsoup
+import java.net.URI
 
 class TitleAction(private val address: String, private val ws: WebSocket) {
     fun get() = Thread {
         try {
             if(address.startsWith("http://")) throw InsecureDomainException()
-            val document = Jsoup.connect(address).get()
+            val uri = URI(address)
+            // Get get the actual domain address (e.g. google.com/search?q=blahblah -> google.com)
+            val host = "${uri.scheme}://${uri.host}"
+            val document = Jsoup.connect(host).get()
             val title = document.head().getElementsByTag("title").text()
             transaction {
                 val results = Jump.find { Jumps.location eq address }
