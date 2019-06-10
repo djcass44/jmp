@@ -42,6 +42,7 @@ object ClaimConverter {
 				Users.username eq claim.username and(Users.requestToken.eq(claim.token))
 			}.elementAtOrNull(0)
 		}
+		Log.v(javaClass, "User is provided: ${user?.from != InternalProvider.SOURCE_NAME}")
 		return if(App.crowdCookieConfig != null && user?.from != InternalProvider.SOURCE_NAME) {
 			// Check for Crowd SSO cookie
 			val ssoToken = kotlin.runCatching {
@@ -70,7 +71,10 @@ object ClaimConverter {
 				App.auth.getUserWithSSOToken(ssoToken)
 			}
 		}
-		else user
+		else {
+			Log.v(javaClass, "Returning user we found locally")
+			user
+		}
 	}
 	fun get(ctx: Context): User {
 		return get(UserAction.getOrNull(ctx), ctx)
