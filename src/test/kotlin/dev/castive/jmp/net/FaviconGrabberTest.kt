@@ -16,7 +16,7 @@
 
 package dev.castive.jmp.net
 
-import com.django.log2.logging.Log
+import dev.castive.log2.Log
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -26,7 +26,7 @@ class FaviconGrabberTest {
     @ValueSource(strings = [
         "https://github.com",
         "https://apple.com",
-        "https://castive.dev"
+        "https://atlassian.com"
     ])
     fun getDefiniteIcon(value: String) { // Used to test grabber works on site with valid favicon
         val grabber = FaviconGrabber(value)
