@@ -19,6 +19,7 @@ package dev.castive.jmp.auth
 import dev.castive.javalin_auth.actions.UserAction
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.AuthenticateResponse
 import dev.castive.javalin_auth.auth.external.ValidUserClaim
+import dev.castive.javalin_auth.auth.provider.InternalProvider
 import dev.castive.jmp.api.App
 import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.db.dao.User
@@ -41,7 +42,7 @@ object ClaimConverter {
 				Users.username eq claim.username and(Users.requestToken.eq(claim.token))
 			}.elementAtOrNull(0)
 		}
-		return if(App.crowdCookieConfig != null) {
+		return if(App.crowdCookieConfig != null && user?.from != InternalProvider.SOURCE_NAME) {
 			// Check for Crowd SSO cookie
 			val ssoToken = kotlin.runCatching {
 				return@runCatching ctx.cookie(App.crowdCookieConfig!!.name)
