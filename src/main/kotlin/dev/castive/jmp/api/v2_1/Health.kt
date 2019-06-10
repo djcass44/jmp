@@ -16,7 +16,9 @@
 
 package dev.castive.jmp.api.v2_1
 
+import dev.castive.javalin_auth.auth.Providers
 import dev.castive.javalin_auth.auth.connect.MinimalConfig
+import dev.castive.javalin_auth.auth.provider.InternalProvider
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.util.checks.DatabaseCheck
@@ -36,10 +38,11 @@ class Health(private val config: MinimalConfig): EndpointGroup {
     }
     private fun runChecks(): HealthPayload {
         val dbCheck = DatabaseCheck().runCheck()
-        val ldapCheck = if(config.enabled) ProviderCheck().runCheck() else null
-        val code = if(!dbCheck || ldapCheck == false) HttpStatus.INTERNAL_SERVER_ERROR_500 else HttpStatus.OK_200
+        val providerCheck = if(config.enabled) ProviderCheck().runCheck() else null
+        val providerName = if(config.enabled) Providers.primaryProvider?.getName() ?: InternalProvider.SOURCE_NAME else InternalProvider.SOURCE_NAME
+        val code = if(!dbCheck || providerCheck == false) HttpStatus.INTERNAL_SERVER_ERROR_500 else HttpStatus.OK_200
 
-        return HealthPayload(code, "OK", dbCheck, ldapCheck)
+        return HealthPayload(code, "OK", dbCheck, providerCheck, providerName)
     }
 }
-data class HealthPayload(val code: Int = HttpStatus.OK_200, val http: String = "OK", val database: Boolean, val ldap: Boolean?)
+data class HealthPayload(val code: Int = HttpStatus.OK_200, val http: String = "OK", val database: Boolean, val identityProvider: Boolean?, val providerName: String)

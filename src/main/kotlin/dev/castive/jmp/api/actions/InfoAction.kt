@@ -16,6 +16,8 @@
 
 package dev.castive.jmp.api.actions
 
+import dev.castive.javalin_auth.auth.Providers
+import dev.castive.javalin_auth.auth.provider.InternalProvider
 import dev.castive.jmp.Runner
 import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.dao.Group
@@ -29,12 +31,13 @@ import java.lang.management.ManagementFactory
 
 class InfoAction {
     data class SystemInfo(val osInfo: OSInfo, val cpus: Int, val javaInfo: JavaInfo, val kotlinInfo: KotlinInfo, val memoryInfo: MemoryInfo)
-    data class AppInfo(val version: String, val apiLevel: Double, val users: Int, val groups: Int, val jumpInfo: JumpInfo, val appUptime: String, val launchConfig: ConfigStore, val launchArgs: ArrayList<String>)
+    data class AppInfo(val version: String, val apiLevel: Double, val users: Int, val groups: Int, val identityInfo: IdentityInfo, val jumpInfo: JumpInfo, val appUptime: String, val launchConfig: ConfigStore, val launchArgs: ArrayList<String>)
 
     data class JavaInfo(val name: String, val version: String, val specification: String, val vendor: String, val home: String, val uptime: String)
     data class KotlinInfo(val major: Int, val minor: Int, val patch: Int)
     data class OSInfo(val name: String, val version: String, val arch: String)
     data class MemoryInfo(val total: String, val max: String, val used: String)
+    data class IdentityInfo(val providerName: String, val providerClass: String)
     fun getSystem(): SystemInfo {
         val osInfo = OSInfo(System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"))
 
@@ -70,7 +73,11 @@ class InfoAction {
         val uptime = System.currentTimeMillis() - Runner.START_TIME
         val uptimeString = timeSpan(uptime)
         val cleanLaunchConfig = ConfigStore(Runner.store.url, Runner.store.driver, File(Runner.store.logRequestDir).absolutePath, Runner.store.BASE_URL, "****", "****")
-        return@transaction AppInfo(version, 2.1, users, groups, jumpInfo, uptimeString, cleanLaunchConfig, ArrayList(Runner.args.toList()))
+        val identityInfo = IdentityInfo(
+            Providers.primaryProvider?.getName() ?: InternalProvider.SOURCE_NAME,
+            if(Providers.primaryProvider != null) { Providers.primaryProvider!!::class.java.name } else InternalProvider::class.java.name
+        )
+        return@transaction AppInfo(version, 2.1, users, groups, identityInfo, jumpInfo, uptimeString, cleanLaunchConfig, ArrayList(Runner.args.toList()))
     }
 
     private fun slf(n: Double): String = Math.floor(n).toLong().toString()

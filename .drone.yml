@@ -5,9 +5,9 @@ steps:
   - name: publish
     image: plugins/docker
     settings:
-      registry: docker.castive.dev
-      repo: docker.castive.dev/jmp
-      tags: ${DRONE_COMMIT_SHA}
+      registry: core.harbor.castive.dev/jmp
+      repo: core.harbor.castive.dev/jmp/api
+      tags: ${DRONE_BRANCH}-${DRONE_COMMIT_SHA}
       username:
         from_secret: DOCKER_USERNAME
       password:
@@ -16,8 +16,8 @@ steps:
     image: quay.io/honestbee/drone-kubernetes
     settings:
       deployment: jmp-api
-      repo: docker.castive.dev/jmp
-      tag: ${DRONE_COMMIT_SHA}
+      repo: core.harbor.castive.dev/jmp/api
+      tag: ${DRONE_BRANCH}-${DRONE_COMMIT_SHA}
       container: jmp-api
       namespace:
         from_secret: NAMESPACE
@@ -30,13 +30,11 @@ steps:
     when:
       branch:
         - develop # for now
-        - feature/crowd
         - master
       event: push
 trigger:
   when:
     branch:
       - master
-      - feature/crowd
       - develop
     event: push
