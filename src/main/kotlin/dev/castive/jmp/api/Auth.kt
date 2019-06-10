@@ -18,13 +18,19 @@ package dev.castive.jmp.api
 
 import com.amdelamar.jhash.Hash
 import dev.castive.javalin_auth.auth.Providers
+import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.Factor
+import dev.castive.javalin_auth.auth.provider.CrowdProvider
+import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.db.dao.Roles
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
+import dev.castive.jmp.util.SystemUtil
 import dev.castive.log2.Log
 import io.javalin.ConflictResponse
+import io.javalin.Context
 import io.javalin.security.Role
 import io.javalin.security.SecurityUtil
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -52,6 +58,8 @@ class Auth {
 			Pair(BasicRoles.ADMIN.name, BasicRoles.ADMIN)
 		)
 	}
+
+	data class UserLoginResponse(val token: String, val provided: Boolean)
 
 	@Deprecated(message = "Do not use strings when dealing with passwords.")
 	fun computeHash(password: String): String {
@@ -86,20 +94,46 @@ class Auth {
 		else
 			throw ConflictResponse()
 	}
-	fun loginUser(username: String, password: String): String? {
+	fun loginUser(token: String, ctx: Context): UserLoginResponse? {
+		Log.v(javaClass, "Attempting to login user via SSO token")
+		if(Providers.primaryProvider != null) {
+			val primaryAttempt = AuthAction.isValidToken(token, ctx)
+			if(primaryAttempt.isNotEmpty()) {
+				Log.v(javaClass, "Found user using token: $primaryAttempt")
+				return UserLoginResponse(primaryAttempt, true)
+			}
+		}
+		return null
+	}
+	fun loginUser(username: String, password: String, ctx: Context): UserLoginResponse? {
+		Log.v(javaClass, "Attempting to login user via basic authentication")
 		var result: String?
 		if(Providers.primaryProvider != null) { // Try to use primary provider if it exists
-			val primaryAttempt = runCatching { Providers.primaryProvider?.getLogin(username, password) }
+			// If the provider wants additional data, generate it here
+			val data = when(Providers.primaryProvider) {
+				is CrowdProvider -> {
+					SystemUtil.gson.toJson(arrayListOf(Factor("remote_address", ctx.ip())))
+				}
+				else -> null
+			}
+			val primaryAttempt = runCatching { Providers.primaryProvider?.getLogin(username, password, data) }
 			// This is for logging
 //			App.exceptionTracker.onExceptionTriggered(primaryAttempt.exceptionOrNull() ?: Exception("Failed to load actual exception class"))
 			result = primaryAttempt.getOrNull()
-			if(result != null) return result
+			if(result != null) {
+				Log.v(javaClass, "Found user in primary provider: $result")
+				return UserLoginResponse(result, true)
+			}
 		}
 		Log.v(javaClass, "Failed to locate user in primary provider, checking local provider")
 		// Fallback to internal database checks
 		result = Providers.internalProvider.getLogin(username, password)
+		if(result != null && result.isBlank()) result = null
 		Log.d(javaClass, "Found local user: $result")
-		return result
+		return if(result != null) {
+			UserLoginResponse(result, false)
+		}
+		else null
 	}
 
 	fun validateUserToken(token: UUID): Boolean {
@@ -147,10 +181,25 @@ class Auth {
 		}
 	}
 
-	private fun getUser(username: String): User? {
+	fun getUser(username: String): User? {
 		return transaction {
 			return@transaction User.find {
 				Users.username eq username
+			}.elementAtOrNull(0)
+		}
+	}
+	fun getUserWithSSOToken(token: String): User? {
+		return transaction {
+			return@transaction User.find {
+				Users.requestToken eq token
+			}.elementAtOrNull(0)
+		}
+	}
+	fun getUser(username: String, token: String): User? {
+		if(username.isBlank() || token.isBlank()) return null
+		return transaction {
+			return@transaction User.find {
+				Users.username eq username and(Users.requestToken.eq(token))
 			}.elementAtOrNull(0)
 		}
 	}

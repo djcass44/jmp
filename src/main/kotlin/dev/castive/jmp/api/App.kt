@@ -18,9 +18,10 @@ package dev.castive.jmp.api
 
 import dev.castive.eventlog.EventLog
 import dev.castive.javalin_auth.actions.UserAction
-import dev.castive.javalin_auth.auth.JWT
 import dev.castive.javalin_auth.auth.Providers
-import dev.castive.javalin_auth.auth.TokenProvider
+import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.CrowdCookieConfig
+import dev.castive.javalin_auth.auth.provider.CrowdProvider
+import dev.castive.javalin_auth.auth.provider.LDAPProvider
 import dev.castive.jmp.Arguments
 import dev.castive.jmp.Runner
 import dev.castive.jmp.Version
@@ -53,6 +54,8 @@ class App(val port: Int = 7000) {
 	companion object {
 		val id = UUID.randomUUID().toString()
 		var exceptionTracker = ExceptionTracker(blockLeak = true)
+		var crowdCookieConfig: CrowdCookieConfig? = null
+		val auth = Auth()
 	}
 	fun start(store: ConfigStore, arguments: Arguments, logger: Logger) {
 		EventLog.stream.add(System.out)
@@ -62,12 +65,20 @@ class App(val port: Int = 7000) {
 			SchemaUtils.createMissingTablesAndColumns(Jumps, Users, Roles, Groups, GroupUsers, Aliases, Sessions)
 			Init(store) // Ensure that the default admin/roles is created
 		}
-		val auth = Auth()
 		val builder = LDAPConfigBuilder(store)
-		Providers(builder.core, builder.extra, builder.group).init(UserVerification(auth)) // Setup user authentication
-		Providers.validator = UserValidator(auth, builder.extra)
+		val verify = UserVerification(auth)
+		val provider = if(!builder.min.enabled) null else when(builder.type) {
+			"ldap" -> LDAPProvider(builder.ldapConfig, verify)
+			"crowd" -> CrowdProvider(builder.crowdConfig).apply {
+				this.setup()
+				crowdCookieConfig = this.getSSOConfig() as CrowdCookieConfig?
+			}
+			else -> null
+		}
+		Providers(builder.min, provider).init(verify) // Setup user authentication
+		Providers.validator = UserValidator(auth, builder.min)
 //	    TokenProvider.ageProfile = TokenProvider.TokenAgeProfile.DEV
-		UserAction.verification = Providers.verification
+		UserAction.verification = verify
 		Javalin.create().apply {
 			disableStartupBanner()
 			port(port)
@@ -77,8 +88,7 @@ class App(val port: Int = 7000) {
 			}
 			enableCaseSensitiveUrls()
 			accessManager { handler, ctx, permittedRoles ->
-				val jwt = JWT.map(ctx)
-				val user = if(TokenProvider.mayBeToken(jwt)) ClaimConverter.getUser(TokenProvider.verify(jwt!!, Providers.verification)) else null
+				val user = ClaimConverter.getUser(ctx)
 				val userRole = if(user == null) Auth.BasicRoles.ANYONE else transaction {
 					Auth.BasicRoles.valueOf(user.role.name)
 				}
@@ -102,19 +112,19 @@ class App(val port: Int = 7000) {
 				Similar().addEndpoints()
 
 				// Users
-				User(auth, ws, builder.extra).addEndpoints()
+				User(auth, ws, builder.min).addEndpoints()
 
 				// Group
 				Group(ws).addEndpoints()
 				GroupMod().addEndpoints()
 
 				// Authentication
-				Oauth(auth).addEndpoints()
+				Oauth(auth, verify).addEndpoints()
 				Verify(auth).addEndpoints()
 				UserMod(auth).addEndpoints()
 
 				// Health
-				Health(builder.core).addEndpoints()
+				Health(builder.min).addEndpoints()
 			}
 			start()
 		}

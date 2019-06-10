@@ -34,7 +34,7 @@ class Similar : EndpointGroup {
         // Find similar jumps
         get("${Runner.BASE}/v2/similar/:query", { ctx ->
             try {
-                val user = ClaimConverter.getUser(UserAction.getOrNull(ctx))
+                val user = ClaimConverter.getUser(UserAction.getOrNull(ctx), ctx)
                 val query = ctx.pathParam("query")
                 if (query.isBlank())
                     throw EmptyPathException()

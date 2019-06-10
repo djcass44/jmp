@@ -16,11 +16,13 @@
 
 package dev.castive.jmp.util
 
+import com.google.gson.GsonBuilder
 import dev.castive.log2.Log
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 
 object SystemUtil {
+    val gson = GsonBuilder().setPrettyPrinting().create()
     fun getEntropyPool(): Int {
         val os = System.getProperty("os.name").toLowerCase()
         return if(os.contains("nix") || os.contains("nux") || os.contains("aix")) {

@@ -30,13 +30,13 @@ steps:
     when:
       branch:
         - develop # for now
-        - staging
+        - feature/crowd
         - master
       event: push
 trigger:
   when:
     branch:
       - master
-      - staging
+      - feature/crowd
       - develop
     event: push

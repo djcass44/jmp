@@ -16,17 +16,17 @@
 
 package dev.castive.jmp.api.v2_1
 
-import dev.castive.javalin_auth.auth.connect.LDAPConfig
+import dev.castive.javalin_auth.auth.connect.MinimalConfig
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.util.checks.DatabaseCheck
-import dev.castive.jmp.util.checks.LDAPCheck
+import dev.castive.jmp.util.checks.ProviderCheck
 import dev.castive.log2.Log
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
 
-class Health(private val config: LDAPConfig): EndpointGroup {
+class Health(private val config: MinimalConfig): EndpointGroup {
     override fun addEndpoints() {
         get("${Runner.BASE}/v3/health", { ctx ->
             val check = runChecks()
@@ -36,7 +36,7 @@ class Health(private val config: LDAPConfig): EndpointGroup {
     }
     private fun runChecks(): HealthPayload {
         val dbCheck = DatabaseCheck().runCheck()
-        val ldapCheck = if(config.enabled) LDAPCheck(config).runCheck() else null
+        val ldapCheck = if(config.enabled) ProviderCheck().runCheck() else null
         val code = if(!dbCheck || ldapCheck == false) HttpStatus.INTERNAL_SERVER_ERROR_500 else HttpStatus.OK_200
 
         return HealthPayload(code, "OK", dbCheck, ldapCheck)

@@ -64,7 +64,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 		// List all items in Json format
 		get("${Runner.BASE}/v1/jumps", { ctx ->
 			val items = arrayListOf<JumpData>()
-			val user = ClaimConverter.getUser(UserAction.getOrNull(ctx))
+			val user = ClaimConverter.getUser(UserAction.getOrNull(ctx), ctx)
 			val userJumps = OwnerAction.getUserVisibleJumps(user)
 			transaction {
 				userJumps.forEach {
@@ -83,11 +83,16 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 				/**
 				 * 1. Try to get JWT token
 				 */
-				val user = ClaimConverter.getUser(UserAction.getOrNull(ctx))
+				val user = ClaimConverter.getUser(UserAction.getOrNull(ctx), ctx)
 				transaction {
 					Log.d(javaClass, "User information: [name: ${user?.username}, token: ${user?.id?.value}]")
 					Log.d(javaClass, "Found user: ${user != null}")
-					val jump = OwnerAction.getJumpFromUser(user, target, caseSensitive)
+					val id = ctx.queryParam("id")?.toIntOrNull()
+					val jump = if(id != null) {
+						Log.i(javaClass, "User is specifying jump id: $id")
+						OwnerAction.getJumpById(user, id)
+					}
+					else OwnerAction.getJumpFromUser(user, target, caseSensitive)
 					if(jump.size == 1) {
 						val location = jump[0].location
 						jump[0].metaUsage++ // Increment usage count for statistics
@@ -110,7 +115,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 		put("${Runner.BASE}/v1/jump", { ctx ->
 			val add = ctx.bodyAsClass(JumpData::class.java)
 			val groupID = Util.getSafeUUID(ctx.queryParam("gid") ?: "")
-			val user = ClaimConverter.getUser(UserAction.get(ctx))!!
+			val user = ClaimConverter.get(UserAction.get(ctx), ctx)
 			// Block non-admin user from adding global jumps
 			if (add.personal == JumpData.TYPE_GLOBAL && transaction { return@transaction user.role.name != Auth.BasicRoles.ADMIN.name }) throw ForbiddenResponse()
 			if (!jumpExists(add.name, add.location, user)) {
@@ -144,13 +149,14 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 		// Edit a jump point
 		patch("${Runner.BASE}/v1/jump", { ctx ->
 			val update = ctx.bodyAsClass(EditJumpData::class.java)
-			val user = ClaimConverter.getUser(UserAction.get(ctx))!!
+			val user = ClaimConverter.get(UserAction.get(ctx), ctx)
 //            if(jumpExists(update.name, update.location, user)) throw ConflictResponse()
 			transaction {
 				val existing = Jump.findById(update.id) ?: throw NotFoundResponse()
 
 				// User can change personal jumps
-				if(existing.owner == user || user.role.name == Auth.BasicRoles.ADMIN.name) {
+				if(existing.owner == user || user.role.name == Auth.BasicRoles.ADMIN.name ||
+					(OwnerAction.getJumpById(user, existing.id.value).isNotEmpty() && !OwnerAction.isPublic(existing))) {
 					existing.apply {
 						name = update.name
 						location = update.location
@@ -196,7 +202,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 		// Delete a jump point
 		delete("${Runner.BASE}/v1/jump/:id", { ctx ->
 			val id = ctx.pathParam("id").toIntOrNull() ?: throw BadRequestResponse()
-			val user = ClaimConverter.getUser(UserAction.get(ctx))!!
+			val user = ClaimConverter.get(UserAction.get(ctx), ctx)
 			transaction {
 				val result = Jump.findById(id) ?: throw NotFoundResponse()
 				// 403 if jump is global and user ISN'T admin
