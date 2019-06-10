@@ -64,17 +64,18 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				Log.e(javaClass, "Not given any form of identification, cannot authenticate user")
 				throw BadRequestResponse("No auth form given")
 			}
-			val token = if(basicAuth != null) auth.loginUser(basicAuth.username, basicAuth.password, ctx) else auth.loginUser(authHeader!!, ctx)
-			if(token == null) {
+			val login = if(basicAuth != null) auth.loginUser(basicAuth.username, basicAuth.password, ctx) else auth.loginUser(authHeader!!, ctx)
+			if(login == null) {
 				Log.d(javaClass, "Request attempt failed: notfound")
 				throw NotFoundResponse()
 			}
 			val sso: AuthenticateResponse?
 			val cookie: CrowdCookie?
 			val name: String
-			when(Providers.primaryProvider) {
-				is CrowdProvider -> {
-					sso = SystemUtil.gson.fromJson(token, AuthenticateResponse::class.java)
+			when {
+				// Check with Crowd ONLY if the user is from Crowd
+				Providers.primaryProvider is CrowdProvider && login.provided -> {
+					sso = SystemUtil.gson.fromJson(login.token, AuthenticateResponse::class.java)
 					cookie = CrowdCookie(App.crowdCookieConfig!!.domain,
 						"TRUE",
 						App.crowdCookieConfig!!.secure,
@@ -100,7 +101,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				ctx.cookie(ck)
 			}
 			val user = auth.getUser(name) ?: throw UnauthorizedResponse()
-			val actualToken = sso?.token ?: token
+			val actualToken = sso?.token ?: login.token
 			transaction {
 				user.requestToken = actualToken
 			}

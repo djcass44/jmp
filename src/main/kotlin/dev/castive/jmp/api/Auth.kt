@@ -59,6 +59,8 @@ class Auth {
 		)
 	}
 
+	data class UserLoginResponse(val token: String, val provided: Boolean)
+
 	@Deprecated(message = "Do not use strings when dealing with passwords.")
 	fun computeHash(password: String): String {
 		return computeHash(password.toCharArray())
@@ -92,18 +94,18 @@ class Auth {
 		else
 			throw ConflictResponse()
 	}
-	fun loginUser(token: String, ctx: Context): String? {
+	fun loginUser(token: String, ctx: Context): UserLoginResponse? {
 		Log.v(javaClass, "Attempting to login user via SSO token")
 		if(Providers.primaryProvider != null) {
 			val primaryAttempt = AuthAction.isValidToken(token, ctx)
 			if(primaryAttempt.isNotEmpty()) {
 				Log.v(javaClass, "Found user using token: $primaryAttempt")
-				return primaryAttempt
+				return UserLoginResponse(primaryAttempt, true)
 			}
 		}
 		return null
 	}
-	fun loginUser(username: String, password: String, ctx: Context): String? {
+	fun loginUser(username: String, password: String, ctx: Context): UserLoginResponse? {
 		Log.v(javaClass, "Attempting to login user via basic authentication")
 		var result: String?
 		if(Providers.primaryProvider != null) { // Try to use primary provider if it exists
@@ -120,7 +122,7 @@ class Auth {
 			result = primaryAttempt.getOrNull()
 			if(result != null) {
 				Log.v(javaClass, "Found user in primary provider: $result")
-				return result
+				return UserLoginResponse(result, true)
 			}
 		}
 		Log.v(javaClass, "Failed to locate user in primary provider, checking local provider")
@@ -128,7 +130,10 @@ class Auth {
 		result = Providers.internalProvider.getLogin(username, password)
 		if(result != null && result.isBlank()) result = null
 		Log.d(javaClass, "Found local user: $result")
-		return result
+		return if(result != null) {
+			UserLoginResponse(result, false)
+		}
+		else null
 	}
 
 	fun validateUserToken(token: UUID): Boolean {
