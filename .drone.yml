@@ -3,15 +3,18 @@ name: docker
 
 steps:
   - name: build
-      image: plugins/docker
-      settings:
-        registry: core.harbor.castive.dev/jmp
-        repo: core.harbor.castive.dev/jmp/api
-        tags: ${DRONE_BRANCH}-${DRONE_COMMIT_SHA}
-        username:
-          from_secret: DOCKER_USERNAME
-        password:
-          from_secret: DOCKER_PASSWORD
+    image: plugins/docker
+    settings:
+      registry: core.harbor.castive.dev/jmp
+      repo: core.harbor.castive.dev/jmp/api
+      tags:
+        - latest
+        - ${DRONE_BRANCH}
+        - ${DRONE_BRANCH}-${DRONE_COMMIT_SHA}
+      username:
+        from_secret: DOCKER_USERNAME
+      password:
+        from_secret: DOCKER_PASSWORD
   - name: deploy
     image: quay.io/honestbee/drone-kubernetes
     settings:
