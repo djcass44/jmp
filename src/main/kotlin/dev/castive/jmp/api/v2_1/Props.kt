@@ -53,7 +53,7 @@ class Props(private val builder: LDAPConfigBuilder, private val tracker: Excepti
         get("${Runner.BASE}/v2_1/statistics/exception", { ctx ->
             val res = tracker.getData()
             ctx.status(HttpStatus.OK_200).json(res)
-        }, Auth.openAccessRole)
+        }, Auth.adminRoleAccess)
     }
 }
 data class LDAPPayload(val connected: Boolean, val users: Int, val groups: Int)
