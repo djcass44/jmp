@@ -100,6 +100,13 @@ class App(val port: Int = 7000) {
 			requestLogger { ctx, timeMs ->
 				logger.add("${System.currentTimeMillis()} - ${ctx.method()} ${ctx.path()} took $timeMs ms")
 			}
+			exception(Exception::class.java) { e, ctx ->
+				Log.e(javaClass, "Encountered unhandled exception: $e")
+				if(Log.getPriorityLevel() <= 1) // only print for debug/verbose
+					e.printStackTrace()
+				exceptionTracker.onExceptionTriggered(e)
+				ctx.status(HttpStatus.INTERNAL_SERVER_ERROR_500)
+			}
 			routes {
 				val ws = WebSocket()
 				ws.addEndpoints()

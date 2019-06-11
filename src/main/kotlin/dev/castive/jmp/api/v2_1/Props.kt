@@ -30,7 +30,6 @@ import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.util.concurrent.CompletableFuture
 
 class Props(private val builder: LDAPConfigBuilder, private val tracker: ExceptionTracker): EndpointGroup {
     override fun addEndpoints() {
@@ -52,10 +51,9 @@ class Props(private val builder: LDAPConfigBuilder, private val tracker: Excepti
             ctx.status(HttpStatus.OK_200).json(LDAPPayload(connected, users, groups))
         }, Auth.adminRoleAccess)
         get("${Runner.BASE}/v2_1/statistics/exception", { ctx ->
-            val future = CompletableFuture<ArrayList<Pair<String, Long>>>()
-            tracker.getData(future = future)
-            ctx.result(future)
-        }, Auth.adminRoleAccess)
+            val res = tracker.getData()
+            ctx.status(HttpStatus.OK_200).json(res)
+        }, Auth.openAccessRole)
     }
 }
 data class LDAPPayload(val connected: Boolean, val users: Int, val groups: Int)

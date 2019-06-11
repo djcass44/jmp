@@ -42,8 +42,8 @@ object ClaimConverter {
 				Users.username eq claim.username and(Users.requestToken.eq(claim.token))
 			}.elementAtOrNull(0)
 		}
-		Log.v(javaClass, "User is provided: ${user?.from != InternalProvider.SOURCE_NAME}")
-		return if(App.crowdCookieConfig != null && user?.from != InternalProvider.SOURCE_NAME) {
+		Log.v(javaClass, "User is provided: ${user != null && user.from != InternalProvider.SOURCE_NAME}")
+		return if(App.crowdCookieConfig != null && user != null && user.from != InternalProvider.SOURCE_NAME) {
 			// Check for Crowd SSO cookie
 			val ssoToken = kotlin.runCatching {
 				return@runCatching ctx.cookie(App.crowdCookieConfig!!.name)
