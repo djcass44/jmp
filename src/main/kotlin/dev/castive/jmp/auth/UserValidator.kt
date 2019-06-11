@@ -20,7 +20,7 @@ import dev.castive.javalin_auth.auth.connect.MinimalConfig
 import dev.castive.javalin_auth.auth.data.Group
 import dev.castive.javalin_auth.auth.data.User
 import dev.castive.javalin_auth.auth.external.UserIngress
-import dev.castive.javalin_auth.auth.provider.LDAPProvider
+import dev.castive.javalin_auth.auth.provider.InternalProvider
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.db.dao.GroupUsers
 import dev.castive.jmp.db.dao.Groups
@@ -58,7 +58,7 @@ class UserValidator(private val auth: Auth, private val min: MinimalConfig): Use
 					}
 				}
 			}
-			val externalGroups = DaoGroup.find { Groups.from eq LDAPProvider.SOURCE_NAME }
+			val externalGroups = DaoGroup.find { Groups.from neq InternalProvider.SOURCE_NAME }
 			val invalid = arrayListOf<DaoGroup>()
 			externalGroups.forEach { if(!names.contains(it.name)) invalid.add(it) }
 			Log.i(javaClass, "Found ${invalid.size} stale groups")
@@ -80,7 +80,14 @@ class UserValidator(private val auth: Auth, private val min: MinimalConfig): Use
 				from = user.source
 			}
 		}
-		else return@transaction match.elementAt(0)
+		else {
+			val existing = match.elementAt(0)
+			existing.apply {
+				from = user.source
+				username = user.username
+			}
+			return@transaction existing
+		}
 	}
 
 	override fun ingestUsers(users: ArrayList<User>) {
@@ -90,8 +97,8 @@ class UserValidator(private val auth: Auth, private val min: MinimalConfig): Use
 				names.add(u.username)
 				getOrCreateUser(u)
 			}
-			// Get LDAP users which weren't in the most recent search and delete them
-			val externalUsers = DaoUser.find { Users.from eq LDAPProvider.SOURCE_NAME }
+			// Get external users which weren't in the most recent search and delete them
+			val externalUsers = DaoUser.find { Users.from neq InternalProvider.SOURCE_NAME }
 			val invalid = arrayListOf<DaoUser>()
 			externalUsers.forEach { if(!names.contains(it.username)) invalid.add(it) }
 			Log.i(javaClass, "Found ${invalid.size} stale users")

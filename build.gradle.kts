@@ -41,7 +41,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1")
 
-    implementation("com.github.djcass44:jmp-auth:d2425aa564")
+    implementation("com.github.djcass44:jmp-auth:45fc33c1e2")
 //    implementation("dev.castive:jmp-auth:0.3.3")
     implementation("com.github.djcass44:log2:3.3")
     implementation("com.github.djcass44:fav2:v0.2.1")
@@ -68,11 +68,11 @@ dependencies {
     implementation("com.zaxxer:HikariCP:3.3.1")
 
     // JDBC drivers (only includes those supported by github.com/JetBrains/Exposed)
-    runtimeOnly("org.xerial:sqlite-jdbc:3.25.2")
-    runtimeOnly("org.postgresql:postgresql:42.2.2")
-    runtimeOnly("mysql:mysql-connector-java:8.0.15")
-    runtimeOnly("com.h2database:h2:1.4.199")
-    runtimeOnly("com.microsoft.sqlserver:mssql-jdbc:7.3.0.jre11-preview")
+    runtimeOnly("org.xerial:sqlite-jdbc:3.25.2") // tested (django)
+    runtimeOnly("org.postgresql:postgresql:42.2.2") // tested (django)
+    runtimeOnly("mysql:mysql-connector-java:8.0.15") // untested
+    runtimeOnly("com.h2database:h2:1.4.199") // untested
+    runtimeOnly("com.microsoft.sqlserver:mssql-jdbc:7.3.0.jre11-preview") // untested
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.2.0")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.2.0")
