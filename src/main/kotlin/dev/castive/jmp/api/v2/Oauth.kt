@@ -137,7 +137,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 		get("${Runner.BASE}/v2/oauth/valid", { ctx ->
 			Log.d(javaClass, "Checking session for ${ctx.ip()}")
 			val user = ClaimConverter.getUser(ctx) ?: run {
-				AuthAction.writeInvalidCookie(ctx)
+//				AuthAction.writeInvalidCookie(ctx)
 				throw UnauthorizedResponse("Invalid authentication")
 			}
 			Log.d(javaClass, "Session for ${user.username} is valid")
@@ -145,7 +145,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				if(user.requestToken != null && Providers.primaryProvider != null && user.from != InternalProvider.SOURCE_NAME) {
 					if(AuthAction.isValidToken(user.requestToken!!, ctx).isEmpty()) {
 						Log.e(Oauth::class.java, "Primary provider validation failed")
-						AuthAction.writeInvalidCookie(ctx, user.username)
+//						AuthAction.writeInvalidCookie(ctx, user.username)
 						throw UnauthorizedResponse("Invalid SSO token")
 					}
 					else if(App.crowdCookieConfig != null) {
