@@ -45,6 +45,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class Jump(private val config: ConfigStore, private val ws: WebSocket): EndpointGroup {
 	private val caseSensitive = Util.getEnv("JMP_CASE_SENSITIVE", "false").toBoolean()
 
+	data class JumpResponse(val found: Boolean = true, val location: String)
+
 	private fun jumpExists(name: String, location: String, user: User?): Boolean {
 		return transaction {
 			/**
@@ -97,9 +99,9 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 						val location = jump[0].location
 						jump[0].metaUsage++ // Increment usage count for statistics
 						Log.v(javaClass, "v2: moving to point: $location")
-						ctx.status(HttpStatus.OK_200).result(location) // Send the user the result, don't redirect them
+						ctx.status(HttpStatus.OK_200).json(JumpResponse(true, location)) // Send the user the result, don't redirect them
 					}
-					else ctx.status(HttpStatus.OK_200).result("${config.BASE_URL}/similar?query=$target")
+					else ctx.status(HttpStatus.OK_200).json(JumpResponse(false, "/similar?query=$target"))
 				}
 			}
 			catch (e: IndexOutOfBoundsException) {
