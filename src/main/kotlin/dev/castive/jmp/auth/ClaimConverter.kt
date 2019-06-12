@@ -57,18 +57,17 @@ object ClaimConverter {
 				val token = kotlin.runCatching {
 					SystemUtil.gson.fromJson(AuthAction.isValidToken(ssoToken, ctx), AuthenticateResponse::class.java)
 				}.getOrNull() ?: return null
-				// This should always be true
-				if(ssoToken == token.token) {
-					// Get the user from Crowds response
-					val foundUser = App.auth.getUser(token.user.name)
-					transaction {
-						// Update the users token to match Crowd
-						Log.d(javaClass, "Updating user with discovered SSO token: ${claim?.username}, ${token.user.name}")
-						foundUser?.requestToken = token.token
-					}
+				// Get the user from Crowds response
+				// We know that auth MUST be valid otherwise Crowd would not return 200 OK
+				if(ssoToken != token.token) Log.a(javaClass, "Current token and new token don't match, Crowd must have issued a refresh!")
+				val foundUser = App.auth.getUser(token.user.name)
+				transaction {
+					// Update the users token to match Crowd
+					Log.d(javaClass, "Updating user with discovered SSO token: ${claim?.username}, ${token.user.name}")
+					foundUser?.requestToken = token.token
 				}
-				Log.d(javaClass, "Searching for active user with token: $ssoToken")
-				App.auth.getUserWithSSOToken(ssoToken)
+				Log.d(javaClass, "Searching for active user with token: [cur: $ssoToken, new: ${token.token}]")
+				App.auth.getUserWithSSOToken(token.token)
 			}
 		}
 		else {
