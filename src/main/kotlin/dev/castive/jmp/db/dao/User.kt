@@ -28,6 +28,7 @@ object Users: UUIDTable() {
     val username = varchar("username", 36).uniqueIndex()
     val hash = text("hash")
     val role = reference("role", Roles)
+    @Deprecated(message = "Use Session instead", level = DeprecationLevel.WARNING)
     val requestToken = text("request_token").nullable()
 
     val metaCreation = long("metaCreation").default(System.currentTimeMillis())
@@ -41,6 +42,7 @@ class User(id: EntityID<UUID>): UUIDEntity(id) {
     var username by Users.username
     var hash by Users.hash
     var role by Role referencedOn Users.role
+    @Deprecated(message = "Use Session instead", level = DeprecationLevel.WARNING)
     var requestToken by Users.requestToken
 
     var metaCreation by Users.metaCreation

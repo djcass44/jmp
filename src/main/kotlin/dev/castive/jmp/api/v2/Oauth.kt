@@ -103,9 +103,6 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 			}
 			val user = auth.getUser(name) ?: throw UnauthorizedResponse()
 			val actualToken = sso?.token ?: login.token
-			transaction {
-				user.requestToken = actualToken
-			}
 			val result = AuthAction.createSession(user, actualToken)
 			ctx.status(HttpStatus.OK_200).json(result)
 		}, Auth.openAccessRole)
@@ -118,16 +115,17 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 			Log.d(javaClass, "Found refresh token")
 			refresh!!
 			val user = kotlin.runCatching {
-				ClaimConverter.get(UserAction.get(ctx, lax = true), ctx)
+				ClaimConverter.get(UserAction.getOrNull(ctx, lax = true), ctx)
 			}.getOrNull() ?: throw UnauthorizedResponse()
 			val response = transaction {
-				val existingRefreshToken = Session.find { Sessions.user eq user.id and(Sessions.refreshToken eq refresh) }.limit(1).elementAtOrNull(0) ?: run {
+				val existingSession = Session.find { Sessions.user eq user.id and(Sessions.refreshToken eq refresh) }.limit(1).elementAtOrNull(0) ?: run {
 					Log.d(Oauth::class.java, "Failed to find matching refresh token")
 					throw UnauthorizedResponse("Invalid refresh token")
 				}
 				// Check if the users request token matched expected
-				if(TokenProvider.verify(existingRefreshToken.refreshToken, verify) == null) throw BadRequestResponse("Expired refresh token")
-				val result = AuthAction.createSession(user, user.requestToken!!)
+				if(TokenProvider.verify(existingSession.refreshToken, verify) == null) throw BadRequestResponse("Expired refresh token")
+				existingSession.active = false
+				val result = AuthAction.createSession(user, existingSession.ssoToken ?: user.id.value.toString())
 				Log.i(Oauth::class.java, "Refreshing session for ${user.username}")
 				return@transaction result
 			}
@@ -140,17 +138,18 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 //				AuthAction.writeInvalidCookie(ctx)
 				throw UnauthorizedResponse("Invalid authentication")
 			}
+			val token = ClaimConverter.getToken(ctx)
 			Log.d(javaClass, "Session for ${user.username} is valid")
 			transaction {
-				if(user.requestToken != null && Providers.primaryProvider != null && user.from != InternalProvider.SOURCE_NAME) {
-					if(AuthAction.isValidToken(user.requestToken!!, ctx).isEmpty()) {
+				if(token != null && Providers.primaryProvider != null && user.from != InternalProvider.SOURCE_NAME) {
+					if(AuthAction.isValidToken(token, ctx).isEmpty()) {
 						Log.e(Oauth::class.java, "Primary provider validation failed")
 //						AuthAction.writeInvalidCookie(ctx, user.username)
 						throw UnauthorizedResponse("Invalid SSO token")
 					}
 					else if(App.crowdCookieConfig != null) {
 						// Re-apply the cookie
-						val ck = Cookie(App.crowdCookieConfig!!.name, user.requestToken).apply {
+						val ck = Cookie(App.crowdCookieConfig!!.name, token).apply {
 							this.domain = App.crowdCookieConfig!!.domain
 							this.secure = App.crowdCookieConfig!!.secure
 							this.path = "/"
@@ -165,10 +164,13 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 		// Logout the user and invalidate tokens if needed
 		post("${Runner.BASE}/v2/oauth/logout", { ctx ->
 			val user = ClaimConverter.get(ctx)
+			val ssoToken = ClaimConverter.getToken(ctx)
 			transaction {
-				if(user.requestToken != null) {
-					Providers.primaryProvider?.invalidateLogin(user.requestToken!!)
-					Log.i(Oauth::class.java, "Invalidating login for ${user.username}, ${user.requestToken}")
+				val session = AuthAction.userHasToken(user.username, ssoToken)
+				if(session?.ssoToken != null) {
+					Providers.primaryProvider?.invalidateLogin(session.ssoToken!!)
+					session.active = false
+					Log.i(Oauth::class.java, "Invalidating login for ${user.username}, $ssoToken")
 				}
 				else Log.v(javaClass, "User has no token to invalidate: ${user.username}")
 			}

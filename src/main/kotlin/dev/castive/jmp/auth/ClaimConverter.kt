@@ -28,7 +28,6 @@ import dev.castive.jmp.util.SystemUtil
 import dev.castive.log2.Log
 import io.javalin.Context
 import io.javalin.UnauthorizedResponse
-import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object ClaimConverter {
@@ -36,11 +35,15 @@ object ClaimConverter {
 		return getUser(UserAction.getOrNull(ctx), ctx)
 	}
 	fun getUser(claim: ValidUserClaim?, ctx: Context): User? {
-		val user = transaction {
+		val user: User? = transaction {
 			return@transaction if (claim == null) null
-			else User.find {
-				Users.username eq claim.username and(Users.requestToken.eq(claim.token))
-			}.elementAtOrNull(0)
+			else {
+				val u = User.find {
+					// TODO this fails if Crowd issues a refreshed token
+					Users.username eq claim.username
+				}.elementAtOrNull(0)
+				return@transaction if(AuthAction.userHadToken(u?.username, claim.token) != null) u else null
+			}
 		}
 		Log.v(javaClass, "User is provided: ${user != null && user.from != InternalProvider.SOURCE_NAME}")
 		return if(App.crowdCookieConfig != null && user != null && user.from != InternalProvider.SOURCE_NAME) {
@@ -75,6 +78,9 @@ object ClaimConverter {
 			user
 		}
 	}
+	fun getToken(ctx: Context): String? = kotlin.runCatching {
+		ctx.cookie(App.crowdCookieConfig!!.name)
+	}.getOrNull()
 	fun get(ctx: Context): User {
 		return get(UserAction.getOrNull(ctx), ctx)
 	}
