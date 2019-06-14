@@ -67,10 +67,11 @@ object ClaimConverter {
 				transaction {
 					// Update the users token to match Crowd
 					Log.d(javaClass, "Updating user with discovered SSO token: ${claim?.username}, ${token.user.name}")
-					foundUser?.requestToken = token.token
+					val s = AuthAction.userHadToken(foundUser?.username, ssoToken)
+					s?.ssoToken = token.token
 				}
 				Log.d(javaClass, "Searching for active user with token: [cur: $ssoToken, new: ${token.token}]")
-				App.auth.getUserWithSSOToken(token.token)
+				foundUser
 			}
 		}
 		else {
