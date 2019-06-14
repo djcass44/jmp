@@ -30,7 +30,6 @@ import io.javalin.ConflictResponse
 import io.javalin.Context
 import io.javalin.security.Role
 import io.javalin.security.SecurityUtil
-import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -198,9 +197,10 @@ class Auth {
 	fun getUser(username: String, token: String): User? {
 		if(username.isBlank() || token.isBlank()) return null
 		return transaction {
-			return@transaction User.find {
-				Users.username eq username and(Users.requestToken.eq(token))
+			val u = User.find {
+				Users.username eq username
 			}.elementAtOrNull(0)
+			return@transaction if(AuthAction.userHadToken(u?.username, token) != null) u else null
 		}
 	}
 	fun getUser(username: String?, token: UUID?): User? {
