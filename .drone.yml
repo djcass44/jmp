@@ -41,30 +41,30 @@ trigger:
       - master
       - develop
     event: push
-#---
-#kind: pipeline
-#name: build
-#
-#steps:
-#  - name: test
-#    image: adoptopenjdk/openjdk12:jdk-12.0.1_12-alpine-slim
-#    volumes:
-#      - name: cache
-#        path: /tmp/cache
-#    commands:
-#      - ./gradlew -g /tmp/cache test
-#  - name: build
-#    image: adoptopenjdk/openjdk12:jdk-12.0.1_12-alpine-slim
-#    volumes:
-#      - name: cache
-#        path: /tmp/cache
-#    commands:
-#      - ./gradlew -g /tmp/cache buildPackage
-#trigger:
-#  when:
-#    branch:
-#      - master
-#      - develop
-#volumes:
-#  - name: cache
-#    temp: {}
+---
+kind: pipeline
+name: build
+
+steps:
+  - name: test
+    image: adoptopenjdk/openjdk12:jdk-12.0.1_12-alpine-slim
+    volumes:
+      - name: cache
+        path: /tmp/cache
+    commands:
+      - ./gradlew -g /tmp/cache test
+  - name: build
+    image: adoptopenjdk/openjdk12:jdk-12.0.1_12-alpine-slim
+    volumes:
+      - name: cache
+        path: /tmp/cache
+    commands:
+      - ./gradlew -g /tmp/cache buildPackage
+trigger:
+  when:
+    branch:
+      - master
+      - develop
+volumes:
+  - name: cache
+    temp: {}
