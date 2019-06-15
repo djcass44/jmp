@@ -46,7 +46,11 @@ object ClaimConverter {
 					// TODO this fails if Crowd issues a refreshed token
 					Users.username eq claim.username
 				}.elementAtOrNull(0)
-				return@transaction if(AuthAction.userHadToken(u?.username, claim.token) != null) u else null
+				val hasToken = AuthAction.userHadToken(u?.username, claim.token)
+				if(hasToken == null && u != null && claim.token != u.id.value.toString()) {
+					return@transaction u
+				}
+				else return@transaction if(hasToken != null) u else null
 			}
 		}
 		Log.v(javaClass, "User is provided: ${user != null && user.from != InternalProvider.SOURCE_NAME}")
