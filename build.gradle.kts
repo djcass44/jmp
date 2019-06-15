@@ -91,7 +91,7 @@ tasks.withType<KotlinCompile>().all {
 }
 
 tasks.withType<ShadowJar> {
-	archiveName = "jmp.$archiveExtension"
+	archiveName = "jmp.$extension"
 }
 tasks.withType<Test> {
 	useJUnitPlatform()
