@@ -34,6 +34,10 @@ object ClaimConverter {
 	fun getUser(ctx: Context): User? {
 		return getUser(UserAction.getOrNull(ctx), ctx)
 	}
+
+	/**
+	 * Try to determine who the user is based on ??
+	 */
 	fun getUser(claim: ValidUserClaim?, ctx: Context): User? {
 		val user: User? = transaction {
 			return@transaction if (claim == null) null
@@ -79,6 +83,10 @@ object ClaimConverter {
 			user
 		}
 	}
+
+	/**
+	 * Get a users SSO cookie, if it exists
+	 */
 	fun getToken(ctx: Context): String? = kotlin.runCatching {
 		ctx.cookie(App.crowdCookieConfig!!.name)
 	}.getOrNull()

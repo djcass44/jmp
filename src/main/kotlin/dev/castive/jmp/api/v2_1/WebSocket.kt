@@ -41,6 +41,10 @@ class WebSocket : EndpointGroup {
         socketConfig = SocketConfig().apply { isReuseAddress = true }
     })
 
+    /**
+     * Start the Socket.IO server
+     * addEndpoints is just to match the Javalin convention
+     */
     override fun addEndpoints() {
         if(!allowSockets) {
             Log.i(javaClass, "Not starting Socket.IO server as env has disabled it")
@@ -57,6 +61,9 @@ class WebSocket : EndpointGroup {
         }.startAsync()
     }
 
+    /**
+     * Broadcasts a message to all listening sessions
+     */
     fun fire(tag: String, data: Any) {
         if(!allowSockets) {
             Log.i(javaClass, "Unable to broadcast as Sockets are disabled")

@@ -22,7 +22,6 @@ import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.actions.InfoAction
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
-import io.javalin.security.SecurityUtil.roles
 import org.eclipse.jetty.http.HttpStatus
 
 class Info: EndpointGroup {
@@ -33,9 +32,9 @@ class Info: EndpointGroup {
         }, Auth.openAccessRole)
         get("${Runner.BASE}/v2/info/system", { ctx ->
             ctx.status(HttpStatus.OK_200).json(InfoAction().getSystem())
-        }, roles(Auth.BasicRoles.ADMIN))
+        }, Auth.adminRoleAccess)
         get("${Runner.BASE}/v2/info/app", { ctx ->
             ctx.status(HttpStatus.OK_200).json(InfoAction().getApp())
-        }, roles(Auth.BasicRoles.ADMIN))
+        }, Auth.adminRoleAccess)
     }
 }

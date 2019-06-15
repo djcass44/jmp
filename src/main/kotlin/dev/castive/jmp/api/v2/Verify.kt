@@ -29,11 +29,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class Verify(private val auth: Auth): EndpointGroup {
 	override fun addEndpoints() {
-		// Verify a users token is still valid
-		get("${Runner.BASE}/v2/verify/token", { ctx ->
-			ctx.status(HttpStatus.MOVED_PERMANENTLY_301).result("This has been deprecated in favour of OAuth2 /v2/oauth")
-		}, Auth.defaultRoleAccess)
 		// Verify a user still exists
+		// Is this actually used?
 		get("${Runner.BASE}/v2/verify/user/:name", { ctx ->
 			val name = ctx.pathParam("name")
 			if (name.isBlank()) {

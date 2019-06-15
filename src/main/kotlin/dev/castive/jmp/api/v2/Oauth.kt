@@ -77,13 +77,14 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				// Check with Crowd ONLY if the user is from Crowd
 				Providers.primaryProvider is CrowdProvider && login.provided -> {
 					sso = SystemUtil.gson.fromJson(login.token, AuthenticateResponse::class.java)
-					cookie = CrowdCookie(App.crowdCookieConfig!!.domain,
+					// Try to generate the cookie if we can
+					cookie = kotlin.runCatching { CrowdCookie(App.crowdCookieConfig!!.domain,
 						"TRUE",
 						App.crowdCookieConfig!!.secure,
 						"",
 						App.crowdCookieConfig!!.name,
 						sso!!.token
-					)
+					) }.getOrNull()
 					name = sso.user.name
 				}
 				else -> {
@@ -93,6 +94,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				}
 			}
 			if(cookie != null) {
+				// Set the cookie on the client
 				val ck = Cookie(cookie.name, cookie.token).apply {
 					this.domain = cookie.host
 					this.secure = cookie.secure

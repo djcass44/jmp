@@ -17,6 +17,11 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import javax.servlet.http.Cookie
 
 object AuthAction {
+	/**
+	 * Create a new session
+	 * This has no effect on external providers and is only user for tracking within JMP
+	 * It is triggered by a users direct login or via an external provider (e.g. Crowds SSO cookie)
+	 */
 	fun createSession(user: User, token: String): Oauth.TokenResponse = transaction {
 		val requestToken = TokenProvider.createRequestToken(user.username, token, user.role.name) ?: throw BadRequestResponse()
 		val refreshToken = TokenProvider.createRefreshToken(user.username, token, user.role.name) ?: throw BadRequestResponse()
@@ -30,11 +35,17 @@ object AuthAction {
 		Log.i(javaClass, "Creating session for ${user.username}")
 		return@transaction Oauth.TokenResponse(requestToken, refreshToken)
 	}
+
+	/**
+	 * Check if the primary provider thinks that the token is valid
+	 * Currently only support Atlassian Crowd
+	 */
 	fun isValidToken(token: String, ctx: Context): String {
 		val valid = Providers.primaryProvider?.validate(token, ValidateRequest(arrayOf(Factor("remote_address", ctx.ip())))) ?: ""
 		Log.d(javaClass, "Validation request returned: '$valid'")
 		return valid
 	}
+	@Deprecated("Overwriting the token is a bad idea, don't accept it if it's invalid")
 	fun writeInvalidCookie(ctx: Context, username: String? = null) {
 		if(App.crowdCookieConfig != null) {
 			// Set an invalid cookie
@@ -47,6 +58,10 @@ object AuthAction {
 			ctx.cookie(ck)
 		}
 	}
+
+	/**
+	 * Check if a user HAD a specific token at any point
+	 */
 	fun userHadToken(username: String?, token: String?): Session? {
 		if(username == null) {
 			Log.v(javaClass, "::userHadToken: provided null username")
@@ -62,6 +77,10 @@ object AuthAction {
 			}.elementAtOrNull(0)
 		}
 	}
+
+	/**
+	 * Check if a user has an active session with a specific token
+	 */
 	fun userHasToken(username: String?, token: String?): Session? {
 		if(username == null) {
 			Log.v(javaClass, "::userHasToken: provided null username")

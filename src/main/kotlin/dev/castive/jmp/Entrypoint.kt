@@ -50,6 +50,7 @@ class Runner {
         START_TIME = System.currentTimeMillis()
         Log.v(javaClass, Arrays.toString(args))
         val arguments = Arguments(args)
+        // Alert the user that dev features are enabled
         if(arguments.enableCors) Log.w(javaClass, "WARNING: CORS access is enabled for ALL origins. DO NOT allow this in production: WARNING")
         if(arguments.enableDev) Log.w(javaClass, "WARNING: Development mode is enabled")
         Log.setPriorityLevel(arguments.debugLevel)
@@ -67,6 +68,7 @@ class Runner {
         val logger = Logger(store.logRequestDir)
         runInitialChecks(store, arguments)
         DatabaseHelper().start(store)
+        // Start the application
         App().start(store, arguments, logger)
     }
 }
