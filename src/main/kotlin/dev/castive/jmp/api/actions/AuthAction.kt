@@ -2,6 +2,7 @@ package dev.castive.jmp.api.actions
 
 import dev.castive.javalin_auth.auth.Providers
 import dev.castive.javalin_auth.auth.TokenProvider
+import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.AuthenticateResponse
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.Factor
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.ValidateRequest
 import dev.castive.jmp.api.App
@@ -10,6 +11,7 @@ import dev.castive.jmp.cache.HazelcastCacheLayer
 import dev.castive.jmp.db.dao.Session
 import dev.castive.jmp.db.dao.Sessions
 import dev.castive.jmp.db.dao.User
+import dev.castive.jmp.util.SystemUtil
 import dev.castive.log2.Log
 import io.javalin.BadRequestResponse
 import io.javalin.Context
@@ -58,6 +60,11 @@ object AuthAction {
 		Log.d(javaClass, "Validation request returned: '$valid'")
 		return valid
 	}
+	fun getTokenInfo(token: String, ctx: Context): AuthenticateResponse? {
+		return kotlin.runCatching {
+			SystemUtil.gson.fromJson(isValidToken(token, ctx), AuthenticateResponse::class.java)
+		}.getOrNull()
+	}
 	@Deprecated("Overwriting the token is a bad idea, don't accept it if it's invalid")
 	fun writeInvalidCookie(ctx: Context, username: String? = null) {
 		if(App.crowdCookieConfig != null) {
@@ -76,10 +83,6 @@ object AuthAction {
 	 * Check if a user HAD a specific token at any point
 	 */
 	fun userHadToken(username: String?, token: String?): Session? {
-		if(username == null) {
-			Log.v(javaClass, "::userHadToken: provided null username")
-			return null
-		}
 		if(token == null) {
 			Log.v(javaClass, "::userHadToken: provided null token")
 			return null
@@ -95,10 +98,6 @@ object AuthAction {
 	 * Check if a user has an active session with a specific token
 	 */
 	fun userHasToken(username: String?, token: String?): Session? {
-		if(username == null) {
-			Log.v(javaClass, "::userHasToken: provided null username")
-			return null
-		}
 		if(token == null) {
 			Log.v(javaClass, "::userHasToken: provided null token")
 			return null
