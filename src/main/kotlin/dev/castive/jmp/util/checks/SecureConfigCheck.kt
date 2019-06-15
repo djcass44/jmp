@@ -21,7 +21,7 @@ import dev.castive.jmp.except.InvalidSecurityConfigurationException
 
 class SecureConfigCheck(private val BASE_URL: String, private val arguments: Arguments): StartupCheck("Security configuration") {
     override fun runCheck(): Boolean {
-        return if(BASE_URL.startsWith("https") && arguments.enableCors) {
+        return if(BASE_URL.startsWith("https") && (arguments.enableCors || arguments.enableDev)) {
             onFail()
             throw InvalidSecurityConfigurationException()
         }

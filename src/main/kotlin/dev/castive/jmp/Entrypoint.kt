@@ -50,7 +50,8 @@ class Runner {
         START_TIME = System.currentTimeMillis()
         Log.v(javaClass, Arrays.toString(args))
         val arguments = Arguments(args)
-        if(arguments.enableCors) Log.w(javaClass, "WARNING: CORS access is enable for ALL origins. DO NOT allow this in production: WARNING")
+        if(arguments.enableCors) Log.w(javaClass, "WARNING: CORS access is enabled for ALL origins. DO NOT allow this in production: WARNING")
+        if(arguments.enableDev) Log.w(javaClass, "WARNING: Development mode is enabled")
         Log.setPriorityLevel(arguments.debugLevel)
         val configLocation = if(args.size >= 2 && args[0] == "using") {
             args[1]

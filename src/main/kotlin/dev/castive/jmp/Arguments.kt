@@ -25,11 +25,13 @@ import java.util.*
 class Arguments(args: Array<String>) {
     val options = Options()
     var enableCors = false
+    var enableDev = false
     var debugLevel = 0
 
     init {
         options.addOption("h", "help", false, "Show help (you are probably here)")
         options.addOption(null, "enable-cors", false, "Allow Cross-Origin Resource Sharing. This should only be used for development purposes. Note: the application will suicide if this is enabled on an HTTPS url")
+        options.addOption("dev", "enable-dev", false, "Allow development features. Implies --enable-cors. Note: the application will suicide if this is enabled on an HTTPS url")
         options.addOption("d", "debug-level", true, "Set the level of logs to be output (0 -> 6, lower is more).")
 
         val helpFormatter = HelpFormatter()
@@ -48,7 +50,8 @@ class Arguments(args: Array<String>) {
                 Log.w(javaClass, "Printed help, application will now exit!")
                 System.exit(0)
             }
-            enableCors = cl.hasOption("enable-cors")
+            enableDev = cl.hasOption("enable-dev")
+            enableCors = cl.hasOption("enable-cors") || enableDev
             debugLevel = if(cl.hasOption("d")) cl.getOptionValue("d").toInt() else 2 // Set default to show info and above
         }
         catch (e: Exception) {

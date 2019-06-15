@@ -84,6 +84,8 @@ class App(val port: Int = 7000) {
 			port(port)
 			if(arguments.enableCors) {
 				enableCorsForAllOrigins()
+			}
+			if(arguments.enableDev) {
 				enableRouteOverview(Runner.BASE, setOf<Role>(Auth.BasicRoles.ANYONE))
 			}
 			enableCaseSensitiveUrls()
