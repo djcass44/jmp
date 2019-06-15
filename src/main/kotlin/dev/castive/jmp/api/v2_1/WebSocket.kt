@@ -42,6 +42,10 @@ class WebSocket : EndpointGroup {
     })
 
     override fun addEndpoints() {
+        if(!allowSockets) {
+            Log.i(javaClass, "Not starting Socket.IO server as env has disabled it")
+            return
+        }
         server.apply {
             addConnectListener {
                 Log.d(javaClass, "WebSocket connected: ${it.remoteAddress}")
@@ -56,6 +60,7 @@ class WebSocket : EndpointGroup {
     fun fire(tag: String, data: Any) {
         if(!allowSockets) {
             Log.i(javaClass, "Unable to broadcast as Sockets are disabled")
+            return
         }
         Log.v(javaClass, "Broadcasting $tag event to ${server.allClients.size} listeners")
         server.allClients.forEach { it.sendEvent(tag, data) }
