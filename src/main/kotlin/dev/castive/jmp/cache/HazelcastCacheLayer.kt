@@ -4,12 +4,13 @@ import com.hazelcast.config.Config
 import com.hazelcast.core.Hazelcast
 import com.hazelcast.core.HazelcastInstance
 import com.hazelcast.core.IMap
+import dev.castive.jmp.util.SystemUtil
 import dev.castive.log2.Log
 import java.util.*
 
 class HazelcastCacheLayer: BaseCacheLayer {
 	private lateinit var hzInstance: HazelcastInstance
-	private lateinit var map: IMap<String, UUID>
+	private lateinit var map: IMap<String, String>
 
 	override fun setup() {
 		hzInstance = Hazelcast.getOrCreateHazelcastInstance(Config("jmp-hz"))
@@ -32,16 +33,20 @@ class HazelcastCacheLayer: BaseCacheLayer {
 
 	override fun getUser(id: UUID, token: String): Pair<UUID, String>? {
 		if(map.isEmpty) return null
-		val guess = map[token]
-		if(guess == id) return Pair(guess, token)
+		val guess = get(map[token] ?: return null)
+		if(System.currentTimeMillis() - guess.time > 5000) return null
+		if(guess.id == id) return Pair(guess.id, token)
 		return null
 	}
 
 	override fun setUser(id: UUID, token: String) {
-		map[token] = id
+		map[token] = set(BaseCacheLayer.UserCache(id, System.currentTimeMillis()))
 	}
 
 	override fun removeUser(token: String) {
 		map.remove(token)
 	}
+
+	private fun get(str: String): BaseCacheLayer.UserCache = SystemUtil.gson.fromJson(str, BaseCacheLayer.UserCache::class.java)
+	private fun set(uc: BaseCacheLayer.UserCache) = SystemUtil.gson.toJson(uc)
 }

@@ -3,6 +3,8 @@ package dev.castive.jmp.cache
 import java.util.*
 
 interface BaseCacheLayer {
+	class UserCache(val id: UUID, val time: Long)
+
 	fun setup()
 	fun tearDown()
 	fun connected(): Boolean
