@@ -50,6 +50,15 @@ object ClaimConverter {
 			}
 		}
 		Log.v(javaClass, "User is provided: ${user != null && user.from != InternalProvider.SOURCE_NAME}")
+		if(user != null && AuthAction.cacheLayer.connected()) {
+			val cached = AuthAction.cacheLayer.getUser(user.id.value, claim?.token ?: user.id.value.toString())
+			Log.d(javaClass, "Got user cache: $cached")
+			// How do we deal with stale results?
+			if(cached != null) {
+				Log.w(javaClass, "We are using a cached user claim for ${user.id.value}")
+				return user
+			}
+		}
 		return if(App.crowdCookieConfig != null && user != null && user.from != InternalProvider.SOURCE_NAME) {
 			// Check for Crowd SSO cookie
 			val ssoToken = kotlin.runCatching {
@@ -57,6 +66,7 @@ object ClaimConverter {
 			}.getOrNull()
 			if(ssoToken == null || ssoToken.isBlank()) {
 				Log.v(javaClass, "Failed to get CrowdCookie: $ssoToken")
+				AuthAction.onUserValid(user, null)
 				user
 			}
 			else {
@@ -75,11 +85,13 @@ object ClaimConverter {
 					s?.ssoToken = token.token
 				}
 				Log.d(javaClass, "Searching for active user with token: [cur: $ssoToken, new: ${token.token}]")
+				if(foundUser != null) AuthAction.onUserValid(foundUser, token.token)
 				foundUser
 			}
 		}
 		else {
 			Log.v(javaClass, "Returning user we found locally")
+			if(user != null) AuthAction.onUserValid(user, null)
 			user
 		}
 	}

@@ -6,6 +6,7 @@ import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.Factor
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.ValidateRequest
 import dev.castive.jmp.api.App
 import dev.castive.jmp.api.v2.Oauth
+import dev.castive.jmp.cache.HazelcastCacheLayer
 import dev.castive.jmp.db.dao.Session
 import dev.castive.jmp.db.dao.Sessions
 import dev.castive.jmp.db.dao.User
@@ -17,6 +18,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import javax.servlet.http.Cookie
 
 object AuthAction {
+	val cacheLayer = HazelcastCacheLayer()
+
 	/**
 	 * Create a new session
 	 * This has no effect on external providers and is only user for tracking within JMP
@@ -34,6 +37,16 @@ object AuthAction {
 		}
 		Log.i(javaClass, "Creating session for ${user.username}")
 		return@transaction Oauth.TokenResponse(requestToken, refreshToken)
+	}
+	fun onUserInvalid(token: String) {
+		if(!cacheLayer.connected()) return
+		Log.i(javaClass, "Removing cached user with token: $token")
+		cacheLayer.removeUser(token)
+	}
+	fun onUserValid(user: User, token: String?) {
+		if(!cacheLayer.connected()) return
+		Log.i(javaClass, "Updating cached user with token: $token")
+		cacheLayer.setUser(user.id.value, token ?: user.id.value.toString())
 	}
 
 	/**

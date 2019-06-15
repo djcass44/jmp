@@ -166,15 +166,19 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 		// Logout the user and invalidate tokens if needed
 		post("${Runner.BASE}/v2/oauth/logout", { ctx ->
 			val user = ClaimConverter.get(ctx)
-			val ssoToken = ClaimConverter.getToken(ctx)
+			val ssoToken = ClaimConverter.getToken(ctx) ?: user.id.value.toString()
 			transaction {
 				val session = AuthAction.userHasToken(user.username, ssoToken)
-				if(session?.ssoToken != null) {
-					Providers.primaryProvider?.invalidateLogin(session.ssoToken!!)
+				if(session != null) {
+					AuthAction.onUserInvalid(ssoToken)
 					session.active = false
-					Log.i(Oauth::class.java, "Invalidating login for ${user.username}, $ssoToken")
+					Log.i(Oauth::class.java, "Disabling session with token: $ssoToken")
+					if(session.ssoToken != null) {
+						Providers.primaryProvider?.invalidateLogin(session.ssoToken!!)
+						Log.i(Oauth::class.java, "Invalidating SSO login for ${user.username}, $ssoToken")
+					}
+					else Log.v(javaClass, "User has no SSO token to invalidate: ${user.username}")
 				}
-				else Log.v(javaClass, "User has no token to invalidate: ${user.username}")
 			}
 			ctx.status(HttpStatus.OK_200)
 		}, Auth.defaultRoleAccess)
