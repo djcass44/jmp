@@ -52,7 +52,7 @@ class Arguments(args: Array<String>) {
             }
             enableDev = cl.hasOption("enable-dev")
             enableCors = cl.hasOption("enable-cors") || enableDev
-            debugLevel = if(cl.hasOption("d")) cl.getOptionValue("d").toInt() else 2 // Set default to show info and above
+            debugLevel = if(cl.hasOption("d")) cl.getOptionValue("d").toIntOrNull() ?: 2 else 2 // Set default to show info and above
         }
         catch (e: Exception) {
             Log.e(javaClass, e.toString())
