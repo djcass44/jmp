@@ -4,10 +4,9 @@ import dev.castive.log2.Log
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-class ExceptionTracker(private val blockLeak: Boolean = true) {
+class ExceptionTracker(private val blockLeak: Boolean = true,
+                       internal val generic: String = Exception::class.java.name) {
 	private val items = arrayListOf<Pair<String, Long>>()
-
-	private val generic = Exception::class.java.name
 
 	fun onExceptionTriggered(e: Throwable, time: Long = System.currentTimeMillis()) {
 		Log.d(javaClass, "Adding exception item")
