@@ -25,6 +25,7 @@ import dev.castive.javalin_auth.auth.provider.LDAPProvider
 import dev.castive.jmp.Arguments
 import dev.castive.jmp.Runner
 import dev.castive.jmp.Version
+import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.api.v1.Jump
 import dev.castive.jmp.api.v2.*
 import dev.castive.jmp.api.v2.Similar
@@ -79,6 +80,7 @@ class App(val port: Int = 7000) {
 		Providers.validator = UserValidator(auth, builder.min)
 //	    TokenProvider.ageProfile = TokenProvider.TokenAgeProfile.DEV
 		UserAction.verification = verify
+		AuthAction.cacheLayer.setup()
 		Javalin.create().apply {
 			disableStartupBanner()
 			port(port)
