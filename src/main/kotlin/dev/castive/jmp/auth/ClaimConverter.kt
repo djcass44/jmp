@@ -34,7 +34,12 @@ object ClaimConverter {
 	}
 
 	/**
-	 * Try to determine who the user is based on ??
+	 * Try to determine who the user is based on whatever we can dig up
+	 * 1. Try to see if the claim can determine the user
+	 * 2. Check to see if the user is in the cache layer
+	 * 3. If not, check again?
+	 * 4. Check to see if the external provider knows them
+	 * 5. Additional Crowd checks
 	 */
 	fun getUser(claim: ValidUserClaim?, ctx: Context): User? {
 		val ssoToken = kotlin.runCatching {
@@ -63,6 +68,16 @@ object ClaimConverter {
 			}
 		}
 		else if(user == null && ssoToken != null) {
+			// Check the cache first
+			val uid = AuthAction.cacheLayer.getUser(ssoToken)
+			if(uid != null) {
+				// We've found a possible user, lets make sure they exist first
+				val u = transaction { User.findById(uid) }
+				if(u != null) {
+					Log.i(javaClass, "We found a cached user, let's try again")
+					return getUser(ValidUserClaim(u.username, ssoToken), ctx)
+				}
+			}
 			// Check to see if the external provider knows who the user is by the given token
 			val externalUser = AuthAction.getTokenInfo(ssoToken, ctx)
 			if(externalUser != null) {

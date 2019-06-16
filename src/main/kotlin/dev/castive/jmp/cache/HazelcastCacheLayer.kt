@@ -4,6 +4,7 @@ import com.hazelcast.config.Config
 import com.hazelcast.core.Hazelcast
 import com.hazelcast.core.HazelcastInstance
 import com.hazelcast.core.IMap
+import dev.castive.jmp.db.Util
 import dev.castive.jmp.util.SystemUtil
 import dev.castive.log2.Log
 import java.util.*
@@ -37,6 +38,12 @@ class HazelcastCacheLayer: BaseCacheLayer {
 		if(System.currentTimeMillis() - guess.time > 5000) return null
 		if(guess.id == id) return Pair(guess.id, token)
 		return null
+	}
+
+	override fun getUser(token: String): UUID? {
+		if(map.isEmpty) return null
+		val id = map[token] ?: return null
+		return Util.getSafeUUID(id)
 	}
 
 	override fun setUser(id: UUID, token: String) {
