@@ -13,14 +13,26 @@ class HazelcastCacheLayer: BaseCacheLayer {
 	private lateinit var hzInstance: HazelcastInstance
 	private lateinit var map: IMap<String, String>
 
-	override fun setup() {
+	override fun setup(): Boolean {
+		if(connected()) {
+			Log.e(javaClass, "We already have an active Hazelcast instance")
+			return false
+		}
+		Log.i(javaClass, "Hazelcast is starting...")
 		hzInstance = Hazelcast.getOrCreateHazelcastInstance(Config("jmp-hz"))
 		map = hzInstance.getMap("claimedUsers")
 		Log.v(javaClass, "Hazelcast contains map with ${map.size} entries")
+		return true
 	}
 
-	override fun tearDown() {
-		hzInstance.shutdown()
+	override fun tearDown(): Boolean {
+		if(!connected()) {
+			Log.e(javaClass, "There is no connected instance to shutdown")
+			return false
+		}
+		Log.i(javaClass, "Hazelcast is being shut down...")
+		hzInstance.lifecycleService.shutdown()
+		return true
 	}
 
 	override fun connected(): Boolean {
@@ -28,8 +40,7 @@ class HazelcastCacheLayer: BaseCacheLayer {
 			Log.e(javaClass, "Hazelcast is not initialised. Please run $javaClass::setup() first")
 			return false
 		}
-		// TODO add actual method of checking for connection
-		return true
+		return hzInstance.lifecycleService.isRunning
 	}
 
 	override fun getUser(id: UUID, token: String): Pair<UUID, String>? {
