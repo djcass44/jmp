@@ -10,8 +10,9 @@ import dev.castive.log2.Log
 import java.util.*
 
 class HazelcastCacheLayer: BaseCacheLayer {
-	private lateinit var hzInstance: HazelcastInstance
-	private lateinit var map: IMap<String, String>
+	lateinit var hzInstance: HazelcastInstance
+	private lateinit var userMap: IMap<String, String>
+	private lateinit var miscMap: IMap<String, String>
 
 	override fun setup(): Boolean {
 		if(connected()) {
@@ -20,8 +21,9 @@ class HazelcastCacheLayer: BaseCacheLayer {
 		}
 		Log.i(javaClass, "Hazelcast is starting...")
 		hzInstance = Hazelcast.getOrCreateHazelcastInstance(Config("jmp-hz"))
-		map = hzInstance.getMap("claimedUsers")
-		Log.v(javaClass, "Hazelcast contains map with ${map.size} entries")
+		userMap = hzInstance.getMap("claimedUsers")
+		miscMap = hzInstance.getMap("misc")
+		Log.v(javaClass, "Hazelcast contains map with ${userMap.size} entries")
 		return true
 	}
 
@@ -44,25 +46,32 @@ class HazelcastCacheLayer: BaseCacheLayer {
 	}
 
 	override fun getUser(id: UUID, token: String): Pair<UUID, String>? {
-		if(map.isEmpty) return null
-		val guess = get(map[token] ?: return null)
+		if(userMap.isEmpty) return null
+		val guess = get(userMap[token] ?: return null)
 		if(System.currentTimeMillis() - guess.time > 5000) return null
 		if(guess.id == id) return Pair(guess.id, token)
 		return null
 	}
 
 	override fun getUser(token: String): UUID? {
-		if(map.isEmpty) return null
-		val id = map[token] ?: return null
+		if(userMap.isEmpty) return null
+		val id = userMap[token] ?: return null
 		return Util.getSafeUUID(id)
 	}
 
 	override fun setUser(id: UUID, token: String) {
-		map[token] = set(BaseCacheLayer.UserCache(id, System.currentTimeMillis()))
+		userMap[token] = set(BaseCacheLayer.UserCache(id, System.currentTimeMillis()))
 	}
 
 	override fun removeUser(token: String) {
-		map.remove(token)
+		userMap.remove(token)
+	}
+
+	fun getMisc(key: String): String? {
+		return miscMap[key]
+	}
+	fun setMisc(key: String, value: String) {
+		miscMap[key] = value
 	}
 
 	private fun get(str: String): BaseCacheLayer.UserCache = SystemUtil.gson.fromJson(str, BaseCacheLayer.UserCache::class.java)

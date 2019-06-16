@@ -80,7 +80,8 @@ class App(val port: Int = 7000) {
 		Providers.validator = UserValidator(auth, builder.min)
 //	    TokenProvider.ageProfile = TokenProvider.TokenAgeProfile.DEV
 		UserAction.verification = verify
-		AuthAction.cacheLayer.setup()
+		// Start the cache concurrently
+		startCache()
 		Javalin.create().apply {
 			disableStartupBanner()
 			port(port)
@@ -147,6 +148,12 @@ class App(val port: Int = 7000) {
 				"  \\____/|_|  |_|_|     \n" +
 				"                       \n" +
 				"JMP v${Version.getVersion()} is ready.")
+	}
+
+	private fun startCache() {
+		AuthAction.cacheLayer.setup()
+		val existingID = AuthAction.getAppId()
+		if(existingID == null) AuthAction.cacheLayer.setMisc("appId", UUID.randomUUID().toString())
 	}
 
 	/**

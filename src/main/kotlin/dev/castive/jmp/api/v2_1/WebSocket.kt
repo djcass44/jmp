@@ -19,7 +19,8 @@ package dev.castive.jmp.api.v2_1
 import com.corundumstudio.socketio.Configuration
 import com.corundumstudio.socketio.SocketConfig
 import com.corundumstudio.socketio.SocketIOServer
-import dev.castive.jmp.api.App
+import com.corundumstudio.socketio.store.HazelcastStoreFactory
+import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.db.Util
 import dev.castive.log2.Log
 import io.javalin.apibuilder.EndpointGroup
@@ -39,6 +40,7 @@ class WebSocket : EndpointGroup {
         hostname = Util.getEnv("SOCKET_HOST", "0.0.0.0")
         port = (Util.getEnv("SOCKET_PORT", "7001").toLongOrNull() ?: 7001).toInt()
         socketConfig = SocketConfig().apply { isReuseAddress = true }
+        storeFactory = HazelcastStoreFactory(AuthAction.cacheLayer.hzInstance)
     })
 
     /**
@@ -53,7 +55,7 @@ class WebSocket : EndpointGroup {
         server.apply {
             addConnectListener {
                 Log.d(javaClass, "WebSocket connected: ${it.remoteAddress}")
-                it.sendEvent(INIT_APP, App.id)
+                it.sendEvent(INIT_APP, AuthAction.getAppId())
             }
             addDisconnectListener {
                 Log.d(javaClass, "WebSocket disconnected: ${it.remoteAddress}")
