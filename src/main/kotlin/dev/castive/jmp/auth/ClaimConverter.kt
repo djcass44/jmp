@@ -91,7 +91,9 @@ object ClaimConverter {
 			if(ssoToken == null || ssoToken.isBlank()) {
 				Log.v(javaClass, "Failed to get CrowdCookie: $ssoToken")
 				AuthAction.onUserValid(user, null)
-				user
+				// We should return null because this user is backed by an external provider
+				Log.i(javaClass, "Refusing to return external user that can't be verified: ${user.username}")
+				null
 			}
 			else {
 				// Check that crowd is aware of our token
