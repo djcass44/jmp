@@ -178,7 +178,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 						Log.i(Oauth::class.java, "Invalidating SSO login for ${user.username}, $ssoToken")
 						if(App.crowdCookieConfig != null) {
 							Log.i(javaClass, "Removing Crowd cookie")
-							ctx.removeCookie(App.crowdCookieConfig!!.name)
+							ctx.cookie(App.crowdCookieConfig!!.name, "", 0)
 						}
 					}
 					else Log.v(javaClass, "User has no SSO token to invalidate: ${user.username}")
