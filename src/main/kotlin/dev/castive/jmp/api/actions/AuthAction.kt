@@ -65,14 +65,15 @@ object AuthAction {
 			SystemUtil.gson.fromJson(isValidToken(token, ctx), AuthenticateResponse::class.java)
 		}.getOrNull()
 	}
-	@Deprecated("Overwriting the token is a bad idea, don't accept it if it's invalid")
 	fun writeInvalidCookie(ctx: Context, username: String? = null) {
 		if(App.crowdCookieConfig != null) {
 			// Set an invalid cookie
-			val ck = Cookie(App.crowdCookieConfig!!.name, "NO_CONTENT").apply {
+			val ck = Cookie(App.crowdCookieConfig!!.name, "").apply {
 				this.domain = App.crowdCookieConfig!!.domain
 				this.secure = App.crowdCookieConfig!!.secure
 				this.path = "/"
+				this.maxAge = 0
+				this.comment = "This should be deleted!"
 			}
 			Log.a(javaClass, "Setting invalid SSO cookie for ${username ?: "[not given]"}")
 			ctx.cookie(ck)
