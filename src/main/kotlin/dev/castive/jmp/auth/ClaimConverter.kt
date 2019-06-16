@@ -82,7 +82,7 @@ object ClaimConverter {
 			val externalUser = AuthAction.getTokenInfo(ssoToken, ctx)
 			if(externalUser != null) {
 				// We know who the user is now! Let's start over
-				Log.i(javaClass, "External provider has knows the user, let's try again")
+				Log.i(javaClass, "External provider knows the user, let's try again")
 				return getUser(ValidUserClaim(externalUser.user.name, externalUser.token), ctx)
 			}
 		}
@@ -106,13 +106,13 @@ object ClaimConverter {
 					val s = AuthAction.userHadToken(foundUser?.username, ssoToken)
 					s?.ssoToken = token.token
 				}
-				Log.d(javaClass, "Searching for active user with token: [cur: $ssoToken, new: ${token.token}]")
+				Log.d(javaClass, "Searching for active user with token: [cur: $ssoToken, new: ${token.token}]: ${foundUser?.username}")
 				if(foundUser != null) AuthAction.onUserValid(foundUser, token.token)
 				foundUser
 			}
 		}
 		else {
-			Log.v(javaClass, "Returning user we found locally")
+			Log.v(javaClass, "Returning user we found locally: ${user?.username}")
 			if(user != null) AuthAction.onUserValid(user, null)
 			user
 		}
