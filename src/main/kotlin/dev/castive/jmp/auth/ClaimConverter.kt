@@ -68,13 +68,14 @@ object ClaimConverter {
 			}
 		}
 		else if(user == null && ssoToken != null) {
+			Log.d(javaClass, "We don't know the user, but we have an SSO token...")
 			// Check the cache first
 			val uid = AuthAction.cacheLayer.getUser(ssoToken)
 			if(uid != null) {
 				// We've found a possible user, lets make sure they exist first
 				val u = transaction { User.findById(uid) }
 				if(u != null) {
-					Log.i(javaClass, "We found a cached user, let's try again")
+					Log.i(javaClass, "We found a cached user, let's try again: ${u.username}")
 					return getUser(ValidUserClaim(u.username, ssoToken), ctx)
 				}
 			}
@@ -82,7 +83,7 @@ object ClaimConverter {
 			val externalUser = AuthAction.getTokenInfo(ssoToken, ctx)
 			if(externalUser != null) {
 				// We know who the user is now! Let's start over
-				Log.i(javaClass, "External provider knows the user, let's try again")
+				Log.i(javaClass, "External provider knows the user, let's try again: ${externalUser.user.name}")
 				return getUser(ValidUserClaim(externalUser.user.name, externalUser.token), ctx)
 			}
 		}
