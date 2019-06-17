@@ -60,6 +60,12 @@ steps:
         path: /tmp/cache
     commands:
       - ./gradlew -g /tmp/cache buildPackage
+  - name: sonar
+      image: aosapps/drone-sonar-plugin
+      settings:
+        sonar_host: https://sonar.castive.dev
+        sonar_token:
+          from_secret: SONAR_TOKEN
 trigger:
   when:
     branch:
