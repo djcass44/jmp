@@ -22,6 +22,7 @@ plugins {
 	id("com.github.johnrengelman.shadow") version "4.0.3"
 	application
 	jacoco
+	id("org.sonarqube") version "2.7.1"
 }
 
 group = "dev.castive"
@@ -104,5 +105,11 @@ task("buildPackage") {
 tasks.jacocoTestReport {
 	reports {
 		xml.isEnabled = true
+	}
+}
+sonarqube {
+	properties{
+		property("sonar.projectKey", "djcass44:jmp")
+		property("sonar.projectName", "djcass44/jmp")
 	}
 }
