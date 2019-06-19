@@ -98,6 +98,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				val ck = Cookie(cookie.name, cookie.token).apply {
 					this.domain = cookie.host
 					this.secure = cookie.secure
+					this.isHttpOnly = true
 					this.path = "/"
 				}
 				Log.d(javaClass, "Setting cookie to: $ck")
@@ -154,6 +155,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 						val ck = Cookie(App.crowdCookieConfig!!.name, token).apply {
 							this.domain = App.crowdCookieConfig!!.domain
 							this.secure = App.crowdCookieConfig!!.secure
+							this.isHttpOnly = true
 							this.path = "/"
 						}
 						Log.v(Oauth::class.java, "Setting SSO cookie for ${user.username}")

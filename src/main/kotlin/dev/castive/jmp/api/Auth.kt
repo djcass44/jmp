@@ -72,7 +72,7 @@ class Auth {
 		if(expectedHash.isBlank()) return false
 		return hashMatches(password.toCharArray(), expectedHash)
 	}
-	private fun hashMatches(password: CharArray, expectedHash: String): Boolean {
+	internal fun hashMatches(password: CharArray, expectedHash: String): Boolean {
 		if(expectedHash.isBlank()) return false
 		return Hash.password(password).verify(expectedHash)
 	}
