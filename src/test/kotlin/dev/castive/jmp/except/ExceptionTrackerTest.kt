@@ -3,6 +3,7 @@ package dev.castive.jmp.except
 import org.junit.jupiter.api.Test
 
 class ExceptionTrackerTest {
+	private val dummyText = "This is a test!"
 	/**
 	 * Add an entry to the tracker
 	 * Ensure that it's actually added
@@ -33,7 +34,7 @@ class ExceptionTrackerTest {
 	 */
 	@Test
 	fun testInsecureAdd() {
-		val except = NullPointerException("This is a test!")
+		val except = NullPointerException(dummyText)
 		val tracker = ExceptionTracker(false)
 		tracker.onExceptionTriggered(except)
 		val res = tracker.getData()
@@ -46,7 +47,7 @@ class ExceptionTrackerTest {
 	 */
 	@Test
 	fun testSecureAdd() {
-		val except = NullPointerException("This is a test!")
+		val except = NullPointerException(dummyText)
 		val tracker = ExceptionTracker(true)
 		tracker.onExceptionTriggered(except)
 		val res = tracker.getData()
@@ -55,7 +56,7 @@ class ExceptionTrackerTest {
 	}
 	@Test
 	fun testSecureAddCustomGeneric() {
-		val except = NullPointerException("This is a test!")
+		val except = NullPointerException(dummyText)
 		val tracker = ExceptionTracker(true, "Test!")
 		tracker.onExceptionTriggered(except)
 		val res = tracker.getData()

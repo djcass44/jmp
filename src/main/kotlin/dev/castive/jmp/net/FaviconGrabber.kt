@@ -16,11 +16,12 @@
 
 package dev.castive.jmp.net
 
+import dev.castive.fav2.Fav
 import dev.castive.jmp.except.InsecureDomainException
 import dev.castive.log2.Log
-import dev.castive.fav2.Fav
 
 class FaviconGrabber(private val domain: String) {
+    private val urlInsecure = "http://"
     init {
         Fav.DEBUG = true
         Fav.ALLOW_HTTP = false // Do not load insecure origins
@@ -36,7 +37,7 @@ class FaviconGrabber(private val domain: String) {
     }
     fun get(): Favicon? {
         return try {
-            if(domain.startsWith("http://")) return null
+            if(domain.startsWith(urlInsecure)) return null
             val link = Fav.loadDomain(domain) ?: return null
             Log.d(javaClass, "Found link: $link")
             Favicon(domain, arrayOf(Icon(link, null, null)))
@@ -51,31 +52,32 @@ class FaviconGrabber(private val domain: String) {
     }
 }
 class Favicon(val domain: String, val icons: Array<Icon>?) {
+    private val urlInsecure = "http://"
     fun get(): Icon? {
-        try {
+        return try {
             if (icons == null || icons.isEmpty())
                 return null
-            if (icons.size == 1) {
-                if (icons[0].src.startsWith("http://")) throw InsecureDomainException()
-                return icons[0]
-            }
-            var result = icons[0]
-            for (i in icons) {
-                if (i.sizes != null) {
-                    if (result.sizes == null)
-                        result = i
-                    if (i.getSize() > result.getSize())
-                        result = i
-                }
-            }
-            if (result.src.startsWith("http://")) throw InsecureDomainException()
+            val result = getBest(icons)
+            if (result.src.startsWith(urlInsecure)) throw InsecureDomainException()
             Log.d(javaClass, "domain: $domain, maxSize: ${result.sizes}")
-            return result
+            result
         }
         catch (e: Exception) {
             Log.e(javaClass, "Failed to generate favicon [$domain]: $e")
-            return null
+            null
         }
+    }
+    private fun getBest(icons: Array<Icon>): Icon {
+        var result = icons[0]
+        for (i in icons) {
+            if (i.sizes != null) {
+                if (result.sizes == null)
+                    result = i
+                if (i.getSize() > result.getSize())
+                    result = i
+            }
+        }
+        return result
     }
 }
 class Icon(val src: String, val type: String?, val sizes: String?) {

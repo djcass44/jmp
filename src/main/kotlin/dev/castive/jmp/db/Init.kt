@@ -54,7 +54,6 @@ class Init(private val store: ConfigStore) {
                     }
                 }
             }
-//            loadUsersFromExternalSource()
         }
     }
 }

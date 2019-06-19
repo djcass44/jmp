@@ -41,7 +41,6 @@ import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.Init
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.except.ExceptionTracker
-import dev.castive.jmp.except.TrackedExceptionHandler
 import dev.castive.log2.Log
 import io.javalin.Javalin
 import io.javalin.security.Role
@@ -154,12 +153,5 @@ class App(val port: Int = 7000) {
 		AuthAction.cacheLayer.setup()
 		val existingID = AuthAction.getAppId()
 		if(existingID == null) AuthAction.cacheLayer.setMisc("appId", UUID.randomUUID().toString())
-	}
-
-	/**
-	 * Set environmental configuration (JVM options)
-	 */
-	private fun setJVMContext() {
-		Thread.setDefaultUncaughtExceptionHandler(TrackedExceptionHandler())
 	}
 }

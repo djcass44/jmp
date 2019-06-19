@@ -151,8 +151,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 		// Edit a jump point
 		patch("${Runner.BASE}/v1/jump", { ctx ->
 			val update = ctx.bodyAsClass(EditJumpData::class.java)
-			val user = ClaimConverter.get(UserAction.get(ctx), ctx)
-//            if(jumpExists(update.name, update.location, user)) throw ConflictResponse()
+			val user = ClaimConverter.get(UserAction.getOrNull(ctx), ctx)
 			transaction {
 				val existing = Jump.findById(update.id) ?: throw NotFoundResponse()
 

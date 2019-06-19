@@ -21,6 +21,7 @@ plugins {
 	kotlin("jvm") version "1.3.30"
 	id("com.github.johnrengelman.shadow") version "4.0.3"
 	application
+	jacoco
 }
 
 group = "dev.castive"
@@ -99,4 +100,9 @@ tasks.withType<Test> {
 task("buildPackage") {
 	println("Building package...")
 	finalizedBy("increment-patch", "shadowJar")
+}
+tasks.jacocoTestReport {
+	reports {
+		xml.isEnabled = true
+	}
 }
