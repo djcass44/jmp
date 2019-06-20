@@ -41,13 +41,13 @@ object ClaimConverter {
 		var user: AuthUser? = null
 		var token: BaseProvider.TokenContext? = null
 		if(Providers.primaryProvider != null) {
-			Log.v(javaClass, "Searching context for using with provider: ${Providers.primaryProvider!!::class.java.name}")
+			Log.v(javaClass, "Searching context for user with provider: ${Providers.primaryProvider!!::class.java.name}")
 			val res = Providers.primaryProvider!!.hasUser(ctx)
 			user = res.first
 			token = res.second
 		}
 		if(user == null) {
-			Log.v(javaClass, "Searching context for using with fallback provider: ${Providers.internalProvider::class.java.name}")
+			Log.v(javaClass, "Searching context for user with fallback provider: ${Providers.internalProvider::class.java.name}")
 			val res = Providers.internalProvider.hasUser(ctx)
 			user = res.first
 			token = res.second
