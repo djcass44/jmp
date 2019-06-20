@@ -17,8 +17,9 @@
 package dev.castive.jmp.auth
 
 import dev.castive.javalin_auth.actions.UserAction
+import dev.castive.javalin_auth.auth.Providers
 import dev.castive.javalin_auth.auth.external.ValidUserClaim
-import dev.castive.javalin_auth.auth.provider.InternalProvider
+import dev.castive.javalin_auth.auth.provider.BaseProvider
 import dev.castive.jmp.api.App
 import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.db.dao.User
@@ -27,10 +28,48 @@ import dev.castive.log2.Log
 import io.javalin.Context
 import io.javalin.UnauthorizedResponse
 import org.jetbrains.exposed.sql.transactions.transaction
+import dev.castive.javalin_auth.auth.data.User as AuthUser
 
 object ClaimConverter {
+//	fun getUser(ctx: Context): User? {
+//		return getUser(UserAction.getOrNull(ctx), ctx)
+//	}
+	fun getUser(claim: ValidUserClaim?, ctx: Context): User? {
+		return getUser(ctx)
+	}
 	fun getUser(ctx: Context): User? {
-		return getUser(UserAction.getOrNull(ctx), ctx)
+		var user: AuthUser? = null
+		var token: BaseProvider.TokenContext? = null
+		if(Providers.primaryProvider != null) {
+			Log.v(javaClass, "Searching context for using with provider: ${Providers.primaryProvider!!::class.java.name}")
+			val res = Providers.primaryProvider!!.hasUser(ctx)
+			user = res.first
+			token = res.second
+		}
+		if(user == null) {
+			Log.v(javaClass, "Searching context for using with fallback provider: ${Providers.internalProvider::class.java.name}")
+			val res = Providers.internalProvider.hasUser(ctx)
+			user = res.first
+			token = res.second
+		}
+		if(user == null) {
+			Log.i(javaClass, "Failed to locate user with any provider")
+			return null
+		}
+		val actualUser = transaction {
+			User.find {
+				Users.username eq user.username
+			}.elementAtOrNull(0)
+		}
+		if(actualUser != null && token != null && token.current.isNotBlank()) {
+			transaction {
+				// Update the users token to match Crowd
+				Log.d(javaClass, "Updating user with discovered SSO token: ${actualUser.username}, ${token.last}")
+				val s = AuthAction.userHadToken(actualUser.username, token.last)
+				s?.ssoToken = token.current
+			}
+		}
+		return actualUser
 	}
 
 	/**
@@ -41,85 +80,85 @@ object ClaimConverter {
 	 * 4. Check to see if the external provider knows them
 	 * 5. Additional Crowd checks
 	 */
-	fun getUser(claim: ValidUserClaim?, ctx: Context): User? {
-		val ssoToken = kotlin.runCatching {
-			return@runCatching ctx.cookie(App.crowdCookieConfig!!.name)
-		}.getOrNull()
-		val user: User? = transaction {
-			return@transaction if (claim == null) null
-			else {
-				val u = User.find { Users.username eq claim.username }.elementAtOrNull(0)
-				val token = ssoToken ?: claim.token
-				val hasToken = AuthAction.userHadToken(u?.username, token)
-				if(hasToken == null && u != null && token != u.id.value.toString()) {
-					return@transaction u
-				}
-				else return@transaction if(hasToken != null) u else null
-			}
-		}
-		Log.v(javaClass, "User is provided: ${user != null && user.from != InternalProvider.SOURCE_NAME}")
-		if(user != null && AuthAction.cacheLayer.connected()) {
-			val cached = AuthAction.cacheLayer.getUser(user.id.value, claim?.token ?: user.id.value.toString())
-			Log.d(javaClass, "Got user cache: $cached")
-			// How do we deal with stale results?
-			if(cached != null) {
-				Log.w(javaClass, "We are using a cached user claim for ${user.id.value}")
-				return user
-			}
-		}
-		else if(user == null && ssoToken != null) {
-			Log.d(javaClass, "We don't know the user, but we have an SSO token...")
-			// Check the cache first
-			val uid = AuthAction.cacheLayer.getUser(ssoToken)
-			if(uid != null) {
-				// We've found a possible user, lets make sure they exist first
-				val u = transaction { User.findById(uid) }
-				if(u != null) {
-					Log.i(javaClass, "We found a cached user, let's try again: ${u.username}")
-					return getUser(ValidUserClaim(u.username, ssoToken), ctx)
-				}
-			}
-			// Check to see if the external provider knows who the user is by the given token
-			val externalUser = AuthAction.getTokenInfo(ssoToken, ctx)
-			if(externalUser != null) {
-				// We know who the user is now! Let's start over
-				Log.i(javaClass, "External provider knows the user, let's try again: ${externalUser.user.name}")
-				return getUser(ValidUserClaim(externalUser.user.name, externalUser.token), ctx)
-			}
-		}
-		return if(App.crowdCookieConfig != null && user != null && user.from != InternalProvider.SOURCE_NAME) {
-			// Check for Crowd SSO cookie
-			if(ssoToken == null || ssoToken.isBlank()) {
-				Log.v(javaClass, "Failed to get CrowdCookie: $ssoToken")
-				AuthAction.onUserValid(user, null)
-				// We should return null because this user is backed by an external provider
-				Log.i(javaClass, "Refusing to return external user that can't be verified: ${user.username}")
-				null
-			}
-			else {
-				// Check that crowd is aware of our token
-				val token = AuthAction.getTokenInfo(ssoToken, ctx) ?: return null
-				// Get the user from Crowds response
-				// We know that auth MUST be valid otherwise Crowd would not return 200 OK
-				if(ssoToken != token.token) Log.a(javaClass, "Current token and new token don't match, Crowd must have issued a refresh!")
-				val foundUser = App.auth.getUser(token.user.name)
-				transaction {
-					// Update the users token to match Crowd
-					Log.d(javaClass, "Updating user with discovered SSO token: ${claim?.username}, ${token.user.name}")
-					val s = AuthAction.userHadToken(foundUser?.username, ssoToken)
-					s?.ssoToken = token.token
-				}
-				Log.d(javaClass, "Searching for active user with token: [cur: $ssoToken, new: ${token.token}]: ${foundUser?.username}")
-				if(foundUser != null) AuthAction.onUserValid(foundUser, token.token)
-				foundUser
-			}
-		}
-		else {
-			Log.v(javaClass, "Returning user we found locally: ${user?.username}")
-			if(user != null) AuthAction.onUserValid(user, null)
-			user
-		}
-	}
+//	fun getUser(claim: ValidUserClaim?, ctx: Context): User? {
+//		val ssoToken = kotlin.runCatching {
+//			return@runCatching ctx.cookie(App.crowdCookieConfig!!.name)
+//		}.getOrNull()
+//		val user: User? = transaction {
+//			return@transaction if (claim == null) null
+//			else {
+//				val u = User.find { Users.username eq claim.username }.elementAtOrNull(0)
+//				val token = ssoToken ?: claim.token
+//				val hasToken = AuthAction.userHadToken(u?.username, token)
+//				if(hasToken == null && u != null && token != u.id.value.toString()) {
+//					return@transaction u
+//				}
+//				else return@transaction if(hasToken != null) u else null
+//			}
+//		}
+//		Log.v(javaClass, "User is provided: ${user != null && user.from != InternalProvider.SOURCE_NAME}")
+//		if(user != null && AuthAction.cacheLayer.connected()) {
+//			val cached = AuthAction.cacheLayer.getUser(user.id.value, claim?.token ?: user.id.value.toString())
+//			Log.d(javaClass, "Got user cache: $cached")
+//			// How do we deal with stale results?
+//			if(cached != null) {
+//				Log.w(javaClass, "We are using a cached user claim for ${user.id.value}")
+//				return user
+//			}
+//		}
+//		else if(user == null && ssoToken != null) {
+//			Log.d(javaClass, "We don't know the user, but we have an SSO token...")
+//			// Check the cache first
+//			val uid = AuthAction.cacheLayer.getUser(ssoToken)
+//			if(uid != null) {
+//				// We've found a possible user, lets make sure they exist first
+//				val u = transaction { User.findById(uid) }
+//				if(u != null) {
+//					Log.i(javaClass, "We found a cached user, let's try again: ${u.username}")
+//					return getUser(ValidUserClaim(u.username, ssoToken), ctx)
+//				}
+//			}
+//			// Check to see if the external provider knows who the user is by the given token
+//			val externalUser = AuthAction.getTokenInfo(ssoToken, ctx)
+//			if(externalUser != null) {
+//				// We know who the user is now! Let's start over
+//				Log.i(javaClass, "External provider knows the user, let's try again: ${externalUser.user.name}")
+//				return getUser(ValidUserClaim(externalUser.user.name, externalUser.token), ctx)
+//			}
+//		}
+//		return if(App.crowdCookieConfig != null && user != null && user.from != InternalProvider.SOURCE_NAME) {
+//			// Check for Crowd SSO cookie
+//			if(ssoToken == null || ssoToken.isBlank()) {
+//				Log.v(javaClass, "Failed to get CrowdCookie: $ssoToken")
+//				AuthAction.onUserValid(user, null)
+//				// We should return null because this user is backed by an external provider
+//				Log.i(javaClass, "Refusing to return external user that can't be verified: ${user.username}")
+//				null
+//			}
+//			else {
+//				// Check that crowd is aware of our token
+//				val token = AuthAction.getTokenInfo(ssoToken, ctx) ?: return null
+//				// Get the user from Crowds response
+//				// We know that auth MUST be valid otherwise Crowd would not return 200 OK
+//				if(ssoToken != token.token) Log.a(javaClass, "Current token and new token don't match, Crowd must have issued a refresh!")
+//				val foundUser = App.auth.getUser(token.user.name)
+//				transaction {
+//					// Update the users token to match Crowd
+//					Log.d(javaClass, "Updating user with discovered SSO token: ${claim?.username}, ${token.user.name}")
+//					val s = AuthAction.userHadToken(foundUser?.username, ssoToken)
+//					s?.ssoToken = token.token
+//				}
+//				Log.d(javaClass, "Searching for active user with token: [cur: $ssoToken, new: ${token.token}]: ${foundUser?.username}")
+//				if(foundUser != null) AuthAction.onUserValid(foundUser, token.token)
+//				foundUser
+//			}
+//		}
+//		else {
+//			Log.v(javaClass, "Returning user we found locally: ${user?.username}")
+//			if(user != null) AuthAction.onUserValid(user, null)
+//			user
+//		}
+//	}
 
 	/**
 	 * Get a users SSO cookie, if it exists
@@ -131,6 +170,6 @@ object ClaimConverter {
 		return get(UserAction.getOrNull(ctx), ctx)
 	}
 	fun get(claim: ValidUserClaim?, ctx: Context): User {
-		return getUser(claim, ctx) ?: throw UnauthorizedResponse("Invalid token")
+		return getUser(ctx) ?: throw UnauthorizedResponse("Invalid token")
 	}
 }
