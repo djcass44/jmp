@@ -15,7 +15,9 @@
  */
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.ajoberstar.grgit.Grgit
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.sonarqube.gradle.SonarQubeTask
 
 plugins {
 	kotlin("jvm") version "1.3.30"
@@ -23,6 +25,7 @@ plugins {
 	application
 	jacoco
 	id("org.sonarqube") version "2.7.1"
+	id("org.ajoberstar.grgit") version "1.7.2"
 }
 
 group = "dev.castive"
@@ -43,7 +46,7 @@ dependencies {
 	implementation(kotlin("stdlib-jdk8"))
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1")
 
-	implementation("com.github.djcass44:jmp-auth:4235f04f19")
+	implementation("com.github.djcass44:jmp-auth:55df866b4b")
 //    implementation("dev.castive:jmp-auth:0.4.0")
 	implementation("com.github.djcass44:log2:3.3")
 	implementation("com.github.djcass44:fav2:v0.2.1")
@@ -82,6 +85,8 @@ dependencies {
 	testImplementation("org.junit.jupiter:junit-jupiter-api:5.2.0")
 	testImplementation("org.junit.jupiter:junit-jupiter-params:5.2.0")
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.2.0")
+
+	testImplementation("io.mockk:mockk:1.9.3")
 }
 
 application {
@@ -98,18 +103,37 @@ tasks.withType<ShadowJar> {
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
+jacoco {
+	toolVersion = "0.8.4"
+}
 task("buildPackage") {
 	println("Building package...")
 	finalizedBy("increment-patch", "shadowJar")
 }
-tasks.jacocoTestReport {
+tasks.withType<JacocoReport> {
 	reports {
 		xml.isEnabled = true
 	}
 }
+val codeCoverageReport by tasks.creating(JacocoReport::class) { dependsOn("test") }
+tasks.withType<SonarQubeTask> { dependsOn("test", "jacocoTestReport") }
+
 sonarqube {
+	val branch = gitBranch()
 	properties{
 		property("sonar.projectKey", "djcass44:jmp")
 		property("sonar.projectName", "djcass44/jmp")
+		property("sonar.branch.name", branch.first)
+		property("sonar.branch.target", branch.second)
+		property("sonar.junit.reportsPath", "$projectDir/build/test-results")
 	}
+}
+fun gitBranch(): Pair<String, String> {
+	val git = Grgit.open(project.rootDir)
+	val branch = git.branch.current.name
+	val target = when(branch) {
+		"develop" -> "master"
+		else -> "develop"
+	}
+	return Pair(branch, target)
 }
