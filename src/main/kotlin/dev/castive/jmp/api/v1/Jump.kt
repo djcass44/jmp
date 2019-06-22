@@ -19,24 +19,20 @@ package dev.castive.jmp.api.v1
 import dev.castive.eventlog.EventLog
 import dev.castive.eventlog.schema.Event
 import dev.castive.eventlog.schema.EventType
-import dev.castive.javalin_auth.actions.UserAction
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.actions.ImageAction
 import dev.castive.jmp.api.actions.OwnerAction
 import dev.castive.jmp.api.actions.TitleAction
 import dev.castive.jmp.api.v2_1.WebSocket
-import dev.castive.jmp.auth.ClaimConverter
+import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.Util
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.Jump
 import dev.castive.jmp.except.EmptyPathException
 import dev.castive.log2.Log
-import io.javalin.BadRequestResponse
-import io.javalin.ConflictResponse
-import io.javalin.ForbiddenResponse
-import io.javalin.NotFoundResponse
+import io.javalin.*
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
@@ -66,7 +62,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 		// List all items in Json format
 		get("${Runner.BASE}/v1/jumps", { ctx ->
 			val items = arrayListOf<JumpData>()
-			val user = ClaimConverter.getUser(UserAction.getOrNull(ctx), ctx)
+			val user: User? = ctx.attribute(AccessManager.attributeUser)
 			val userJumps = OwnerAction.getUserVisibleJumps(user)
 			transaction {
 				userJumps.forEach {
@@ -85,7 +81,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 				/**
 				 * 1. Try to get JWT token
 				 */
-				val user = ClaimConverter.getUser(UserAction.getOrNull(ctx), ctx)
+				val user: User? = ctx.attribute(AccessManager.attributeUser)
 				transaction {
 					Log.d(javaClass, "User information: [name: ${user?.username}, token: ${user?.id?.value}]")
 					Log.d(javaClass, "Found user: ${user != null}")
@@ -117,7 +113,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 		put("${Runner.BASE}/v1/jump", { ctx ->
 			val add = ctx.bodyAsClass(JumpData::class.java)
 			val groupID = Util.getSafeUUID(ctx.queryParam("gid") ?: "")
-			val user = ClaimConverter.get(UserAction.get(ctx), ctx)
+			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse("Invalid authentication")
 			// Block non-admin user from adding global jumps
 			if (add.personal == JumpData.TYPE_GLOBAL && transaction { return@transaction user.role.name != Auth.BasicRoles.ADMIN.name }) throw ForbiddenResponse()
 			if (!jumpExists(add.name, add.location, user)) {
@@ -151,7 +147,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 		// Edit a jump point
 		patch("${Runner.BASE}/v1/jump", { ctx ->
 			val update = ctx.bodyAsClass(EditJumpData::class.java)
-			val user = ClaimConverter.get(UserAction.getOrNull(ctx), ctx)
+			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse("Invalid authentication")
 			transaction {
 				val existing = Jump.findById(update.id) ?: throw NotFoundResponse()
 
@@ -203,7 +199,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 		// Delete a jump point
 		delete("${Runner.BASE}/v1/jump/:id", { ctx ->
 			val id = ctx.pathParam("id").toIntOrNull() ?: throw BadRequestResponse()
-			val user = ClaimConverter.get(UserAction.get(ctx), ctx)
+			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse("Invalid authentication")
 			transaction {
 				val result = Jump.findById(id) ?: throw NotFoundResponse()
 				// 403 if jump is global and user ISN'T admin

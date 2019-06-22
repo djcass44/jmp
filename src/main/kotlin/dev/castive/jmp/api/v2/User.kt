@@ -19,12 +19,12 @@ package dev.castive.jmp.api.v2
 import dev.castive.eventlog.EventLog
 import dev.castive.eventlog.schema.Event
 import dev.castive.eventlog.schema.EventType
-import dev.castive.javalin_auth.actions.UserAction
 import dev.castive.javalin_auth.auth.connect.MinimalConfig
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
+import dev.castive.jmp.api.Responses
 import dev.castive.jmp.api.v2_1.WebSocket
-import dev.castive.jmp.auth.ClaimConverter
+import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.User
 import dev.castive.log2.Log
@@ -38,6 +38,7 @@ import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
+import kotlin.math.ceil
 
 class User(
     private val auth: Auth,
@@ -46,7 +47,7 @@ class User(
 ): EndpointGroup {
     override fun addEndpoints() {
         get("${Runner.BASE}/v2/users", { ctx ->
-            ClaimConverter.get(UserAction.get(ctx), ctx)
+            val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
             Log.d(javaClass, "list - JWT validation passed")
             val count = ctx.queryParam<Int>("count").value?.coerceAtLeast(5) ?: 10
             val offset = ctx.queryParam<Int>("offset").value?.coerceAtLeast(0) ?: 0
@@ -71,13 +72,13 @@ class User(
             }
             EventLog.post(Event(type = EventType.READ, resource = UserData::class.java, causedBy = javaClass))
             val currentPage = (offset / userCount) + 1
-            val totalPages = Math.ceil(userCount / count.toDouble()).toInt()
+            val totalPages = ceil(userCount / count.toDouble()).toInt()
             Log.d(javaClass, "Returning ${users.size} users")
             ctx.status(HttpStatus.OK_200).json(PagedUserData(currentPage, totalPages, users, offset + (count * 2) < userCount))
         }, Auth.defaultRoleAccess)
         // Add a user
         put("${Runner.BASE}/v2/user", { ctx ->
-            val user = ClaimConverter.getUser(UserAction.getOrNull(ctx), ctx)
+            val user: User? = ctx.attribute(AccessManager.attributeUser)
             transaction {
                 val blockLocal = configMin.blockLocal
                 Log.d(javaClass, "Block local accounts: $blockLocal")
@@ -95,22 +96,22 @@ class User(
         }, Auth.openAccessRole)
         // Get information about the current user
         get("${Runner.BASE}/v2/user", { ctx ->
-            val u = ClaimConverter.get(UserAction.get(ctx), ctx)
+            val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
             transaction {
-                ctx.status(HttpStatus.OK_200).result(u.role.name)
+                ctx.status(HttpStatus.OK_200).result(user.role.name)
             }
             EventLog.post(Event(type = EventType.READ, resource = UserData::class.java, causedBy = javaClass))
         }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2_1/user/info", { ctx ->
-            val u = ClaimConverter.get(UserAction.get(ctx), ctx)
+            val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
             transaction {
-                ctx.status(HttpStatus.OK_200).json(UserData(u, arrayListOf()))
+                ctx.status(HttpStatus.OK_200).json(UserData(user, arrayListOf()))
             }
         }, Auth.defaultRoleAccess)
         // Change the role of a user
         patch("${Runner.BASE}/v2/user", { ctx ->
             val updated = ctx.bodyAsClass(EditUserData::class.java)
-            val u = ClaimConverter.get(UserAction.get(ctx), ctx)
+            val u: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
             transaction {
                 val user = User.findById(updated.id) ?: throw BadRequestResponse()
                 // Block dropping the superuser from admin
@@ -131,7 +132,7 @@ class User(
         // Delete a user
         delete("${Runner.BASE}/v2/user/:id", { ctx ->
             val id = UUID.fromString(ctx.pathParam("id"))
-            val user = ClaimConverter.get(UserAction.get(ctx), ctx)
+            val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
             transaction {
                 val target = User.findById(id) ?: throw BadRequestResponse()
                 Log.i(javaClass, "[${user.username}] is removing ${target.username}")

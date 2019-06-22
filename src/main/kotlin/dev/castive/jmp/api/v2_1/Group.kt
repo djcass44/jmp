@@ -19,16 +19,17 @@ package dev.castive.jmp.api.v2_1
 import dev.castive.eventlog.EventLog
 import dev.castive.eventlog.schema.Event
 import dev.castive.eventlog.schema.EventType
-import dev.castive.javalin_auth.actions.UserAction
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
-import dev.castive.jmp.auth.ClaimConverter
+import dev.castive.jmp.api.Responses
+import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.Group
 import dev.castive.log2.Log
 import io.javalin.ConflictResponse
 import io.javalin.ForbiddenResponse
 import io.javalin.NotFoundResponse
+import io.javalin.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
@@ -42,7 +43,7 @@ class Group(private val ws: WebSocket): EndpointGroup {
     override fun addEndpoints() {
         get("${Runner.BASE}/v2_1/groups", { ctx ->
             val items = arrayListOf<GroupData>()
-            val user = ClaimConverter.getUser(ctx)
+            val user: User? = ctx.attribute(AccessManager.attributeUser)
             Log.d(javaClass, "Listing groups visible to actual user: ${user != null}")
             if(user != null) {
                 transaction {
@@ -72,7 +73,7 @@ class Group(private val ws: WebSocket): EndpointGroup {
         }, Auth.defaultRoleAccess)
         put("${Runner.BASE}/v2_1/group", { ctx ->
             val add = ctx.bodyAsClass(GroupData::class.java)
-            val user = ClaimConverter.get(ctx)
+            val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
             Log.d(javaClass, "add - JWT validation passed")
             transaction {
                 val existing = Group.find {
@@ -91,7 +92,7 @@ class Group(private val ws: WebSocket): EndpointGroup {
         }, Auth.defaultRoleAccess)
         patch("${Runner.BASE}/v2_1/group", { ctx ->
             val update = ctx.bodyAsClass(GroupData::class.java)
-            val user = ClaimConverter.get(UserAction.get(ctx), ctx)
+            val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
             transaction {
                 val existing = Group.findById(update.id!!) ?: throw NotFoundResponse("Group not found")
                 // Only allow update if user belongs to group (or is admin)
@@ -104,7 +105,7 @@ class Group(private val ws: WebSocket): EndpointGroup {
         }, Auth.defaultRoleAccess)
         delete("${Runner.BASE}/v2_1/group/:id", { ctx ->
             val id = UUID.fromString(ctx.pathParam("id"))
-            val user = ClaimConverter.get(UserAction.get(ctx), ctx)
+            val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
             transaction {
                 val existing = Group.findById(id) ?: throw NotFoundResponse("Group not found")
                 // Only allow deletion if user belongs to group (or is admin)

@@ -16,12 +16,12 @@
 
 package dev.castive.jmp.api.v2
 
-import dev.castive.javalin_auth.actions.UserAction
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Similar
 import dev.castive.jmp.api.actions.OwnerAction
-import dev.castive.jmp.auth.ClaimConverter
+import dev.castive.jmp.auth.AccessManager
+import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.except.EmptyPathException
 import dev.castive.log2.Log
 import io.javalin.BadRequestResponse
@@ -34,7 +34,7 @@ class Similar : EndpointGroup {
         // Find similar jumps
         get("${Runner.BASE}/v2/similar/:query", { ctx ->
             try {
-                val user = ClaimConverter.getUser(UserAction.getOrNull(ctx), ctx)
+                val user: User? = ctx.attribute(AccessManager.attributeUser)
                 val query = ctx.pathParam("query")
                 if (query.isBlank())
                     throw EmptyPathException()

@@ -4,10 +4,8 @@ import com.hazelcast.config.Config
 import com.hazelcast.core.Hazelcast
 import com.hazelcast.core.HazelcastInstance
 import com.hazelcast.core.IMap
-import dev.castive.jmp.db.Util
 import dev.castive.jmp.util.SystemUtil
 import dev.castive.log2.Log
-import java.util.*
 
 class HazelcastCacheLayer: BaseCacheLayer {
 	lateinit var hzInstance: HazelcastInstance
@@ -45,22 +43,21 @@ class HazelcastCacheLayer: BaseCacheLayer {
 		return hzInstance.lifecycleService.isRunning
 	}
 
-	override fun getUser(id: UUID, token: String): Pair<UUID, String>? {
+	override fun getUser(username: String, token: String): Pair<String, String>? {
 		if(userMap.isEmpty) return null
 		val guess = get(userMap[token] ?: return null)
 		if(System.currentTimeMillis() - guess.time > 5000) return null
-		if(guess.id == id) return Pair(guess.id, token)
+		if(guess.username == username) return Pair(guess.username, token)
 		return null
 	}
 
-	override fun getUser(token: String): UUID? {
+	override fun getUser(token: String): String? {
 		if(userMap.isEmpty) return null
-		val id = userMap[token] ?: return null
-		return Util.getSafeUUID(id)
+		return userMap[token] ?: return null
 	}
 
-	override fun setUser(id: UUID, token: String) {
-		userMap[token] = set(BaseCacheLayer.UserCache(id, System.currentTimeMillis()))
+	override fun setUser(username: String, token: String) {
+		userMap[token] = set(BaseCacheLayer.UserCache(username, System.currentTimeMillis()))
 	}
 
 	override fun removeUser(token: String) {
