@@ -119,7 +119,13 @@ val codeCoverageReport by tasks.creating(JacocoReport::class) { dependsOn("test"
 tasks.withType<SonarQubeTask> { dependsOn("test", "jacocoTestReport") }
 
 sonarqube {
-	val branch = gitBranch()
+	val git = Grgit.open(project.rootDir)
+	val name = git.branch.current.name
+	val target = when(name) {
+		"develop" -> "master"
+		else -> "develop"
+	}
+	val branch = Pair(name, target)
 	properties{
 		property("sonar.projectKey", "djcass44:jmp")
 		property("sonar.projectName", "djcass44/jmp")
@@ -127,13 +133,4 @@ sonarqube {
 		property("sonar.branch.target", branch.second)
 		property("sonar.junit.reportsPath", "$projectDir/build/test-results")
 	}
-}
-fun gitBranch(): Pair<String, String> {
-	val git = Grgit.open(project.rootDir)
-	val branch = git.branch.current.name
-	val target = when(branch) {
-		"develop" -> "master"
-		else -> "develop"
-	}
-	return Pair(branch, target)
 }
