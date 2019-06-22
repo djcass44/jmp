@@ -33,7 +33,7 @@ import dev.castive.jmp.api.v2.User
 import dev.castive.jmp.api.v2_1.*
 import dev.castive.jmp.api.v2_1.Group
 import dev.castive.jmp.audit.Logger
-import dev.castive.jmp.auth.ClaimConverter
+import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.auth.LDAPConfigBuilder
 import dev.castive.jmp.auth.UserValidator
 import dev.castive.jmp.auth.UserVerification
@@ -54,6 +54,7 @@ class App(val port: Int = 7000) {
 	companion object {
 		val id = UUID.randomUUID().toString()
 		var exceptionTracker = ExceptionTracker(blockLeak = true)
+		@Deprecated(message = "Config is store by the provider")
 		var crowdCookieConfig: CrowdCookieConfig? = null
 		val auth = Auth()
 	}
@@ -84,23 +85,11 @@ class App(val port: Int = 7000) {
 		Javalin.create().apply {
 			disableStartupBanner()
 			port(port)
-			if(arguments.enableCors) {
-				enableCorsForAllOrigins()
-			}
-			if(arguments.enableDev) {
-				enableRouteOverview(Runner.BASE, setOf<Role>(Auth.BasicRoles.ANYONE))
-			}
+			if(arguments.enableCors) { enableCorsForAllOrigins() }
+			if(arguments.enableDev) { enableRouteOverview(Runner.BASE, setOf<Role>(Auth.BasicRoles.ANYONE)) }
 			enableCaseSensitiveUrls()
-			accessManager { handler, ctx, permittedRoles ->
-				val user = ClaimConverter.getUser(ctx)
-				val userRole = if(user == null) Auth.BasicRoles.ANYONE else transaction {
-					Auth.BasicRoles.valueOf(user.role.name)
-				}
-				if(permittedRoles.contains(userRole))
-					handler.handle(ctx)
-				else
-					ctx.status(HttpStatus.UNAUTHORIZED_401).result("Unauthorised")
-			}
+			// User our custom access manager
+			accessManager(AccessManager())
 			requestLogger { ctx, timeMs ->
 				logger.add("${System.currentTimeMillis()} - ${ctx.method()} ${ctx.path()} took $timeMs ms")
 			}

@@ -16,7 +16,6 @@
 
 package dev.castive.jmp.api.v2
 
-import dev.castive.javalin_auth.actions.UserAction
 import dev.castive.javalin_auth.auth.Providers
 import dev.castive.javalin_auth.auth.TokenProvider
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.AuthenticateResponse
@@ -26,11 +25,14 @@ import dev.castive.javalin_auth.auth.provider.InternalProvider
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.App
 import dev.castive.jmp.api.Auth
+import dev.castive.jmp.api.Responses
 import dev.castive.jmp.api.actions.AuthAction
+import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.auth.ClaimConverter
 import dev.castive.jmp.auth.UserVerification
 import dev.castive.jmp.db.dao.Session
 import dev.castive.jmp.db.dao.Sessions
+import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.UserData
 import dev.castive.jmp.util.SystemUtil
 import dev.castive.log2.Log
@@ -117,9 +119,8 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 			}
 			Log.d(javaClass, "Found refresh token")
 			refresh!!
-			val user = kotlin.runCatching {
-				ClaimConverter.get(UserAction.getOrNull(ctx, lax = true), ctx)
-			}.getOrNull() ?: throw UnauthorizedResponse()
+			ctx.attribute("LAX", true)
+			val user = ClaimConverter.getUser(ctx) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
 			val response = transaction {
 				val existingSession = Session.find { Sessions.user eq user.id and(Sessions.refreshToken eq refresh) }.limit(1).elementAtOrNull(0) ?: run {
 					Log.d(Oauth::class.java, "Failed to find matching refresh token")
@@ -137,10 +138,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 		// Verify a users token is still valid
 		get("${Runner.BASE}/v2/oauth/valid", { ctx ->
 			Log.d(javaClass, "Checking session for ${ctx.ip()}")
-			val user = ClaimConverter.getUser(ctx) ?: run {
-//				AuthAction.writeInvalidCookie(ctx)
-				throw UnauthorizedResponse("Invalid authentication")
-			}
+			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
 			val token = ClaimConverter.getToken(ctx)
 			Log.d(javaClass, "Session for ${user.username} is valid")
 			transaction {
@@ -167,7 +165,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 		}, Auth.openAccessRole)
 		// Logout the user and invalidate tokens if needed
 		post("${Runner.BASE}/v2/oauth/logout", { ctx ->
-			val user = ClaimConverter.get(ctx)
+			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
 			val ssoToken = ClaimConverter.getToken(ctx) ?: user.id.value.toString()
 			transaction {
 				val session = AuthAction.userHasToken(user.username, ssoToken)
