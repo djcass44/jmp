@@ -5,13 +5,9 @@ LABEL maintainer="Django Cass <dj.cass44@gmail.com>"
 WORKDIR /app
 
 # Dry run for caching
-COPY build.gradle.kts settings.gradle version.xml gradlew ./
-COPY gradle ./gradle
-RUN ./gradlew build || return 0
-# Build & package app
 COPY . .
 
-RUN ./gradlew buildPackage
+RUN ./gradlew buildPackage -x test -x sonarqube -x jacocoTestReport
 
 # STAGE 2 - RUN
 FROM adoptopenjdk/openjdk12:jre-12.0.1_12-alpine
