@@ -48,7 +48,7 @@ object AuthAction {
 	fun onUserValid(user: User, token: String?) {
 		if(!cacheLayer.connected()) return
 		Log.i(javaClass, "Updating cached user with token: $token")
-		cacheLayer.setUser(user.id.value, token ?: user.id.value.toString())
+		cacheLayer.setUser(user.username, token ?: user.id.value.toString())
 	}
 	fun getAppId(): String? {
 		return cacheLayer.getMisc("appId")

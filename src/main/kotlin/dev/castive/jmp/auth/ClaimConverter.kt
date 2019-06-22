@@ -61,7 +61,10 @@ object ClaimConverter {
 				val s = AuthAction.userHadToken(actualUser.username, token.last)
 				s?.ssoToken = token.current
 			}
+			// Update the cache layer
+			AuthAction.onUserValid(actualUser, token.current)
 		}
+		else if(actualUser != null) AuthAction.onUserValid(actualUser, null)
 		return actualUser
 	}
 
