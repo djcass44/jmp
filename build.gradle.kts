@@ -98,7 +98,10 @@ tasks.withType<KotlinCompile>().all {
 }
 
 tasks.withType<ShadowJar> {
-	archiveName = "jmp.$extension"
+	baseName = "jmp"
+	classifier = null
+	version = null
+	minimize()
 }
 tasks.withType<Test> {
 	useJUnitPlatform()
@@ -120,17 +123,20 @@ tasks.withType<SonarQubeTask> { dependsOn("test", "jacocoTestReport") }
 
 sonarqube {
 	val git = Grgit.open(project.rootDir)
-	val name = git.branch.current.name
+	val name = runCatching {git.branch.current.name}.getOrNull()
 	val target = when(name) {
+		null -> null
 		"develop" -> "master"
 		else -> "develop"
 	}
-	val branch = Pair(name, target)
+	val branch = if(name != null && target != null) Pair(name, target) else null
 	properties{
 		property("sonar.projectKey", "djcass44:jmp")
 		property("sonar.projectName", "djcass44/jmp")
-		property("sonar.branch.name", branch.first)
-		property("sonar.branch.target", branch.second)
+		if(branch != null) {
+			property("sonar.branch.name", branch.first)
+			property("sonar.branch.target", branch.second)
+		}
 		property("sonar.junit.reportsPath", "$projectDir/build/test-results")
 	}
 }
