@@ -24,7 +24,7 @@ import dev.castive.log2.Log
 class DatabaseHelper {
     fun start(store: ConfigStore) {
         Log.v(javaClass, "Database config: [${store.url}, ${store.driver}]")
-        Log.v(javaClass, "Application config: [${store.BASE_URL}, ${store.logRequestDir}, ${store.dataPath}]")
+        Log.v(javaClass, "Application config: [${store.baseUrl}, ${store.logRequestDir}, ${store.dataPath}]")
         val ds = HikariDataSource(HikariConfig().apply {
             jdbcUrl = store.url
             driverClassName = store.driver

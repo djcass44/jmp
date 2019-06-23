@@ -19,6 +19,7 @@ package dev.castive.jmp.api
 import dev.castive.eventlog.EventLog
 import dev.castive.javalin_auth.actions.UserAction
 import dev.castive.javalin_auth.auth.Providers
+import dev.castive.javalin_auth.auth.TokenProvider
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.CrowdCookieConfig
 import dev.castive.javalin_auth.auth.provider.CrowdProvider
 import dev.castive.javalin_auth.auth.provider.LDAPProvider
@@ -42,6 +43,7 @@ import dev.castive.jmp.db.Init
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.except.ExceptionTracker
 import dev.castive.log2.Log
+import dev.castive.securepass3.PasswordGenerator
 import io.javalin.Javalin
 import io.javalin.security.Role
 import org.eclipse.jetty.http.HttpStatus
@@ -142,5 +144,16 @@ class App(val port: Int = 7000) {
 		AuthAction.cacheLayer.setup()
 		val existingID = AuthAction.getAppId()
 		if(existingID == null) AuthAction.cacheLayer.setMisc("appId", UUID.randomUUID().toString())
+
+		val existingKey = AuthAction.cacheLayer.getMisc("appKey")
+		val key = if(existingKey == null) {
+			Log.i(javaClass, "No cached signing key, a new one will be generated")
+			val k = PasswordGenerator().generate(32).toString()
+			AuthAction.cacheLayer.setMisc("appKey", k)
+			k
+		}
+		else existingKey
+		// Reseed the JWT signer with our shared-key
+		TokenProvider.buildSigner(key)
 	}
 }

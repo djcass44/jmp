@@ -21,6 +21,7 @@ import dev.castive.jmp.audit.Logger
 import dev.castive.jmp.db.Config
 import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.DatabaseHelper
+import dev.castive.jmp.db.Util
 import dev.castive.jmp.util.checks.AuditCheck
 import dev.castive.jmp.util.checks.EntropyCheck
 import dev.castive.jmp.util.checks.SecureConfigCheck
@@ -38,7 +39,7 @@ class Runner {
     private fun runInitialChecks(store: ConfigStore, arguments: Arguments) {
         Log.i(javaClass, "Checking security configuration")
         println("Running setup checks\n")
-        val checks = arrayListOf(SecureConfigCheck(store.BASE_URL, arguments), EntropyCheck(), AuditCheck())
+        val checks = arrayListOf(SecureConfigCheck(store.baseUrl, arguments), EntropyCheck(), AuditCheck())
         var count = 0
         for (c in checks) {
             if(c.runCheck()) count++
@@ -69,7 +70,8 @@ class Runner {
         runInitialChecks(store, arguments)
         DatabaseHelper().start(store)
         // Start the application
-        App().start(store, arguments, logger)
+        val appPort = Util.getEnv("PORT", "7000").toIntOrNull() ?: 7000
+        App(appPort).start(store, arguments, logger)
     }
 }
 

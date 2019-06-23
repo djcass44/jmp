@@ -37,6 +37,7 @@ object ClaimConverter {
 			val res = Providers.primaryProvider!!.hasUser(ctx)
 			user = res.first
 			token = res.second
+			Log.d(javaClass, "Discovered external user: ${user?.username}")
 		}
 		// Fall-back to the internal provider
 		if(user == null) {
@@ -44,6 +45,7 @@ object ClaimConverter {
 			val res = Providers.internalProvider.hasUser(ctx)
 			user = res.first
 			token = res.second
+			Log.d(javaClass, "Discovered internal user: ${user?.username}")
 		}
 		if(user == null) {
 			Log.i(javaClass, "Failed to locate user with any provider")

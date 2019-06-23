@@ -72,7 +72,7 @@ class InfoAction {
         val jumpInfo = JumpInfo(jumps, globalJumps, personalJumps, groupedJumps)
         val uptime = System.currentTimeMillis() - Runner.START_TIME
         val uptimeString = timeSpan(uptime)
-        val cleanLaunchConfig = ConfigStore(Runner.store.url, Runner.store.driver, File(Runner.store.logRequestDir).absolutePath, Runner.store.BASE_URL, "****", "****")
+        val cleanLaunchConfig = ConfigStore(Runner.store.url, Runner.store.driver, File(Runner.store.logRequestDir).absolutePath, Runner.store.baseUrl, "****", "****")
         val identityInfo = IdentityInfo(
             Providers.primaryProvider?.getName() ?: InternalProvider.SOURCE_NAME,
             if(Providers.primaryProvider != null) { Providers.primaryProvider!!::class.java.name } else InternalProvider::class.java.name
