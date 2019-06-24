@@ -124,17 +124,21 @@ tasks.withType<SonarQubeTask> { dependsOn("test", "jacocoTestReport") }
 sonarqube {
 	val git = runCatching {Grgit.open(project.rootDir)}.getOrNull()
 	// Don't run an analysis if we can't get git context
-	val name = (if(git == null) null else runCatching {git.branch.current.name}.getOrNull()) ?: return@sonarqube
+	val name = (if(git == null) null else runCatching {git.branch.current.name}.getOrNull())
 	val target = when(name) {
+		null -> null
 		"develop" -> "master"
 		else -> "develop"
 	}
-	val branch = Pair(name, target)
-	properties {
+	val branch = if(name != null && target != null) Pair(name, target) else null
+	this.isSkipProject = branch == null
+	properties{
 		property("sonar.projectKey", "djcass44:jmp")
 		property("sonar.projectName", "djcass44/jmp")
-		property("sonar.branch.name", branch.first)
-		property("sonar.branch.target", branch.second)
+		if(branch != null) {
+			property("sonar.branch.name", branch.first)
+			property("sonar.branch.target", branch.second)
+		}
 		property("sonar.junit.reportsPath", "$projectDir/build/test-results")
 	}
 }
