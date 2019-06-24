@@ -71,6 +71,6 @@ class HazelcastCacheLayer: BaseCacheLayer {
 		miscMap[key] = value
 	}
 
-	private fun get(str: String): BaseCacheLayer.UserCache = SystemUtil.gson.fromJson(str, BaseCacheLayer.UserCache::class.java)
+	fun get(str: String): BaseCacheLayer.UserCache = SystemUtil.gson.fromJson(str, BaseCacheLayer.UserCache::class.java)
 	private fun set(uc: BaseCacheLayer.UserCache) = SystemUtil.gson.toJson(uc)
 }
