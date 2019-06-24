@@ -101,7 +101,6 @@ tasks.withType<ShadowJar> {
 	baseName = "jmp"
 	classifier = null
 	version = null
-	minimize()
 }
 tasks.withType<Test> {
 	useJUnitPlatform()
