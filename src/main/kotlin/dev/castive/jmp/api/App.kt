@@ -155,5 +155,11 @@ class App(val port: Int = 7000) {
 		else existingKey
 		// Reseed the JWT signer with our shared-key
 		TokenProvider.buildSigner(key)
+
+		// Gracefully shutdown the cache layer when the JVM is shutting down
+		Runtime.getRuntime().addShutdownHook(Thread {
+			Log.w(javaClass, "Shutting down cache layer")
+			AuthAction.cacheLayer.tearDown()
+		})
 	}
 }

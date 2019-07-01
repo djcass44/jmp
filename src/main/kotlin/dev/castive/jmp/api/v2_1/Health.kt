@@ -30,26 +30,26 @@ import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
 
 class Health(private val config: MinimalConfig): EndpointGroup {
-    private val rateLimiter = RateLimiter.create(5.0)
+	private val rateLimiter = RateLimiter.create(5.0)
 
-    override fun addEndpoints() {
-        get("${Runner.BASE}/v3/health", { ctx ->
-            if(rateLimiter.tryAcquire()) {
-                val check = runChecks()
-                Log.d(javaClass, check.toString())
-                ctx.status(HttpStatus.OK_200).json(check)
-            }
-            else
-                ctx.status(HttpStatus.TOO_MANY_REQUESTS_429).result("You're making too many requests")
-        }, Auth.openAccessRole)
-    }
-    private fun runChecks(): HealthPayload {
-        val dbCheck = DatabaseCheck().runCheck()
-        val providerCheck = if(config.enabled) ProviderCheck().runCheck() else null
-        val providerName = if(config.enabled) Providers.primaryProvider?.getName() ?: InternalProvider.SOURCE_NAME else InternalProvider.SOURCE_NAME
-        val code = if(!dbCheck || providerCheck == false) HttpStatus.INTERNAL_SERVER_ERROR_500 else HttpStatus.OK_200
+	override fun addEndpoints() {
+		get("${Runner.BASE}/v3/health", { ctx ->
+			if(rateLimiter.tryAcquire()) {
+				val check = runChecks()
+				Log.d(javaClass, check.toString())
+				ctx.status(HttpStatus.OK_200).json(check)
+			}
+			else
+				ctx.status(HttpStatus.TOO_MANY_REQUESTS_429).result("You're making too many requests")
+		}, Auth.openAccessRole)
+	}
+	private fun runChecks(): HealthPayload {
+		val dbCheck = DatabaseCheck().runCheck()
+		val providerCheck = if(config.enabled) ProviderCheck().runCheck() else null
+		val providerName = if(config.enabled) Providers.primaryProvider?.getName() ?: InternalProvider.SOURCE_NAME else InternalProvider.SOURCE_NAME
+		val code = if(!dbCheck || providerCheck == false) HttpStatus.INTERNAL_SERVER_ERROR_500 else HttpStatus.OK_200
 
-        return HealthPayload(code, "OK", dbCheck, providerCheck, providerName)
-    }
+		return HealthPayload(code, "OK", dbCheck, providerCheck, providerName)
+	}
 }
 data class HealthPayload(val code: Int = HttpStatus.OK_200, val http: String = "OK", val database: Boolean, val identityProvider: Boolean?, val providerName: String)
