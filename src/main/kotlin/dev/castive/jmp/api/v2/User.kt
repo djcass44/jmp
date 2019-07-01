@@ -16,6 +16,7 @@
 
 package dev.castive.jmp.api.v2
 
+import com.google.common.util.concurrent.RateLimiter
 import dev.castive.eventlog.EventLog
 import dev.castive.eventlog.schema.Event
 import dev.castive.eventlog.schema.EventType
@@ -45,6 +46,8 @@ class User(
     private val ws: WebSocket,
     private val configMin: MinimalConfig
 ): EndpointGroup {
+    private val createLimiter = RateLimiter.create(5.0)
+
     override fun addEndpoints() {
         get("${Runner.BASE}/v2/users", { ctx ->
             val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
@@ -78,21 +81,32 @@ class User(
         }, Auth.defaultRoleAccess)
         // Add a user
         put("${Runner.BASE}/v2/user", { ctx ->
-            val user: User? = ctx.attribute(AccessManager.attributeUser)
-            transaction {
-                val blockLocal = configMin.blockLocal
-                Log.d(javaClass, "Block local accounts: $blockLocal")
-                if ((user == null || auth.getUserRole(user.username, user.id.value) != Auth.BasicRoles.ADMIN) && blockLocal) {
-                    Log.i(javaClass, "User ${user?.username} is not allowed to create local accounts [reason: POLICY]")
-                    throw UnauthorizedResponse("Creating local accounts has been disabled.")
+            if(createLimiter.tryAcquire()) {
+                val user: User? = ctx.attribute(AccessManager.attributeUser)
+                transaction {
+                    val blockLocal = configMin.blockLocal
+                    Log.d(javaClass, "Block local accounts: $blockLocal")
+                    if ((user == null || auth.getUserRole(
+                            user.username,
+                            user.id.value
+                        ) != Auth.BasicRoles.ADMIN) && blockLocal
+                    ) {
+                        Log.i(
+                            javaClass,
+                            "User ${user?.username} is not allowed to create local accounts [reason: POLICY]"
+                        )
+                        throw UnauthorizedResponse("Creating local accounts has been disabled.")
+                    }
                 }
+                val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
+                Log.i(javaClass, "$user is creating a user [name: ${basicAuth.username}]")
+                auth.createUser(basicAuth.username, basicAuth.password.toCharArray())
+                EventLog.post(Event(type = EventType.CREATE, resource = UserData::class.java, causedBy = javaClass))
+                ws.fire(WebSocket.EVENT_UPDATE_USER, WebSocket.EVENT_UPDATE_USER)
+                ctx.status(HttpStatus.CREATED_201).result(basicAuth.username)
             }
-            val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
-            Log.i(javaClass, "$user is creating a user [name: ${basicAuth.username}]")
-            auth.createUser(basicAuth.username, basicAuth.password.toCharArray())
-            EventLog.post(Event(type = EventType.CREATE, resource = UserData::class.java, causedBy = javaClass))
-            ws.fire(WebSocket.EVENT_UPDATE_USER, WebSocket.EVENT_UPDATE_USER)
-            ctx.status(HttpStatus.CREATED_201).result(basicAuth.username)
+            else
+                ctx.status(HttpStatus.TOO_MANY_REQUESTS_429).result(Responses.GENERIC_RATE_LIMITED)
         }, Auth.openAccessRole)
         // Get information about the current user
         get("${Runner.BASE}/v2/user", { ctx ->

@@ -22,6 +22,7 @@ import dev.castive.javalin_auth.auth.connect.MinimalConfig
 import dev.castive.javalin_auth.auth.provider.InternalProvider
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
+import dev.castive.jmp.api.Responses
 import dev.castive.jmp.util.checks.DatabaseCheck
 import dev.castive.jmp.util.checks.ProviderCheck
 import dev.castive.log2.Log
@@ -40,7 +41,7 @@ class Health(private val config: MinimalConfig): EndpointGroup {
 				ctx.status(HttpStatus.OK_200).json(check)
 			}
 			else
-				ctx.status(HttpStatus.TOO_MANY_REQUESTS_429).result("You're making too many requests")
+				ctx.status(HttpStatus.TOO_MANY_REQUESTS_429).result(Responses.GENERIC_RATE_LIMITED)
 		}, Auth.openAccessRole)
 	}
 	private fun runChecks(): HealthPayload {
