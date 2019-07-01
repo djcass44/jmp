@@ -63,6 +63,7 @@ dependencies {
 	implementation("io.github.rybalkinsd:kohttp:0.7.1")
 	implementation("com.google.code.gson:gson:2.8.5")
 	implementation("org.jsoup:jsoup:1.11.3")
+	implementation("com.google.guava:guava:28.0-jre")
 
 	implementation("com.hazelcast:hazelcast:3.12.1")
 	implementation("com.hazelcast:hazelcast-client:3.12.1")

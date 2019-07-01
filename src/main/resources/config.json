@@ -2,8 +2,8 @@
   "url": "jdbc:sqlite:data/jmp.db",
   "driver": "org.sqlite.JDBC",
   "logRequestDir": "./data/logs",
-  "BASE_URL": "http://localhost:3000",
-  "DRIVER_USER": "",
-  "DRIVER_PASSWORD": "",
+  "baseUrl": "http://localhost:3000",
+  "tableUser": "",
+  "tablePassword": "",
   "dataPath": "./data"
 }
