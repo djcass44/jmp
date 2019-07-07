@@ -21,6 +21,7 @@ import dev.castive.eventlog.schema.Event
 import dev.castive.eventlog.schema.EventType
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
+import dev.castive.jmp.api.Responses
 import dev.castive.jmp.api.actions.ImageAction
 import dev.castive.jmp.api.actions.OwnerAction
 import dev.castive.jmp.api.actions.TitleAction
@@ -113,7 +114,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 		put("${Runner.BASE}/v1/jump", { ctx ->
 			val add = ctx.bodyAsClass(JumpData::class.java)
 			val groupID = Util.getSafeUUID(ctx.queryParam("gid") ?: "")
-			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse("Invalid authentication")
+			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
 			// Block non-admin user from adding global jumps
 			if (add.personal == JumpData.TYPE_GLOBAL && transaction { return@transaction user.role.name != Auth.BasicRoles.ADMIN.name }) throw ForbiddenResponse()
 			if (!jumpExists(add.name, add.location, user)) {
@@ -147,7 +148,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 		// Edit a jump point
 		patch("${Runner.BASE}/v1/jump", { ctx ->
 			val update = ctx.bodyAsClass(EditJumpData::class.java)
-			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse("Invalid authentication")
+			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
 			transaction {
 				val existing = Jump.findById(update.id) ?: throw NotFoundResponse()
 
@@ -199,7 +200,7 @@ class Jump(private val config: ConfigStore, private val ws: WebSocket): Endpoint
 		// Delete a jump point
 		delete("${Runner.BASE}/v1/jump/:id", { ctx ->
 			val id = ctx.pathParam("id").toIntOrNull() ?: throw BadRequestResponse()
-			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse("Invalid authentication")
+			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
 			transaction {
 				val result = Jump.findById(id) ?: throw NotFoundResponse()
 				// 403 if jump is global and user ISN'T admin

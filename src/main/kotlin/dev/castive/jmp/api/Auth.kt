@@ -239,8 +239,9 @@ class Auth {
 			}
 		}
 	}
-	fun isAdmin(user: User): Boolean = transaction {
-		return@transaction user.role.name == getDAOAdminRole().name
+	fun isAdmin(user: User?): Boolean {
+		if(user == null) return false
+		return transaction { return@transaction user.role.name == getDAOAdminRole().name }
 	}
 	fun getDAOUserRole(): DaoRole {
 		return getDAORole(BasicRoles.USER)
