@@ -20,7 +20,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.sonarqube.gradle.SonarQubeTask
 
 plugins {
-	kotlin("jvm") version "1.3.30"
+	kotlin("jvm") version "1.3.40"
 	id("com.github.johnrengelman.shadow") version "4.0.3"
 	application
 	jacoco
@@ -87,7 +87,8 @@ dependencies {
 	testImplementation("org.junit.jupiter:junit-jupiter-params:5.2.0")
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.2.0")
 
-	testImplementation("io.mockk:mockk:1.9.3")
+	testImplementation("org.mockito:mockito-core:3.0.0")
+	testImplementation("org.jetbrains.kotlin:kotlin-test:1.3.40")
 }
 
 application {

@@ -41,7 +41,7 @@ class Init(private val store: ConfigStore) {
                     Files.writeString(Path.of("${path}initialAdminPassword"), String(password), StandardCharsets.UTF_8)
                 }
                 catch (e: Exception) {
-                    Log.e(javaClass, "Failed to save admin password")
+                    Log.e(javaClass, "Failed to save admin password: $e")
                 }
                 for (c in password) // Probably useless if converted to a string above
                     print(c)

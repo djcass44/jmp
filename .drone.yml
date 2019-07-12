@@ -5,8 +5,8 @@ steps:
   - name: build
     image: plugins/docker
     settings:
-      registry: core.harbor.castive.dev/jmp
-      repo: core.harbor.castive.dev/jmp/api
+      registry: docker.castive.dev
+      repo: docker.castive.dev/jmp/api
       tags:
         - latest
         - ${DRONE_BRANCH}
@@ -15,62 +15,9 @@ steps:
         from_secret: DOCKER_USERNAME
       password:
         from_secret: DOCKER_PASSWORD
-  - name: deploy
-    image: quay.io/honestbee/drone-kubernetes
-    settings:
-      deployment: jmp-api
-      repo: core.harbor.castive.dev/jmp/api
-      tag: ${DRONE_BRANCH}-${DRONE_COMMIT_SHA}
-      container: jmp-api
-      namespace:
-        from_secret: KUBERNETES_NAMESPACE
-      kubernetes_server:
-        from_secret: KUBERNETES_SERVER
-      kubernetes_cert:
-        from_secret: KUBERNETES_CERT
-      kubernetes_token:
-        from_secret: KUBERNETES_TOKEN
-    when:
-      branch:
-        - develop # for now
-        - master
-      event: push
 trigger:
   when:
     branch:
       - master
       - develop
     event: push
----
-kind: pipeline
-name: build
-
-steps:
-  - name: test
-    image: adoptopenjdk/openjdk12:jdk-12.0.1_12-alpine-slim
-    volumes:
-      - name: cache
-        path: /tmp/cache
-    commands:
-      - ./gradlew -g /tmp/cache test
-  - name: build
-    image: adoptopenjdk/openjdk12:jdk-12.0.1_12-alpine-slim
-    volumes:
-      - name: cache
-        path: /tmp/cache
-    commands:
-      - ./gradlew -g /tmp/cache buildPackage
-#  - name: sonar
-#    image: aosapps/drone-sonar-plugin
-#    settings:
-#      sonar_host: https://sonar.castive.dev
-#      sonar_token:
-#        from_secret: SONAR_TOKEN
-trigger:
-  when:
-    branch:
-      - master
-      - develop
-volumes:
-  - name: cache
-    temp: {}

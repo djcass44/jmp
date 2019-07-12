@@ -24,11 +24,13 @@ ENV DRIVER_URL="jdbc:sqlite:jmp.db" \
     SOCKET_HOST=0.0.0.0 \
     SOCKET_PORT=7001
 
+RUN addgroup -S jmp && adduser -S jmp -G jmp
+
 WORKDIR /app
 COPY --from=GRADLE_CACHE /app/build/libs/jmp.jar .
 
-EXPOSE 7000
-VOLUME ["/data"]
+EXPOSE 7000 $SOCKET_PORT
+VOLUME $JMP_HOME
 
 COPY entrypoint.sh /entrypoint.sh
 
@@ -36,6 +38,10 @@ COPY entrypoint.sh /entrypoint.sh
 ENV TINI_VERSION v0.18.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
+
+#RUN chown -R jmp:jmp $JMP_HOME /entrypoint.sh /tini /app && \
+#    chmod -R 755 $JMP_HOME
+#USER jmp
 
 ENTRYPOINT ["/tini", "--"]
 CMD ["/entrypoint.sh"]

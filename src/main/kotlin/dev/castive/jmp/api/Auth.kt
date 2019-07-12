@@ -40,7 +40,6 @@ class Auth {
 		USER, ADMIN, ANYONE
 	}
 	companion object {
-
 		val openAccessRole = SecurityUtil.roles(
 			BasicRoles.ANYONE,
 			BasicRoles.USER,
@@ -51,11 +50,6 @@ class Auth {
 			BasicRoles.ADMIN
 		)
 		val adminRoleAccess = SecurityUtil.roles(BasicRoles.ADMIN)
-		val roleMapping = hashMapOf<String, Role>(
-			Pair(BasicRoles.ANYONE.name, BasicRoles.ANYONE),
-			Pair(BasicRoles.USER.name, BasicRoles.USER),
-			Pair(BasicRoles.ADMIN.name, BasicRoles.ADMIN)
-		)
 	}
 
 	data class UserLoginResponse(val token: String, val provided: Boolean)
@@ -187,13 +181,6 @@ class Auth {
 			}.elementAtOrNull(0)
 		}
 	}
-	fun getUserWithSSOToken(token: String): User? {
-		return transaction {
-			return@transaction User.find {
-				Users.requestToken eq token
-			}.elementAtOrNull(0)
-		}
-	}
 	fun getUser(username: String, token: String): User? {
 		if(username.isBlank() || token.isBlank()) return null
 		return transaction {
@@ -201,27 +188,6 @@ class Auth {
 				Users.username eq username
 			}.elementAtOrNull(0)
 			return@transaction if(AuthAction.userHadToken(u?.username, token) != null) u else null
-		}
-	}
-	fun getUser(username: String?, token: UUID?): User? {
-		if(username == null || token == null)
-			return null
-		return transaction {
-			return@transaction User.findById(token)
-		}
-	}
-
-	// Determine role based on request
-	fun getUserRole(username: String? = null): Role {
-		if(username == null)
-			return BasicRoles.USER
-		val user = getUser(username) ?: return BasicRoles.USER
-		return transaction {
-			when (user.role.name) {
-				BasicRoles.ADMIN.name -> BasicRoles.ADMIN
-				BasicRoles.USER.name -> BasicRoles.USER
-				else -> BasicRoles.USER
-			}
 		}
 	}
 	// Determine role based on request
