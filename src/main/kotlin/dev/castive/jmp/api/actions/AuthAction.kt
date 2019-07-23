@@ -50,9 +50,6 @@ object AuthAction {
 		Log.i(javaClass, "Updating cached user with token: $token")
 		cacheLayer.setUser(user.username, token ?: user.id.value.toString())
 	}
-	fun getAppId(): String? {
-		return cacheLayer.getMisc("appId")
-	}
 
 	/**
 	 * Check if the primary provider thinks that the token is valid

@@ -55,7 +55,7 @@ class WebSocket : EndpointGroup {
 		server.apply {
 			addConnectListener {
 				Log.d(javaClass, "WebSocket connected: ${it.remoteAddress}")
-				it.sendEvent(INIT_APP, AuthAction.getAppId())
+				it.sendEvent(INIT_APP, AuthAction.cacheLayer.getMisc("appId"))
 			}
 			addDisconnectListener {
 				Log.d(javaClass, "WebSocket disconnected: ${it.remoteAddress}")

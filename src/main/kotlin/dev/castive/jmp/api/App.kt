@@ -38,12 +38,14 @@ import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.auth.LDAPConfigBuilder
 import dev.castive.jmp.auth.UserValidator
 import dev.castive.jmp.auth.UserVerification
+import dev.castive.jmp.crypto.KeyProvider
+import dev.castive.jmp.crypto.SSMKeyProvider
 import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.Init
+import dev.castive.jmp.db.Util
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.except.ExceptionTracker
 import dev.castive.log2.Log
-import dev.castive.securepass3.PasswordGenerator
 import io.javalin.Javalin
 import io.javalin.security.Role
 import org.eclipse.jetty.http.HttpStatus
@@ -140,21 +142,22 @@ class App(val port: Int = 7000) {
 				"JMP v${Version.getVersion()} is ready.")
 	}
 
+	private fun getKeyProvider(): KeyProvider {
+		return when(Util.getEnv("JMP_KEY_REALM", KeyProvider.shortName)) {
+			SSMKeyProvider.shortName -> SSMKeyProvider()
+			else -> KeyProvider()
+		}
+	}
+
 	private fun startCache() {
 		AuthAction.cacheLayer.setup()
-		val existingID = AuthAction.getAppId()
+		val existingID = AuthAction.cacheLayer.getMisc("appId")
 		if(existingID == null) AuthAction.cacheLayer.setMisc("appId", UUID.randomUUID().toString())
 
-		val existingKey = AuthAction.cacheLayer.getMisc("appKey")
-		val key = if(existingKey == null) {
-			Log.i(javaClass, "No cached signing key, a new one will be generated")
-			val k = PasswordGenerator().generate(32).toString()
-			AuthAction.cacheLayer.setMisc("appKey", k)
-			k
-		}
-		else existingKey
-		// Reseed the JWT signer with our shared-key
-		TokenProvider.buildSigner(key)
+		// Reseed the JWT signer with our encryption key
+		val keyProvider = getKeyProvider()
+		Log.v(javaClass, "Using key provider: ${keyProvider::class.java.name}")
+		TokenProvider.buildSigner(keyProvider.getEncryptionKey())
 
 		// Gracefully shutdown the cache layer when the JVM is shutting down
 		Runtime.getRuntime().addShutdownHook(Thread {

@@ -76,6 +76,10 @@ dependencies {
 	implementation("org.jetbrains.exposed:exposed:0.11.2")
 	implementation("com.zaxxer:HikariCP:3.3.1")
 
+	// Crypto providers
+	implementation("com.amazonaws:aws-java-sdk-ssm:1.11.595")
+
+
 	// JDBC drivers (only includes those supported by github.com/JetBrains/Exposed)
 	runtimeOnly("org.xerial:sqlite-jdbc:3.25.2") // tested (django)
 	runtimeOnly("org.postgresql:postgresql:42.2.2") // tested (django)
