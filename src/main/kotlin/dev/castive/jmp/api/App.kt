@@ -63,6 +63,7 @@ class App(val port: Int = 7000) {
 		val auth = Auth()
 	}
 	fun start(store: ConfigStore, arguments: Arguments, logger: Logger) {
+		val startTime = System.currentTimeMillis()
 		EventLog.stream.add(System.out)
 		transaction {
 			SchemaUtils.create(Jumps, Users, Roles, Groups, GroupUsers, Aliases) // Ensure that the tables are created
@@ -139,7 +140,7 @@ class App(val port: Int = 7000) {
 				" | |__| | |  | | |     \n" +
 				"  \\____/|_|  |_|_|     \n" +
 				"                       \n" +
-				"JMP v${Version.getVersion()} is ready.")
+				"JMP v${Version.getVersion()} is ready (took ${System.currentTimeMillis() - startTime} ms)")
 	}
 
 	private fun getKeyProvider(): KeyProvider {
