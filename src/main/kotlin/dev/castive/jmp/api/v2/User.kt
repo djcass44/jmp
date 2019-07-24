@@ -86,15 +86,8 @@ class User(
                 transaction {
                     val blockLocal = configMin.blockLocal
                     Log.d(javaClass, "Block local accounts: $blockLocal")
-                    if ((user == null || auth.getUserRole(
-                            user.username,
-                            user.id.value
-                        ) != Auth.BasicRoles.ADMIN) && blockLocal
-                    ) {
-                        Log.i(
-                            javaClass,
-                            "User ${user?.username} is not allowed to create local accounts [reason: POLICY]"
-                        )
+                    if ((user == null || !auth.isAdmin(user)) && blockLocal) {
+                        Log.i(javaClass, "User ${user?.username} is not allowed to create local accounts [reason: POLICY]")
                         throw UnauthorizedResponse("Creating local accounts has been disabled.")
                     }
                 }

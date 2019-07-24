@@ -4,9 +4,7 @@ services:
   jmp:
     build: .
     image: jmp
-    command: ["java", "-jar", "jmp.jar",
-              "using", "env", "-d", "0",
-              "--enable-cors"]
+    command: ["java", "-jar", "jmp.jar", "-d", "0", "--enable-cors"]
     ports:
       - "7000:7000"
       - "7001:7001"

@@ -21,7 +21,7 @@ import com.corundumstudio.socketio.SocketConfig
 import com.corundumstudio.socketio.SocketIOServer
 import com.corundumstudio.socketio.store.HazelcastStoreFactory
 import dev.castive.jmp.api.actions.AuthAction
-import dev.castive.jmp.db.Util
+import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
 import io.javalin.apibuilder.EndpointGroup
 
@@ -34,11 +34,11 @@ class WebSocket : EndpointGroup {
 		const val EVENT_UPDATE_FAVICON = "${EVENT_UPDATE}_FAVICON"
 		const val EVENT_UPDATE_TITLE = "${EVENT_UPDATE}_TITLE"
 
-		val allowSockets = Util.getEnv("SOCKET_ENABLED", "true").toBoolean()
+		val allowSockets = EnvUtil.getEnv(EnvUtil.SOCKET_ENABLED, "true").toBoolean()
 	}
 	private val server = SocketIOServer(Configuration().apply {
-		hostname = Util.getEnv("SOCKET_HOST", "0.0.0.0")
-		port = (Util.getEnv("SOCKET_PORT", "7001").toLongOrNull() ?: 7001).toInt()
+		hostname = EnvUtil.getEnv(EnvUtil.SOCKET_HOST, "0.0.0.0")
+		port = (EnvUtil.getEnv(EnvUtil.SOCKET_PORT, "7001").toLongOrNull() ?: 7001).toInt()
 		socketConfig = SocketConfig().apply { isReuseAddress = true }
 		storeFactory = HazelcastStoreFactory(AuthAction.cacheLayer.hzInstance)
 	})

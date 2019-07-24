@@ -19,9 +19,5 @@ package dev.castive.jmp.db
 import java.util.*
 
 object Util {
-    fun getEnv(name: String, default: String): String {
-        val env = System.getenv(name)
-        return if (env.isNullOrEmpty()) default else env
-    }
     fun getSafeUUID(text: String): UUID? = kotlin.runCatching { UUID.fromString(text) }.getOrNull()
 }

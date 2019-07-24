@@ -80,7 +80,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				Providers.primaryProvider is CrowdProvider && login.provided -> {
 					sso = SystemUtil.gson.fromJson(login.token, AuthenticateResponse::class.java)
 					// Try to generate the cookie if we can
-					cookie = kotlin.runCatching { CrowdCookie(App.crowdCookieConfig!!.domain,
+					cookie = runCatching { CrowdCookie(App.crowdCookieConfig!!.domain,
 						"TRUE",
 						App.crowdCookieConfig!!.secure,
 						"",

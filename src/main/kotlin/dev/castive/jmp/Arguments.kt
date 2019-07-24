@@ -21,9 +21,10 @@ import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.HelpFormatter
 import org.apache.commons.cli.Options
 import java.util.*
+import kotlin.system.exitProcess
 
 class Arguments(args: Array<String>) {
-    val options = Options()
+    private val options = Options()
     var enableCors = false
     var enableDev = false
     var debugLevel = 0
@@ -37,18 +38,12 @@ class Arguments(args: Array<String>) {
         val helpFormatter = HelpFormatter()
         val parser = DefaultParser()
         try {
-            // args 0,1 are always using xxx
-            val relevantArgs = when {
-                args.size < 2 -> args
-                args.size == 2 -> arrayOf()
-                else -> args.copyOfRange(2, args.size)
-            }
-            Log.v(javaClass, "Arguments parser will receive: ${Arrays.toString(relevantArgs)}")
-            val cl = parser.parse(options, relevantArgs)
+            Log.v(javaClass, "Arguments parser will receive: ${Arrays.toString(args)}")
+            val cl = parser.parse(options, args)
             if(cl.hasOption("h")) {
                 helpFormatter.printHelp("jmp", "jmp-${Version.getVersion()}", options, "", true)
                 Log.w(javaClass, "Printed help, application will now exit!")
-                System.exit(0)
+                exitProcess(0)
             }
             enableDev = cl.hasOption("enable-dev")
             enableCors = cl.hasOption("enable-cors") || enableDev

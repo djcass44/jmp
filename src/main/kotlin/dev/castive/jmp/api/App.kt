@@ -28,7 +28,8 @@ import dev.castive.jmp.Runner
 import dev.castive.jmp.Version
 import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.api.v1.Jump
-import dev.castive.jmp.api.v2.*
+import dev.castive.jmp.api.v2.Info
+import dev.castive.jmp.api.v2.Oauth
 import dev.castive.jmp.api.v2.Similar
 import dev.castive.jmp.api.v2.User
 import dev.castive.jmp.api.v2_1.*
@@ -42,9 +43,9 @@ import dev.castive.jmp.crypto.KeyProvider
 import dev.castive.jmp.crypto.SSMKeyProvider
 import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.Init
-import dev.castive.jmp.db.Util
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.except.ExceptionTracker
+import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
 import io.javalin.Javalin
 import io.javalin.security.Role
@@ -54,20 +55,19 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 
-class App(val port: Int = 7000) {
+class App(private val port: Int = 7000) {
 	companion object {
 		val id = UUID.randomUUID().toString()
 		var exceptionTracker = ExceptionTracker(blockLeak = true)
-		@Deprecated(message = "Config is store by the provider")
+//		@Deprecated(message = "Config is stored by the provider")
 		var crowdCookieConfig: CrowdCookieConfig? = null
 		val auth = Auth()
 	}
 	fun start(store: ConfigStore, arguments: Arguments, logger: Logger) {
-		val startTime = System.currentTimeMillis()
 		EventLog.stream.add(System.out)
 		transaction {
 			SchemaUtils.create(Jumps, Users, Roles, Groups, GroupUsers, Aliases) // Ensure that the tables are created
-			Log.i(javaClass, "Running automated database upgrade (if required)")
+			Log.i(javaClass, "Checking for database drift")
 			SchemaUtils.createMissingTablesAndColumns(Jumps, Users, Roles, Groups, GroupUsers, Aliases, Sessions)
 			Init(store) // Ensure that the default admin/roles is created
 		}
@@ -125,8 +125,7 @@ class App(val port: Int = 7000) {
 
 				// Authentication
 				Oauth(auth, verify).addEndpoints()
-				Verify(auth).addEndpoints()
-				UserMod(auth).addEndpoints()
+//				UserMod(auth).addEndpoints()
 
 				// Health
 				Health(builder.min).addEndpoints()
@@ -140,11 +139,11 @@ class App(val port: Int = 7000) {
 				" | |__| | |  | | |     \n" +
 				"  \\____/|_|  |_|_|     \n" +
 				"                       \n" +
-				"JMP v${Version.getVersion()} is ready (took ${System.currentTimeMillis() - startTime} ms)")
+				"JMP v${Version.getVersion()} is ready (took ${System.currentTimeMillis() - Runner.START_TIME} ms)")
 	}
 
 	private fun getKeyProvider(): KeyProvider {
-		return when(Util.getEnv("JMP_KEY_REALM", KeyProvider.shortName)) {
+		return when(EnvUtil.getEnv(EnvUtil.KEY_REALM, KeyProvider.shortName)) {
 			SSMKeyProvider.shortName -> SSMKeyProvider()
 			else -> KeyProvider()
 		}

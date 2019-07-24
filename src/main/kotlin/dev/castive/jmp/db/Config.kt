@@ -16,10 +16,18 @@
 
 package dev.castive.jmp.db
 
-import com.beust.klaxon.Klaxon
+import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
 
-data class ConfigStore(val url: String, val driver: String, val logRequestDir: String, val baseUrl: String, val tableUser: String? = "", val tablePassword: String? = "", val dataPath: String = ".")
+data class ConfigStore(
+    val url: String,
+    val driver: String,
+    val logRequestDir: String,
+    val baseUrl: String,
+    val tableUser: String? = "",
+    val tablePassword: String? = "",
+    val dataPath: String = "."
+)
 
 class Config {
     companion object {
@@ -32,32 +40,17 @@ class Config {
         private const val envKey = "DRIVER_PASSWORD"
         private const val envBaseUrl = "BASE_URL"
         private const val envDataPath = "JMP_HOME"
-
-        const val logEnabled = "LOG_ENABLED"
-        private const val logRequestDir = "LOG_DIRECTORY"
-    }
-    fun load(name: String): ConfigStore {
-        val fileContent = Config::class.java.getResource("/$name").readText()
-        return try {
-            val store = Klaxon().parse<ConfigStore>(fileContent)
-            store?: loadEnv()
-        }
-        catch (e: Exception) {
-            e.printStackTrace()
-            Log.e(javaClass, "Failed to parse config")
-            loadEnv()
-        }
     }
     fun loadEnv(): ConfigStore {
-        Log.w(javaClass, "Trying to use ENV for database configuration (default SQLite)")
+        Log.w(javaClass, "Using environment for application/database configuration")
         return ConfigStore(
-            Util.getEnv(envUrl, defaultUrl),
-            Util.getEnv(envDriver, defaultDriver),
-            Util.getEnv(logRequestDir, "."),
-            Util.getEnv(envBaseUrl, "http://localhost:8080"),
-            Util.getEnv(envUser, ""),
-            Util.getEnv(envKey, ""),
-            Util.getEnv(envDataPath, ".")
+            EnvUtil.getEnv(envUrl, defaultUrl),
+            EnvUtil.getEnv(envDriver, defaultDriver),
+            EnvUtil.getEnv(EnvUtil.LOG_LOCATION, "."),
+            EnvUtil.getEnv(envBaseUrl, "http://localhost:8080"),
+            EnvUtil.getEnv(envUser, ""),
+            EnvUtil.getEnv(envKey, ""),
+            EnvUtil.getEnv(envDataPath, ".")
         )
     }
 }

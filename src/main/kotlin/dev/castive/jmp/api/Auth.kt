@@ -32,7 +32,6 @@ import io.javalin.security.Role
 import io.javalin.security.SecurityUtil
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.util.*
 import dev.castive.jmp.db.dao.Role as DaoRole
 
 class Auth {
@@ -129,13 +128,6 @@ class Auth {
 		else null
 	}
 
-	fun validateUserToken(token: UUID): Boolean {
-		return transaction {
-			val existing = User.findById(token)
-			return@transaction existing != null
-		}
-	}
-
 	fun getUserToken(username: String, password: CharArray): String? {
 		assert(userExists(username))
 		return transaction {
@@ -188,21 +180,6 @@ class Auth {
 				Users.username eq username
 			}.elementAtOrNull(0)
 			return@transaction if(AuthAction.userHadToken(u?.username, token) != null) u else null
-		}
-	}
-	// Determine role based on request
-	fun getUserRole(username: String, token: UUID): Role {
-		val user = getUser(username) ?: return BasicRoles.USER
-		if(user.id.value != token) {
-			Log.w(javaClass, "getUserRole -> $user provided invalid token")
-			return BasicRoles.USER
-		}
-		return transaction {
-			when (user.role.name) {
-				BasicRoles.ADMIN.name -> BasicRoles.ADMIN
-				BasicRoles.USER.name -> BasicRoles.USER
-				else -> BasicRoles.USER
-			}
 		}
 	}
 	fun isAdmin(user: User?): Boolean {

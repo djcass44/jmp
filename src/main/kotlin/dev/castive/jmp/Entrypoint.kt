@@ -21,7 +21,7 @@ import dev.castive.jmp.audit.Logger
 import dev.castive.jmp.db.Config
 import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.DatabaseHelper
-import dev.castive.jmp.db.Util
+import dev.castive.jmp.util.EnvUtil
 import dev.castive.jmp.util.checks.AuditCheck
 import dev.castive.jmp.util.checks.EntropyCheck
 import dev.castive.jmp.util.checks.SecureConfigCheck
@@ -55,22 +55,13 @@ class Runner {
         if(arguments.enableCors) Log.w(javaClass, "WARNING: CORS access is enabled for ALL origins. DO NOT allow this in production: WARNING")
         if(arguments.enableDev) Log.w(javaClass, "WARNING: Development mode is enabled")
         Log.setPriorityLevel(arguments.debugLevel)
-        val configLocation = if(args.size >= 2 && args[0] == "using") {
-            args[1]
-        }
-        else
-            "env"
-        Log.i(javaClass, "Using database path: $configLocation")
-        val store = if(configLocation.isNotBlank() && configLocation != "env")
-            Config().load(configLocation)
-        else
-            Config().loadEnv()
+        val store = Config().loadEnv()
         Runner.store = store
         val logger = Logger(store.logRequestDir)
         runInitialChecks(store, arguments)
         DatabaseHelper().start(store)
         // Start the application
-        val appPort = Util.getEnv("PORT", "7000").toIntOrNull() ?: 7000
+        val appPort = EnvUtil.getEnv(EnvUtil.PORT, "7000").toIntOrNull() ?: 7000
         App(appPort).start(store, arguments, logger)
     }
 }

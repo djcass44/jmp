@@ -1,9 +1,0 @@
-{
-  "url": "jdbc:sqlite:data/jmp.db",
-  "driver": "org.sqlite.JDBC",
-  "logRequestDir": "./data/logs",
-  "baseUrl": "http://localhost:3000",
-  "tableUser": "",
-  "tablePassword": "",
-  "dataPath": "./data"
-}

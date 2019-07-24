@@ -16,9 +16,8 @@
 
 package dev.castive.jmp.audit
 
-import dev.castive.jmp.db.Config
-import dev.castive.jmp.db.Util
 import dev.castive.jmp.io.NOutputStream
+import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
 import java.io.File
 import java.io.FileOutputStream
@@ -32,11 +31,11 @@ class Logger(logPath: String) {
 	private val logOut = File(logDir, "jmp.std.out")
 	private val logErr = File(logDir, "jmp.err.out")
 
-	private val logEnabled = Util.getEnv(Config.logEnabled, "true").toBoolean()
+	private val logEnabled = EnvUtil.getEnv(EnvUtil.LOG_ENABLED, "true").toBoolean()
 
 	init {
 		if(!logEnabled) {
-			Log.a(javaClass, "File based logging has been disabled by ${Config.logEnabled}")
+			Log.a(javaClass, "File based logging has been disabled by ${EnvUtil.LOG_ENABLED}")
 			Log.w(javaClass, "Disabling logging is not recommended in production systems!")
 		}
 		else {

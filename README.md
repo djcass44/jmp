@@ -1,10 +1,8 @@
 # JMP
 
-[![Build Status](https://ci.castive.dev/api/badges/djcass44/jmp/status.svg)](https://ci.castive.dev/djcass44/jmp)
-
 JMP is a utility used for quickly navigating to select websites/addresses.
 
-It is made up of 2 main components; the UI and API. For setting up the UI and more info, see the UI [README](src/main/resources/public2/README.md)
+It is made up of 2 main components; the UI and API. For setting up the UI and more info, see the UI [README](https://github.com/djcass44/jmp-react/blob/develop/README.md)
 
 ## Setting up the API
 
@@ -12,11 +10,9 @@ JMP can be installed in 2 different ways.
 
 1. **Using docker** (recommended)
 
-Edit [env](env) and add the url the application will be running on
-
 ```bash
-docker build -t jmp:0.4 .
-docker run jmp:0.4 -v "./data:/data" -p 7000:7000
+docker build -t jmp/api .
+docker run jmp/api -v "./data:/data" -p 7000:7000 -p 7001:7001
 ```
 
 There is also a docker-compose utility script you can use
@@ -31,7 +27,7 @@ This is done via running the Jar file manually.
 
 ```bash
 ./gradlew shadowJar
-java -jar build/libs/jmp.jar using env
+java -jar build/libs/jmp.jar
 ```
 
 ## Application information
@@ -40,14 +36,6 @@ When the application first starts, an initial `admin` user is created.
 The password to this user is randomly generated and is printed to the console and written to the working directory in a file called `initialAdminPassword`
 
 **Launch configuration**
-
-`using <value>`: set the application configuration. This MUST be first.
-
-*Note: `using env` will be used as a fallback`*
-
-Possible values: 
-- `using env`: application will look to environment variable for configuration (recommended when using docker)
-- `using config.json`: application will look at [config.json](src/main/resources/config.json) for configuration
 
 `--enable-cors`: this will accept ALL incoming CORS requests. This is only for development purposes and MUST NOT be used in production.
 

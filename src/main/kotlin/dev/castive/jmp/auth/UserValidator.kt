@@ -71,7 +71,7 @@ class UserValidator(private val auth: Auth, private val min: MinimalConfig): Use
 	}
 
 	private fun getOrCreateUser(user: User): DaoUser = transaction {
-		val match = DaoUser.find { Users.username eq user.username and Users.from.eq(user.source) }
+		val match = DaoUser.find { Users.username eq user.username }
 		if(match.empty()) {
 			return@transaction DaoUser.new {
 				username = user.username
@@ -82,6 +82,7 @@ class UserValidator(private val auth: Auth, private val min: MinimalConfig): Use
 		}
 		else {
 			val existing = match.elementAt(0)
+			Log.i(javaClass, "Updating user: ${user.username}")
 			existing.apply {
 				from = user.source
 				username = user.username
