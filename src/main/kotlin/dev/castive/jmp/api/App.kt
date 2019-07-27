@@ -48,10 +48,7 @@ import dev.castive.jmp.except.ExceptionTracker
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
 import io.javalin.Javalin
-import io.javalin.core.compression.Brotli
-import io.javalin.core.compression.Gzip
 import io.javalin.core.util.RouteOverviewPlugin
-import io.javalin.core.security.Role
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -90,13 +87,15 @@ class App(private val port: Int = 7000) {
 		UserAction.verification = verify
 		// Start the cache concurrently
 		startCache()
+		val javalinStart = System.currentTimeMillis()
 		Javalin.create { config ->
 			config.apply {
 				showJavalinBanner = false
 				if (arguments.enableCors) { enableCorsForAllOrigins() }
 				if (arguments.enableDev) { registerPlugin(RouteOverviewPlugin(Runner.BASE, setOf(Auth.BasicRoles.ANYONE))) }
 				// experimental brotli compression
-				compressionStrategy(Brotli(4), Gzip(6))
+//				compressionStrategy(Brotli(4), Gzip(6))
+//				dynamicGzip = true
 				requestLogger { ctx, timeMs ->
 					logger.add("${System.currentTimeMillis()} - ${ctx.method()} ${ctx.path()} took $timeMs ms")
 				}
@@ -138,6 +137,7 @@ class App(private val port: Int = 7000) {
 			}
 			start()
 		}
+		Log.i(javaClass, "Stage 2 ready in ${System.currentTimeMillis() - javalinStart} ms")
 		println("       _ __  __ _____  \n" +
 				"      | |  \\/  |  __ \\ \n" +
 				"      | | \\  / | |__) |\n" +
