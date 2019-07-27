@@ -38,7 +38,9 @@ ant.importBuild("version.xml")
 repositories {
 	maven(url = "https://dl.bintray.com/kotlin/exposed")
 	maven(url = "https://jitpack.io")
+	mavenCentral()
 	jcenter()
+	maven(url = "https://dl.bintray.com/nitram509/jbrotli/")
 //    mavenLocal()
 }
 
@@ -46,16 +48,16 @@ dependencies {
 	implementation(kotlin("stdlib-jdk8"))
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1")
 
-	implementation("com.github.djcass44:jmp-auth:55df866b4b")
+	implementation("com.github.djcass44:jmp-auth:b83b461592")
 //    implementation("dev.castive:jmp-auth:0.4.0")
 	implementation("com.github.djcass44:log2:3.3")
 	implementation("com.github.djcass44:fav2:v0.2.1")
 	implementation("com.github.djcass44:eventlog:72b6dac4e2")
 
-	implementation("io.javalin:javalin:2.8.0")
+	implementation("io.javalin:javalin:3.2.0")
 	implementation("com.corundumstudio.socketio:netty-socketio:1.7.17")
 
-	implementation("org.slf4j:slf4j-simple:1.7.25")
+	implementation("org.slf4j:slf4j-simple:1.7.26")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.8")
 	implementation("com.beust:klaxon:5.0.1")
 	implementation("info.debatty:java-string-similarity:1.1.0")

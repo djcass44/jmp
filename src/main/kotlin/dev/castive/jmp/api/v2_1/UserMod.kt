@@ -7,8 +7,8 @@ import dev.castive.jmp.api.Responses
 import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.User
 import dev.castive.log2.Log
-import io.javalin.ForbiddenResponse
-import io.javalin.UnauthorizedResponse
+import io.javalin.http.ForbiddenResponse
+import io.javalin.http.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.patch
 import io.javalin.apibuilder.EndpointGroup

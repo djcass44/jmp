@@ -23,9 +23,9 @@ import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.Group
 import dev.castive.jmp.db.dao.User
 import dev.castive.log2.Log
-import io.javalin.BadRequestResponse
-import io.javalin.NotFoundResponse
-import io.javalin.UnauthorizedResponse
+import io.javalin.http.BadRequestResponse
+import io.javalin.http.NotFoundResponse
+import io.javalin.http.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.patch
 import io.javalin.apibuilder.EndpointGroup
 import org.jetbrains.exposed.sql.SizedCollection

@@ -27,20 +27,19 @@ import dev.castive.jmp.api.actions.OwnerAction
 import dev.castive.jmp.api.actions.TitleAction
 import dev.castive.jmp.api.v2_1.WebSocket
 import dev.castive.jmp.auth.AccessManager
-import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.Util
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.Jump
 import dev.castive.jmp.except.EmptyPathException
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
-import io.javalin.*
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
+import io.javalin.http.*
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class Jump(private val config: ConfigStore, private val ws: WebSocket): EndpointGroup {
+class Jump(private val ws: WebSocket): EndpointGroup {
 	private val caseSensitive = EnvUtil.getEnv(EnvUtil.CASE_SENSITIVE, "false").toBoolean()
 
 	data class JumpResponse(val found: Boolean = true, val location: String)
