@@ -26,10 +26,10 @@ import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
 import dev.castive.jmp.util.SystemUtil
 import dev.castive.log2.Log
-import io.javalin.ConflictResponse
-import io.javalin.Context
-import io.javalin.security.Role
-import io.javalin.security.SecurityUtil
+import io.javalin.core.security.Role
+import io.javalin.core.security.SecurityUtil
+import io.javalin.http.ConflictResponse
+import io.javalin.http.Context
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import dev.castive.jmp.db.dao.Role as DaoRole

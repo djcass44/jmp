@@ -13,8 +13,8 @@ import dev.castive.jmp.db.dao.Sessions
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.util.SystemUtil
 import dev.castive.log2.Log
-import io.javalin.BadRequestResponse
-import io.javalin.Context
+import io.javalin.http.BadRequestResponse
+import io.javalin.http.Context
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import javax.servlet.http.Cookie

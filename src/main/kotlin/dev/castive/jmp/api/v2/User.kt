@@ -29,12 +29,12 @@ import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.User
 import dev.castive.log2.Log
-import io.javalin.BadRequestResponse
-import io.javalin.ForbiddenResponse
-import io.javalin.UnauthorizedResponse
+import io.javalin.http.BadRequestResponse
+import io.javalin.http.ForbiddenResponse
+import io.javalin.http.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
-import io.javalin.security.SecurityUtil.roles
+import io.javalin.core.security.SecurityUtil.roles
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction

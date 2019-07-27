@@ -23,7 +23,7 @@ import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
 import dev.castive.log2.Log
-import io.javalin.Context
+import io.javalin.http.Context
 import org.jetbrains.exposed.sql.transactions.transaction
 import dev.castive.javalin_auth.auth.data.User as AuthUser
 

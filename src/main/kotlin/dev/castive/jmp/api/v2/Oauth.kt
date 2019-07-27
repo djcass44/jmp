@@ -36,9 +36,9 @@ import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.UserData
 import dev.castive.jmp.util.SystemUtil
 import dev.castive.log2.Log
-import io.javalin.BadRequestResponse
-import io.javalin.NotFoundResponse
-import io.javalin.UnauthorizedResponse
+import io.javalin.http.BadRequestResponse
+import io.javalin.http.NotFoundResponse
+import io.javalin.http.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.post
 import io.javalin.apibuilder.EndpointGroup

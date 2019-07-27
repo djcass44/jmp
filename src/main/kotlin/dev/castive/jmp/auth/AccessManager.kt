@@ -2,10 +2,10 @@ package dev.castive.jmp.auth
 
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Responses
-import io.javalin.Context
-import io.javalin.Handler
-import io.javalin.security.AccessManager
-import io.javalin.security.Role
+import io.javalin.core.security.AccessManager
+import io.javalin.core.security.Role
+import io.javalin.http.Context
+import io.javalin.http.Handler
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
 

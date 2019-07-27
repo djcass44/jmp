@@ -24,7 +24,7 @@ import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.except.EmptyPathException
 import dev.castive.log2.Log
-import io.javalin.BadRequestResponse
+import io.javalin.http.BadRequestResponse
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus

@@ -26,10 +26,10 @@ import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.Group
 import dev.castive.log2.Log
-import io.javalin.ConflictResponse
-import io.javalin.ForbiddenResponse
-import io.javalin.NotFoundResponse
-import io.javalin.UnauthorizedResponse
+import io.javalin.http.ConflictResponse
+import io.javalin.http.ForbiddenResponse
+import io.javalin.http.NotFoundResponse
+import io.javalin.http.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
