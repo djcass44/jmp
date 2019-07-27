@@ -27,7 +27,6 @@ import dev.castive.jmp.db.dao.Groups
 import dev.castive.jmp.db.dao.Users
 import dev.castive.log2.Log
 import org.jetbrains.exposed.sql.SizedCollection
-import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import dev.castive.jmp.db.dao.Group as DaoGroup
@@ -39,7 +38,7 @@ class UserValidator(private val auth: Auth, private val min: MinimalConfig): Use
 		transaction {
 			groups.forEach { g ->
 				names.add(g.name)
-				val match = DaoGroup.find { Groups.name eq g.name and Groups.from.eq(g.source) }
+				val match = DaoGroup.find { Groups.name eq g.name }
 				// Get the users in the group
 				val users = arrayListOf<DaoUser>()
 				g.members.forEach { users.add(getOrCreateUser(it)) }
