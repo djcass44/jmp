@@ -18,6 +18,7 @@ package dev.castive.jmp.auth
 
 import dev.castive.javalin_auth.auth.Providers
 import dev.castive.javalin_auth.auth.provider.BaseProvider
+import dev.castive.javalin_auth.auth.provider.OauthProvider
 import dev.castive.jmp.api.App
 import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.db.dao.User
@@ -28,8 +29,11 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import dev.castive.javalin_auth.auth.data.User as AuthUser
 
 object ClaimConverter {
+	private val oauth = OauthProvider()
+
 	fun getUser(ctx: Context): User? {
 		var user: AuthUser? = null
+		var user2: User? = null
 		var token: BaseProvider.TokenContext? = null
 		// See if the primary provider can find the user
 		if(Providers.primaryProvider != null) {
@@ -48,12 +52,33 @@ object ClaimConverter {
 			Log.d(javaClass, "Discovered internal user: ${user?.username}")
 		}
 		if(user == null) {
+			Log.v(javaClass, "Searching context for user with Oauth provider")
+			// TRY to get the accessToken from the Authorization header
+			val header = kotlin.runCatching { ctx.header("Authorization")!!.split(" ")[1] }.getOrNull()
+			if(header != null) {
+				Log.v(javaClass, "Got accessToken: $header")
+				// Check that the accessToken is still valid
+				val res = oauth.isTokenValid(header)
+				if (res) {
+					Log.v(javaClass, "AccessToken is valid, lets get its session")
+					// Get the session the accessToken belongs to
+					val session = AuthAction.getSession(header)
+					// Get the user from the session
+					if (session != null) {
+						user2 = transaction { session.user }
+						Log.i(javaClass, "Found session for ${user2.username}")
+					}
+				}
+			}
+		}
+		if(user == null && user2 == null) {
 			Log.i(javaClass, "Failed to locate user with any provider")
 			return null
 		}
-		val actualUser = transaction {
+		val actualUser =  user2 ?: transaction {
 			User.find {
-				Users.username eq user.username
+				// user2 is null so user cannot be null
+				Users.username eq user!!.username
 			}.elementAtOrNull(0)
 		}
 		if(actualUser != null && token != null && token.current.isNotBlank()) {
