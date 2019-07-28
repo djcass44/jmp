@@ -40,6 +40,19 @@ object AuthAction {
 		Log.i(javaClass, "Creating session for ${user.username}")
 		return@transaction Oauth.TokenResponse(requestToken, refreshToken)
 	}
+	fun getSession(user: User, refreshToken: String) = transaction {
+		Session.find {
+			// Find ACTIVE matching sessions
+			Sessions.user eq user.id and (Sessions.refreshToken eq refreshToken) and (Sessions.active eq true)
+		}.limit(1).elementAtOrNull(0)
+	}
+
+	fun getSession(refreshToken: String) = transaction {
+		Session.find {
+			Sessions.refreshToken eq refreshToken and (Sessions.active eq true)
+		}.limit(1).elementAtOrNull(0)
+	}
+
 	fun onUserInvalid(token: String) {
 		if(!cacheLayer.connected()) return
 		Log.i(javaClass, "Removing cached user with token: $token")

@@ -41,15 +41,15 @@ repositories {
 	mavenCentral()
 	jcenter()
 	maven(url = "https://dl.bintray.com/nitram509/jbrotli/")
-//    mavenLocal()
+    mavenLocal()
 }
 
 dependencies {
 	implementation(kotlin("stdlib-jdk8"))
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1")
 
-	implementation("com.github.djcass44:jmp-auth:b83b461592")
-//    implementation("dev.castive:jmp-auth:0.4.0")
+//	implementation("com.github.djcass44:jmp-auth:b83b461592")
+    implementation("dev.castive:jmp-auth:0.5.0")
 	implementation("com.github.djcass44:log2:3.3")
 	implementation("com.github.djcass44:fav2:v0.2.1")
 	implementation("com.github.djcass44:eventlog:72b6dac4e2")
@@ -74,6 +74,7 @@ dependencies {
 
 	implementation("com.auth0:java-jwt:3.7.0")
 	implementation("com.github.kmehrunes:javalin-jwt:v0.1")
+	implementation("com.github.scribejava:scribejava-apis:6.7.0")
 
 	implementation("org.jetbrains.exposed:exposed:0.11.2")
 	implementation("com.zaxxer:HikariCP:3.3.1")

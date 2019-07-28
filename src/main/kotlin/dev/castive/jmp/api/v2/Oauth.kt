@@ -30,20 +30,17 @@ import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.auth.ClaimConverter
 import dev.castive.jmp.auth.UserVerification
-import dev.castive.jmp.db.dao.Session
-import dev.castive.jmp.db.dao.Sessions
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.UserData
 import dev.castive.jmp.util.SystemUtil
 import dev.castive.log2.Log
-import io.javalin.http.BadRequestResponse
-import io.javalin.http.NotFoundResponse
-import io.javalin.http.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.post
 import io.javalin.apibuilder.EndpointGroup
+import io.javalin.http.BadRequestResponse
+import io.javalin.http.NotFoundResponse
+import io.javalin.http.UnauthorizedResponse
 import org.eclipse.jetty.http.HttpStatus
-import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import javax.servlet.http.Cookie
 
@@ -122,7 +119,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 			ctx.attribute("LAX", true)
 			val user = ClaimConverter.getUser(ctx) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
 			val response = transaction {
-				val existingSession = Session.find { Sessions.user eq user.id and(Sessions.refreshToken eq refresh) }.limit(1).elementAtOrNull(0) ?: run {
+				val existingSession = AuthAction.getSession(user, refresh) ?: run {
 					Log.d(Oauth::class.java, "Failed to find matching refresh token")
 					throw UnauthorizedResponse("Invalid refresh token")
 				}
