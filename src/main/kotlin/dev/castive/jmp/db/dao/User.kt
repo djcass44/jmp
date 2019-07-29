@@ -26,6 +26,9 @@ import java.util.*
 object Users: UUIDTable() {
     // TODO greatly increase username length
     val username = varchar("username", 36).uniqueIndex()
+	val displayName = text("displayName").default("")
+	val avatarUrl = varchar("avatarUrl", 2083).nullable()
+
     val hash = text("hash")
     val role = reference("role", Roles)
     @Deprecated(message = "Use Session instead", level = DeprecationLevel.WARNING)
@@ -40,6 +43,9 @@ class User(id: EntityID<UUID>): UUIDEntity(id) {
     companion object : UUIDEntityClass<User>(Users)
 
     var username by Users.username
+	var displayName by Users.displayName
+	var avatarUrl by Users.avatarUrl
+
     var hash by Users.hash
     var role by Role referencedOn Users.role
     @Deprecated(message = "Use Session instead", level = DeprecationLevel.WARNING)
@@ -50,8 +56,18 @@ class User(id: EntityID<UUID>): UUIDEntity(id) {
 
     var from by Users.from
 }
-data class UserData(val id: UUID, val username: String, val role: String, val groups: ArrayList<String>, val metaCreation: Long = 0, val metaUpdate: Long = 0, val from: String = InternalProvider.SOURCE_NAME) {
-    constructor(user: User, groups: ArrayList<String>): this(user.id.value, user.username, user.role.name, groups, user.metaCreation, user.metaUpdate, user.from)
+data class UserData(
+    val id: UUID,
+    val username: String,
+    val role: String,
+    val groups: ArrayList<String>,
+    val metaCreation: Long = 0,
+    val metaUpdate: Long = 0,
+    val from: String = InternalProvider.SOURCE_NAME,
+    val displayName: String,
+    val avatarUrl: String?
+) {
+    constructor(user: User, groups: ArrayList<String>): this(user.id.value, user.username, user.role.name, groups, user.metaCreation, user.metaUpdate, user.from, user.displayName, user.avatarUrl)
     constructor(user: User): this(user, arrayListOf())
 }
 data class PagedUserData(val currentPage: Int, val totalPages: Int, val users: ArrayList<UserData>, val next: Boolean)

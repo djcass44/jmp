@@ -95,6 +95,8 @@ class Oauth2: EndpointGroup {
 			val user = transaction {
 				return@transaction User.new {
 					username = userData.username
+					displayName = userData.displayName
+					avatarUrl = userData.avatarUrl
 					hash = ""
 					role = App.auth.getDAOUserRole() // assume user for now
 					from = userData.source
@@ -106,7 +108,14 @@ class Oauth2: EndpointGroup {
 		else {
 			Log.i(javaClass, "User already exists: ${userData.username}")
 			// Create/update the session for the existing user
-			val user = transaction { User.find { Users.username eq userData.username and(Users.from eq userData.source) }.limit(1).elementAtOrNull(0) }
+			val user = transaction {
+				val u = User.find { Users.username eq userData.username and(Users.from eq userData.source) }.limit(1).elementAtOrNull(0)
+				// Update some things which may change
+				u?.apply {
+					displayName = userData.displayName
+					avatarUrl = userData.avatarUrl
+				}
+			}
 			newSession(refreshToken, user)
 		}
 		return true
