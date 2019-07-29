@@ -41,15 +41,17 @@ repositories {
 	mavenCentral()
 	jcenter()
 	maven(url = "https://dl.bintray.com/nitram509/jbrotli/")
-    mavenLocal()
+//    mavenLocal()
 }
+
+val junitVersion: String by project
 
 dependencies {
 	implementation(kotlin("stdlib-jdk8"))
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1")
 
-//	implementation("com.github.djcass44:jmp-auth:b83b461592")
-    implementation("dev.castive:jmp-auth:0.5.0")
+	implementation("com.github.djcass44:jmp-auth:5d5ebb1d4d")
+//    implementation("dev.castive:jmp-auth:0.5.1")
 	implementation("com.github.djcass44:log2:3.3")
 	implementation("com.github.djcass44:fav2:v0.2.1")
 	implementation("com.github.djcass44:eventlog:72b6dac4e2")
@@ -90,9 +92,9 @@ dependencies {
 	runtimeOnly("com.h2database:h2:1.4.199") // untested
 	runtimeOnly("com.microsoft.sqlserver:mssql-jdbc:7.3.0.jre11-preview") // untested
 
-	testImplementation("org.junit.jupiter:junit-jupiter-api:5.2.0")
-	testImplementation("org.junit.jupiter:junit-jupiter-params:5.2.0")
-	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.2.0")
+	testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
+	testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
+	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
 
 	testImplementation("org.mockito:mockito-core:3.0.0")
 	testImplementation("org.jetbrains.kotlin:kotlin-test:1.3.40")

@@ -18,7 +18,7 @@ package dev.castive.jmp.auth
 
 import dev.castive.javalin_auth.auth.Providers
 import dev.castive.javalin_auth.auth.provider.BaseProvider
-import dev.castive.javalin_auth.auth.provider.OauthProvider
+import dev.castive.javalin_auth.auth.provider.GitHubProvider
 import dev.castive.jmp.api.App
 import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.db.dao.User
@@ -29,7 +29,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import dev.castive.javalin_auth.auth.data.User as AuthUser
 
 object ClaimConverter {
-	private val oauth = OauthProvider()
+	private val oauth = GitHubProvider()
 
 	fun getUser(ctx: Context): User? {
 		var user: AuthUser? = null

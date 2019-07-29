@@ -1,7 +1,7 @@
 package dev.castive.jmp.api.v2_1
 
 import com.github.scribejava.core.model.OAuth2AccessToken
-import dev.castive.javalin_auth.auth.provider.OauthProvider
+import dev.castive.javalin_auth.auth.provider.GitHubProvider
 import dev.castive.javalin_auth.util.Util
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.App
@@ -21,7 +21,7 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class Oauth2: EndpointGroup {
-	private val oauth = OauthProvider()
+	private val oauth = GitHubProvider()
 	override fun addEndpoints() {
 		/**
 		 * Redirect the user to an oauth2 provider consent screen
