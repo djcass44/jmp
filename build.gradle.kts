@@ -101,17 +101,28 @@ application {
 	mainClassName = "dev.castive.jmp.EntrypointKt"
 }
 
-tasks.withType<KotlinCompile>().all {
-	kotlinOptions.jvmTarget = "11"
-}
-
-tasks.withType<ShadowJar> {
-	baseName = "jmp"
-	classifier = null
-	version = null
-}
-tasks.withType<Test> {
-	useJUnitPlatform()
+tasks {
+	wrapper {
+		gradleVersion = "5.5.1"
+		distributionType = Wrapper.DistributionType.ALL
+	}
+	withType<KotlinCompile>().all {
+		kotlinOptions.jvmTarget = "11"
+	}
+	withType<ShadowJar> {
+		baseName = "jmp"
+		classifier = null
+		version = null
+	}
+	withType<Test> {
+		useJUnitPlatform()
+	}
+	withType<JacocoReport> {
+		reports {
+			xml.isEnabled = true
+		}
+	}
+	withType<SonarQubeTask> { dependsOn("test", "jacocoTestReport") }
 }
 jacoco {
 	toolVersion = "0.8.4"
@@ -120,13 +131,7 @@ task("buildPackage") {
 	println("Building package...")
 	finalizedBy("increment-patch", "shadowJar")
 }
-tasks.withType<JacocoReport> {
-	reports {
-		xml.isEnabled = true
-	}
-}
 val codeCoverageReport by tasks.creating(JacocoReport::class) { dependsOn("test") }
-tasks.withType<SonarQubeTask> { dependsOn("test", "jacocoTestReport") }
 
 sonarqube {
 	val git = runCatching {Grgit.open(project.rootDir)}.getOrNull()

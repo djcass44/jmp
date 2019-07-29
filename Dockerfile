@@ -1,5 +1,5 @@
 # STAGE 1 - BUILD
-FROM adoptopenjdk/openjdk12:jdk-12.0.1_12-alpine-slim as GRADLE_CACHE
+FROM gradle:5.5.1-jdk12 as GRADLE_CACHE
 LABEL maintainer="Django Cass <dj.cass44@gmail.com>"
 
 WORKDIR /app
@@ -7,7 +7,7 @@ WORKDIR /app
 # Dry run for caching
 COPY . .
 
-RUN ./gradlew buildPackage -x test -x sonarqube -x jacocoTestReport
+RUN gradle buildPackage -x test -x sonarqube -x jacocoTestReport
 
 # STAGE 2 - RUN
 FROM adoptopenjdk/openjdk12:jre-12.0.1_12-alpine
