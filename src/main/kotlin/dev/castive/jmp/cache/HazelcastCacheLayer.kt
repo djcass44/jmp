@@ -51,9 +51,13 @@ class HazelcastCacheLayer: BaseCacheLayer {
 		return null
 	}
 
-	override fun getUser(token: String): String? {
+	override fun getUser(token: String): BaseCacheLayer.UserCache? {
 		if(userMap.isEmpty) return null
-		return userMap[token] ?: return null
+		val res = userMap[token] ?: return null
+		val guess = get(res)
+		// Consider cache of over 10 seconds to be stale
+		if(System.currentTimeMillis() - guess.time > 10000) return null
+		return guess
 	}
 
 	override fun setUser(username: String, token: String) {

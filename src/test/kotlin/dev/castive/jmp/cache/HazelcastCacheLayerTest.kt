@@ -54,8 +54,7 @@ class HazelcastCacheLayerActiveTest {
 		assertTrue(layer.connected())
 		layer.setUser(username, token)
 
-		val result = layer.get(layer.getUser(token)!!)
-		assertNotNull(result)
+		val result = layer.getUser(token)!!
 		assertEquals(username, result.username)
 	}
 	@Test

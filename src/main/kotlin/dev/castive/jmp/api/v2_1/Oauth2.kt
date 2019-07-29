@@ -73,6 +73,7 @@ class Oauth2: EndpointGroup {
 		 */
 		post("${Runner.BASE}/v2/oauth2/logout", { ctx ->
 			val token = ctx.queryParam("accessToken", String::class.java, null).getOrNull() ?: throw BadRequestResponse("Invalid access token")
+			Log.a(javaClass, "Logging out user with accessToken: $token")
 			oauth.revokeTokenAsync(token)
 			ctx.status(HttpStatus.OK_200)
 		}, Auth.defaultRoleAccess)

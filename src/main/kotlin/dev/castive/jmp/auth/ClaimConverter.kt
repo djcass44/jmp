@@ -58,16 +58,26 @@ object ClaimConverter {
 			if(header != null) {
 				Log.v(javaClass, "Got accessToken: $header")
 				// Check that the accessToken is still valid
-				val res = oauth.isTokenValid(header)
-				if (res) {
-					Log.v(javaClass, "AccessToken is valid, lets get its session")
-					// Get the session the accessToken belongs to
-					val session = AuthAction.getSession(header)
-					// Get the user from the session
-					if (session != null) {
-						user2 = transaction { session.user }
-						Log.i(javaClass, "Found session for ${user2.username}")
-					}
+				val maybeUsername = AuthAction.cacheLayer.getUser(header)
+				val maybeUser = if(maybeUsername != null) App.auth.getUser(maybeUsername.username) else null
+				if(maybeUser != null) {
+					Log.i(javaClass, "Found user in cache: ${maybeUsername?.username}")
+					user2 = maybeUser
+				}
+				else {
+					val res = oauth.isTokenValid(header)
+					if (res) {
+						Log.v(javaClass, "AccessToken is valid, lets get its session")
+						// Get the session the accessToken belongs to
+						val session = AuthAction.getSession(header)
+						// Get the user from the session
+						if (session != null) {
+							user2 = transaction { session.user }
+							AuthAction.onUserValid(user2, header)
+							Log.i(javaClass, "Found session for ${user2.username}")
+						}
+					} else
+						AuthAction.onUserInvalid(header)
 				}
 			}
 		}
@@ -75,24 +85,12 @@ object ClaimConverter {
 			Log.i(javaClass, "Failed to locate user with any provider")
 			return null
 		}
-		val actualUser =  user2 ?: transaction {
+		return user2 ?: transaction {
 			User.find {
 				// user2 is null so user cannot be null
 				Users.username eq user!!.username
 			}.elementAtOrNull(0)
 		}
-		if(actualUser != null && token != null && token.current.isNotBlank()) {
-			transaction {
-				// Update the users token to match Crowd
-				Log.d(javaClass, "Updating user with discovered SSO token: ${actualUser.username}, ${token.last}")
-				val s = AuthAction.userHadToken(actualUser.username, token.last)
-				s?.ssoToken = token.current
-			}
-			// Update the cache layer
-			AuthAction.onUserValid(actualUser, token.current)
-		}
-		else if(actualUser != null) AuthAction.onUserValid(actualUser, null)
-		return actualUser
 	}
 
 	/**
