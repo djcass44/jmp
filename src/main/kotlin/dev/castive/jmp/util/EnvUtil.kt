@@ -1,7 +1,7 @@
 package dev.castive.jmp.util
 
 object EnvUtil {
-	fun getEnv(name: String, default: String): String {
+	fun getEnv(name: String, default: String = ""): String {
 		val env = System.getenv(name)
 		return if (env.isNullOrEmpty()) default else env
 	}
@@ -16,4 +16,7 @@ object EnvUtil {
 
 	const val LOG_ENABLED = "LOG_ENABLED"
 	const val LOG_LOCATION = "LOG_DIRECTORY"
+
+	const val GITHUB_ENABLED = "GITHUB_ENABLED"
+	const val GOOGLE_ENABLED = "GOOGLE_ENABLED"
 }

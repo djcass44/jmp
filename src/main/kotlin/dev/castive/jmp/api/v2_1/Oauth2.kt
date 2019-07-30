@@ -2,6 +2,8 @@ package dev.castive.jmp.api.v2_1
 
 import com.github.scribejava.core.model.OAuth2AccessToken
 import dev.castive.javalin_auth.auth.provider.GitHubProvider
+import dev.castive.javalin_auth.auth.provider.GoogleProvider
+import dev.castive.javalin_auth.auth.provider.flow.AbstractOAuth2Provider
 import dev.castive.javalin_auth.util.Util
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.App
@@ -11,17 +13,30 @@ import dev.castive.jmp.api.v2.Oauth
 import dev.castive.jmp.db.dao.Session
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
+import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.post
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.http.BadRequestResponse
+import io.javalin.http.Context
+import io.javalin.http.NotFoundResponse
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class Oauth2: EndpointGroup {
-	private val oauth = GitHubProvider()
+	companion object {
+		val providers = hashMapOf<String, AbstractOAuth2Provider>()
+		init {
+			if(EnvUtil.getEnv(EnvUtil.GITHUB_ENABLED) == "true") providers["github"] = GitHubProvider()
+			if(EnvUtil.getEnv(EnvUtil.GOOGLE_ENABLED) == "true") providers["google"] = GoogleProvider()
+		}
+	}
+	private fun getProvider(ctx: Context): AbstractOAuth2Provider {
+		val provider = ctx.queryParam("provider", String::class.java).getOrNull() ?: throw BadRequestResponse("Invalid provider")
+		return kotlin.runCatching { providers[provider] }.getOrNull() ?: throw NotFoundResponse("That provider could not be found.")
+	}
 	override fun addEndpoints() {
 		/**
 		 * Redirect the user to an oauth2 provider consent screen
@@ -29,8 +44,7 @@ class Oauth2: EndpointGroup {
 		 * Note: the user will hit this endpoint directly
 		 */
 		get("${Runner.BASE}/v2/oauth2/authorise", { ctx ->
-			// TODO use provider to select the oauth provider
-			val provider = ctx.queryParam("provider", String::class.java).getOrNull() ?: throw BadRequestResponse("Invalid provider")
+			val oauth = getProvider(ctx)
 			// get the url from the actual provider
 			val url = oauth.getAuthoriseUrl()
 			ctx.redirect(url, HttpStatus.FOUND_302)
@@ -40,11 +54,12 @@ class Oauth2: EndpointGroup {
 		 */
 		get("${Runner.BASE}/v2/oauth2/refresh", { ctx ->
 			val refresh = ctx.queryParam("refreshToken", String::class.java, null).getOrNull() ?: throw BadRequestResponse("Invalid refresh token")
+			val oauth = getProvider(ctx)
 			val token = oauth.refreshToken(refresh)
 			Log.i(javaClass, "Refreshed access token using refresh token: $refresh")
 			// Create a new session
 			newSession(token.refreshToken, null, refresh)
-			ctx.status(HttpStatus.OK_200).json(Oauth.TokenResponse(token.accessToken, token.refreshToken))
+			ctx.status(HttpStatus.OK_200).json(Oauth.TokenResponse(token.accessToken, token.refreshToken, oauth.sourceName))
 		}, Auth.openAccessRole)
 		/**
 		 * Use the consent code to get a session from the Oauth provider
@@ -58,11 +73,14 @@ class Oauth2: EndpointGroup {
 				Log.e(javaClass, "Failed to get code from callback query: ${ctx.queryString()}")
 				throw BadRequestResponse("Could not find 'code' query parameter")
 			}
+			val provider = ctx.header("X-Auth-Source") ?: throw BadRequestResponse("Please set the X-Auth-Source header")
+			Log.i(javaClass, "Got provider from header [X-Auth-Source]: $provider")
+			val oauth = kotlin.runCatching { providers[provider] }.getOrNull() ?: throw NotFoundResponse("That provider could not be found.")
 			val token = oauth.getAccessToken(code)
 			Log.d(javaClass, Util.gson.toJson(token))
 			// Attempt to create the user
-			if(createUser(token))
-				ctx.status(HttpStatus.OK_200).json(Oauth.TokenResponse(token.accessToken, token.refreshToken ?: token.accessToken))
+			if(createUser(token, oauth))
+				ctx.status(HttpStatus.OK_200).json(Oauth.TokenResponse(token.accessToken, token.refreshToken ?: token.accessToken, oauth.sourceName))
 			else {
 				Log.e(javaClass, "Failed to create user from token: ${token.accessToken}")
 				ctx.status(HttpStatus.INTERNAL_SERVER_ERROR_500)
@@ -73,18 +91,19 @@ class Oauth2: EndpointGroup {
 		 */
 		post("${Runner.BASE}/v2/oauth2/logout", { ctx ->
 			val token = ctx.queryParam("accessToken", String::class.java, null).getOrNull() ?: throw BadRequestResponse("Invalid access token")
+			val oauth = getProvider(ctx)
 			Log.a(javaClass, "Logging out user with accessToken: $token")
 			oauth.revokeTokenAsync(token)
 			ctx.status(HttpStatus.OK_200)
 		}, Auth.defaultRoleAccess)
 	}
 
-	private fun createUser(token: OAuth2AccessToken): Boolean = createUser(token.accessToken, token.refreshToken ?: token.accessToken)
+	private fun createUser(token: OAuth2AccessToken, provider: AbstractOAuth2Provider): Boolean = createUser(token.accessToken, token.refreshToken ?: token.accessToken, provider)
 	/**
 	 * Create a user by getting their information from the provider
 	 */
-	private fun createUser(accessToken: String, refreshToken: String = accessToken): Boolean {
-		val userData = oauth.getUserInformation(accessToken)
+	private fun createUser(accessToken: String, refreshToken: String = accessToken, provider: AbstractOAuth2Provider): Boolean {
+		val userData = provider.getUserInformation(accessToken)
 		if(userData == null) {
 			Log.e(javaClass, "Failed to get user information for using with token: $accessToken")
 			return false

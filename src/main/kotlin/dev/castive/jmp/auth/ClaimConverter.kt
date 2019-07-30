@@ -17,10 +17,9 @@
 package dev.castive.jmp.auth
 
 import dev.castive.javalin_auth.auth.Providers
-import dev.castive.javalin_auth.auth.provider.BaseProvider
-import dev.castive.javalin_auth.auth.provider.GitHubProvider
 import dev.castive.jmp.api.App
 import dev.castive.jmp.api.actions.AuthAction
+import dev.castive.jmp.api.v2_1.Oauth2
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
 import dev.castive.log2.Log
@@ -29,18 +28,15 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import dev.castive.javalin_auth.auth.data.User as AuthUser
 
 object ClaimConverter {
-	private val oauth = GitHubProvider()
 
 	fun getUser(ctx: Context): User? {
 		var user: AuthUser? = null
 		var user2: User? = null
-		var token: BaseProvider.TokenContext? = null
 		// See if the primary provider can find the user
 		if(Providers.primaryProvider != null) {
 			Log.v(javaClass, "Searching context for user with provider: ${Providers.primaryProvider!!::class.java.name}")
 			val res = Providers.primaryProvider!!.hasUser(ctx)
 			user = res.first
-			token = res.second
 			Log.d(javaClass, "Discovered external user: ${user?.username}")
 		}
 		// Fall-back to the internal provider
@@ -48,7 +44,6 @@ object ClaimConverter {
 			Log.v(javaClass, "Searching context for user with fallback provider: ${Providers.internalProvider::class.java.name}")
 			val res = Providers.internalProvider.hasUser(ctx)
 			user = res.first
-			token = res.second
 			Log.d(javaClass, "Discovered internal user: ${user?.username}")
 		}
 		if(user == null) {
@@ -65,19 +60,22 @@ object ClaimConverter {
 					user2 = maybeUser
 				}
 				else {
-					val res = oauth.isTokenValid(header)
-					if (res) {
-						Log.v(javaClass, "AccessToken is valid, lets get its session")
-						// Get the session the accessToken belongs to
-						val session = AuthAction.getSession(header)
-						// Get the user from the session
-						if (session != null) {
-							user2 = transaction { session.user }
-							AuthAction.onUserValid(user2, header)
-							Log.i(javaClass, "Found session for ${user2.username}")
-						}
-					} else
-						AuthAction.onUserInvalid(header)
+					val source = Oauth2.providers[ctx.header("X-Auth-Source")]
+					if(source != null) {
+						val res = source.isTokenValid(header)
+						if (res) {
+							Log.v(javaClass, "AccessToken is valid, lets get its session")
+							// Get the session the accessToken belongs to
+							val session = AuthAction.getSession(header)
+							// Get the user from the session
+							if (session != null) {
+								user2 = transaction { session.user }
+								AuthAction.onUserValid(user2, header)
+								Log.i(javaClass, "Found session for ${user2.username}")
+							}
+						} else
+							AuthAction.onUserInvalid(header)
+					}
 				}
 			}
 		}

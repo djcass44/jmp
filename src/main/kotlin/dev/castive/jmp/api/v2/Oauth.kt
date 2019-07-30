@@ -45,7 +45,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import javax.servlet.http.Cookie
 
 class Oauth(private val auth: Auth, private val verify: UserVerification): EndpointGroup {
-	data class TokenResponse(val request: String, val refresh: String)
+	data class TokenResponse(val request: String, val refresh: String, val source: String? = null)
 	override fun addEndpoints() {
 		get("${Runner.BASE}/v2/oauth/cookie", { ctx ->
 			if(App.crowdCookieConfig == null) {
