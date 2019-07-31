@@ -17,9 +17,9 @@
 package dev.castive.jmp.auth
 
 import dev.castive.javalin_auth.auth.Providers
-import dev.castive.javalin_auth.auth.provider.BaseProvider
 import dev.castive.jmp.api.App
 import dev.castive.jmp.api.actions.AuthAction
+import dev.castive.jmp.api.v2_1.Oauth2
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
 import dev.castive.log2.Log
@@ -28,15 +28,15 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import dev.castive.javalin_auth.auth.data.User as AuthUser
 
 object ClaimConverter {
+
 	fun getUser(ctx: Context): User? {
 		var user: AuthUser? = null
-		var token: BaseProvider.TokenContext? = null
+		var user2: User? = null
 		// See if the primary provider can find the user
 		if(Providers.primaryProvider != null) {
 			Log.v(javaClass, "Searching context for user with provider: ${Providers.primaryProvider!!::class.java.name}")
 			val res = Providers.primaryProvider!!.hasUser(ctx)
 			user = res.first
-			token = res.second
 			Log.d(javaClass, "Discovered external user: ${user?.username}")
 		}
 		// Fall-back to the internal provider
@@ -44,30 +44,51 @@ object ClaimConverter {
 			Log.v(javaClass, "Searching context for user with fallback provider: ${Providers.internalProvider::class.java.name}")
 			val res = Providers.internalProvider.hasUser(ctx)
 			user = res.first
-			token = res.second
 			Log.d(javaClass, "Discovered internal user: ${user?.username}")
 		}
 		if(user == null) {
+			Log.v(javaClass, "Searching context for user with Oauth provider")
+			// TRY to get the accessToken from the Authorization header
+			val header = kotlin.runCatching { ctx.header("Authorization")!!.split(" ")[1] }.getOrNull()
+			if(header != null) {
+				Log.v(javaClass, "Got accessToken: $header")
+				// Check that the accessToken is still valid
+				val maybeUsername = AuthAction.cacheLayer.getUser(header)
+				val maybeUser = if(maybeUsername != null) App.auth.getUser(maybeUsername.username) else null
+				if(maybeUser != null) {
+					Log.i(javaClass, "Found user in cache: ${maybeUsername?.username}")
+					user2 = maybeUser
+				}
+				else {
+					val source = Oauth2.providers[ctx.header("X-Auth-Source")]
+					if(source != null) {
+						val res = source.isTokenValid(header)
+						if (res) {
+							Log.v(javaClass, "AccessToken is valid, lets get its session")
+							// Get the session the accessToken belongs to
+							val session = AuthAction.getSession(header)
+							// Get the user from the session
+							if (session != null) {
+								user2 = transaction { session.user }
+								AuthAction.onUserValid(user2, header)
+								Log.i(javaClass, "Found session for ${user2.username}")
+							}
+						} else
+							AuthAction.onUserInvalid(header)
+					}
+				}
+			}
+		}
+		if(user == null && user2 == null) {
 			Log.i(javaClass, "Failed to locate user with any provider")
 			return null
 		}
-		val actualUser = transaction {
+		return user2 ?: transaction {
 			User.find {
-				Users.username eq user.username
+				// user2 is null so user cannot be null
+				Users.username eq user!!.username
 			}.elementAtOrNull(0)
 		}
-		if(actualUser != null && token != null && token.current.isNotBlank()) {
-			transaction {
-				// Update the users token to match Crowd
-				Log.d(javaClass, "Updating user with discovered SSO token: ${actualUser.username}, ${token.last}")
-				val s = AuthAction.userHadToken(actualUser.username, token.last)
-				s?.ssoToken = token.current
-			}
-			// Update the cache layer
-			AuthAction.onUserValid(actualUser, token.current)
-		}
-		else if(actualUser != null) AuthAction.onUserValid(actualUser, null)
-		return actualUser
 	}
 
 	/**

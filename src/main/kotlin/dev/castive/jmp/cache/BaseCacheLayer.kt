@@ -7,7 +7,7 @@ interface BaseCacheLayer {
 	fun tearDown(): Boolean
 	fun connected(): Boolean
 	fun getUser(username: String, token: String): Pair<String, String>?
-	fun getUser(token: String): String?
+	fun getUser(token: String): UserCache?
 	fun setUser(username: String, token: String)
 	fun removeUser(token: String)
 }
