@@ -15,8 +15,7 @@ import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
-import io.javalin.apibuilder.ApiBuilder.get
-import io.javalin.apibuilder.ApiBuilder.post
+import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
@@ -24,6 +23,7 @@ import io.javalin.http.NotFoundResponse
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.*
 
 class Oauth2: EndpointGroup {
 	companion object {
@@ -31,6 +31,8 @@ class Oauth2: EndpointGroup {
 		init {
 			if(EnvUtil.getEnv(EnvUtil.GITHUB_ENABLED) == "true") providers["github"] = GitHubProvider()
 			if(EnvUtil.getEnv(EnvUtil.GOOGLE_ENABLED) == "true") providers["google"] = GoogleProvider()
+			Log.i(Oauth2::class.java, "Enabled ${providers.size} OAuth2 providers")
+			Log.i(Oauth2::class.java, "Active OAuth2 providers: ${Arrays.toString(providers.keys.toTypedArray())}")
 		}
 	}
 	private fun getProvider(ctx: Context): AbstractOAuth2Provider {
@@ -38,6 +40,14 @@ class Oauth2: EndpointGroup {
 		return kotlin.runCatching { providers[provider] }.getOrNull() ?: throw NotFoundResponse("That provider could not be found.")
 	}
 	override fun addEndpoints() {
+		/**
+		 * Check whether a provider exists
+		 * Used by the front end for showing social login buttons
+		 */
+		head("${Runner.BASE}/v2/oauth2/authorise", { ctx ->
+			val oauth = getProvider(ctx)
+			ctx.status(HttpStatus.OK_200).result(oauth.sourceName)
+		}, Auth.openAccessRole)
 		/**
 		 * Redirect the user to an oauth2 provider consent screen
 		 * No handling is done here, that is done by the callback
