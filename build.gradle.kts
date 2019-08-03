@@ -50,9 +50,9 @@ dependencies {
 	implementation(kotlin("stdlib-jdk8"))
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1")
 
-	implementation("com.github.djcass44:jmp-auth:97de8c5c25")
+	implementation("com.github.djcass44:jmp-auth:b4693a17a9")
 //    implementation("dev.castive:jmp-auth:0.5.1")
-	implementation("com.github.djcass44:log2:3.3")
+	implementation("com.github.djcass44:log2:352d950dab")
 	implementation("com.github.djcass44:fav2:v0.2.1")
 	implementation("com.github.djcass44:eventlog:72b6dac4e2")
 

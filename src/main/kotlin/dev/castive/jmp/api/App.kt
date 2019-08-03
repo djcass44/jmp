@@ -49,6 +49,8 @@ import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
 import io.javalin.Javalin
 import io.javalin.core.util.RouteOverviewPlugin
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -58,13 +60,31 @@ import java.util.*
 class App(private val port: Int = 7000) {
 	companion object {
 		val id = UUID.randomUUID().toString()
-		var exceptionTracker = ExceptionTracker(blockLeak = true)
+		var exceptionTracker = ExceptionTracker(blockLeak = EnvUtil.getEnv(EnvUtil.JMP_ALLOW_ERROR_INFO, "false").toBoolean())
 //		@Deprecated(message = "Config is stored by the provider")
 		var crowdCookieConfig: CrowdCookieConfig? = null
 		val auth = Auth()
 	}
+	private lateinit var ws: WebSocket
+
+	/**
+	 * Request sending a message to the websocket server
+	 * This is used to ensure that messages aren't send to an un-initialised server
+	 */
+	private fun wsRequest(tag: String, data: Any) {
+		if(!this::ws.isInitialized) {
+			Log.w(javaClass, "Socket server is not ready, request $tag will be dropped")
+			return
+		}
+		ws.fire(tag, data)
+	}
+
 	fun start(store: ConfigStore, arguments: Arguments, logger: Logger) {
 		EventLog.stream.add(System.out)
+		// the key must be available for the accessManager
+		setupKey()
+		// Start the cache concurrently
+		GlobalScope.launch { startCache() }
 		transaction {
 			SchemaUtils.create(Jumps, Users, Roles, Groups, GroupUsers, Aliases) // Ensure that the tables are created
 			Log.i(javaClass, "Checking for database drift")
@@ -85,17 +105,12 @@ class App(private val port: Int = 7000) {
 		Providers.validator = UserValidator(auth, builder.min)
 //	    TokenProvider.ageProfile = TokenProvider.TokenAgeProfile.DEV
 		UserAction.verification = verify
-		// Start the cache concurrently
-		startCache()
 		val javalinStart = System.currentTimeMillis()
 		Javalin.create { config ->
 			config.apply {
 				showJavalinBanner = false
 				if (arguments.enableCors) { enableCorsForAllOrigins() }
 				if (arguments.enableDev) { registerPlugin(RouteOverviewPlugin(Runner.BASE, setOf(Auth.BasicRoles.ANYONE))) }
-				// experimental brotli compression
-//				compressionStrategy(Brotli(4), Gzip(6))
-//				dynamicGzip = true
 				requestLogger { ctx, timeMs ->
 					logger.add("${System.currentTimeMillis()} - ${ctx.method()} ${ctx.path()} took $timeMs ms")
 				}
@@ -105,27 +120,24 @@ class App(private val port: Int = 7000) {
 		}.apply {
 			exception(Exception::class.java) { e, ctx ->
 				Log.e(javaClass, "Encountered unhandled exception: $e")
-				if(Log.getPriorityLevel() <= 1) // only print for debug/verbose
-					e.printStackTrace()
+				Log.v(javaClass, e.printStackTrace().toString())
 				exceptionTracker.onExceptionTriggered(e)
 				ctx.status(HttpStatus.INTERNAL_SERVER_ERROR_500)
 			}
 			routes {
-				val ws = WebSocket()
-				ws.addEndpoints()
 				// General
-				Info().addEndpoints()
+				Info(store, arguments).addEndpoints()
 				Props(builder, exceptionTracker).addEndpoints()
 
 				// Jumping
-				Jump(ws).addEndpoints()
+				Jump(this@App::wsRequest).addEndpoints()
 				Similar().addEndpoints()
 
 				// Users
-				User(auth, ws, builder.min).addEndpoints()
+				User(auth, this@App::wsRequest, builder.min).addEndpoints()
 
 				// Group
-				Group(ws).addEndpoints()
+				Group(this@App::wsRequest).addEndpoints()
 				GroupMod().addEndpoints()
 
 				// Authentication
@@ -136,9 +148,9 @@ class App(private val port: Int = 7000) {
 				// Health
 				Health(builder.min).addEndpoints()
 			}
-			start()
+			start(port)
 		}
-		Log.i(javaClass, "Stage 2 ready in ${System.currentTimeMillis() - javalinStart} ms")
+		Log.i(javaClass, "HTTP server ready in ${System.currentTimeMillis() - javalinStart} ms")
 		println("       _ __  __ _____  \n" +
 				"      | |  \\/  |  __ \\ \n" +
 				"      | | \\  / | |__) |\n" +
@@ -156,20 +168,26 @@ class App(private val port: Int = 7000) {
 		}
 	}
 
-	private fun startCache() {
-		AuthAction.cacheLayer.setup()
-		val existingID = AuthAction.cacheLayer.getMisc("appId")
-		if(existingID == null) AuthAction.cacheLayer.setMisc("appId", UUID.randomUUID().toString())
-
+	private fun setupKey() {
 		// Reseed the JWT signer with our encryption key
 		val keyProvider = getKeyProvider()
 		Log.v(javaClass, "Using key provider: ${keyProvider::class.java.name}")
 		TokenProvider.buildSigner(keyProvider.getEncryptionKey())
+	}
+
+	private fun startCache() {
+		AuthAction.cacheLayer.setup()
+		val existingID = AuthAction.cacheLayer.getMisc("appId")
+		if(existingID == null) AuthAction.cacheLayer.setMisc("appId", UUID.randomUUID().toString())
 
 		// Gracefully shutdown the cache layer when the JVM is shutting down
 		Runtime.getRuntime().addShutdownHook(Thread {
 			Log.w(javaClass, "Shutting down cache layer")
 			AuthAction.cacheLayer.tearDown()
 		})
+		// Start the websocket server
+		ws = WebSocket().apply {
+			addEndpoints()
+		}
 	}
 }

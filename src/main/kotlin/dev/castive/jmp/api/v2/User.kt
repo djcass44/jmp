@@ -29,12 +29,12 @@ import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.User
 import dev.castive.log2.Log
-import io.javalin.http.BadRequestResponse
-import io.javalin.http.ForbiddenResponse
-import io.javalin.http.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.core.security.SecurityUtil.roles
+import io.javalin.http.BadRequestResponse
+import io.javalin.http.ForbiddenResponse
+import io.javalin.http.UnauthorizedResponse
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -43,7 +43,7 @@ import kotlin.math.ceil
 
 class User(
     private val auth: Auth,
-    private val ws: WebSocket,
+    private val ws: (tag: String, data: Any) -> (Unit),
     private val configMin: MinimalConfig
 ): EndpointGroup {
     private val createLimiter = RateLimiter.create(5.0)
@@ -95,7 +95,7 @@ class User(
                 Log.i(javaClass, "$user is creating a user [name: ${basicAuth.username}]")
                 auth.createUser(basicAuth.username, basicAuth.password.toCharArray())
                 EventLog.post(Event(type = EventType.CREATE, resource = UserData::class.java, causedBy = javaClass))
-                ws.fire(WebSocket.EVENT_UPDATE_USER, WebSocket.EVENT_UPDATE_USER)
+                ws.invoke(WebSocket.EVENT_UPDATE_USER, WebSocket.EVENT_UPDATE_USER)
                 ctx.status(HttpStatus.CREATED_201).result(basicAuth.username)
             }
             else
@@ -132,7 +132,7 @@ class User(
                 EventLog.post(Event(type = EventType.UPDATE, resource = UserData::class.java, causedBy = javaClass))
                 user.role = role
                 user.metaUpdate = System.currentTimeMillis()
-                ws.fire(WebSocket.EVENT_UPDATE_USER, WebSocket.EVENT_UPDATE_USER)
+                ws.invoke(WebSocket.EVENT_UPDATE_USER, WebSocket.EVENT_UPDATE_USER)
                 ctx.status(HttpStatus.NO_CONTENT_204).json(updated)
             }
         }, roles(Auth.BasicRoles.ADMIN))
@@ -154,7 +154,7 @@ class User(
                 target.delete()
                 EventLog.post(Event(type = EventType.DESTROY, resource = UserData::class.java, causedBy = dev.castive.jmp.api.v2.User::class.java))
             }
-            ws.fire(WebSocket.EVENT_UPDATE_USER, WebSocket.EVENT_UPDATE_USER)
+            ws.invoke(WebSocket.EVENT_UPDATE_USER, WebSocket.EVENT_UPDATE_USER)
             ctx.status(HttpStatus.NO_CONTENT_204)
         }, roles(Auth.BasicRoles.ADMIN))
         get("${Runner.BASE}/v2_1/user/groups", { ctx ->

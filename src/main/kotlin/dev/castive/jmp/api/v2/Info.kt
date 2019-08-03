@@ -16,25 +16,27 @@
 
 package dev.castive.jmp.api.v2
 
+import dev.castive.jmp.Arguments
 import dev.castive.jmp.Runner
 import dev.castive.jmp.Version
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.actions.InfoAction
+import dev.castive.jmp.db.ConfigStore
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
 
-class Info: EndpointGroup {
+class Info(private val store: ConfigStore, private val arguments: Arguments): EndpointGroup {
     override fun addEndpoints() {
         // Version/info
         get("${Runner.BASE}/v2/version", { ctx ->
             ctx.status(HttpStatus.OK_200).result("v${Version.getVersion()}")
         }, Auth.openAccessRole)
         get("${Runner.BASE}/v2/info/system", { ctx ->
-            ctx.status(HttpStatus.OK_200).json(InfoAction().getSystem())
+            ctx.status(HttpStatus.OK_200).json(InfoAction(store, arguments).getSystem())
         }, Auth.adminRoleAccess)
         get("${Runner.BASE}/v2/info/app", { ctx ->
-            ctx.status(HttpStatus.OK_200).json(InfoAction().getApp())
+            ctx.status(HttpStatus.OK_200).json(InfoAction(store, arguments).getApp())
         }, Auth.adminRoleAccess)
     }
 }

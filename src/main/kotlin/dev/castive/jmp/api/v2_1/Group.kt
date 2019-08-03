@@ -26,12 +26,12 @@ import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.Group
 import dev.castive.log2.Log
+import io.javalin.apibuilder.ApiBuilder.*
+import io.javalin.apibuilder.EndpointGroup
 import io.javalin.http.ConflictResponse
 import io.javalin.http.ForbiddenResponse
 import io.javalin.http.NotFoundResponse
 import io.javalin.http.UnauthorizedResponse
-import io.javalin.apibuilder.ApiBuilder.*
-import io.javalin.apibuilder.EndpointGroup
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.deleteWhere
@@ -39,7 +39,7 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
-class Group(private val ws: WebSocket): EndpointGroup {
+class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
     override fun addEndpoints() {
         get("${Runner.BASE}/v2_1/groups", { ctx ->
             val items = arrayListOf<GroupData>()
@@ -87,7 +87,7 @@ class Group(private val ws: WebSocket): EndpointGroup {
                 }
             }
             EventLog.post(Event(type = EventType.CREATE, resource = GroupData::class.java, causedBy = javaClass))
-            ws.fire(WebSocket.EVENT_UPDATE_GROUP, WebSocket.EVENT_UPDATE_GROUP)
+            ws.invoke(WebSocket.EVENT_UPDATE_GROUP, WebSocket.EVENT_UPDATE_GROUP)
             ctx.status(HttpStatus.CREATED_201).json(add)
         }, Auth.defaultRoleAccess)
         patch("${Runner.BASE}/v2_1/group", { ctx ->
@@ -98,7 +98,7 @@ class Group(private val ws: WebSocket): EndpointGroup {
                 // Only allow update if user belongs to group (or is admin)
                 if(user.role.name != Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
                 existing.name = update.name
-                ws.fire(WebSocket.EVENT_UPDATE_GROUP, WebSocket.EVENT_UPDATE_GROUP)
+                ws.invoke(WebSocket.EVENT_UPDATE_GROUP, WebSocket.EVENT_UPDATE_GROUP)
                 ctx.status(HttpStatus.NO_CONTENT_204).json(update)
             }
             EventLog.post(Event(type = EventType.UPDATE, resource = GroupData::class.java, causedBy = javaClass))
@@ -115,7 +115,7 @@ class Group(private val ws: WebSocket): EndpointGroup {
                     GroupUsers.group eq existing.id
                 }
                 existing.delete()
-                ws.fire(WebSocket.EVENT_UPDATE_GROUP, WebSocket.EVENT_UPDATE_GROUP)
+                ws.invoke(WebSocket.EVENT_UPDATE_GROUP, WebSocket.EVENT_UPDATE_GROUP)
                 ctx.status(HttpStatus.NO_CONTENT_204)
             }
             EventLog.post(Event(type = EventType.DESTROY, resource = GroupData::class.java, causedBy = javaClass))

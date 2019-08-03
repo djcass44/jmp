@@ -18,6 +18,7 @@ package dev.castive.jmp.api.actions
 
 import dev.castive.javalin_auth.auth.Providers
 import dev.castive.javalin_auth.auth.provider.InternalProvider
+import dev.castive.jmp.Arguments
 import dev.castive.jmp.Runner
 import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.dao.Group
@@ -28,8 +29,11 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
 import java.lang.management.ManagementFactory
+import kotlin.math.floor
+import kotlin.math.ln
+import kotlin.math.pow
 
-class InfoAction {
+class InfoAction(private val store: ConfigStore, private val arguments: Arguments) {
     data class SystemInfo(val osInfo: OSInfo, val cpus: Int, val javaInfo: JavaInfo, val kotlinInfo: KotlinInfo, val memoryInfo: MemoryInfo)
     data class AppInfo(val version: String, val apiLevel: Double, val users: Int, val groups: Int, val identityInfo: IdentityInfo, val jumpInfo: JumpInfo, val appUptime: String, val launchConfig: ConfigStore, val launchArgs: ArrayList<String>)
 
@@ -72,15 +76,15 @@ class InfoAction {
         val jumpInfo = JumpInfo(jumps, globalJumps, personalJumps, groupedJumps)
         val uptime = System.currentTimeMillis() - Runner.START_TIME
         val uptimeString = timeSpan(uptime)
-        val cleanLaunchConfig = ConfigStore(Runner.store.url, Runner.store.driver, File(Runner.store.logRequestDir).absolutePath, Runner.store.baseUrl, "****", "****")
+        val cleanLaunchConfig = ConfigStore(store.url, store.driver, File(store.logRequestDir).absolutePath, store.baseUrl, "****", "****")
         val identityInfo = IdentityInfo(
             Providers.primaryProvider?.getName() ?: InternalProvider.SOURCE_NAME,
             if(Providers.primaryProvider != null) { Providers.primaryProvider!!::class.java.name } else InternalProvider::class.java.name
         )
-        return@transaction AppInfo(version, 2.1, users, groups, identityInfo, jumpInfo, uptimeString, cleanLaunchConfig, ArrayList(Runner.args.toList()))
+        return@transaction AppInfo(version, 2.1, users, groups, identityInfo, jumpInfo, uptimeString, cleanLaunchConfig, ArrayList(arguments.args.toList()))
     }
 
-    private fun slf(n: Double): String = Math.floor(n).toLong().toString()
+    private fun slf(n: Double): String = floor(n).toLong().toString()
     private fun timeSpan(timeInMs: Long): String {
         val t = timeInMs.toDouble()
         if (t < 1000.0)
@@ -105,8 +109,8 @@ class InfoAction {
     private fun getByteFormatted(bytes: Long, si: Boolean = true): String {
         val unit = if (si) 1000 else 1024
         if (bytes < unit) return "$bytes B"
-        val exp = (Math.log(bytes.toDouble()) / Math.log(unit.toDouble())).toInt()
+        val exp = (ln(bytes.toDouble()) / ln(unit.toDouble())).toInt()
         val pre = (if (si) "kMGTPE" else "KMGTPE")[exp - 1] + if (si) "" else "i"
-        return String.format("%.1f %sB", bytes / Math.pow(unit.toDouble(), exp.toDouble()), pre)
+        return String.format("%.1f %sB", bytes / unit.toDouble().pow(exp.toDouble()), pre)
     }
 }

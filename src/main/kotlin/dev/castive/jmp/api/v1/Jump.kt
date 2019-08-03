@@ -39,7 +39,7 @@ import io.javalin.http.*
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class Jump(private val ws: WebSocket): EndpointGroup {
+class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 	private val caseSensitive = EnvUtil.getEnv(EnvUtil.CASE_SENSITIVE, "false").toBoolean()
 
 	data class JumpResponse(val found: Boolean = true, val location: String)
@@ -137,7 +137,7 @@ class Jump(private val ws: WebSocket): EndpointGroup {
 					ImageAction(add.location, ws).get()
 					TitleAction(add.location, ws).get()
 				}
-				ws.fire(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
+				ws.invoke(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
 				ctx.status(HttpStatus.CREATED_201).json(add)
 			}
 			else {
@@ -191,7 +191,7 @@ class Jump(private val ws: WebSocket): EndpointGroup {
 					Log.a(javaClass, "GC cleaned up $gc orphaned aliases for ${existing.id.value}, ${existing.name}")
 					ImageAction(update.location, ws).get()
 					TitleAction(update.location, ws).get()
-					ws.fire(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
+					ws.invoke(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
 					ctx.status(HttpStatus.NO_CONTENT_204).json(update)
 				}
 				else throw ForbiddenResponse()
@@ -212,7 +212,7 @@ class Jump(private val ws: WebSocket): EndpointGroup {
 				result.delete()
 				EventLog.post(Event(type = EventType.DESTROY, resource = JumpData::class.java, causedBy = javaClass))
 			}
-			ws.fire(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
+			ws.invoke(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
 			ctx.status(HttpStatus.NO_CONTENT_204)
 		}, Auth.defaultRoleAccess)
 	}

@@ -10,7 +10,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.jsoup.Jsoup
 import java.net.URI
 
-class TitleAction(private val address: String, private val ws: WebSocket) {
+class TitleAction(private val address: String, private val ws: (tag: String, data: Any) -> (Unit)) {
     fun get() = Thread {
         try {
             if(address.startsWith("http://")) throw InsecureDomainException()
@@ -24,7 +24,7 @@ class TitleAction(private val address: String, private val ws: WebSocket) {
                 for (r in results) if (r.title == null || r.title != title) {
                     Log.v(javaClass, "Updating title for ${r.name} [previous: ${r.title}, new: $title]")
                     r.title = title
-                    ws.fire(WebSocket.EVENT_UPDATE_TITLE, FaviconPayload(r.id.value, title))
+                    ws.invoke(WebSocket.EVENT_UPDATE_TITLE, FaviconPayload(r.id.value, title))
                 }
             }
         }

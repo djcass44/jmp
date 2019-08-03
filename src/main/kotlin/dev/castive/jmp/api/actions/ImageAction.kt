@@ -25,7 +25,7 @@ import dev.castive.jmp.net.FaviconGrabber
 import dev.castive.log2.Log
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class ImageAction(private val address: String, private val ws: WebSocket) {
+class ImageAction(private val address: String, private val ws: (tag: String, data: Any) -> (Unit)) {
     fun get() {
         Thread {
             FaviconGrabber(address).get(object : FaviconGrabber.OnLoadCallback {
@@ -36,7 +36,7 @@ class ImageAction(private val address: String, private val ws: WebSocket) {
                         for (r in results) if(r.image == null || r.image != f.src) {
                             Log.v(javaClass, "Updating icon for ${r.name} [previous: ${r.image}, new: ${f.src}]")
                             r.image = f.src
-                            ws.fire(WebSocket.EVENT_UPDATE_FAVICON, FaviconPayload(r.id.value, f.src))
+                            ws.invoke(WebSocket.EVENT_UPDATE_FAVICON, FaviconPayload(r.id.value, f.src))
                         }
                     }
                 }

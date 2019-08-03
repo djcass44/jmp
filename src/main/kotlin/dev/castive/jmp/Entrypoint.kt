@@ -24,8 +24,11 @@ import dev.castive.jmp.db.DatabaseHelper
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.jmp.util.checks.AuditCheck
 import dev.castive.jmp.util.checks.EntropyCheck
+import dev.castive.jmp.util.checks.JavaVersionCheck
 import dev.castive.jmp.util.checks.SecureConfigCheck
 import dev.castive.log2.Log
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.*
 
 
@@ -33,13 +36,11 @@ class Runner {
     companion object {
         const val BASE = "/api"
         var START_TIME = 0L
-        lateinit var store: ConfigStore
-        lateinit var args: Array<String>
     }
     private fun runInitialChecks(store: ConfigStore, arguments: Arguments) {
         Log.i(javaClass, "Checking security configuration")
         println("Running setup checks\n")
-        val checks = arrayListOf(SecureConfigCheck(store.baseUrl, arguments), EntropyCheck(), AuditCheck())
+        val checks = arrayListOf(SecureConfigCheck(store.baseUrl, arguments), EntropyCheck(), AuditCheck(), JavaVersionCheck())
         var count = 0
         for (c in checks) {
             if(c.runCheck()) count++
@@ -47,18 +48,17 @@ class Runner {
         println("Setup checks completed ($count/${checks.size} passed)\n")
     }
     fun start(args: Array<String>) {
-        Runner.args = args
         START_TIME = System.currentTimeMillis()
         Log.v(javaClass, Arrays.toString(args))
         val arguments = Arguments(args)
         // Alert the user that dev features are enabled
         if(arguments.enableCors) Log.w(javaClass, "WARNING: CORS access is enabled for ALL origins. DO NOT allow this in production: WARNING")
         if(arguments.enableDev) Log.w(javaClass, "WARNING: Development mode is enabled")
-        Log.setPriorityLevel(arguments.debugLevel)
         val store = Config().loadEnv()
-        Runner.store = store
         val logger = Logger(store.logRequestDir)
-        runInitialChecks(store, arguments)
+        GlobalScope.launch {
+            runInitialChecks(store, arguments)
+        }
         DatabaseHelper().start(store)
         // Start the application
         val appPort = EnvUtil.getEnv(EnvUtil.PORT, "7000").toIntOrNull() ?: 7000

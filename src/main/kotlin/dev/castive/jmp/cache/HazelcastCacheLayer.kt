@@ -52,6 +52,7 @@ class HazelcastCacheLayer: BaseCacheLayer {
 	}
 
 	override fun getUser(token: String): BaseCacheLayer.UserCache? {
+		if(!connected()) return null
 		if(userMap.isEmpty) return null
 		val res = userMap[token] ?: return null
 		val guess = get(res)

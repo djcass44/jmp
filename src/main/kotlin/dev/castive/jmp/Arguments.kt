@@ -23,11 +23,10 @@ import org.apache.commons.cli.Options
 import java.util.*
 import kotlin.system.exitProcess
 
-class Arguments(args: Array<String>) {
+class Arguments(val args: Array<String>) {
     private val options = Options()
     var enableCors = false
     var enableDev = false
-    var debugLevel = 0
 
     init {
         options.addOption("h", "help", false, "Show help (you are probably here)")
@@ -47,7 +46,6 @@ class Arguments(args: Array<String>) {
             }
             enableDev = cl.hasOption("enable-dev")
             enableCors = cl.hasOption("enable-cors") || enableDev
-            debugLevel = if(cl.hasOption("d")) cl.getOptionValue("d").toIntOrNull() ?: 2 else 2 // Set default to show info and above
         }
         catch (e: Exception) {
             Log.e(javaClass, e.toString())

@@ -6,6 +6,7 @@ object EnvUtil {
 		return if (env.isNullOrEmpty()) default else env
 	}
 
+	const val JMP_ALLOW_ERROR_INFO = "JMP_ALLOW_ERROR_INFO"
 	const val KEY_REALM = "JMP_KEY_REALM"
 	const val CASE_SENSITIVE = "JMP_CASE_SENSITIVE"
 	const val PORT = "PORT"
