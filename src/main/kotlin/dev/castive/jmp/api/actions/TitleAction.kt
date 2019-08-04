@@ -6,12 +6,15 @@ import dev.castive.jmp.db.dao.Jump
 import dev.castive.jmp.db.dao.Jumps
 import dev.castive.jmp.except.InsecureDomainException
 import dev.castive.log2.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jsoup.Jsoup
 import java.net.URI
 
-class TitleAction(private val address: String, private val ws: (tag: String, data: Any) -> (Unit)) {
-    fun get() = Thread {
+class TitleAction(private val ws: (tag: String, data: Any) -> (Unit)) {
+    fun get(address: String) = GlobalScope.launch(context = Dispatchers.IO) {
         try {
             if(address.startsWith("http://")) throw InsecureDomainException()
             val uri = URI(address)
@@ -31,8 +34,5 @@ class TitleAction(private val address: String, private val ws: (tag: String, dat
         catch (e: Exception) {
             Log.e(javaClass, "Failed to load title: $e")
         }
-    }.apply {
-        isDaemon = true
-        start()
     }
 }

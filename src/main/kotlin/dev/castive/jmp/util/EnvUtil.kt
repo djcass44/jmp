@@ -18,6 +18,8 @@ object EnvUtil {
 	const val LOG_ENABLED = "LOG_ENABLED"
 	const val LOG_LOCATION = "LOG_DIRECTORY"
 
+	const val FAV2_URL = "FAV2_URL"
+
 	const val GITHUB_ENABLED = "GITHUB_ENABLED"
 	const val GOOGLE_ENABLED = "GOOGLE_ENABLED"
 }

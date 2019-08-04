@@ -20,41 +20,46 @@ import com.google.common.util.concurrent.RateLimiter
 import dev.castive.javalin_auth.auth.Providers
 import dev.castive.javalin_auth.auth.connect.MinimalConfig
 import dev.castive.javalin_auth.auth.provider.InternalProvider
-import dev.castive.jmp.Runner
 import dev.castive.jmp.api.App
-import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Responses
 import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.util.checks.DatabaseCheck
 import dev.castive.jmp.util.checks.ProviderCheck
 import dev.castive.log2.Log
-import io.javalin.apibuilder.ApiBuilder.get
-import io.javalin.apibuilder.EndpointGroup
+import io.javalin.http.Context
+import io.javalin.http.Handler
 import org.eclipse.jetty.http.HttpStatus
 
-class Health(private val config: MinimalConfig): EndpointGroup {
+class Health(private val config: MinimalConfig): Handler {
+	// Used for JSON response to the front-end
+	data class HealthPayload(
+		val code: Int = HttpStatus.OK_200,
+		val http: String = "OK",
+		val database: Boolean?,
+		val identityProvider: Boolean?,
+		val providerName: String
+	)
+
 	private val rateLimiter = RateLimiter.create(10.0)
 
-	override fun addEndpoints() {
-		get("${Runner.BASE}/v3/health", { ctx ->
-			val user: User? = ctx.attribute(AccessManager.attributeUser)
-			when {
-				App.auth.isAdmin(user) -> {
-					Log.v(javaClass, "Getting health check for an admin")
-					val check = runChecks(safe = false) // Allow the admin to run database checks
-					Log.d(javaClass, check.toString())
-					ctx.status(HttpStatus.OK_200).json(check)
-				}
-				rateLimiter.tryAcquire() -> {
-					Log.v(javaClass, "Getting health check for a normal user, they haven't been rate limited")
-					val check = runChecks()
-					Log.d(javaClass, check.toString())
-					ctx.status(HttpStatus.OK_200).json(check)
-				}
-				else -> ctx.status(HttpStatus.TOO_MANY_REQUESTS_429).result(Responses.GENERIC_RATE_LIMITED)
+	override fun handle(ctx :Context) {
+		val user: User? = ctx.attribute(AccessManager.attributeUser)
+		when {
+			App.auth.isAdmin(user) -> {
+				Log.v(javaClass, "Getting health check for an admin")
+				val check = runChecks(safe = false) // Allow the admin to run database checks
+				Log.d(javaClass, check.toString())
+				ctx.status(HttpStatus.OK_200).json(check)
 			}
-		}, Auth.openAccessRole)
+			rateLimiter.tryAcquire() -> {
+				Log.v(javaClass, "Getting health check for a normal user, they haven't been rate limited")
+				val check = runChecks()
+				Log.d(javaClass, check.toString())
+				ctx.status(HttpStatus.OK_200).json(check)
+			}
+			else -> ctx.status(HttpStatus.TOO_MANY_REQUESTS_429).result(Responses.GENERIC_RATE_LIMITED)
+		}
 	}
 	private fun runChecks(safe: Boolean = true): HealthPayload {
 		val dbCheck = if(!safe) DatabaseCheck().runCheck() else null
@@ -65,4 +70,3 @@ class Health(private val config: MinimalConfig): EndpointGroup {
 		return HealthPayload(code, "OK", dbCheck, providerCheck, providerName)
 	}
 }
-data class HealthPayload(val code: Int = HttpStatus.OK_200, val http: String = "OK", val database: Boolean?, val identityProvider: Boolean?, val providerName: String)

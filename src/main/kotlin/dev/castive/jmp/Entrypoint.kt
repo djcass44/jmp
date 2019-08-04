@@ -27,8 +27,8 @@ import dev.castive.jmp.util.checks.EntropyCheck
 import dev.castive.jmp.util.checks.JavaVersionCheck
 import dev.castive.jmp.util.checks.SecureConfigCheck
 import dev.castive.log2.Log
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.*
 
 
@@ -47,7 +47,7 @@ class Runner {
         }
         println("Setup checks completed ($count/${checks.size} passed)\n")
     }
-    fun start(args: Array<String>) {
+    fun start(args: Array<String>) = runBlocking {
         START_TIME = System.currentTimeMillis()
         Log.v(javaClass, Arrays.toString(args))
         val arguments = Arguments(args)
@@ -56,13 +56,13 @@ class Runner {
         if(arguments.enableDev) Log.w(javaClass, "WARNING: Development mode is enabled")
         val store = Config().loadEnv()
         val logger = Logger(store.logRequestDir)
-        GlobalScope.launch {
+        launch {
             runInitialChecks(store, arguments)
         }
         DatabaseHelper().start(store)
-        // Start the application
+        // Start the application and wait for it to finish
         val appPort = EnvUtil.getEnv(EnvUtil.PORT, "7000").toIntOrNull() ?: 7000
-        App(appPort).start(store, arguments, logger)
+        launch { App(appPort).start(store, arguments, logger) }.join()
     }
 }
 

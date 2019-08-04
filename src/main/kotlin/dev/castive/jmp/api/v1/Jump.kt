@@ -41,6 +41,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 	private val caseSensitive = EnvUtil.getEnv(EnvUtil.CASE_SENSITIVE, "false").toBoolean()
+	private val imageAction = ImageAction(ws)
+	private val titleAction = TitleAction(ws)
 
 	data class JumpResponse(val found: Boolean = true, val location: String)
 
@@ -134,8 +136,8 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 						parent = jump
 					} }
 					EventLog.post(Event(type = EventType.CREATE, resource = JumpData::class.java, causedBy = dev.castive.jmp.api.v1.Jump::class.java))
-					ImageAction(add.location, ws).get()
-					TitleAction(add.location, ws).get()
+					imageAction.get(add.location)
+					titleAction.get(add.location)
 				}
 				ws.invoke(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
 				ctx.status(HttpStatus.CREATED_201).json(add)
@@ -189,8 +191,8 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 						}
 					}
 					Log.a(javaClass, "GC cleaned up $gc orphaned aliases for ${existing.id.value}, ${existing.name}")
-					ImageAction(update.location, ws).get()
-					TitleAction(update.location, ws).get()
+					imageAction.get(update.location)
+					titleAction.get(update.location)
 					ws.invoke(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
 					ctx.status(HttpStatus.NO_CONTENT_204).json(update)
 				}

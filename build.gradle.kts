@@ -52,8 +52,7 @@ dependencies {
 
 	implementation("com.github.djcass44:jmp-auth:b4693a17a9")
 //    implementation("dev.castive:jmp-auth:0.5.1")
-	implementation("com.github.djcass44:log2:352d950dab")
-	implementation("com.github.djcass44:fav2:v0.2.1")
+	implementation("com.github.djcass44:log2:7df051d775")
 	implementation("com.github.djcass44:eventlog:72b6dac4e2")
 
 	implementation("io.javalin:javalin:3.2.0")

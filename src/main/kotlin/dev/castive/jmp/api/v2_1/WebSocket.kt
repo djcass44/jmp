@@ -23,9 +23,10 @@ import com.corundumstudio.socketio.store.HazelcastStoreFactory
 import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
-import io.javalin.apibuilder.EndpointGroup
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
-class WebSocket : EndpointGroup {
+class WebSocket {
 	companion object {
 		const val INIT_APP = "INIT_APP"
 		const val EVENT_UPDATE = "EVENT_UPDATE"
@@ -47,10 +48,10 @@ class WebSocket : EndpointGroup {
 	 * Start the Socket.IO server
 	 * addEndpoints is just to match the Javalin convention
 	 */
-	override fun addEndpoints() {
+	fun start() = GlobalScope.launch {
 		if(!allowSockets) {
 			Log.i(javaClass, "Not starting Socket.IO server as env has disabled it")
-			return
+			return@launch
 		}
 		server.apply {
 			addConnectListener {
@@ -66,10 +67,10 @@ class WebSocket : EndpointGroup {
 	/**
 	 * Broadcasts a message to all listening sessions
 	 */
-	fun fire(tag: String, data: Any) {
+	fun fire(tag: String, data: Any) = GlobalScope.launch {
 		if(!allowSockets) {
 			Log.i(javaClass, "Unable to broadcast as Sockets are disabled")
-			return
+			return@launch
 		}
 		Log.v(javaClass, "Broadcasting $tag event to ${server.broadcastOperations.clients.size} listeners")
 		server.broadcastOperations.clients.forEach { it.sendEvent(tag, data) }

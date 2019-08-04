@@ -16,8 +16,6 @@
 
 package dev.castive.jmp.api.v2
 
-import dev.castive.jmp.Runner
-import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Similar
 import dev.castive.jmp.api.actions.OwnerAction
 import dev.castive.jmp.auth.AccessManager
@@ -25,28 +23,25 @@ import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.except.EmptyPathException
 import dev.castive.log2.Log
 import io.javalin.http.BadRequestResponse
-import io.javalin.apibuilder.ApiBuilder.get
-import io.javalin.apibuilder.EndpointGroup
+import io.javalin.http.Context
+import io.javalin.http.Handler
 import org.eclipse.jetty.http.HttpStatus
 
-class Similar : EndpointGroup {
-    override fun addEndpoints() {
-        // Find similar jumps
-        get("${Runner.BASE}/v2/similar/:query", { ctx ->
-            try {
-                val user: User? = ctx.attribute(AccessManager.attributeUser)
-                val query = ctx.pathParam("query")
-                if (query.isBlank())
-                    throw EmptyPathException()
-                val userJumps = OwnerAction.getUserVisibleJumps(user, includeAliases = true)
-                val similar = Similar(query, userJumps)
-                similar.compute()
-                ctx.status(HttpStatus.OK_200).json(similar.results)
-            }
-            catch (e: EmptyPathException) {
-                Log.e(javaClass, "Empty target")
-                throw BadRequestResponse()
-            }
-        }, Auth.openAccessRole)
+class Similar: Handler {
+    override fun handle(ctx: Context) {
+        try {
+            val user: User? = ctx.attribute(AccessManager.attributeUser)
+            val query = ctx.pathParam("query")
+            if (query.isBlank())
+                throw EmptyPathException()
+            val userJumps = OwnerAction.getUserVisibleJumps(user, includeAliases = true)
+            val similar = Similar(query, userJumps)
+            similar.compute()
+            ctx.status(HttpStatus.OK_200).json(similar.results)
+        }
+        catch (e: EmptyPathException) {
+            Log.e(javaClass, "Empty target")
+            throw BadRequestResponse()
+        }
     }
 }

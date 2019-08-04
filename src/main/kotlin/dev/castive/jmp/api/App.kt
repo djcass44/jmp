@@ -49,8 +49,10 @@ import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
 import io.javalin.Javalin
 import io.javalin.core.util.RouteOverviewPlugin
-import kotlinx.coroutines.GlobalScope
+import io.javalin.http.HandlerType
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -79,17 +81,27 @@ class App(private val port: Int = 7000) {
 		ws.fire(tag, data)
 	}
 
-	fun start(store: ConfigStore, arguments: Arguments, logger: Logger) {
+	suspend fun start(store: ConfigStore, arguments: Arguments, logger: Logger) = withContext(Dispatchers.Default) {
 		EventLog.stream.add(System.out)
 		// the key must be available for the accessManager
 		setupKey()
 		// Start the cache concurrently
-		GlobalScope.launch { startCache() }
-		transaction {
-			SchemaUtils.create(Jumps, Users, Roles, Groups, GroupUsers, Aliases) // Ensure that the tables are created
-			Log.i(javaClass, "Checking for database drift")
-			SchemaUtils.createMissingTablesAndColumns(Jumps, Users, Roles, Groups, GroupUsers, Aliases, Sessions)
-			Init(store) // Ensure that the default admin/roles is created
+		launch { startCache() }
+		// Use the IO pool because the database will likely be doing IO operations
+		withContext(Dispatchers.IO) {
+			transaction {
+				SchemaUtils.create(
+					Jumps,
+					Users,
+					Roles,
+					Groups,
+					GroupUsers,
+					Aliases
+				) // Ensure that the tables are created
+				Log.i(javaClass, "Checking for database drift")
+				SchemaUtils.createMissingTablesAndColumns(Jumps, Users, Roles, Groups, GroupUsers, Aliases, Sessions)
+				Init(store) // Ensure that the default admin/roles is created
+			}
 		}
 		val builder = LDAPConfigBuilder(store)
 		val verify = UserVerification(auth)
@@ -124,6 +136,8 @@ class App(private val port: Int = 7000) {
 				exceptionTracker.onExceptionTriggered(e)
 				ctx.status(HttpStatus.INTERNAL_SERVER_ERROR_500)
 			}
+			addHandler(HandlerType.GET, "${Runner.BASE}/v2/similar/:query", Similar(), Auth.openAccessRole)
+			addHandler(HandlerType.GET, "${Runner.BASE}/v3/health", Health(builder.min), Auth.openAccessRole)
 			routes {
 				// General
 				Info(store, arguments).addEndpoints()
@@ -131,7 +145,6 @@ class App(private val port: Int = 7000) {
 
 				// Jumping
 				Jump(this@App::wsRequest).addEndpoints()
-				Similar().addEndpoints()
 
 				// Users
 				User(auth, this@App::wsRequest, builder.min).addEndpoints()
@@ -144,9 +157,6 @@ class App(private val port: Int = 7000) {
 				Oauth(auth, verify).addEndpoints()
 				Oauth2().addEndpoints()
 //				UserMod(auth).addEndpoints()
-
-				// Health
-				Health(builder.min).addEndpoints()
 			}
 			start(port)
 		}
@@ -187,7 +197,7 @@ class App(private val port: Int = 7000) {
 		})
 		// Start the websocket server
 		ws = WebSocket().apply {
-			addEndpoints()
+			start()
 		}
 	}
 }
