@@ -67,7 +67,7 @@ class App(private val port: Int = 7000) {
 		var crowdCookieConfig: CrowdCookieConfig? = null
 		val auth = Auth()
 	}
-	private lateinit var ws: WebSocket
+	private lateinit var ws: Socket
 
 	/**
 	 * Request sending a message to the websocket server
@@ -157,6 +157,10 @@ class App(private val port: Int = 7000) {
 				Oauth(auth, verify).addEndpoints()
 				Oauth2().addEndpoints()
 //				UserMod(auth).addEndpoints()
+
+				ws = Socket().apply {
+					addEndpoints()
+				}
 			}
 			start(port)
 		}
@@ -195,9 +199,5 @@ class App(private val port: Int = 7000) {
 			Log.w(javaClass, "Shutting down cache layer")
 			AuthAction.cacheLayer.tearDown()
 		})
-		// Start the websocket server
-		ws = WebSocket().apply {
-			start()
-		}
 	}
 }
