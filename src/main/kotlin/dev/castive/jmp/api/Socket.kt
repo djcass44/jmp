@@ -11,9 +11,12 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 
 class Socket: EndpointGroup {
+	// Complies with Flux Standard Action (https://github.com/redux-utilities/flux-standard-action)
 	data class Payload(
-		val tag: String,
-		val data: Any?
+		val type: String,
+		val payload: Any?,
+		val error: Boolean = false,
+		val meta: Any? = null
 	)
 
 	private val sessions = ConcurrentHashMap<String, WsContext>()
