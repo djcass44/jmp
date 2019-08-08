@@ -177,8 +177,8 @@ class App(private val port: Int = 7000) {
 
 	private fun startCache() {
 		AuthAction.cacheLayer.setup()
-		val existingID = AuthAction.cacheLayer.getMisc("appId")
-		if(existingID == null) AuthAction.cacheLayer.setMisc("appId", UUID.randomUUID().toString())
+		val existingID = AuthAction.cacheLayer.get("appId")
+		if(existingID == null) AuthAction.cacheLayer.set("appId", UUID.randomUUID().toString())
 
 		// Gracefully shutdown the cache layer when the JVM is shutting down
 		Runtime.getRuntime().addShutdownHook(Thread {

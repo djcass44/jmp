@@ -45,7 +45,7 @@ class Socket: EndpointGroup {
 	}
 
 	private fun onConnect(ctx: WsContext) {
-		ctx.send(Payload(INIT_APP, AuthAction.cacheLayer.getMisc("appId")))
+		ctx.send(Payload(INIT_APP, AuthAction.cacheLayer.get("appId")))
 	}
 
 	/**

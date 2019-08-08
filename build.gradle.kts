@@ -36,7 +36,6 @@ apply(plugin = "java")
 ant.importBuild("version.xml")
 
 repositories {
-	maven(url = "https://dl.bintray.com/kotlin/exposed")
 	maven(url = "https://jitpack.io")
 	mavenCentral()
 	jcenter()
@@ -48,7 +47,7 @@ val junitVersion: String by project
 
 dependencies {
 	implementation(kotlin("stdlib-jdk8"))
-	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1")
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.2")
 
 	implementation("com.github.djcass44:jmp-auth:b4693a17a9")
 //    implementation("dev.castive:jmp-auth:0.5.1")
@@ -59,16 +58,13 @@ dependencies {
 
 	implementation("org.slf4j:slf4j-simple:1.7.26")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.8")
-	implementation("com.beust:klaxon:5.0.1")
 	implementation("info.debatty:java-string-similarity:1.1.0")
 	implementation("com.amdelamar:jhash:2.1.0")
-	implementation("io.github.rybalkinsd:kohttp:0.7.1")
 	implementation("com.google.code.gson:gson:2.8.5")
 	implementation("org.jsoup:jsoup:1.11.3")
 	implementation("com.google.guava:guava:28.0-jre")
 
-	implementation("com.hazelcast:hazelcast:3.12.1")
-	implementation("com.hazelcast:hazelcast-client:3.12.1")
+	implementation("com.squareup.okhttp3:okhttp:4.0.1")
 
 	implementation("commons-cli:commons-cli:1.4")
 
@@ -76,7 +72,7 @@ dependencies {
 	implementation("com.github.kmehrunes:javalin-jwt:v0.1")
 	implementation("com.github.scribejava:scribejava-apis:6.7.0")
 
-	implementation("org.jetbrains.exposed:exposed:0.11.2")
+	implementation("org.jetbrains.exposed:exposed:0.16.3")
 	implementation("com.zaxxer:HikariCP:3.3.1")
 
 	// Crypto providers
@@ -100,6 +96,9 @@ dependencies {
 
 application {
 	mainClassName = "dev.castive.jmp.EntrypointKt"
+	applicationDefaultJvmArgs = listOf(
+		"-Djava.util.logging.config.file=src/main/resources/logging.properties"
+	)
 }
 
 tasks {

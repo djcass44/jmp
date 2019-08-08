@@ -7,7 +7,7 @@ import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.Factor
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.ValidateRequest
 import dev.castive.jmp.api.App
 import dev.castive.jmp.api.v2.Oauth
-import dev.castive.jmp.cache.HazelcastCacheLayer
+import dev.castive.jmp.cache.JvmCache
 import dev.castive.jmp.db.dao.Session
 import dev.castive.jmp.db.dao.Sessions
 import dev.castive.jmp.db.dao.User
@@ -20,7 +20,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import javax.servlet.http.Cookie
 
 object AuthAction {
-	val cacheLayer = HazelcastCacheLayer()
+	val cacheLayer = JvmCache()
 
 	/**
 	 * Create a new session

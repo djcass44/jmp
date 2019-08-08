@@ -1,49 +1,18 @@
 package dev.castive.jmp.cache
 
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
-class HazelcastCacheLayerTest {
-	@Test
-	fun testLifecycle() {
-		val layer = HazelcastCacheLayer()
-		assertFalse(layer.connected())
-		layer.setup()
-		assertTrue(layer.connected())
-		layer.tearDown()
-		assertFalse(layer.connected())
-	}
-	@Test
-	fun testDupeBlocking() {
-		val layer = HazelcastCacheLayer()
-		assertFalse(layer.connected())
-		layer.setup()
-		assertTrue(layer.connected())
-		assertFalse(layer.setup())
-		layer.tearDown()
-		assertFalse(layer.connected())
-		assertFalse(layer.tearDown())
-	}
-}
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class HazelcastCacheLayerActiveTest {
-	private lateinit var layer: HazelcastCacheLayer
+class JvmCacheTest {
+	private lateinit var layer: JvmCache
 
 	@BeforeAll
 	fun setup() {
-		layer = HazelcastCacheLayer()
-		assertFalse(layer.connected())
-		layer.setup()
+		layer = JvmCache()
 		assertTrue(layer.connected())
-	}
-	@AfterAll
-	fun tearDown() {
-		assertTrue(layer.connected())
-		layer.tearDown()
-		assertFalse(layer.connected())
 	}
 
 	@Test
@@ -77,9 +46,9 @@ class HazelcastCacheLayerActiveTest {
 		val value = "data-value${System.currentTimeMillis()}"
 
 		assertTrue(layer.connected())
-		layer.setMisc(key, value)
+		layer.set(key, value)
 
-		val result = layer.getMisc(key)
+		val result = layer.get(key)
 		assertNotNull(result)
 		assertEquals(value, result)
 	}

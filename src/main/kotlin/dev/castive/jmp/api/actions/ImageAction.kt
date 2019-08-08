@@ -49,15 +49,16 @@ class ImageAction(private val ws: (tag: String, data: Any) -> (Unit)) {
 				val response = client.newCall(request).execute()
 				// If the response isn't OK, return
 				if(!response.isSuccessful) {
-					Log.e(javaClass, "Fav2 POST request failed: ${response.message()}")
+					Log.e(javaClass, "Fav2 POST request failed: ${response.message}")
 					response.close()
 					return@launch
 				}
 				// Try to get the body response
-				val destUrl = response.body()?.string() ?: run {
+				val destUrl = response.body?.string() ?: run {
 					response.close()
 					throw Exception("No body returned from request")
 				}
+				response.close() // ensure no leakages
 				transaction {
 					// Get the jumps which may use this favicon
 					val results = Jump.find { Jumps.location eq address }
