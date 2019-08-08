@@ -22,10 +22,10 @@ import dev.castive.eventlog.schema.EventType
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Responses
+import dev.castive.jmp.api.Socket
 import dev.castive.jmp.api.actions.ImageAction
 import dev.castive.jmp.api.actions.OwnerAction
 import dev.castive.jmp.api.actions.TitleAction
-import dev.castive.jmp.api.v2_1.WebSocket
 import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.Util
 import dev.castive.jmp.db.dao.*
@@ -139,7 +139,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 					imageAction.get(add.location)
 					titleAction.get(add.location)
 				}
-				ws.invoke(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
+				ws.invoke(Socket.EVENT_UPDATE, Socket.EVENT_UPDATE)
 				ctx.status(HttpStatus.CREATED_201).json(add)
 			}
 			else {
@@ -193,7 +193,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 					Log.a(javaClass, "GC cleaned up $gc orphaned aliases for ${existing.id.value}, ${existing.name}")
 					imageAction.get(update.location)
 					titleAction.get(update.location)
-					ws.invoke(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
+					ws.invoke(Socket.EVENT_UPDATE, Socket.EVENT_UPDATE)
 					ctx.status(HttpStatus.NO_CONTENT_204).json(update)
 				}
 				else throw ForbiddenResponse()
@@ -214,7 +214,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 				result.delete()
 				EventLog.post(Event(type = EventType.DESTROY, resource = JumpData::class.java, causedBy = javaClass))
 			}
-			ws.invoke(WebSocket.EVENT_UPDATE, WebSocket.EVENT_UPDATE)
+			ws.invoke(Socket.EVENT_UPDATE, Socket.EVENT_UPDATE)
 			ctx.status(HttpStatus.NO_CONTENT_204)
 		}, Auth.defaultRoleAccess)
 	}

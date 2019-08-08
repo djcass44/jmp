@@ -67,19 +67,6 @@ class App(private val port: Int = 7000) {
 		var crowdCookieConfig: CrowdCookieConfig? = null
 		val auth = Auth()
 	}
-	private lateinit var ws: WebSocket
-
-	/**
-	 * Request sending a message to the websocket server
-	 * This is used to ensure that messages aren't send to an un-initialised server
-	 */
-	private fun wsRequest(tag: String, data: Any) {
-		if(!this::ws.isInitialized) {
-			Log.w(javaClass, "Socket server is not ready, request $tag will be dropped")
-			return
-		}
-		ws.fire(tag, data)
-	}
 
 	suspend fun start(store: ConfigStore, arguments: Arguments, logger: Logger) = withContext(Dispatchers.Default) {
 		EventLog.stream.add(System.out)
@@ -139,18 +126,21 @@ class App(private val port: Int = 7000) {
 			addHandler(HandlerType.GET, "${Runner.BASE}/v2/similar/:query", Similar(), Auth.openAccessRole)
 			addHandler(HandlerType.GET, "${Runner.BASE}/v3/health", Health(builder.min), Auth.openAccessRole)
 			routes {
+				val ws = Socket().apply {
+					addEndpoints()
+				}
 				// General
 				Info(store, arguments).addEndpoints()
 				Props(builder, exceptionTracker).addEndpoints()
 
 				// Jumping
-				Jump(this@App::wsRequest).addEndpoints()
+				Jump(ws::fire).addEndpoints()
 
 				// Users
-				User(auth, this@App::wsRequest, builder.min).addEndpoints()
+				User(auth, ws::fire, builder.min).addEndpoints()
 
 				// Group
-				Group(this@App::wsRequest).addEndpoints()
+				Group(ws::fire).addEndpoints()
 				GroupMod().addEndpoints()
 
 				// Authentication
@@ -195,9 +185,5 @@ class App(private val port: Int = 7000) {
 			Log.w(javaClass, "Shutting down cache layer")
 			AuthAction.cacheLayer.tearDown()
 		})
-		// Start the websocket server
-		ws = WebSocket().apply {
-			start()
-		}
 	}
 }

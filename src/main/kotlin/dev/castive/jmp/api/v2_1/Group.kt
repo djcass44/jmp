@@ -22,6 +22,7 @@ import dev.castive.eventlog.schema.EventType
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Responses
+import dev.castive.jmp.api.Socket
 import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.Group
@@ -87,7 +88,7 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
                 }
             }
             EventLog.post(Event(type = EventType.CREATE, resource = GroupData::class.java, causedBy = javaClass))
-            ws.invoke(WebSocket.EVENT_UPDATE_GROUP, WebSocket.EVENT_UPDATE_GROUP)
+            ws.invoke(Socket.EVENT_UPDATE_GROUP, Socket.EVENT_UPDATE_GROUP)
             ctx.status(HttpStatus.CREATED_201).json(add)
         }, Auth.defaultRoleAccess)
         patch("${Runner.BASE}/v2_1/group", { ctx ->
@@ -98,7 +99,7 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
                 // Only allow update if user belongs to group (or is admin)
                 if(user.role.name != Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
                 existing.name = update.name
-                ws.invoke(WebSocket.EVENT_UPDATE_GROUP, WebSocket.EVENT_UPDATE_GROUP)
+                ws.invoke(Socket.EVENT_UPDATE_GROUP, Socket.EVENT_UPDATE_GROUP)
                 ctx.status(HttpStatus.NO_CONTENT_204).json(update)
             }
             EventLog.post(Event(type = EventType.UPDATE, resource = GroupData::class.java, causedBy = javaClass))
@@ -115,7 +116,7 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
                     GroupUsers.group eq existing.id
                 }
                 existing.delete()
-                ws.invoke(WebSocket.EVENT_UPDATE_GROUP, WebSocket.EVENT_UPDATE_GROUP)
+                ws.invoke(Socket.EVENT_UPDATE_GROUP, Socket.EVENT_UPDATE_GROUP)
                 ctx.status(HttpStatus.NO_CONTENT_204)
             }
             EventLog.post(Event(type = EventType.DESTROY, resource = GroupData::class.java, causedBy = javaClass))
