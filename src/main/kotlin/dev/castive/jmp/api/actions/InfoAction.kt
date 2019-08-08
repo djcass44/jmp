@@ -27,7 +27,6 @@ import dev.castive.jmp.db.dao.Jumps
 import dev.castive.jmp.db.dao.User
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.io.File
 import java.lang.management.ManagementFactory
 import kotlin.math.floor
 import kotlin.math.ln
@@ -76,7 +75,7 @@ class InfoAction(private val store: ConfigStore, private val arguments: Argument
         val jumpInfo = JumpInfo(jumps, globalJumps, personalJumps, groupedJumps)
         val uptime = System.currentTimeMillis() - Runner.START_TIME
         val uptimeString = timeSpan(uptime)
-        val cleanLaunchConfig = ConfigStore(store.url, store.driver, File(store.logRequestDir).absolutePath, store.baseUrl, "****", "****")
+        val cleanLaunchConfig = ConfigStore(store.url, store.driver, store.baseUrl, "****", "****")
         val identityInfo = IdentityInfo(
             Providers.primaryProvider?.getName() ?: InternalProvider.SOURCE_NAME,
             if(Providers.primaryProvider != null) { Providers.primaryProvider!!::class.java.name } else InternalProvider::class.java.name

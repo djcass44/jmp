@@ -6,20 +6,25 @@ object EnvUtil {
 		return if (env.isNullOrEmpty()) default else env
 	}
 
+	// allow exception information in the tracker (default false)
 	const val JMP_ALLOW_ERROR_INFO = "JMP_ALLOW_ERROR_INFO"
+	// set the source of JWT encryption key
 	const val KEY_REALM = "JMP_KEY_REALM"
+	// whether jumps should be case sensitive
 	const val CASE_SENSITIVE = "JMP_CASE_SENSITIVE"
+	// http port
 	const val PORT = "PORT"
 
-	const val SOCKET_ENABLED = "SOCKET_ENABLED"
-	const val SOCKET_PORT = "SOCKET_PORT"
-	const val SOCKET_HOST = "SOCKET_HOST"
-
+	// whether logs should be written to a file
 	const val LOG_ENABLED = "LOG_ENABLED"
+	// the directory to write logs (if enabled)
 	const val LOG_LOCATION = "LOG_DIRECTORY"
 
+	// the url of the fav2 server
 	const val FAV2_URL = "FAV2_URL"
 
+	// whether github oauth2 is enabled
 	const val GITHUB_ENABLED = "GITHUB_ENABLED"
+	// whether google oauth2 is enabled
 	const val GOOGLE_ENABLED = "GOOGLE_ENABLED"
 }

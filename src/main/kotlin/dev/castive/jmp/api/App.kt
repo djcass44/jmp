@@ -68,7 +68,8 @@ class App(private val port: Int = 7000) {
 		val auth = Auth()
 	}
 
-	suspend fun start(store: ConfigStore, arguments: Arguments, logger: Logger) = withContext(Dispatchers.Default) {
+	suspend fun start(store: ConfigStore, arguments: Arguments) = withContext(Dispatchers.Default) {
+		val logger = Logger()
 		EventLog.stream.add(System.out)
 		// the key must be available for the accessManager
 		setupKey()

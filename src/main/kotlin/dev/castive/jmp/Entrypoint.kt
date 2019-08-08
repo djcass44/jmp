@@ -17,7 +17,6 @@
 package dev.castive.jmp
 
 import dev.castive.jmp.api.App
-import dev.castive.jmp.audit.Logger
 import dev.castive.jmp.db.Config
 import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.DatabaseHelper
@@ -55,14 +54,13 @@ class Runner {
         if(arguments.enableCors) Log.w(javaClass, "WARNING: CORS access is enabled for ALL origins. DO NOT allow this in production: WARNING")
         if(arguments.enableDev) Log.w(javaClass, "WARNING: Development mode is enabled")
         val store = Config().loadEnv()
-        val logger = Logger(store.logRequestDir)
         launch {
             runInitialChecks(store, arguments)
         }
         DatabaseHelper().start(store)
         // Start the application and wait for it to finish
         val appPort = EnvUtil.getEnv(EnvUtil.PORT, "7000").toIntOrNull() ?: 7000
-        launch { App(appPort).start(store, arguments, logger) }.join()
+        launch { App(appPort).start(store, arguments) }.join()
     }
 }
 

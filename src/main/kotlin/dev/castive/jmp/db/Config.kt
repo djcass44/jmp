@@ -22,7 +22,6 @@ import dev.castive.log2.Log
 data class ConfigStore(
     val url: String,
     val driver: String,
-    val logRequestDir: String,
     val baseUrl: String,
     val tableUser: String? = "",
     val tablePassword: String? = "",
@@ -46,7 +45,6 @@ class Config {
         return ConfigStore(
             EnvUtil.getEnv(envUrl, defaultUrl),
             EnvUtil.getEnv(envDriver, defaultDriver),
-            EnvUtil.getEnv(EnvUtil.LOG_LOCATION, "."),
             EnvUtil.getEnv(envBaseUrl, "http://localhost:8080"),
             EnvUtil.getEnv(envUser, ""),
             EnvUtil.getEnv(envKey, ""),

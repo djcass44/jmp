@@ -1,10 +1,10 @@
 ---
-version: '2'
+version: '3'
 services:
   jmp:
     build: .
     image: jmp
-    command: ["java", "-jar", "jmp.jar", "-d", "0", "--enable-cors"]
+    command: ["java", "-jar", "jmp.jar", "--enable-dev"]
     ports:
       - "7000:7000"
       - "7001:7001"
@@ -13,20 +13,5 @@ services:
     environment:
       - DRIVER_URL=jdbc:sqlite:/data/jmp.db
       - DRIVER_CLASS=org.sqlite.JDBC
-      - ENV_LOG_REQUEST_DIRECTORY="data/logs"
+      - ENV_LOG_REQUEST_DIRECTORY="/data/logs"
       - BASE_URL=http://localhost:3000
-      - SOCKET_ENABLED=true
-      - SOCKET_HOST=0.0.0.0
-      - SOCKET_PORT=7001
-  ldap-service:
-    image: osixia/openldap:1.1.8
-    hostname: ldap-service
-  phpldapadmin:
-    image: osixia/phpldapadmin:0.7.2
-    hostname: phpldapadmin-service
-    ports:
-      - 8443:443
-    links:
-      - ldap-service:ldap-host
-    environment:
-      - PHPLDAPADMIN_LDAP_HOSTS=ldap-host

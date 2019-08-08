@@ -20,9 +20,6 @@ ENV DRIVER_URL="jdbc:sqlite:jmp.db" \
     LOG_DIRECTORY="." \
     BASE_URL="localhost:8080" \
     JMP_HOME="/data/" \
-    SOCKET_ENABLED=true \
-    SOCKET_HOST=0.0.0.0 \
-    SOCKET_PORT=7001 \
     USER=jmp
 
 RUN addgroup -S ${USER} && adduser -S ${USER} -G ${USER}

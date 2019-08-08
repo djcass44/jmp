@@ -16,6 +16,7 @@
 
 package dev.castive.jmp.audit
 
+import dev.castive.jmp.api.App
 import dev.castive.jmp.io.NOutputStream
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
@@ -24,12 +25,12 @@ import java.io.FileOutputStream
 import java.io.PrintStream
 import java.nio.charset.StandardCharsets
 
-class Logger(logPath: String) {
-	private val logDir = File(logPath)
+class Logger {
+	private val logDir = File(EnvUtil.getEnv(EnvUtil.LOG_LOCATION, "./logs"))
 
-	private val logRequest = File(logDir, "jmp.request.out")
-	private val logOut = File(logDir, "jmp.std.out")
-	private val logErr = File(logDir, "jmp.err.out")
+	private val logRequest = File(logDir, "jmp-requests_${App.id}.log")
+	private val logOut = File(logDir, "jmp-stdout_${App.id}.log")
+	private val logErr = File(logDir, "jmp-stderr_${App.id}.log")
 
 	private val logEnabled = EnvUtil.getEnv(EnvUtil.LOG_ENABLED, "true").toBoolean()
 
@@ -40,6 +41,7 @@ class Logger(logPath: String) {
 		}
 		else {
 			Log.v(javaClass, "Using context directory: ${logDir.absolutePath}")
+			Log.i(javaClass, "Application Id: ${App.id}, look for this if you need to identify logs")
 			if (!logDir.exists()) {
 				logDir.parentFile.mkdirs()
 				logDir.mkdir()
