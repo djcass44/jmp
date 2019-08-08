@@ -56,7 +56,6 @@ dependencies {
 	implementation("com.github.djcass44:eventlog:72b6dac4e2")
 
 	implementation("io.javalin:javalin:3.2.0")
-	implementation("com.corundumstudio.socketio:netty-socketio:1.7.17")
 
 	implementation("org.slf4j:slf4j-simple:1.7.26")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.8")

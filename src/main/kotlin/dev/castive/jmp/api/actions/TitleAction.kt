@@ -1,7 +1,6 @@
 package dev.castive.jmp.api.actions
 
-import dev.castive.jmp.api.v2_1.FaviconPayload
-import dev.castive.jmp.api.v2_1.WebSocket
+import dev.castive.jmp.api.Socket
 import dev.castive.jmp.db.dao.Jump
 import dev.castive.jmp.db.dao.Jumps
 import dev.castive.jmp.except.InsecureDomainException
@@ -27,7 +26,7 @@ class TitleAction(private val ws: (tag: String, data: Any) -> (Unit)) {
                 for (r in results) if (r.title == null || r.title != title) {
                     Log.v(javaClass, "Updating title for ${r.name} [previous: ${r.title}, new: $title]")
                     r.title = title
-                    ws.invoke(WebSocket.EVENT_UPDATE_TITLE, FaviconPayload(r.id.value, title))
+                    ws.invoke(Socket.EVENT_UPDATE_TITLE, Socket.FaviconPayload(r.id.value, title))
                 }
             }
         }

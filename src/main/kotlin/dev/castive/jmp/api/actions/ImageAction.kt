@@ -16,8 +16,7 @@
 
 package dev.castive.jmp.api.actions
 
-import dev.castive.jmp.api.v2_1.FaviconPayload
-import dev.castive.jmp.api.v2_1.WebSocket
+import dev.castive.jmp.api.Socket
 import dev.castive.jmp.db.dao.Jump
 import dev.castive.jmp.db.dao.Jumps
 import dev.castive.jmp.util.EnvUtil
@@ -67,7 +66,7 @@ class ImageAction(private val ws: (tag: String, data: Any) -> (Unit)) {
 						Log.v(javaClass, "Updating icon for ${r.name} [previous: ${r.image}, new: $destUrl]")
 						r.image = destUrl
 						// Fire a websocket update to inform the clients
-						ws.invoke(WebSocket.EVENT_UPDATE_FAVICON, FaviconPayload(r.id.value, destUrl))
+						ws.invoke(Socket.EVENT_UPDATE_FAVICON, Socket.FaviconPayload(r.id.value, destUrl))
 					}
 				}
 			}

@@ -1,7 +1,6 @@
 package dev.castive.jmp.api
 
 import dev.castive.jmp.api.actions.AuthAction
-import dev.castive.jmp.api.v2_1.WebSocket
 import dev.castive.log2.Log
 import io.javalin.apibuilder.ApiBuilder
 import io.javalin.apibuilder.EndpointGroup
@@ -11,6 +10,16 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 
 class Socket: EndpointGroup {
+	companion object {
+		const val INIT_APP = "INIT_APP"
+		const val EVENT_UPDATE = "EVENT_UPDATE"
+		const val EVENT_UPDATE_USER = "${EVENT_UPDATE}_USER"
+		const val EVENT_UPDATE_GROUP = "${EVENT_UPDATE}_GROUP"
+		const val EVENT_UPDATE_FAVICON = "${EVENT_UPDATE}_FAVICON"
+		const val EVENT_UPDATE_TITLE = "${EVENT_UPDATE}_TITLE"
+	}
+
+	data class FaviconPayload(val id: Int, val url: String)
 	// Complies with Flux Standard Action (https://github.com/redux-utilities/flux-standard-action)
 	data class Payload(
 		val type: String,
@@ -36,19 +45,21 @@ class Socket: EndpointGroup {
 	}
 
 	private fun onConnect(ctx: WsContext) {
-		ctx.send(Payload(WebSocket.INIT_APP, AuthAction.cacheLayer.getMisc("appId")))
+		ctx.send(Payload(INIT_APP, AuthAction.cacheLayer.getMisc("appId")))
 	}
 
 	/**
 	 * Broadcasts a message to all listening sessions
 	 */
-	fun fire(tag: String, data: Any?) = GlobalScope.launch {
-		Log.v(javaClass, "Broadcasting $tag event to ${sessions.size} listeners")
-		var invalid = 0
-		sessions.values.forEach {
-			if(it.session.isOpen) it.send(Payload(tag, data))
-			else invalid++
+	fun fire(tag: String, data: Any?) {
+		GlobalScope.launch {
+			Log.v(javaClass, "Broadcasting $tag event to ${sessions.size} listeners")
+			var invalid = 0
+			sessions.values.forEach {
+				if(it.session.isOpen) it.send(Payload(tag, data))
+				else invalid++
+			}
+			Log.i(javaClass, "Unable to send to $invalid closed sessions")
 		}
-		Log.i(javaClass, "Unable to send to $invalid closed sessions")
 	}
 }

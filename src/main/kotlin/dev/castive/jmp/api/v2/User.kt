@@ -24,7 +24,7 @@ import dev.castive.javalin_auth.auth.connect.MinimalConfig
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Responses
-import dev.castive.jmp.api.v2_1.WebSocket
+import dev.castive.jmp.api.Socket
 import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.User
@@ -95,7 +95,7 @@ class User(
                 Log.i(javaClass, "$user is creating a user [name: ${basicAuth.username}]")
                 auth.createUser(basicAuth.username, basicAuth.password.toCharArray())
                 EventLog.post(Event(type = EventType.CREATE, resource = UserData::class.java, causedBy = javaClass))
-                ws.invoke(WebSocket.EVENT_UPDATE_USER, WebSocket.EVENT_UPDATE_USER)
+                ws.invoke(Socket.EVENT_UPDATE_USER, Socket.EVENT_UPDATE_USER)
                 ctx.status(HttpStatus.CREATED_201).result(basicAuth.username)
             }
             else
@@ -132,7 +132,7 @@ class User(
                 EventLog.post(Event(type = EventType.UPDATE, resource = UserData::class.java, causedBy = javaClass))
                 user.role = role
                 user.metaUpdate = System.currentTimeMillis()
-                ws.invoke(WebSocket.EVENT_UPDATE_USER, WebSocket.EVENT_UPDATE_USER)
+                ws.invoke(Socket.EVENT_UPDATE_USER, Socket.EVENT_UPDATE_USER)
                 ctx.status(HttpStatus.NO_CONTENT_204).json(updated)
             }
         }, roles(Auth.BasicRoles.ADMIN))
@@ -154,7 +154,7 @@ class User(
                 target.delete()
                 EventLog.post(Event(type = EventType.DESTROY, resource = UserData::class.java, causedBy = dev.castive.jmp.api.v2.User::class.java))
             }
-            ws.invoke(WebSocket.EVENT_UPDATE_USER, WebSocket.EVENT_UPDATE_USER)
+            ws.invoke(Socket.EVENT_UPDATE_USER, Socket.EVENT_UPDATE_USER)
             ctx.status(HttpStatus.NO_CONTENT_204)
         }, roles(Auth.BasicRoles.ADMIN))
         get("${Runner.BASE}/v2_1/user/groups", { ctx ->
