@@ -1,5 +1,6 @@
 package dev.castive.jmp.api
 
+import dev.castive.jmp.Runner
 import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.log2.Log
 import io.javalin.apibuilder.ApiBuilder
@@ -31,7 +32,7 @@ class Socket: EndpointGroup {
 	private val sessions = ConcurrentHashMap<String, WsContext>()
 
 	override fun addEndpoints() {
-		ApiBuilder.ws("/ws2", { ws ->
+		ApiBuilder.ws("${Runner.BASE}/ws2", { ws ->
 			ws.onConnect { ctx ->
 				Log.v(javaClass, "Socket connection established: ${ctx.sessionId}, ${ctx.session.remoteAddress}")
 				sessions[ctx.sessionId] = ctx
