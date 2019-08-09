@@ -65,7 +65,6 @@ dependencies {
 	implementation("com.google.guava:guava:28.0-jre")
 
 	implementation("com.squareup.okhttp3:okhttp:4.0.1")
-	implementation("com.github.kittinunf:fuel:2.2.0")
 
 	implementation("commons-cli:commons-cli:1.4")
 
