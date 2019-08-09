@@ -1,6 +1,6 @@
 package dev.castive.jmp.auth
 
-import dev.castive.jmp.api.Auth
+import dev.castive.javalin_auth.auth.Roles.BasicRoles
 import dev.castive.jmp.api.Responses
 import io.javalin.core.security.AccessManager
 import io.javalin.core.security.Role
@@ -15,8 +15,8 @@ class AccessManager: AccessManager {
 	}
 	override fun manage(handler: Handler, ctx: Context, permittedRoles: MutableSet<Role>) {
 		val user = ClaimConverter.getUser(ctx)
-		val userRole = if(user == null) Auth.BasicRoles.ANYONE else transaction {
-			Auth.BasicRoles.valueOf(user.role.name)
+		val userRole = if(user == null) BasicRoles.ANYONE else transaction {
+			BasicRoles.valueOf(user.role.name)
 		}
 		if(permittedRoles.contains(userRole)) {
 			// Store user information for later handlers

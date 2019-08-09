@@ -16,6 +16,7 @@
 
 package dev.castive.jmp.db
 
+import dev.castive.javalin_auth.auth.Roles.BasicRoles
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.db.dao.Role
 import dev.castive.jmp.db.dao.User
@@ -48,7 +49,7 @@ class Init(private val store: ConfigStore) {
                 println()
             }
             if(Role.all().empty()) {
-                for (r in Auth.BasicRoles.values()) {
+                for (r in BasicRoles.values()) {
                     Role.new {
                         name = r.name
                     }

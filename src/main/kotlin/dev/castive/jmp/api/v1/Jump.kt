@@ -19,6 +19,7 @@ package dev.castive.jmp.api.v1
 import dev.castive.eventlog.EventLog
 import dev.castive.eventlog.schema.Event
 import dev.castive.eventlog.schema.EventType
+import dev.castive.javalin_auth.auth.Roles.BasicRoles
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Responses
@@ -118,7 +119,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 			val groupID = Util.getSafeUUID(ctx.queryParam("gid") ?: "")
 			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
 			// Block non-admin user from adding global jumps
-			if (add.personal == JumpData.TYPE_GLOBAL && transaction { return@transaction user.role.name != Auth.BasicRoles.ADMIN.name }) throw ForbiddenResponse()
+			if (add.personal == JumpData.TYPE_GLOBAL && transaction { return@transaction user.role.name != BasicRoles.ADMIN.name }) throw ForbiddenResponse()
 			if (!jumpExists(add.name, add.location, user)) {
 				transaction {
 					val group = if(groupID != null) Group.findById(groupID) else null
@@ -155,7 +156,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 				val existing = Jump.findById(update.id) ?: throw NotFoundResponse()
 
 				// User can change personal jumps
-				if(existing.owner == user || user.role.name == Auth.BasicRoles.ADMIN.name ||
+				if(existing.owner == user || user.role.name == BasicRoles.ADMIN.name ||
 					(OwnerAction.getJumpById(user, existing.id.value).isNotEmpty() && !OwnerAction.isPublic(existing))) {
 					existing.apply {
 						name = update.name
@@ -206,7 +207,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 			transaction {
 				val result = Jump.findById(id) ?: throw NotFoundResponse()
 				// 403 if jump is global and user ISN'T admin
-				if (result.owner == null && user.role.name != Auth.BasicRoles.ADMIN.name) throw ForbiddenResponse()
+				if (result.owner == null && user.role.name != BasicRoles.ADMIN.name) throw ForbiddenResponse()
 				// 403 if jump is personal and tokens don't match
 				if (result.owner != null && result.owner!!.id != user.id) throw ForbiddenResponse()
 				// Delete all aliased children so that they don't become orphans

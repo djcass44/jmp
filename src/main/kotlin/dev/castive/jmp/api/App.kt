@@ -18,7 +18,9 @@ package dev.castive.jmp.api
 
 import dev.castive.eventlog.EventLog
 import dev.castive.javalin_auth.actions.UserAction
+import dev.castive.javalin_auth.api.OAuth2
 import dev.castive.javalin_auth.auth.Providers
+import dev.castive.javalin_auth.auth.Roles.BasicRoles
 import dev.castive.javalin_auth.auth.TokenProvider
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.CrowdCookieConfig
 import dev.castive.javalin_auth.auth.provider.CrowdProvider
@@ -32,13 +34,12 @@ import dev.castive.jmp.api.v2.Info
 import dev.castive.jmp.api.v2.Oauth
 import dev.castive.jmp.api.v2.Similar
 import dev.castive.jmp.api.v2.User
-import dev.castive.jmp.api.v2_1.*
 import dev.castive.jmp.api.v2_1.Group
+import dev.castive.jmp.api.v2_1.GroupMod
+import dev.castive.jmp.api.v2_1.Health
+import dev.castive.jmp.api.v2_1.Props
 import dev.castive.jmp.audit.Logger
-import dev.castive.jmp.auth.AccessManager
-import dev.castive.jmp.auth.LDAPConfigBuilder
-import dev.castive.jmp.auth.UserValidator
-import dev.castive.jmp.auth.UserVerification
+import dev.castive.jmp.auth.*
 import dev.castive.jmp.crypto.KeyProvider
 import dev.castive.jmp.crypto.SSMKeyProvider
 import dev.castive.jmp.db.ConfigStore
@@ -110,7 +111,7 @@ class App(private val port: Int = 7000) {
 			config.apply {
 				showJavalinBanner = false
 				if (arguments.enableCors) { enableCorsForAllOrigins() }
-				if (arguments.enableDev) { registerPlugin(RouteOverviewPlugin(Runner.BASE, setOf(Auth.BasicRoles.ANYONE))) }
+				if (arguments.enableDev) { registerPlugin(RouteOverviewPlugin(Runner.BASE, setOf(BasicRoles.ANYONE))) }
 				requestLogger { ctx, timeMs ->
 					logger.add("${System.currentTimeMillis()} - ${ctx.method()} ${ctx.path()} took $timeMs ms")
 				}
@@ -146,7 +147,7 @@ class App(private val port: Int = 7000) {
 
 				// Authentication
 				Oauth(auth, verify).addEndpoints()
-				Oauth2().addEndpoints()
+				OAuth2(Runner.BASE, OAuth2Callback()).addEndpoints()
 //				UserMod(auth).addEndpoints()
 			}
 			start(port)

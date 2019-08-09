@@ -16,10 +16,10 @@
 
 package dev.castive.jmp.auth
 
+import dev.castive.javalin_auth.api.OAuth2
 import dev.castive.javalin_auth.auth.Providers
 import dev.castive.jmp.api.App
 import dev.castive.jmp.api.actions.AuthAction
-import dev.castive.jmp.api.v2_1.Oauth2
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
 import dev.castive.log2.Log
@@ -60,7 +60,7 @@ object ClaimConverter {
 					user2 = maybeUser
 				}
 				else {
-					val source = Oauth2.providers[ctx.header("X-Auth-Source")]
+					val source = OAuth2.providers[ctx.header("X-Auth-Source")]
 					if(source != null) {
 						val res = source.isTokenValid(header)
 						if (res) {

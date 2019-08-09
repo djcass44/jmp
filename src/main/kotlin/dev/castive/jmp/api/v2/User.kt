@@ -31,7 +31,6 @@ import dev.castive.jmp.db.dao.User
 import dev.castive.log2.Log
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
-import io.javalin.core.security.SecurityUtil.roles
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.ForbiddenResponse
 import io.javalin.http.UnauthorizedResponse
@@ -135,7 +134,7 @@ class User(
                 ws.invoke(Socket.EVENT_UPDATE_USER, Socket.EVENT_UPDATE_USER)
                 ctx.status(HttpStatus.NO_CONTENT_204).json(updated)
             }
-        }, roles(Auth.BasicRoles.ADMIN))
+        }, Auth.adminRoleAccess)
         // Delete a user
         delete("${Runner.BASE}/v2/user/:id", { ctx ->
             val id = UUID.fromString(ctx.pathParam("id"))
@@ -156,7 +155,7 @@ class User(
             }
             ws.invoke(Socket.EVENT_UPDATE_USER, Socket.EVENT_UPDATE_USER)
             ctx.status(HttpStatus.NO_CONTENT_204)
-        }, roles(Auth.BasicRoles.ADMIN))
+        }, Auth.adminRoleAccess)
         get("${Runner.BASE}/v2_1/user/groups", { ctx ->
             val uid = runCatching {
                 UUID.fromString(ctx.queryParam("uid"))

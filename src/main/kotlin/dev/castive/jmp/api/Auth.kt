@@ -18,6 +18,7 @@ package dev.castive.jmp.api
 
 import com.amdelamar.jhash.Hash
 import dev.castive.javalin_auth.auth.Providers
+import dev.castive.javalin_auth.auth.Roles.BasicRoles
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.Factor
 import dev.castive.javalin_auth.auth.provider.CrowdProvider
 import dev.castive.jmp.api.actions.AuthAction
@@ -26,29 +27,18 @@ import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
 import dev.castive.jmp.util.SystemUtil
 import dev.castive.log2.Log
-import io.javalin.core.security.Role
-import io.javalin.core.security.SecurityUtil
 import io.javalin.http.ConflictResponse
 import io.javalin.http.Context
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
+import dev.castive.javalin_auth.auth.Roles as AuthRoles
 import dev.castive.jmp.db.dao.Role as DaoRole
 
 class Auth {
-	enum class BasicRoles: Role {
-		USER, ADMIN, ANYONE
-	}
 	companion object {
-		val openAccessRole = SecurityUtil.roles(
-			BasicRoles.ANYONE,
-			BasicRoles.USER,
-			BasicRoles.ADMIN
-		)
-		val defaultRoleAccess = SecurityUtil.roles(
-			BasicRoles.USER,
-			BasicRoles.ADMIN
-		)
-		val adminRoleAccess = SecurityUtil.roles(BasicRoles.ADMIN)
+		val openAccessRole = AuthRoles.openAccessRole
+		val defaultRoleAccess = AuthRoles.defaultAccessRole
+		val adminRoleAccess = AuthRoles.adminAccessRole
 	}
 
 	data class UserLoginResponse(val token: String, val provided: Boolean)

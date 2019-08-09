@@ -19,6 +19,7 @@ package dev.castive.jmp.api.v2_1
 import dev.castive.eventlog.EventLog
 import dev.castive.eventlog.schema.Event
 import dev.castive.eventlog.schema.EventType
+import dev.castive.javalin_auth.auth.Roles.BasicRoles
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Responses
@@ -48,7 +49,7 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
             Log.d(javaClass, "Listing groups visible to actual user: ${user != null}")
             if(user != null) {
                 transaction {
-                    if(user.role.name == Auth.BasicRoles.ADMIN.name) {
+                    if(user.role.name == BasicRoles.ADMIN.name) {
                         Group.all().forEach {
                             items.add(GroupData((it)))
                         }
@@ -97,7 +98,7 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
             transaction {
                 val existing = Group.findById(update.id!!) ?: throw NotFoundResponse("Group not found")
                 // Only allow update if user belongs to group (or is admin)
-                if(user.role.name != Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
+                if(user.role.name != BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
                 existing.name = update.name
                 ws.invoke(Socket.EVENT_UPDATE_GROUP, Socket.EVENT_UPDATE_GROUP)
                 ctx.status(HttpStatus.NO_CONTENT_204).json(update)
@@ -110,7 +111,7 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
             transaction {
                 val existing = Group.findById(id) ?: throw NotFoundResponse("Group not found")
                 // Only allow deletion if user belongs to group (or is admin)
-                if(user.role.name != Auth.BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
+                if(user.role.name != BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
                 Log.i(javaClass, "${user.username} is removing group ${existing.name}")
                 GroupUsers.deleteWhere {
                     GroupUsers.group eq existing.id
