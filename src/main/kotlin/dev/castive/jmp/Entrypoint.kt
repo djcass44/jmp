@@ -21,10 +21,7 @@ import dev.castive.jmp.db.Config
 import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.DatabaseHelper
 import dev.castive.jmp.util.EnvUtil
-import dev.castive.jmp.util.checks.AuditCheck
-import dev.castive.jmp.util.checks.EntropyCheck
-import dev.castive.jmp.util.checks.JavaVersionCheck
-import dev.castive.jmp.util.checks.SecureConfigCheck
+import dev.castive.jmp.util.checks.*
 import dev.castive.log2.Log
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -39,7 +36,13 @@ class Runner {
     private fun runInitialChecks(store: ConfigStore, arguments: Arguments) {
         Log.i(javaClass, "Checking security configuration")
         println("Running setup checks\n")
-        val checks = arrayListOf(SecureConfigCheck(store.baseUrl, arguments), EntropyCheck(), AuditCheck(), JavaVersionCheck())
+        val checks = arrayListOf(
+            SecureConfigCheck(store.baseUrl, arguments),
+            EntropyCheck(),
+            AuditCheck(),
+            JavaVersionCheck(),
+            FavCheck()
+        )
         var count = 0
         for (c in checks) {
             if(c.runCheck()) count++

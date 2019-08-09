@@ -25,6 +25,7 @@ import dev.castive.jmp.api.Responses
 import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.util.checks.DatabaseCheck
+import dev.castive.jmp.util.checks.FavCheck
 import dev.castive.jmp.util.checks.ProviderCheck
 import dev.castive.log2.Log
 import io.javalin.http.Context
@@ -38,7 +39,8 @@ class Health(private val config: MinimalConfig): Handler {
 		val http: String = "OK",
 		val database: Boolean?,
 		val identityProvider: Boolean?,
-		val providerName: String
+		val providerName: String,
+		val imageApi: Boolean = false
 	)
 
 	private val rateLimiter = RateLimiter.create(10.0)
@@ -64,9 +66,10 @@ class Health(private val config: MinimalConfig): Handler {
 	private fun runChecks(safe: Boolean = true): HealthPayload {
 		val dbCheck = if(!safe) DatabaseCheck().runCheck() else null
 		val providerCheck = if(config.enabled) ProviderCheck().runCheck() else null
+		val favStatus = if(!safe) FavCheck().runCheck() else false
 		val providerName = if(config.enabled) Providers.primaryProvider?.getName() ?: InternalProvider.SOURCE_NAME else InternalProvider.SOURCE_NAME
 		val code = if(dbCheck == false || providerCheck == false) HttpStatus.INTERNAL_SERVER_ERROR_500 else HttpStatus.OK_200
 
-		return HealthPayload(code, "OK", dbCheck, providerCheck, providerName)
+		return HealthPayload(code, "OK", dbCheck, providerCheck, providerName, favStatus)
 	}
 }
