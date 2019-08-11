@@ -19,7 +19,6 @@ package dev.castive.jmp.auth
 import dev.castive.javalin_auth.api.OAuth2
 import dev.castive.javalin_auth.auth.Providers
 import dev.castive.jmp.api.App
-import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
 import dev.castive.log2.Log
@@ -28,8 +27,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import dev.castive.javalin_auth.auth.data.User as AuthUser
 
 object ClaimConverter {
-
-	fun getUser(ctx: Context): User? {
+	fun getUser(ctx: Context, userUtils: UserUtils): User? {
 		var user: AuthUser? = null
 		var user2: User? = null
 		// See if the primary provider can find the user
@@ -53,8 +51,8 @@ object ClaimConverter {
 			if(header != null) {
 				Log.v(javaClass, "Got accessToken: $header")
 				// Check that the accessToken is still valid
-				val maybeUsername = AuthAction.cacheLayer.getUser(header)
-				val maybeUser = if(maybeUsername != null) App.auth.getUser(maybeUsername.username) else null
+				val maybeUsername = userUtils.cache.getUser(header)
+				val maybeUser = if(maybeUsername != null) userUtils.getUser(maybeUsername.username) else null
 				if(maybeUser != null) {
 					Log.i(javaClass, "Found user in cache: ${maybeUsername?.username}")
 					user2 = maybeUser
@@ -66,15 +64,15 @@ object ClaimConverter {
 						if (res) {
 							Log.v(javaClass, "AccessToken is valid, lets get its session")
 							// Get the session the accessToken belongs to
-							val session = AuthAction.getSession(header)
+							val session = userUtils.getSession(header)
 							// Get the user from the session
 							if (session != null) {
 								user2 = transaction { session.user }
-								AuthAction.onUserValid(user2, header)
+								userUtils.onUserValid(user2, header)
 								Log.i(javaClass, "Found session for ${user2.username}")
 							}
 						} else
-							AuthAction.onUserInvalid(header)
+							userUtils.onUserInvalid(header)
 					}
 				}
 			}

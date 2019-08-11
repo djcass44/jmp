@@ -17,6 +17,7 @@
 package dev.castive.jmp.api.v2
 
 import dev.castive.javalin_auth.auth.Providers
+import dev.castive.javalin_auth.auth.Roles
 import dev.castive.javalin_auth.auth.TokenProvider
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.AuthenticateResponse
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.CrowdCookie
@@ -26,9 +27,9 @@ import dev.castive.jmp.Runner
 import dev.castive.jmp.api.App
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Responses
-import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.auth.ClaimConverter
+import dev.castive.jmp.auth.UserUtils
 import dev.castive.jmp.auth.UserVerification
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.UserData
@@ -44,7 +45,7 @@ import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
 import javax.servlet.http.Cookie
 
-class Oauth(private val auth: Auth, private val verify: UserVerification): EndpointGroup {
+class Oauth(private val auth: Auth, private val verify: UserVerification, private val userUtils: UserUtils): EndpointGroup {
 	data class TokenResponse(val request: String, val refresh: String, val source: String? = null)
 	override fun addEndpoints() {
 		get("${Runner.BASE}/v2/oauth/cookie", { ctx ->
@@ -55,7 +56,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 			val ck = ctx.cookie(App.crowdCookieConfig!!.name)
 			Log.d(javaClass, "Users HTTP cookie: $ck, valid: ${ck != null && ck != "NO_CONTENT"}")
 			ctx.status(HttpStatus.OK_200).json(ck != null && ck != "NO_CONTENT")
-		}, Auth.openAccessRole)
+		}, Roles.openAccessRole)
 		// Get a users token
 		post("${Runner.BASE}/v2/oauth/token", { ctx ->
 			val basicAuth = ctx.basicAuthCredentials()
@@ -103,11 +104,11 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				Log.d(javaClass, "Setting cookie to: $ck")
 				ctx.cookie(ck)
 			}
-			val user = auth.getUser(name) ?: throw UnauthorizedResponse()
+			val user = userUtils.getUser(name) ?: throw UnauthorizedResponse()
 			val actualToken = sso?.token ?: login.token
-			val result = AuthAction.createSession(user, actualToken)
+			val result = userUtils.createSession(user, actualToken)
 			ctx.status(HttpStatus.OK_200).json(result)
-		}, Auth.openAccessRole)
+		}, Roles.openAccessRole)
 		get("${Runner.BASE}/v2/oauth/refresh", { ctx ->
 			val refresh = ctx.queryParam("refreshToken", "")
 			if(refresh.isJSNullOrBlank()) {
@@ -117,21 +118,21 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 			Log.d(javaClass, "Found refresh token")
 			refresh!!
 			ctx.attribute("LAX", true)
-			val user = ClaimConverter.getUser(ctx) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+			val user = ClaimConverter.getUser(ctx, userUtils) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
 			val response = transaction {
-				val existingSession = AuthAction.getSession(user, refresh) ?: run {
+				val existingSession = userUtils.getSession(user, refresh) ?: run {
 					Log.d(Oauth::class.java, "Failed to find matching refresh token")
 					throw UnauthorizedResponse("Invalid refresh token")
 				}
 				// Check if the users request token matched expected
 				if(TokenProvider.verify(existingSession.refreshToken, verify) == null) throw BadRequestResponse("Expired refresh token")
 				existingSession.active = false
-				val result = AuthAction.createSession(user, existingSession.ssoToken ?: user.id.value.toString())
+				val result = userUtils.createSession(user, existingSession.ssoToken ?: user.id.value.toString())
 				Log.i(Oauth::class.java, "Refreshing session for ${user.username}")
 				return@transaction result
 			}
 			ctx.status(HttpStatus.OK_200).json(response)
-		}, Auth.openAccessRole)
+		}, Roles.openAccessRole)
 		// Verify a users token is still valid
 		get("${Runner.BASE}/v2/oauth/valid", { ctx ->
 			Log.d(javaClass, "Checking session for ${ctx.ip()}")
@@ -140,9 +141,8 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 			Log.d(javaClass, "Session for ${user.username} is valid")
 			transaction {
 				if(token != null && Providers.primaryProvider != null && user.from != InternalProvider.SOURCE_NAME) {
-					if(AuthAction.isValidToken(token, ctx).isEmpty()) {
+					if(userUtils.isValidToken(token, ctx).isEmpty()) {
 						Log.e(Oauth::class.java, "Primary provider validation failed")
-//						AuthAction.writeInvalidCookie(ctx, user.username)
 						throw UnauthorizedResponse("Invalid SSO token")
 					}
 					else if(App.crowdCookieConfig != null) {
@@ -159,15 +159,15 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 				}
 				ctx.status(HttpStatus.OK_200).json(UserData(user))
 			}
-		}, Auth.openAccessRole)
+		}, Roles.openAccessRole)
 		// Logout the user and invalidate tokens if needed
 		post("${Runner.BASE}/v2/oauth/logout", { ctx ->
 			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
 			val ssoToken = ClaimConverter.getToken(ctx) ?: user.id.value.toString()
 			transaction {
-				val session = AuthAction.userHasToken(user.username, ssoToken)
+				val session = userUtils.userHasToken(user.username, ssoToken)
 				if(session != null) {
-					AuthAction.onUserInvalid(ssoToken)
+					userUtils.onUserInvalid(ssoToken)
 					session.active = false
 					Log.i(Oauth::class.java, "Disabling session with token: $ssoToken")
 					if(session.ssoToken != null) {
@@ -175,14 +175,14 @@ class Oauth(private val auth: Auth, private val verify: UserVerification): Endpo
 						Log.i(Oauth::class.java, "Invalidating SSO login for ${user.username}, $ssoToken")
 						if(App.crowdCookieConfig != null) {
 							Log.i(javaClass, "Removing Crowd cookie")
-							AuthAction.writeInvalidCookie(ctx, user.username)
+							userUtils.writeInvalidCookie(ctx, user.username)
 						}
 					}
 					else Log.v(javaClass, "User has no SSO token to invalidate: ${user.username}")
 				}
 			}
 			ctx.status(HttpStatus.OK_200)
-		}, Auth.defaultRoleAccess)
+		}, Roles.defaultAccessRole)
 	}
 }
 

@@ -18,11 +18,14 @@ package dev.castive.jmp.db
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.source.HikariSource
 import dev.castive.log2.Log
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.transaction
 
-class DatabaseHelper {
-    fun start(store: ConfigStore) {
+class DatabaseHelper(private val store: ConfigStore) {
+    fun start() {
         Log.v(javaClass, "Database config: [${store.url}, ${store.driver}]")
         Log.v(javaClass, "Application config: [baseUrl: ${store.baseUrl}, dataPath: ${store.dataPath}]")
         val ds = HikariDataSource(HikariConfig().apply {
@@ -36,5 +39,14 @@ class DatabaseHelper {
             Log.w(javaClass, "Running shutdown hook, DO NOT forcibly close the application")
             ds.close()
         })
+        setup()
+    }
+    private fun setup() {
+        transaction {
+            // Ensure that the tables are created
+            Log.i(javaClass, "Checking for database drift")
+            SchemaUtils.createMissingTablesAndColumns(Jumps, Users, Roles, Groups, GroupUsers, Aliases, Sessions)
+            Init(store.dataPath) // Ensure that the default admin/roles is created
+        }
     }
 }

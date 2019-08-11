@@ -28,10 +28,10 @@ class JvmCache: BaseCacheLayer {
 		userMap.remove(token)
 	}
 
-	fun get(key: String): String? {
+	override fun get(key: String): String? {
 		return miscMap[key]
 	}
-	fun set(key: String, value: String) {
+	override fun set(key: String, value: String) {
 		miscMap[key] = value
 	}
 

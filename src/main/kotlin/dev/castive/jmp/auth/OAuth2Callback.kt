@@ -3,7 +3,6 @@ package dev.castive.jmp.auth
 import dev.castive.javalin_auth.api.OAuth2
 import dev.castive.javalin_auth.auth.provider.flow.AbstractOAuth2Provider
 import dev.castive.jmp.api.App
-import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.db.dao.Session
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
@@ -11,7 +10,7 @@ import dev.castive.log2.Log
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class OAuth2Callback: OAuth2.Callback() {
+class OAuth2Callback(private val userUtils: UserUtils): OAuth2.Callback() {
 	/**
 	 * Create a user by getting their information from the provider
 	 */
@@ -22,7 +21,7 @@ class OAuth2Callback: OAuth2.Callback() {
 			return false
 		}
 		// Only create the user if they don't exist
-		if(!App.auth.userExists(userData.username)) {
+		if(!userUtils.userExists(userData.username)) {
 			// create the user
 			val user = transaction {
 				return@transaction User.new {
@@ -58,7 +57,7 @@ class OAuth2Callback: OAuth2.Callback() {
 	 * @param user: what user we want to create the session for. This can be null if there is an active session (e.g. for refreshing)
 	 */
 	private fun newSession(refreshToken: String, user: User?, oldToken: String = refreshToken) {
-		val existingSession = AuthAction.getSession(oldToken)
+		val existingSession = userUtils.getSession(oldToken)
 		existingSession?.active = false
 
 		if(user == null && existingSession == null) {

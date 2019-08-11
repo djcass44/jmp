@@ -28,7 +28,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 
-class Init(private val store: ConfigStore) {
+class Init(private val dataPath: String) {
     init {
         val superName = "admin" // Hardcoded into FE, don't change
         transaction {
@@ -37,7 +37,7 @@ class Init(private val store: ConfigStore) {
                 Auth().createUser(superName, password, true)
                 Log.w(javaClass, "Created superuser with access: [username: $superName]\nPlease change this ASAP!\nThis will also be stored in the current directory in 'initialAdminPassword'")
                 try {
-	                var path = store.dataPath
+	                var path = dataPath
 	                if(!path.endsWith(File.separatorChar)) path += File.separatorChar
                     Files.writeString(Path.of("${path}initialAdminPassword"), String(password), StandardCharsets.UTF_8)
                 }

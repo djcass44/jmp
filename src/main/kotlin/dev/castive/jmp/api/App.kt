@@ -28,7 +28,6 @@ import dev.castive.javalin_auth.auth.provider.LDAPProvider
 import dev.castive.jmp.Arguments
 import dev.castive.jmp.Runner
 import dev.castive.jmp.Version
-import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.api.v1.Jump
 import dev.castive.jmp.api.v2.Info
 import dev.castive.jmp.api.v2.Oauth
@@ -40,11 +39,11 @@ import dev.castive.jmp.api.v2_1.Health
 import dev.castive.jmp.api.v2_1.Props
 import dev.castive.jmp.audit.Logger
 import dev.castive.jmp.auth.*
+import dev.castive.jmp.cache.BaseCacheLayer
+import dev.castive.jmp.cache.JvmCache
 import dev.castive.jmp.crypto.KeyProvider
 import dev.castive.jmp.crypto.SSMKeyProvider
 import dev.castive.jmp.db.ConfigStore
-import dev.castive.jmp.db.Init
-import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.except.ExceptionTracker
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
@@ -55,8 +54,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.eclipse.jetty.http.HttpStatus
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 
@@ -70,28 +67,14 @@ class App(private val port: Int = 7000) {
 	}
 
 	suspend fun start(store: ConfigStore, arguments: Arguments) = withContext(Dispatchers.Default) {
+		val cache = JvmCache()
 		val logger = Logger()
 		EventLog.stream.add(System.out)
 		// the key must be available for the accessManager
 		setupKey()
 		// Start the cache concurrently
-		launch { startCache() }
-		// Use the IO pool because the database will likely be doing IO operations
-		withContext(Dispatchers.IO) {
-			transaction {
-				SchemaUtils.create(
-					Jumps,
-					Users,
-					Roles,
-					Groups,
-					GroupUsers,
-					Aliases
-				) // Ensure that the tables are created
-				Log.i(javaClass, "Checking for database drift")
-				SchemaUtils.createMissingTablesAndColumns(Jumps, Users, Roles, Groups, GroupUsers, Aliases, Sessions)
-				Init(store) // Ensure that the default admin/roles is created
-			}
-		}
+		launch { startCache(cache) }
+		// Setup providers
 		val builder = LDAPConfigBuilder(store)
 		val verify = UserVerification(auth)
 		val provider = if(!builder.min.enabled) null else when(builder.type) {
@@ -116,7 +99,7 @@ class App(private val port: Int = 7000) {
 					logger.add("${System.currentTimeMillis()} - ${ctx.method()} ${ctx.path()} took $timeMs ms")
 				}
 				// User our custom access manager
-				accessManager(AccessManager())
+				accessManager(AccessManager(cache))
 			}
 		}.apply {
 			exception(Exception::class.java) { e, ctx ->
@@ -128,7 +111,8 @@ class App(private val port: Int = 7000) {
 			addHandler(HandlerType.GET, "${Runner.BASE}/v2/similar/:query", Similar(), Auth.openAccessRole)
 			addHandler(HandlerType.GET, "${Runner.BASE}/v3/health", Health(builder.min), Auth.openAccessRole)
 			routes {
-				val ws = Socket().apply {
+				val userUtils = UserUtils(cache)
+				val ws = Socket(cache).apply {
 					addEndpoints()
 				}
 				// General
@@ -146,8 +130,8 @@ class App(private val port: Int = 7000) {
 				GroupMod().addEndpoints()
 
 				// Authentication
-				Oauth(auth, verify).addEndpoints()
-				OAuth2(Runner.BASE, OAuth2Callback()).addEndpoints()
+				Oauth(auth, verify, userUtils).addEndpoints()
+				OAuth2(Runner.BASE, OAuth2Callback(userUtils)).addEndpoints()
 //				UserMod(auth).addEndpoints()
 			}
 			start(port)
@@ -177,15 +161,8 @@ class App(private val port: Int = 7000) {
 		TokenProvider.buildSigner(keyProvider.getEncryptionKey())
 	}
 
-	private fun startCache() {
-		AuthAction.cacheLayer.setup()
-		val existingID = AuthAction.cacheLayer.get("appId")
-		if(existingID == null) AuthAction.cacheLayer.set("appId", UUID.randomUUID().toString())
-
-		// Gracefully shutdown the cache layer when the JVM is shutting down
-		Runtime.getRuntime().addShutdownHook(Thread {
-			Log.w(javaClass, "Shutting down cache layer")
-			AuthAction.cacheLayer.tearDown()
-		})
+	private fun startCache(cache: BaseCacheLayer) {
+		val existingID = cache.get("appId")
+		if(existingID == null) cache.set("appId", UUID.randomUUID().toString())
 	}
 }

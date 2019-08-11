@@ -169,7 +169,7 @@ class Auth {
 			val u = User.find {
 				Users.username eq username
 			}.elementAtOrNull(0)
-			return@transaction if(AuthAction.userHadToken(u?.username, token) != null) u else null
+			return@transaction if(AuthAction.userHadToken(token) != null) u else null
 		}
 	}
 	fun isAdmin(user: User?): Boolean {

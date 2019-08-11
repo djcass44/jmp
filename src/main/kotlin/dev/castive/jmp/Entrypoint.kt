@@ -60,7 +60,7 @@ class Runner {
         launch {
             runInitialChecks(store, arguments)
         }
-        DatabaseHelper().start(store)
+        DatabaseHelper(store).start()
         // Start the application and wait for it to finish
         val appPort = EnvUtil.getEnv(EnvUtil.PORT, "7000").toIntOrNull() ?: 7000
         launch { App(appPort).start(store, arguments) }.join()
