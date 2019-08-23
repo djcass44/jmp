@@ -34,13 +34,13 @@ class NOutputStream: OutputStream() {
         }
     }
 
-    override fun write(b: ByteArray?) {
+    override fun write(b: ByteArray) {
         streams.forEach {
             it.write(b)
         }
     }
 
-    override fun write(b: ByteArray?, off: Int, len: Int) {
+    override fun write(b: ByteArray, off: Int, len: Int) {
         streams.forEach {
             it.write(b, off, len)
         }

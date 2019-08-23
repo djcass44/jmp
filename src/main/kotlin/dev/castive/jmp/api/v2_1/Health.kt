@@ -40,7 +40,7 @@ class Health(private val config: MinimalConfig): Handler {
 		val database: Boolean?,
 		val identityProvider: Boolean?,
 		val providerName: String,
-		val imageApi: Boolean = false
+		val imageApi: Boolean? = null
 	)
 
 	private val rateLimiter = RateLimiter.create(10.0)
@@ -66,7 +66,7 @@ class Health(private val config: MinimalConfig): Handler {
 	private fun runChecks(safe: Boolean = true): HealthPayload {
 		val dbCheck = if(!safe) DatabaseCheck().runCheck() else null
 		val providerCheck = if(config.enabled) ProviderCheck().runCheck() else null
-		val favStatus = if(!safe) FavCheck().runCheck() else false
+		val favStatus = if(!safe) FavCheck().runCheck() else null
 		val providerName = if(config.enabled) Providers.primaryProvider?.getName() ?: InternalProvider.SOURCE_NAME else InternalProvider.SOURCE_NAME
 		val code = if(dbCheck == false || providerCheck == false) HttpStatus.INTERNAL_SERVER_ERROR_500 else HttpStatus.OK_200
 

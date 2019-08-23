@@ -16,39 +16,39 @@
 
 package dev.castive.jmp.db
 
-import dev.castive.jmp.util.EnvUtil
+import dev.castive.jmp.util.EnvUtil.getEnv
 import dev.castive.log2.Log
 
 data class ConfigStore(
-    val url: String,
-    val driver: String,
-    val baseUrl: String,
-    val tableUser: String? = "",
-    val tablePassword: String? = "",
-    val dataPath: String = "."
+	val url: String,
+	val driver: String,
+	val baseUrl: String,
+	val tableUser: String? = "",
+	val tablePassword: String? = "",
+	val dataPath: String = "."
 )
 
 class Config {
-    companion object {
-        private const val defaultUrl = "jdbc:sqlite:jmp.db"
-        private const val defaultDriver = "org.sqlite.JDBC"
+	companion object {
+		private const val defaultUrl = "jdbc:sqlite:jmp.db"
+		private const val defaultDriver = "org.sqlite.JDBC"
 
-        private const val envUrl = "DRIVER_URL"
-        private const val envDriver = "DRIVER_CLASS"
-        private const val envUser = "DRIVER_USER"
-        private const val envKey = "DRIVER_PASSWORD"
-        private const val envBaseUrl = "BASE_URL"
-        private const val envDataPath = "JMP_HOME"
-    }
-    fun loadEnv(): ConfigStore {
-        Log.w(javaClass, "Using environment for application/database configuration")
-        return ConfigStore(
-            EnvUtil.getEnv(envUrl, defaultUrl),
-            EnvUtil.getEnv(envDriver, defaultDriver),
-            EnvUtil.getEnv(envBaseUrl, "http://localhost:8080"),
-            EnvUtil.getEnv(envUser, ""),
-            EnvUtil.getEnv(envKey, ""),
-            EnvUtil.getEnv(envDataPath, ".")
-        )
-    }
+		private const val envUrl = "DRIVER_URL"
+		private const val envDriver = "DRIVER_CLASS"
+		private const val envUser = "DRIVER_USER"
+		private const val envKey = "DRIVER_PASSWORD"
+		private const val envBaseUrl = "BASE_URL"
+		private const val envDataPath = "JMP_HOME"
+	}
+	fun loadEnv(): ConfigStore {
+		Log.w(javaClass, "Using environment for application/database configuration")
+		return ConfigStore(
+			getEnv(envUrl, defaultUrl),
+			getEnv(envDriver, defaultDriver),
+			getEnv(envBaseUrl, "http://localhost:8080"),
+			getEnv(envUser, ""),
+			getEnv(envKey, ""),
+			getEnv(envDataPath, ".")
+		)
+	}
 }

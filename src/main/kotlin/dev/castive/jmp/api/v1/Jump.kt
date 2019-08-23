@@ -28,11 +28,11 @@ import dev.castive.jmp.api.actions.ImageAction
 import dev.castive.jmp.api.actions.OwnerAction
 import dev.castive.jmp.api.actions.TitleAction
 import dev.castive.jmp.auth.AccessManager
-import dev.castive.jmp.db.Util
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.Jump
 import dev.castive.jmp.except.EmptyPathException
 import dev.castive.jmp.util.EnvUtil
+import dev.castive.jmp.util.toUUID
 import dev.castive.log2.Log
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
@@ -116,7 +116,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 		// Add a jump point
 		put("${Runner.BASE}/v1/jump", { ctx ->
 			val add = ctx.bodyAsClass(JumpData::class.java)
-			val groupID = Util.getSafeUUID(ctx.queryParam("gid") ?: "")
+			val groupID = (ctx.queryParam("gid") ?: "").toUUID()
 			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
 			// Block non-admin user from adding global jumps
 			if (add.personal == JumpData.TYPE_GLOBAL && transaction { return@transaction user.role.name != BasicRoles.ADMIN.name }) throw ForbiddenResponse()

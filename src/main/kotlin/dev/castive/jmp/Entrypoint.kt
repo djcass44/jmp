@@ -22,10 +22,11 @@ import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.DatabaseHelper
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.jmp.util.checks.*
-import dev.castive.log2.Log
+import dev.castive.log2.logi
+import dev.castive.log2.logv
+import dev.castive.log2.logw
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.util.*
 
 
 class Runner {
@@ -34,7 +35,7 @@ class Runner {
         var START_TIME = 0L
     }
     private fun runInitialChecks(store: ConfigStore, arguments: Arguments) {
-        Log.i(javaClass, "Checking security configuration")
+        "Checking security configuration".logi(javaClass)
         println("Running setup checks\n")
         val checks = arrayListOf(
             SecureConfigCheck(store.baseUrl, arguments),
@@ -51,11 +52,11 @@ class Runner {
     }
     fun start(args: Array<String>) = runBlocking {
         START_TIME = System.currentTimeMillis()
-        Log.v(javaClass, Arrays.toString(args))
+        args.contentToString().logv(javaClass)
         val arguments = Arguments(args)
         // Alert the user that dev features are enabled
-        if(arguments.enableCors) Log.w(javaClass, "WARNING: CORS access is enabled for ALL origins. DO NOT allow this in production: WARNING")
-        if(arguments.enableDev) Log.w(javaClass, "WARNING: Development mode is enabled")
+        if(arguments.enableCors) "WARNING: CORS access is enabled for ALL origins. DO NOT allow this in production: WARNING".logw(javaClass)
+        if(arguments.enableDev) "WARNING: Development mode is enabled".logw(javaClass)
         val store = Config().loadEnv()
         launch {
             runInitialChecks(store, arguments)

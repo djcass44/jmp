@@ -58,7 +58,6 @@ object OwnerAction {
                 if (includeAliases) {
                     val aliases = Alias.find { Aliases.parent eq jmp.id }
                     // Add a munted version of the JumpData but with the alias name
-                    // TODO ensure using duplicate IDs doesn't bork the ui
                     aliases.forEach {
                         results.add(
                             JumpData(

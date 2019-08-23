@@ -69,7 +69,7 @@ class Logger {
 	}
 	fun add(text: String) {
 		if(!logEnabled) return
-		val res = kotlin.runCatching { logRequest.appendText("$text\n", StandardCharsets.UTF_8) }.exceptionOrNull()
+		val res = runCatching { logRequest.appendText("$text\n", StandardCharsets.UTF_8) }.exceptionOrNull()
 		if(res != null) Log.e(javaClass, "Failed to log: $res")
 	}
 }

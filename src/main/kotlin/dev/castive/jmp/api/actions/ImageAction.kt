@@ -20,36 +20,30 @@ import dev.castive.jmp.api.Socket
 import dev.castive.jmp.db.dao.Jump
 import dev.castive.jmp.db.dao.Jumps
 import dev.castive.jmp.util.EnvUtil
-import dev.castive.log2.Log
+import dev.castive.jmp.util.safe
+import dev.castive.log2.loge
+import dev.castive.log2.logv
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 class ImageAction(private val ws: (tag: String, data: Any) -> (Unit)) {
 	private val favUrl = EnvUtil.getEnv(EnvUtil.FAV2_URL, "http://localhost:8080")
 	private val client = OkHttpClient()
 
-	/**
-	 * Convert a string to be url safe
-	 * This should probably be moved to a util package
-	 */
-	private fun safe(string: String) = URLEncoder.encode(string, StandardCharsets.UTF_8)
-
 	fun get(address: String) {
 		GlobalScope.launch(context = Dispatchers.IO) {
 			// Create the request for fav2
-			val request = Request.Builder().url("$favUrl/icon?site=${safe(address)}").post(RequestBody.create(null, "")).build()
+			val request = Request.Builder().url("$favUrl/icon?site=${address.safe()}").post("".toRequestBody(null)).build()
 			try {
 				val response = client.newCall(request).execute()
 				// If the response isn't OK, return
 				if(!response.isSuccessful) {
-					Log.e(javaClass, "Fav2 POST request failed: ${response.message}")
+					"FAV2 POST request failed: ${response.message}".loge(javaClass)
 					response.close()
 					return@launch
 				}
@@ -64,7 +58,7 @@ class ImageAction(private val ws: (tag: String, data: Any) -> (Unit)) {
 					val results = Jump.find { Jumps.location eq address }
 					for (r in results) if(r.image == null || r.image != destUrl) {
 						// Update the image url to the new one
-						Log.v(javaClass, "Updating icon for ${r.name} [previous: ${r.image}, new: $destUrl]")
+						"Updating icon for ${r.name} [previous: ${r.image}, new: $destUrl]".logv(javaClass)
 						r.image = destUrl
 						// Fire a websocket update to inform the clients
 						ws.invoke(Socket.EVENT_UPDATE_FAVICON, Socket.FaviconPayload(r.id.value, destUrl))
@@ -72,7 +66,7 @@ class ImageAction(private val ws: (tag: String, data: Any) -> (Unit)) {
 				}
 			}
 			catch (e: Exception) {
-				Log.e(javaClass, "Fav2 POST request failed: $e")
+				"Fav2 POST request failed: $e".loge(javaClass)
 			}
 		}
 	}

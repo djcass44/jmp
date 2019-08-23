@@ -51,7 +51,7 @@ dependencies {
 
 	implementation("com.github.djcass44:jmp-auth:176931eec3")
 //    implementation("dev.castive:jmp-auth:0.5.3")
-	implementation("com.github.djcass44:log2:7df051d775")
+	implementation("com.github.djcass44:log2:7d9def02d1")
 	implementation("com.github.djcass44:eventlog:72b6dac4e2")
 
 	implementation("io.javalin:javalin:3.2.0")
@@ -147,10 +147,10 @@ sonarqube {
 	properties{
 		property("sonar.projectKey", "djcass44:jmp")
 		property("sonar.projectName", "djcass44/jmp")
-		if(branch != null) {
-			property("sonar.branch.name", branch.first)
-			property("sonar.branch.target", branch.second)
-		}
+//		if(branch != null) {
+//			property("sonar.branch.name", branch.first)
+//			property("sonar.branch.target", branch.second)
+//		}
 		property("sonar.junit.reportsPath", "$projectDir/build/test-results")
 	}
 }

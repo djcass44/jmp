@@ -74,7 +74,7 @@ class UserUtils(val cache: BaseCacheLayer) {
 		return valid
 	}
 	fun getTokenInfo(token: String, ctx: Context): AuthenticateResponse? {
-		return kotlin.runCatching {
+		return runCatching {
 			SystemUtil.gson.fromJson(isValidToken(token, ctx), AuthenticateResponse::class.java)
 		}.getOrNull()
 	}
