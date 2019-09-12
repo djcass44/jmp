@@ -1,5 +1,16 @@
 # Configuration
 
+## Database configuration
+
+Database connection is established using values set in "Application configuration"
+
+JMP currently supports the following databases:
+* SQLite
+* PostgreSQL
+* MySQL
+* H2
+* SQLServer
+
 ## Application configuration
 
 `DRIVER_URL`: the JDBC url (default `jdbc:sqlite:jmp.db`)
