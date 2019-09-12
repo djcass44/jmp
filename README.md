@@ -2,9 +2,14 @@
 
 JMP is a utility used for quickly navigating to select websites/addresses.
 
-It is made up of 2 main components; the UI and API. For setting up the UI and more info, see the UI [README](https://github.com/djcass44/jmp-react/blob/develop/README.md)
+It is made up of 2 main components; the UI and API. 
+For setting up the UI and more info, see the UI [README](https://github.com/djcass44/jmp-react/blob/develop/README.md)
 
 ## Setting up the API
+
+When the application first starts, an initial `admin` user is created. 
+The password to this user is randomly generated and is printed to the console and written to the working directory in a file called `initialAdminPassword`
+
 
 JMP can be installed in 2 different ways.
 
@@ -12,7 +17,7 @@ JMP can be installed in 2 different ways.
 
 ```bash
 docker build -t jmp/api .
-docker run jmp/api -v "./data:/data" -p 7000:7000 -p 7001:7001
+docker run -v "./data:/data" -p 7000:7000 jmp/api 
 ```
 
 There is also a docker-compose utility script you can use
@@ -30,22 +35,23 @@ This is done via running the Jar file manually.
 java -jar build/libs/jmp.jar
 ```
 
-## Application information
+## Setup information
 
-When the application first starts, an initial `admin` user is created. 
-The password to this user is randomly generated and is printed to the console and written to the working directory in a file called `initialAdminPassword`
+See [SETUP.md](SETUP.md) for more in-depth application configuration
+
+## Application information
 
 **Launch configuration**
 
 `--enable-cors`: this will accept ALL incoming CORS requests. This is only for development purposes and MUST NOT be used in production.
 
+`--enable-dev`: enabled certain development features AND --enable-cors. **This must not be used for production.**
+
 *Note: the application will not start if CORS is enabled and the BASE_URL is HTTPS*
 
-`-d <value>`: set the level of logging (0 -> 6, lower is more).
+## Browser setup
 
-## Setup
-
-This information is also available in a running UI instance via the `?` button or `/setup`. It is more user-oriented.
+This information is also available in a running UI instance via the `?` button or `/help`. It is more user-oriented.
 
 *Note: replace $BASE_URL with the url the application will be running on.*
 
