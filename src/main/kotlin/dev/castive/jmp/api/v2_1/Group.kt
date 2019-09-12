@@ -27,6 +27,7 @@ import dev.castive.jmp.api.Socket
 import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.Group
+import dev.castive.jmp.util.ok
 import dev.castive.log2.Log
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
@@ -67,7 +68,7 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
                     }
                 }
             }
-            ctx.status(HttpStatus.OK_200).json(items)
+            ctx.ok().json(items)
         }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2_1/group/:id", { ctx ->
             // Only allow users to view groups they're already in

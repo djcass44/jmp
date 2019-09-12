@@ -6,12 +6,13 @@ import com.amazonaws.services.simplesystemsmanagement.model.ParameterType
 import com.amazonaws.services.simplesystemsmanagement.model.PutParameterRequest
 import dev.castive.eventlog.EventLog
 import dev.castive.eventlog.schema.Event
+import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
 
 class SSMKeyProvider: KeyProvider() {
 	companion object {
 		const val shortName = "aws-ssm"
-		private const val parameterName = "JMP_ENCRYPTION_KEY"
+		private val parameterName = EnvUtil.getEnv(EnvUtil.KEY_AWS_SSM_NAME, "JMP_ENCRYPTION_KEY")
 	}
 	private val client = AWSSimpleSystemsManagementClientBuilder.defaultClient()
 

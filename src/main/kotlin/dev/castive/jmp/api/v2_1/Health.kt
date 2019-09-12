@@ -27,6 +27,7 @@ import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.util.checks.DatabaseCheck
 import dev.castive.jmp.util.checks.FavCheck
 import dev.castive.jmp.util.checks.ProviderCheck
+import dev.castive.jmp.util.ok
 import dev.castive.log2.Log
 import io.javalin.http.Context
 import io.javalin.http.Handler
@@ -52,13 +53,13 @@ class Health(private val config: MinimalConfig): Handler {
 				Log.v(javaClass, "Getting health check for an admin")
 				val check = runChecks(safe = false) // Allow the admin to run database checks
 				Log.d(javaClass, check.toString())
-				ctx.status(HttpStatus.OK_200).json(check)
+				ctx.ok().json(check)
 			}
 			rateLimiter.tryAcquire() -> {
 				Log.v(javaClass, "Getting health check for a normal user, they haven't been rate limited")
 				val check = runChecks()
 				Log.d(javaClass, check.toString())
-				ctx.status(HttpStatus.OK_200).json(check)
+				ctx.ok().json(check)
 			}
 			else -> ctx.status(HttpStatus.TOO_MANY_REQUESTS_429).result(Responses.GENERIC_RATE_LIMITED)
 		}

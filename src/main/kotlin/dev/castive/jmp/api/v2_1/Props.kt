@@ -26,14 +26,16 @@ import dev.castive.jmp.db.dao.Groups
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
 import dev.castive.jmp.except.ExceptionTracker
-import dev.castive.log2.Log
+import dev.castive.jmp.util.ok
+import dev.castive.log2.logi
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
-import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.concurrent.TimeUnit
 
 class Props(private val builder: LDAPConfigBuilder, private val tracker: ExceptionTracker): EndpointGroup {
+	data class ProviderPayload(val connected: Boolean, val name: String, val users: Int, val groups: Int)
+
 	override fun addEndpoints() {
 		get("${Runner.BASE}/v2_1/prop/:target", { ctx ->
 			val targetProp = ctx.pathParam("target")
@@ -41,24 +43,23 @@ class Props(private val builder: LDAPConfigBuilder, private val tracker: Excepti
 				builder.properties.containsKey(targetProp) -> builder.properties.getProperty(targetProp)
 				else -> builder.properties.getOrDefault(targetProp, "undefined")
 			}
-			ctx.status(HttpStatus.OK_200).result(result.toString())
+			ctx.ok().result(result.toString())
 		}, Auth.adminRoleAccess)
 		get("${Runner.BASE}/v2_1/uprop/allow_local", { ctx ->
-			ctx.status(HttpStatus.OK_200).result(builder.min.blockLocal.toString())
+			ctx.ok().result(builder.min.blockLocal.toString())
 		}, Auth.openAccessRole)
 		get("${Runner.BASE}/v2_1/provider/main", { ctx ->
 			val main = Providers.primaryProvider
 			val connected = main != null && main.connected()
 			val users = if(main != null) transaction { return@transaction User.find { Users.from eq main.getName() }.count() } else 0
 			val groups = if(main != null) transaction { return@transaction Group.find { Groups.from eq main.getName() }.count() } else 0
-			ctx.status(HttpStatus.OK_200).json(ProviderPayload(connected, main?.getName() ?: InternalProvider.SOURCE_NAME, users, groups))
+			ctx.ok().json(ProviderPayload(connected, main?.getName() ?: InternalProvider.SOURCE_NAME, users, groups))
 		}, Auth.adminRoleAccess)
 		get("${Runner.BASE}/v2_1/statistics/exception", { ctx ->
 			val time = ctx.queryParam("time", "5")?.toLongOrNull() ?: 5
-			Log.v(javaClass, "An admin is viewing all logged exceptions from the last $time minutes")
+			"An admin is viewing all logged exceptions from the last $time minutes".logi(javaClass)
 			val res = tracker.getData(TimeUnit.MINUTES.toMillis(time))
-			ctx.status(HttpStatus.OK_200).json(res)
+			ctx.ok().json(res)
 		}, Auth.adminRoleAccess)
 	}
 }
-data class ProviderPayload(val connected: Boolean, val name: String, val users: Int, val groups: Int)

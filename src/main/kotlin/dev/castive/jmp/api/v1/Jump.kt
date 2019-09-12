@@ -32,6 +32,7 @@ import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.Jump
 import dev.castive.jmp.except.EmptyPathException
 import dev.castive.jmp.util.EnvUtil
+import dev.castive.jmp.util.ok
 import dev.castive.jmp.util.toUUID
 import dev.castive.log2.Log
 import io.javalin.apibuilder.ApiBuilder.*
@@ -47,15 +48,15 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 
 	data class JumpResponse(val found: Boolean = true, val location: String)
 
-	private fun jumpExists(name: String, location: String, user: User?): Boolean {
+	private fun jumpExists(add: JumpData, user: User?): Boolean {
 		return transaction {
 			/**
 			 * Get Jumps for user
 			 * Return TRUE if both name & location matches any
 			 */
-			val existing = OwnerAction.getJumpFromUser(user, name, caseSensitive)
+			val existing = OwnerAction.getJumpFromUser(user, add.name, caseSensitive)
 			existing.forEach {
-				if(it.name.equals(name, ignoreCase = !caseSensitive) && it.location == location && !(it.owner == null && it.ownerGroup == null))
+				if(it.name.equals(add.name, ignoreCase = !caseSensitive) && it.location == add.location)
 					return@transaction true
 			}
 			return@transaction false
@@ -82,10 +83,8 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 				val target = if(caseSensitive) ctx.pathParam("target") else ctx.pathParam("target").toLowerCase()
 				if(target.isBlank())
 					throw EmptyPathException()
-				/**
-				 * 1. Try to get JWT token
-				 */
 				val user: User? = ctx.attribute(AccessManager.attributeUser)
+				// get the target jump and inform the user
 				transaction {
 					Log.d(javaClass, "User information: [name: ${user?.username}, token: ${user?.id?.value}]")
 					Log.d(javaClass, "Found user: ${user != null}")
@@ -101,12 +100,9 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 						Log.v(javaClass, "v2: moving to point: $location")
 						ctx.status(HttpStatus.OK_200).json(JumpResponse(true, location)) // Send the user the result, don't redirect them
 					}
-					else ctx.status(HttpStatus.OK_200).json(JumpResponse(false, "/similar?query=$target"))
+					// we either found nothing, or more than 1 result. Show a UI to resolve
+					else ctx.ok().json(JumpResponse(false, "/similar?query=$target"))
 				}
-			}
-			catch (e: IndexOutOfBoundsException) {
-				Log.e(javaClass, "Invalid target: ${ctx.path()}")
-				throw BadRequestResponse()
 			}
 			catch (e: EmptyPathException) {
 				Log.e(javaClass, "Empty target")
@@ -116,11 +112,11 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 		// Add a jump point
 		put("${Runner.BASE}/v1/jump", { ctx ->
 			val add = ctx.bodyAsClass(JumpData::class.java)
-			val groupID = (ctx.queryParam("gid") ?: "").toUUID()
+			val groupID = (ctx.queryParam<String>("gid").getOrNull() ?: "").toUUID()
 			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
 			// Block non-admin user from adding global jumps
 			if (add.personal == JumpData.TYPE_GLOBAL && transaction { return@transaction user.role.name != BasicRoles.ADMIN.name }) throw ForbiddenResponse()
-			if (!jumpExists(add.name, add.location, user)) {
+			if (!jumpExists(add, user)) {
 				transaction {
 					val group = if(groupID != null) Group.findById(groupID) else null
 					val jump = Jump.new {
@@ -132,10 +128,12 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 						metaUpdate = System.currentTimeMillis()
 					}
 					// Create aliases for newly added Jump
-					add.alias.forEach { Alias.new {
-						name = it.name
-						parent = jump
-					} }
+					add.alias.forEach {
+						Alias.new {
+							name = it.name
+							parent = jump
+						}
+					}
 					EventLog.post(Event(type = EventType.CREATE, resource = JumpData::class.java, causedBy = dev.castive.jmp.api.v1.Jump::class.java))
 					imageAction.get(add.location)
 					titleAction.get(add.location)
@@ -145,7 +143,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 			}
 			else {
 				EventLog.post(Event(type = "CONFLICT", resource = JumpData::class.java, causedBy = javaClass))
-				throw ConflictResponse()
+				throw ConflictResponse("${add.name} already exists!")
 			}
 		}, Auth.openAccessRole)
 		// Edit a jump point
@@ -202,7 +200,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 		}, Auth.defaultRoleAccess)
 		// Delete a jump point
 		delete("${Runner.BASE}/v1/jump/:id", { ctx ->
-			val id = ctx.pathParam("id").toIntOrNull() ?: throw BadRequestResponse()
+			val id = ctx.pathParam<Int>("id").getOrNull() ?: throw BadRequestResponse()
 			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
 			transaction {
 				val result = Jump.findById(id) ?: throw NotFoundResponse()

@@ -34,6 +34,8 @@ import dev.castive.jmp.auth.UserVerification
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.UserData
 import dev.castive.jmp.util.SystemUtil
+import dev.castive.jmp.util.isESNullOrBlank
+import dev.castive.jmp.util.ok
 import dev.castive.log2.Log
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.post
@@ -55,7 +57,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification, privat
 			}
 			val ck = ctx.cookie(App.crowdCookieConfig!!.name)
 			Log.d(javaClass, "Users HTTP cookie: $ck, valid: ${ck != null && ck != "NO_CONTENT"}")
-			ctx.status(HttpStatus.OK_200).json(ck != null && ck != "NO_CONTENT")
+			ctx.ok().json(ck != null && ck != "NO_CONTENT")
 		}, Roles.openAccessRole)
 		// Get a users token
 		post("${Runner.BASE}/v2/oauth/token", { ctx ->
@@ -107,11 +109,11 @@ class Oauth(private val auth: Auth, private val verify: UserVerification, privat
 			val user = userUtils.getUser(name) ?: throw UnauthorizedResponse()
 			val actualToken = sso?.token ?: login.token
 			val result = userUtils.createSession(user, actualToken)
-			ctx.status(HttpStatus.OK_200).json(result)
+			ctx.ok().json(result)
 		}, Roles.openAccessRole)
 		get("${Runner.BASE}/v2/oauth/refresh", { ctx ->
 			val refresh = ctx.queryParam("refreshToken", "")
-			if(refresh.isJSNullOrBlank()) {
+			if(refresh.isESNullOrBlank()) {
 				Log.d(javaClass, "Refresh token is null or blank")
 				throw BadRequestResponse()
 			}
@@ -131,7 +133,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification, privat
 				Log.i(Oauth::class.java, "Refreshing session for ${user.username}")
 				return@transaction result
 			}
-			ctx.status(HttpStatus.OK_200).json(response)
+			ctx.ok().json(response)
 		}, Roles.openAccessRole)
 		// Verify a users token is still valid
 		get("${Runner.BASE}/v2/oauth/valid", { ctx ->
@@ -157,7 +159,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification, privat
 						ctx.cookie(ck)
 					}
 				}
-				ctx.status(HttpStatus.OK_200).json(UserData(user))
+				ctx.ok().json(UserData(user))
 			}
 		}, Roles.openAccessRole)
 		// Logout the user and invalidate tokens if needed
@@ -181,11 +183,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification, privat
 					else Log.v(javaClass, "User has no SSO token to invalidate: ${user.username}")
 				}
 			}
-			ctx.status(HttpStatus.OK_200)
+			ctx.ok()
 		}, Roles.defaultAccessRole)
 	}
-}
-
-private fun String?.isJSNullOrBlank(): Boolean {
-	return this.isNullOrBlank() || this == "null" || this == "undefined"
 }

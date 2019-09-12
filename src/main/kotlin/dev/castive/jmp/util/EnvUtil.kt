@@ -10,6 +10,7 @@ object EnvUtil {
 	const val JMP_ALLOW_ERROR_INFO = "JMP_ALLOW_ERROR_INFO"
 	// set the source of JWT encryption key
 	const val KEY_REALM = "JMP_KEY_REALM"
+	const val KEY_AWS_SSM_NAME = "JMP_KEY_AWS_SSM_NAME"
 	// whether jumps should be case sensitive
 	const val CASE_SENSITIVE = "JMP_CASE_SENSITIVE"
 	// http port

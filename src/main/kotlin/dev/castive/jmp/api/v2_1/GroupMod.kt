@@ -23,13 +23,13 @@ import dev.castive.jmp.api.Responses
 import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.Group
 import dev.castive.jmp.db.dao.User
+import dev.castive.jmp.util.ok
 import dev.castive.log2.Log
 import io.javalin.apibuilder.ApiBuilder.patch
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.NotFoundResponse
 import io.javalin.http.UnauthorizedResponse
-import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -72,7 +72,7 @@ class GroupMod: EndpointGroup {
                     }
                 }
             }
-            ctx.status(HttpStatus.OK_200)
+            ctx.ok()
         }, Auth.defaultRoleAccess)
     }
 }
