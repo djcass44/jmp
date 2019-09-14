@@ -22,8 +22,11 @@ import dev.castive.jmp.Version
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.actions.InfoAction
 import dev.castive.jmp.db.ConfigStore
+import dev.castive.jmp.util.ok
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
+import io.javalin.http.BadRequestResponse
+import io.javalin.http.NotFoundResponse
 import org.eclipse.jetty.http.HttpStatus
 
 class Info(private val store: ConfigStore, private val arguments: Arguments): EndpointGroup {
@@ -32,11 +35,15 @@ class Info(private val store: ConfigStore, private val arguments: Arguments): En
         get("${Runner.BASE}/v2/version", { ctx ->
             ctx.status(HttpStatus.OK_200).result("v${Version.getVersion()}")
         }, Auth.openAccessRole)
-        get("${Runner.BASE}/v2/info/system", { ctx ->
-            ctx.status(HttpStatus.OK_200).json(InfoAction(store, arguments).getSystem())
-        }, Auth.adminRoleAccess)
-        get("${Runner.BASE}/v2/info/app", { ctx ->
-            ctx.status(HttpStatus.OK_200).json(InfoAction(store, arguments).getApp())
+        // get application/system information
+        get("${Runner.BASE}/v2/info/:type", { ctx ->
+            val type = ctx.pathParam("type", String::class.java).getOrNull() ?: throw BadRequestResponse("Invalid or null type")
+            val info = InfoAction(store, arguments)
+            ctx.ok().json(when(type) {
+                "system" -> info.getSystem()
+                "app" -> info.getApp()
+                else -> throw NotFoundResponse()
+            })
         }, Auth.adminRoleAccess)
     }
 }

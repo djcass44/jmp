@@ -16,8 +16,9 @@
 
 package dev.castive.jmp.util.checks
 
-import dev.castive.log2.Log
+import dev.castive.jmp.except.LowEntropyException
 import dev.castive.jmp.util.SystemUtil
+import dev.castive.log2.Log
 
 class EntropyCheck: StartupCheck("Entropy pool") {
     override fun runCheck(): Boolean {
@@ -26,7 +27,7 @@ class EntropyCheck: StartupCheck("Entropy pool") {
             entropy in 1..999 -> {
                 onFail()
                 Log.w(javaClass, "Entropy pool is low, this will cause issues when using strong cryptography")
-                false
+                throw LowEntropyException()
             }
             entropy <= 0 -> {
                 onWarning()

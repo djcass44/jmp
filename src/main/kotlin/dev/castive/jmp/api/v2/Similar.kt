@@ -20,28 +20,33 @@ import dev.castive.jmp.api.Similar
 import dev.castive.jmp.api.actions.OwnerAction
 import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.User
-import dev.castive.jmp.except.EmptyPathException
+import dev.castive.jmp.util.ok
 import dev.castive.log2.Log
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.http.Handler
-import org.eclipse.jetty.http.HttpStatus
 
 class Similar: Handler {
+    private val similar = Similar()
+
     override fun handle(ctx: Context) {
-        try {
-            val user: User? = ctx.attribute(AccessManager.attributeUser)
-            val query = ctx.pathParam("query")
-            if (query.isBlank())
-                throw EmptyPathException()
-            val userJumps = OwnerAction.getUserVisibleJumps(user, includeAliases = true)
-            val similar = Similar(query, userJumps)
-            similar.compute()
-            ctx.status(HttpStatus.OK_200).json(similar.results)
+        val user: User? = ctx.attribute(AccessManager.attributeUser)
+        val query = ctx.pathParam("query", String::class.java).getOrNull()
+        // we require a search term, so error if we dont get it
+        if (query.isNullOrBlank()) {
+            Log.i(javaClass, "Received null or empty target request from: ${ctx.userAgent()}")
+            throw BadRequestResponse("Empty or null target")
         }
-        catch (e: EmptyPathException) {
-            Log.e(javaClass, "Empty target")
-            throw BadRequestResponse()
-        }
+        // get the jumps visible to the user
+        val userJumps = OwnerAction.getUserVisibleJumps(user, includeAliases = true)
+
+        // check if the user wants suggestions instead (only the name)
+        val suggest = ctx.queryParam("suggest", Boolean::class.java).getOrNull()
+        ctx.ok().json(
+            if(suggest != true)
+                similar.compute(userJumps, query)
+            else
+                similar.computeNames(userJumps, query)
+        )
     }
 }

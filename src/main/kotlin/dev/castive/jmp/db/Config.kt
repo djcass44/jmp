@@ -41,7 +41,7 @@ class Config {
 		private const val envDataPath = "JMP_HOME"
 	}
 	fun loadEnv(): ConfigStore {
-		Log.w(javaClass, "Using environment for application/database configuration")
+		Log.i(javaClass, "Using environment for application/database configuration")
 		return ConfigStore(
 			getEnv(envUrl, defaultUrl),
 			getEnv(envDriver, defaultDriver),

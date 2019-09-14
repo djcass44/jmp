@@ -40,8 +40,7 @@ class UserValidator(private val auth: Auth, private val min: MinimalConfig): Use
 				names.add(g.name)
 				val match = DaoGroup.find { Groups.name eq g.name }
 				// Get the users in the group
-				val users = arrayListOf<DaoUser>()
-				g.members.forEach { users.add(getOrCreateUser(it)) }
+				val users = g.members.map { getOrCreateUser(it) }
 				if(match.empty()) {
 					// Group doesn't exist yet
 					DaoGroup.new {
@@ -91,11 +90,10 @@ class UserValidator(private val auth: Auth, private val min: MinimalConfig): Use
 	}
 
 	override fun ingestUsers(users: ArrayList<User>) {
-		val names = arrayListOf<String>()
 		transaction {
-			users.forEach { u ->
-				names.add(u.username)
-				getOrCreateUser(u)
+			val names = users.map {
+				getOrCreateUser(it)
+				it.username
 			}
 			// Get external users which weren't in the most recent search and delete them
 			val externalUsers = DaoUser.find { Users.from neq InternalProvider.SOURCE_NAME }

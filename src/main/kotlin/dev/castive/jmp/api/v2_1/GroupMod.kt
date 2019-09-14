@@ -23,6 +23,7 @@ import dev.castive.jmp.api.Responses
 import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.Group
 import dev.castive.jmp.db.dao.User
+import dev.castive.jmp.util.eq
 import dev.castive.jmp.util.ok
 import dev.castive.log2.Log
 import io.javalin.apibuilder.ApiBuilder.patch
@@ -51,7 +52,7 @@ class GroupMod: EndpointGroup {
                 // Add user to groups
                 for (g in mods.add) {
                     val group = Group.findById(UUID.fromString(g)) ?: throw NotFoundResponse("Invalid gid: $g")
-                    if(user.role.name == BasicRoles.ADMIN.name || group.users.contains(user)) {
+                    if(user.role.eq(BasicRoles.ADMIN) || group.users.contains(user)) {
                         // Add user to GroupUsers
                         val newUsers = ArrayList<User>()
                         newUsers.addAll(group.users)
@@ -62,7 +63,7 @@ class GroupMod: EndpointGroup {
                 }
                 for (g in mods.rm) {
                     val group = Group.findById(UUID.fromString(g)) ?: throw NotFoundResponse("Invalid gid: $g")
-                    if(user.role.name == BasicRoles.ADMIN.name || group.users.contains(user)) {
+                    if(user.role.eq(BasicRoles.ADMIN) || group.users.contains(user)) {
                         // Remove user from GroupUsers
                         val newUsers = ArrayList<User>()
                         newUsers.addAll(group.users)

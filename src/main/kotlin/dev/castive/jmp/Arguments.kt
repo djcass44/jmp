@@ -17,6 +17,7 @@
 package dev.castive.jmp
 
 import dev.castive.log2.Log
+import dev.castive.log2.loge
 import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.HelpFormatter
 import org.apache.commons.cli.Options
@@ -31,7 +32,6 @@ class Arguments(val args: Array<String>) {
 		options.addOption("h", "help", false, "Show help (you are probably here)")
 		options.addOption(null, "enable-cors", false, "Allow Cross-Origin Resource Sharing. This should only be used for development purposes. Note: the application will suicide if this is enabled on an HTTPS url")
 		options.addOption("dev", "enable-dev", false, "Allow development features. Implies --enable-cors. Note: the application will suicide if this is enabled on an HTTPS url")
-		options.addOption("d", "debug-level", true, "Set the level of logs to be output (0 -> 6, lower is more).")
 
 		val helpFormatter = HelpFormatter()
 		val parser = DefaultParser()
@@ -47,7 +47,7 @@ class Arguments(val args: Array<String>) {
 			enableCors = cl.hasOption("enable-cors") || enableDev
 		}
 		catch (e: Exception) {
-			Log.e(javaClass, e.toString())
+			e.toString().loge(javaClass)
 		}
 	}
 }

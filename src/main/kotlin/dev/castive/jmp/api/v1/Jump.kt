@@ -30,8 +30,8 @@ import dev.castive.jmp.api.actions.TitleAction
 import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.Jump
-import dev.castive.jmp.except.EmptyPathException
 import dev.castive.jmp.util.EnvUtil
+import dev.castive.jmp.util.eq
 import dev.castive.jmp.util.ok
 import dev.castive.jmp.util.toUUID
 import dev.castive.log2.Log
@@ -66,47 +66,40 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 	override fun addEndpoints() {
 		// List all items in Json format
 		get("${Runner.BASE}/v1/jumps", { ctx ->
-			val items = arrayListOf<JumpData>()
 			val user: User? = ctx.attribute(AccessManager.attributeUser)
 			val userJumps = OwnerAction.getUserVisibleJumps(user)
-			transaction {
-				userJumps.forEach {
-					items.add(JumpData(it))
-				}
+			val items = transaction {
+				return@transaction userJumps.map { JumpData(it) }
 			}
 			EventLog.post(Event(type = EventType.READ, resource = JumpData::class.java, causedBy = javaClass))
 			Log.v(javaClass, "Found ${items.size} jumps for ${user?.username}")
 			ctx.json(items).status(HttpStatus.OK_200)
 		}, Auth.openAccessRole)
 		get("${Runner.BASE}/v2/jump/:target", { ctx ->
-			try {
-				val target = if(caseSensitive) ctx.pathParam("target") else ctx.pathParam("target").toLowerCase()
-				if(target.isBlank())
-					throw EmptyPathException()
-				val user: User? = ctx.attribute(AccessManager.attributeUser)
-				// get the target jump and inform the user
-				transaction {
-					Log.d(javaClass, "User information: [name: ${user?.username}, token: ${user?.id?.value}]")
-					Log.d(javaClass, "Found user: ${user != null}")
-					val id = ctx.queryParam("id")?.toIntOrNull()
-					val jump = if(id != null) {
-						Log.i(javaClass, "User is specifying jump id: $id")
-						OwnerAction.getJumpById(user, id)
-					}
-					else OwnerAction.getJumpFromUser(user, target, caseSensitive)
-					if(jump.size == 1) {
-						val location = jump[0].location
-						jump[0].metaUsage++ // Increment usage count for statistics
-						Log.v(javaClass, "v2: moving to point: $location")
-						ctx.status(HttpStatus.OK_200).json(JumpResponse(true, location)) // Send the user the result, don't redirect them
-					}
-					// we either found nothing, or more than 1 result. Show a UI to resolve
-					else ctx.ok().json(JumpResponse(false, "/similar?query=$target"))
-				}
+			val target = if(caseSensitive) ctx.pathParam("target") else ctx.pathParam("target").toLowerCase()
+			if (target.isBlank()) {
+				Log.i(javaClass, "Received null or empty target request from: ${ctx.userAgent()}")
+				throw BadRequestResponse("Empty or null target")
 			}
-			catch (e: EmptyPathException) {
-				Log.e(javaClass, "Empty target")
-				throw NotFoundResponse()
+			val user: User? = ctx.attribute(AccessManager.attributeUser)
+			// get the target jump and inform the user
+			transaction {
+				Log.d(javaClass, "User information: [name: ${user?.username}, token: ${user?.id?.value}]")
+				Log.d(javaClass, "Found user: ${user != null}")
+				val id = ctx.queryParam("id", Int::class.java).getOrNull()
+				val jump = if(id != null) {
+					Log.i(javaClass, "User is specifying jump id: $id")
+					OwnerAction.getJumpById(user, id)
+				}
+				else OwnerAction.getJumpFromUser(user, target, caseSensitive)
+				if(jump.size == 1) {
+					val location = jump[0].location
+					jump[0].metaUsage++ // Increment usage count for statistics
+					Log.v(javaClass, "v2: moving to point: $location")
+					ctx.status(HttpStatus.OK_200).json(JumpResponse(true, location)) // Send the user the result, don't redirect them
+				}
+				// we either found nothing, or more than 1 result. Show a UI to resolve
+				else ctx.ok().json(JumpResponse(false, "/similar?query=$target"))
 			}
 		}, Auth.openAccessRole)
 		// Add a jump point
@@ -115,7 +108,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 			val groupID = (ctx.queryParam<String>("gid").getOrNull() ?: "").toUUID()
 			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
 			// Block non-admin user from adding global jumps
-			if (add.personal == JumpData.TYPE_GLOBAL && transaction { return@transaction user.role.name != BasicRoles.ADMIN.name }) throw ForbiddenResponse()
+			if (add.personal == JumpData.TYPE_GLOBAL && transaction { return@transaction user.role.eq(BasicRoles.ADMIN) }) throw ForbiddenResponse()
 			if (!jumpExists(add, user)) {
 				transaction {
 					val group = if(groupID != null) Group.findById(groupID) else null
@@ -134,7 +127,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 							parent = jump
 						}
 					}
-					EventLog.post(Event(type = EventType.CREATE, resource = JumpData::class.java, causedBy = dev.castive.jmp.api.v1.Jump::class.java))
+					EventLog.post(Event(type = EventType.CREATE, resource = JumpData::class.java, causedBy = Jump::class.java))
 					imageAction.get(add.location)
 					titleAction.get(add.location)
 				}
@@ -154,7 +147,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 				val existing = Jump.findById(update.id) ?: throw NotFoundResponse()
 
 				// User can change personal jumps
-				if(existing.owner == user || user.role.name == BasicRoles.ADMIN.name ||
+				if(existing.owner == user || user.role.eq(BasicRoles.ADMIN) ||
 					(OwnerAction.getJumpById(user, existing.id.value).isNotEmpty() && !OwnerAction.isPublic(existing))) {
 					existing.apply {
 						name = update.name

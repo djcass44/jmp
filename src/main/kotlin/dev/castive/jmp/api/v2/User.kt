@@ -28,6 +28,8 @@ import dev.castive.jmp.api.Socket
 import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.User
+import dev.castive.jmp.util.asArrayList
+import dev.castive.jmp.util.ok
 import dev.castive.log2.Log
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
@@ -63,11 +65,8 @@ class User(
                             Users.id eq it.id
                         }
                         .withDistinct()
-                    val groups = arrayListOf<String>()
-                    Group.wrapRows(res).toList().forEach { g ->
-                        groups.add(g.name)
-                    }
-                    users.add(UserData(it, groups))
+                    val groups = Group.wrapRows(res).toList().map { g -> g.name }
+                    users.add(UserData(it, groups.asArrayList()))
                 }
                 //Determine if there is a next page
                 return@transaction User.all().count()
@@ -76,7 +75,7 @@ class User(
             val currentPage = (offset / userCount) + 1
             val totalPages = ceil(userCount / count.toDouble()).toInt()
             Log.d(javaClass, "Returning ${users.size} users")
-            ctx.status(HttpStatus.OK_200).json(PagedUserData(currentPage, totalPages, users, offset + (count * 2) < userCount))
+            ctx.ok().json(PagedUserData(currentPage, totalPages, users, offset + (count * 2) < userCount))
         }, Auth.defaultRoleAccess)
         // Add a user
         put("${Runner.BASE}/v2/user", { ctx ->
@@ -104,14 +103,14 @@ class User(
         get("${Runner.BASE}/v2/user", { ctx ->
             val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
             transaction {
-                ctx.status(HttpStatus.OK_200).result(user.role.name)
+                ctx.ok().result(user.role.name)
             }
             EventLog.post(Event(type = EventType.READ, resource = UserData::class.java, causedBy = javaClass))
         }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2_1/user/info", { ctx ->
             val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
             transaction {
-                ctx.status(HttpStatus.OK_200).json(UserData(user, arrayListOf()))
+                ctx.ok().json(UserData(user, arrayListOf()))
             }
         }, Auth.defaultRoleAccess)
         // Change the role of a user
@@ -129,8 +128,10 @@ class User(
                 }.elementAtOrNull(0) ?: throw BadRequestResponse()
                 Log.i(javaClass, "User role updated [user: ${user.username}, from: ${user.role.name}, to: ${role.name}] by ${u.username}")
                 EventLog.post(Event(type = EventType.UPDATE, resource = UserData::class.java, causedBy = javaClass))
-                user.role = role
-                user.metaUpdate = System.currentTimeMillis()
+                user.apply {
+                    this.role = role
+                    metaUpdate = System.currentTimeMillis()
+                }
                 ws.invoke(Socket.EVENT_UPDATE_USER, Socket.EVENT_UPDATE_USER)
                 ctx.status(HttpStatus.NO_CONTENT_204).json(updated)
             }
@@ -162,8 +163,7 @@ class User(
             }.getOrElse {
                 throw BadRequestResponse("Bad UUID")
             }
-            val items = arrayListOf<GroupData>()
-            transaction {
+            val items = transaction {
                 val getUser = User.findById(uid) ?: throw BadRequestResponse("Requested user is null")
                 val res = (Groups innerJoin GroupUsers innerJoin Users)
                     .slice(Groups.columns)
@@ -171,11 +171,9 @@ class User(
                         Users.id eq getUser.id
                     }
                     .withDistinct()
-                Group.wrapRows(res).toList().forEach {
-                    items.add(GroupData(it))
-                }
+                return@transaction Group.wrapRows(res).toList().map { GroupData(it) }
             }
-            ctx.status(HttpStatus.OK_200).json(items)
+            ctx.ok().json(items)
         }, Auth.defaultRoleAccess)
     }
 }

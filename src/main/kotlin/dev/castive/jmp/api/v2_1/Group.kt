@@ -62,17 +62,10 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
                             Users.id eq user.id
                         }
                         .withDistinct()
-                    val groups = Group.wrapRows(res).toList()
-                    groups.forEach {
-                        items.add(GroupData(it))
-                    }
+                    items.addAll(Group.wrapRows(res).toList().map { GroupData(it) })
                 }
             }
             ctx.ok().json(items)
-        }, Auth.defaultRoleAccess)
-        get("${Runner.BASE}/v2_1/group/:id", { ctx ->
-            // Only allow users to view groups they're already in
-            ctx.status(HttpStatus.NOT_IMPLEMENTED_501).result("This endpoint is unfinished, or not ready for public use.")
         }, Auth.defaultRoleAccess)
         put("${Runner.BASE}/v2_1/group", { ctx ->
             val add = ctx.bodyAsClass(GroupData::class.java)

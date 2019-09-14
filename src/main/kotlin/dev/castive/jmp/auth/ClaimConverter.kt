@@ -78,7 +78,7 @@ object ClaimConverter {
 			}
 		}
 		if(user == null && user2 == null) {
-			Log.i(javaClass, "Failed to locate user with any provider")
+			Log.i(javaClass, "[${ctx.path()}] Failed to locate user with any provider")
 			return null
 		}
 		return user2 ?: transaction {
