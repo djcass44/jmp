@@ -39,7 +39,6 @@ repositories {
 	maven(url = "https://jitpack.io")
 	mavenCentral()
 	jcenter()
-	maven(url = "https://dl.bintray.com/nitram509/jbrotli/")
 //    mavenLocal()
 }
 
@@ -54,7 +53,7 @@ dependencies {
 	implementation("com.github.djcass44:log2:7d9def02d1")
 	implementation("com.github.djcass44:eventlog:72b6dac4e2")
 
-	implementation("io.javalin:javalin:3.2.0")
+	implementation("io.javalin:javalin:3.4.1")
 
 	implementation("org.slf4j:slf4j-simple:1.7.26")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.8")

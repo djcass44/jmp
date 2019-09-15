@@ -47,6 +47,9 @@ class Health(private val config: MinimalConfig): Handler {
 	private val rateLimiter = RateLimiter.create(10.0)
 
 	override fun handle(ctx :Context) {
+		// allow health checks from any origin
+		// this is fine because we are rate-limiting this endpoint
+		ctx.header("Access-Control-Allow-Origin", "*")
 		val user: User? = ctx.attribute(AccessManager.attributeUser)
 		when {
 			App.auth.isAdmin(user) -> {
