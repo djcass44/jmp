@@ -47,6 +47,7 @@ val junitVersion: String by project
 dependencies {
 	implementation(kotlin("stdlib-jdk8"))
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.2")
+	implementation("org.jetbrains.kotlin:kotlin-reflect:1.3.50")
 
 	implementation("com.github.djcass44:jmp-auth:176931eec3")
 //    implementation("dev.castive:jmp-auth:0.5.3")

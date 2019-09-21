@@ -16,12 +16,16 @@
 
 package dev.castive.jmp.db
 
-import dev.castive.javalin_auth.auth.Roles.BasicRoles
+import dev.castive.javalin_auth.auth.Roles
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.db.dao.Role
 import dev.castive.jmp.db.dao.User
 import dev.castive.log2.Log
+import dev.castive.log2.logok
+import dev.castive.log2.logv
 import dev.castive.securepass3.PasswordGenerator
+import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
 import java.nio.charset.StandardCharsets
@@ -32,9 +36,20 @@ class Init(private val dataPath: String) {
     init {
         val superName = "admin" // Hardcoded into FE, don't change
         transaction {
+            addLogger(StdOutSqlLogger)
+            // roles must be created before the admin
+            if(Role.all().empty()) {
+                for (r in Roles.BasicRoles.values()) {
+                    Role.new {
+                        name = r.name
+                    }
+                }
+                "Initialised user roles".logok(javaClass)
+            }
+	        "Located ${User.all().count()} existing users...".logv(javaClass)
             if(User.all().empty()) {
                 val password = PasswordGenerator().generate(32, strong = false) // Strong causes blocking issues in Docker
-                Auth().createUser(superName, password, true)
+                Auth().createUser(superName, password, true, "Admin")
                 Log.w(javaClass, "Created superuser with access: [username: $superName]\nPlease change this ASAP!\nThis will also be stored in the current directory in 'initialAdminPassword'")
                 try {
 	                var path = dataPath
@@ -47,13 +62,6 @@ class Init(private val dataPath: String) {
                 for (c in password) // Probably useless if converted to a string above
                     print(c)
                 println()
-            }
-            if(Role.all().empty()) {
-                for (r in BasicRoles.values()) {
-                    Role.new {
-                        name = r.name
-                    }
-                }
             }
         }
     }

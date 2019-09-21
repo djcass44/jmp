@@ -6,6 +6,8 @@ object EnvUtil {
 		return if (env.isNullOrEmpty()) default else env
 	}
 
+	const val JMP_INDEX_PATH = "JMP_INDEX_PATH"
+
 	// allow exception information in the tracker (default false)
 	const val JMP_ALLOW_ERROR_INFO = "JMP_ALLOW_ERROR_INFO"
 	// set the source of JWT encryption key

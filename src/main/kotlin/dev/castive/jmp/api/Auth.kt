@@ -26,9 +26,14 @@ import dev.castive.jmp.db.dao.Roles
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
 import dev.castive.jmp.util.SystemUtil
+import dev.castive.jmp.util.isEqual
 import dev.castive.log2.Log
+import dev.castive.log2.logi
+import dev.castive.log2.logv
 import io.javalin.http.ConflictResponse
 import io.javalin.http.Context
+import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import dev.castive.javalin_auth.auth.Roles as AuthRoles
@@ -60,21 +65,25 @@ class Auth {
 		return Hash.password(password).verify(expectedHash)
 	}
 
-	fun createUser(username: String, password: CharArray, admin: Boolean = false) {
+	fun createUser(username: String, password: CharArray, admin: Boolean = false, displayName: String = "") {
 		val hash = computeHash(password)
 		if(!userExists(username)) { // Assume the user hasn't been added
+			"Attempting to create user: $username, admin=$admin".logi(javaClass)
 			transaction {
+				addLogger(StdOutSqlLogger)
 				User.new {
 					this.username = username
 					this.hash = hash
-					role = if(admin) getDAOAdminRole() else getDAOUserRole()
-					metaCreation = System.currentTimeMillis()
-					metaUpdate = System.currentTimeMillis()
+					this.displayName = displayName
+					role = if (admin) getDAOAdminRole() else getDAOUserRole()
 				}
+				commit()
 			}
 		}
-		else
+		else {
+			"Failed to create user ($username) as they already exist!".logv(javaClass)
 			throw ConflictResponse()
+		}
 	}
 	fun loginUser(token: String, ctx: Context): UserLoginResponse? {
 		Log.v(javaClass, "Attempting to login user via SSO token")
@@ -147,21 +156,16 @@ class Auth {
 			return@transaction user?.id?.value.toString()
 		}
 	}
-	fun userExists(username: String): Boolean {
-		return transaction {
-			val existing = User.find {
-				Users.username.lowerCase() eq username.toLowerCase()
-			}
-			return@transaction !existing.empty()
-		}
+	private fun userExists(username: String): Boolean = transaction {
+		return@transaction !User.find {
+			Users.username.lowerCase() eq username.toLowerCase()
+		}.empty()
 	}
 
-	fun getUser(username: String): User? {
-		return transaction {
-			return@transaction User.find {
-				Users.username eq username
-			}.elementAtOrNull(0)
-		}
+	fun getUser(username: String): User? = transaction {
+		return@transaction User.find {
+			Users.username eq username
+		}.elementAtOrNull(0)
 	}
 	fun getUser(username: String, token: String): User? {
 		if(username.isBlank() || token.isBlank()) return null
@@ -174,18 +178,18 @@ class Auth {
 	}
 	fun isAdmin(user: User?): Boolean {
 		if(user == null) return false
-		return transaction { return@transaction user.role == getDAOAdminRole() }
+		return transaction { return@transaction user.role.isEqual(BasicRoles.ADMIN) }
 	}
 	fun getDAOUserRole(): DaoRole {
 		return getDAORole(BasicRoles.USER)
 	}
-	fun getDAOAdminRole(): DaoRole {
+	private fun getDAOAdminRole(): DaoRole {
 		return getDAORole(BasicRoles.ADMIN)
 	}
 	private fun getDAORole(role: BasicRoles): DaoRole {
 		return transaction {
 			return@transaction DaoRole.find {
-				Roles.name eq role.name
+				Roles.name.lowerCase() eq role.name.toLowerCase()
 			}.elementAtOrNull(0)?: // If role is null, create it
 			DaoRole.new {
 				name = role.name

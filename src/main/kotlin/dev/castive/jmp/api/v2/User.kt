@@ -91,7 +91,9 @@ class User(
                 }
                 val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
                 Log.i(javaClass, "$user is creating a user [name: ${basicAuth.username}]")
-                auth.createUser(basicAuth.username, basicAuth.password.toCharArray())
+                transaction {
+                    auth.createUser(basicAuth.username, basicAuth.password.toCharArray())
+                }
                 EventLog.post(Event(type = EventType.CREATE, resource = UserData::class.java, causedBy = javaClass))
                 ws.invoke(Socket.EVENT_UPDATE_USER, Socket.EVENT_UPDATE_USER)
                 ctx.status(HttpStatus.CREATED_201).result(basicAuth.username)

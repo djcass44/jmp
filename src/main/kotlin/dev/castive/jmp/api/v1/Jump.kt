@@ -21,6 +21,7 @@ import dev.castive.eventlog.schema.Event
 import dev.castive.eventlog.schema.EventType
 import dev.castive.javalin_auth.auth.Roles.BasicRoles
 import dev.castive.jmp.Runner
+import dev.castive.jmp.api.App
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Responses
 import dev.castive.jmp.api.Socket
@@ -31,7 +32,7 @@ import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.Jump
 import dev.castive.jmp.util.EnvUtil
-import dev.castive.jmp.util.eq
+import dev.castive.jmp.util.isEqual
 import dev.castive.jmp.util.ok
 import dev.castive.jmp.util.toUUID
 import dev.castive.log2.Log
@@ -108,7 +109,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 			val groupID = (ctx.queryParam<String>("gid").getOrNull() ?: "").toUUID()
 			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
 			// Block non-admin user from adding global jumps
-			if (add.personal == JumpData.TYPE_GLOBAL && transaction { return@transaction user.role.eq(BasicRoles.ADMIN) }) throw ForbiddenResponse()
+			if (add.personal == JumpData.TYPE_GLOBAL && !App.auth.isAdmin(user)) throw ForbiddenResponse("Only an admin can create global Jumps")
 			if (!jumpExists(add, user)) {
 				transaction {
 					val group = if(groupID != null) Group.findById(groupID) else null
@@ -147,7 +148,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 				val existing = Jump.findById(update.id) ?: throw NotFoundResponse()
 
 				// User can change personal jumps
-				if(existing.owner == user || user.role.eq(BasicRoles.ADMIN) ||
+				if(existing.owner == user || user.role.isEqual(BasicRoles.ADMIN) ||
 					(OwnerAction.getJumpById(user, existing.id.value).isNotEmpty() && !OwnerAction.isPublic(existing))) {
 					existing.apply {
 						name = update.name

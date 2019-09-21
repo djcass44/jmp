@@ -30,7 +30,7 @@ fun Context.ok(): Context = this.status(HttpStatus.OK_200)
 /**
  * Checks whether a DaoRole name is equal to a BasicRole name
  */
-fun Role.eq(role: Roles.BasicRoles): Boolean = name == role.name
+fun Role.isEqual(role: Roles.BasicRoles): Boolean = name.equals(role.name, ignoreCase = true)
 
 /**
  * Convert a List to kotlin.collections.ArrayList
