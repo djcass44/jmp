@@ -17,6 +17,7 @@
 package dev.castive.jmp.audit
 
 import dev.castive.jmp.api.App
+import dev.castive.jmp.io.DataProvider
 import dev.castive.jmp.io.NOutputStream
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
@@ -26,7 +27,8 @@ import java.io.PrintStream
 import java.nio.charset.StandardCharsets
 
 class Logger {
-	private val logDir = File(EnvUtil.getEnv(EnvUtil.LOG_LOCATION, "./logs"))
+	// request a directory within JMP_HOME
+	private val logDir = DataProvider.getDirectory("logs")
 
 	private val logRequest = File(logDir, "jmp-requests_${App.id}.log")
 	private val logOut = File(logDir, "jmp-stdout_${App.id}.log")

@@ -36,6 +36,7 @@ import dev.castive.jmp.util.isEqual
 import dev.castive.jmp.util.ok
 import dev.castive.jmp.util.toUUID
 import dev.castive.log2.Log
+import dev.castive.log2.logi
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.http.*
@@ -93,11 +94,12 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 					OwnerAction.getJumpById(user, id)
 				}
 				else OwnerAction.getJumpFromUser(user, target, caseSensitive)
+				"Got ${jump.size} jumps as a response to: [name: $target, id: $id]".logi(javaClass)
 				if(jump.size == 1) {
 					val location = jump[0].location
 					jump[0].metaUsage++ // Increment usage count for statistics
 					Log.v(javaClass, "v2: moving to point: $location")
-					ctx.status(HttpStatus.OK_200).json(JumpResponse(true, location)) // Send the user the result, don't redirect them
+					ctx.ok().json(JumpResponse(true, location)) // Send the user the result, don't redirect them
 				}
 				// we either found nothing, or more than 1 result. Show a UI to resolve
 				else ctx.ok().json(JumpResponse(false, "/similar?query=$target"))

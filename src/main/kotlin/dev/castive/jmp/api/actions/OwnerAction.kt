@@ -17,6 +17,7 @@
 package dev.castive.jmp.api.actions
 
 import dev.castive.jmp.db.dao.*
+import dev.castive.jmp.util.asArrayList
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -86,9 +87,11 @@ object OwnerAction {
     }
     fun getJumpById(user: User?, id: Int): ArrayList<Jump> {
         val jumps = getUserVisibleJumps(user)
-        val results = arrayListOf<Jump>()
-        transaction { jumps.forEach { if(it.id.value == id) results.add(it) } }
-        return results
+        return transaction {
+            jumps.mapNotNull {
+                if(it.id.value == id) it else null
+            }
+        }.asArrayList()
     }
     fun getJumpFromUser(user: User?, jump: String, caseSensitive: Boolean = true): ArrayList<Jump> {
         val jumps = getUserVisibleJumps(user)

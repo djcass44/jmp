@@ -6,6 +6,7 @@ object EnvUtil {
 		return if (env.isNullOrEmpty()) default else env
 	}
 
+	const val JMP_HOME = "JMP_HOME"
 	const val JMP_INDEX_PATH = "JMP_INDEX_PATH"
 
 	// allow exception information in the tracker (default false)
@@ -20,8 +21,6 @@ object EnvUtil {
 
 	// whether logs should be written to a file
 	const val LOG_ENABLED = "LOG_ENABLED"
-	// the directory to write logs (if enabled)
-	const val LOG_LOCATION = "LOG_DIRECTORY"
 
 	// the url of the fav2 server
 	const val FAV2_URL = "FAV2_URL"
