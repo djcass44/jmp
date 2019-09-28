@@ -48,7 +48,8 @@ class Similar(private val threshold: Double = 0.75) {
     }
     fun computeNames(dict: ArrayList<JumpData>, query: String): List<String> {
         val results = compute(dict, query)
-        return results.map { it.name }
+        // return the id suffix so that the webextension can skip the /similar hop
+        return results.map { "${it.name}?id=${it.id}" }
     }
 
     // Check to see if any Jumps are exact matches
