@@ -16,6 +16,7 @@
 
 package dev.castive.jmp.api.v2_1
 
+import dev.castive.javalin_auth.api.OAuth2
 import dev.castive.javalin_auth.auth.Providers
 import dev.castive.javalin_auth.auth.provider.InternalProvider
 import dev.castive.jmp.Runner
@@ -55,6 +56,15 @@ class Props(private val builder: LDAPConfigBuilder, private val tracker: Excepti
 			val groups = if(main != null) transaction { return@transaction Group.find { Groups.from eq main.getName() }.count() } else 0
 			ctx.ok().json(ProviderPayload(connected, main?.getName() ?: InternalProvider.SOURCE_NAME, users, groups))
 		}, Auth.adminRoleAccess)
+		get("${Runner.BASE}/v2_1/statistics/providers", { ctx ->
+			// get the names of all possible auth providers
+			ctx.ok().json(arrayListOf(InternalProvider.SOURCE_NAME).apply {
+				if(Providers.primaryProvider != null)
+					add(Providers.primaryProvider!!.getName())
+				// add oauth2 providers
+				addAll(OAuth2.providers.keys)
+			})
+		}, Auth.defaultRoleAccess)
 		get("${Runner.BASE}/v2_1/statistics/exception", { ctx ->
 			val time = ctx.queryParam("time", "5")?.toLongOrNull() ?: 5
 			"An admin is viewing all logged exceptions from the last $time minutes".logi(javaClass)

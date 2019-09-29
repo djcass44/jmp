@@ -16,6 +16,7 @@
 
 package dev.castive.jmp.db.dao
 
+import dev.castive.javalin_auth.auth.provider.InternalProvider
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
@@ -26,7 +27,11 @@ import java.util.*
 object Groups: UUIDTable() {
     val name = varchar("name", 255).uniqueIndex()
 
-    val from = varchar("from", 24).default("local")
+    val from = varchar("from", 24).default(InternalProvider.SOURCE_NAME)
+    // whether the group should be publicly visible (only allowed for internal groups)
+    val public = bool("public").default(false)
+    // users from this source will be automatically added to this group
+    val defaultFor = varchar("default_for", 24).nullable()
 }
 class Group(id: EntityID<UUID>): UUIDEntity(id) {
     companion object: UUIDEntityClass<Group>(Groups)
@@ -35,9 +40,17 @@ class Group(id: EntityID<UUID>): UUIDEntity(id) {
     var users by User via GroupUsers
 
     var from by Groups.from
+    var public by Groups.public
+    var defaultFor by Groups.defaultFor
 }
-data class GroupData(val id: UUID? = UUID.randomUUID(), val name: String, val from: String = "local") {
-    constructor(group: Group): this(group.id.value, group.name, group.from)
+data class GroupData(
+    val id: UUID? = UUID.randomUUID(),
+    val name: String,
+    val from: String = InternalProvider.SOURCE_NAME,
+    val public: Boolean = false,
+    val defaultFor: String? = null
+) {
+    constructor(group: Group): this(group.id.value, group.name, group.from, group.public, group.defaultFor)
 }
 object GroupUsers: Table() {
     val group = reference("group", Groups).primaryKey(0)

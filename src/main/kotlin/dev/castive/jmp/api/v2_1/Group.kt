@@ -20,14 +20,17 @@ import dev.castive.eventlog.EventLog
 import dev.castive.eventlog.schema.Event
 import dev.castive.eventlog.schema.EventType
 import dev.castive.javalin_auth.auth.Roles.BasicRoles
+import dev.castive.javalin_auth.auth.provider.InternalProvider
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Responses
 import dev.castive.jmp.api.Socket
-import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.Group
+import dev.castive.jmp.tasks.GroupsTask
+import dev.castive.jmp.util.isEqual
 import dev.castive.jmp.util.ok
+import dev.castive.jmp.util.user
 import dev.castive.log2.Log
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
@@ -46,8 +49,8 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
     override fun addEndpoints() {
         get("${Runner.BASE}/v2_1/groups", { ctx ->
             val items = arrayListOf<GroupData>()
-            val user: User? = ctx.attribute(AccessManager.attributeUser)
-            Log.d(javaClass, "Listing groups visible to actual user: ${user != null}")
+            val user: User? = ctx.user()
+            Log.d(javaClass, "Listing groups visible to actual user: ${user?.username}")
             if(user != null) {
                 transaction {
                     if(user.role.name == BasicRoles.ADMIN.name) {
@@ -69,7 +72,7 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
         }, Auth.defaultRoleAccess)
         put("${Runner.BASE}/v2_1/group", { ctx ->
             val add = ctx.bodyAsClass(GroupData::class.java)
-            val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+            val user: User = ctx.user() ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
             Log.d(javaClass, "add - JWT validation passed")
             transaction {
                 val existing = Group.find {
@@ -78,6 +81,9 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
                 if(existing.count() > 0) throw ConflictResponse("Group already exists")
                 Group.new(UUID.randomUUID()) {
                     name = add.name
+                    public = add.public
+                    if(!public)
+                        defaultFor = add.defaultFor
                     // Add the user to the new group
                     users = SizedCollection(arrayListOf(user))
                 }
@@ -88,32 +94,45 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
         }, Auth.defaultRoleAccess)
         patch("${Runner.BASE}/v2_1/group", { ctx ->
             val update = ctx.bodyAsClass(GroupData::class.java)
-            val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+            val user: User = ctx.user() ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
             transaction {
                 val existing = Group.findById(update.id!!) ?: throw NotFoundResponse("Group not found")
                 // Only allow update if user belongs to group (or is admin)
-                if(user.role.name != BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
-                existing.name = update.name
-                ws.invoke(Socket.EVENT_UPDATE_GROUP, Socket.EVENT_UPDATE_GROUP)
-                ctx.status(HttpStatus.NO_CONTENT_204).json(update)
+                if(!user.role.isEqual(BasicRoles.ADMIN) && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
+                // update the group
+                existing.apply {
+                    name = update.name
+                    // only allow the public flag to be changed for internal groups
+                    if(from == InternalProvider.SOURCE_NAME && user.role.isEqual(BasicRoles.ADMIN)) {
+                        public = update.public
+                        // we cannot have a public and default group
+                        if(!public)
+                            defaultFor = update.defaultFor
+                    }
+                }
             }
+            // ask the groupstask cron to update public/default relations
+            GroupsTask.update()
+            ws.invoke(Socket.EVENT_UPDATE_GROUP, Socket.EVENT_UPDATE_GROUP)
+            ctx.status(HttpStatus.NO_CONTENT_204).json(update)
             EventLog.post(Event(type = EventType.UPDATE, resource = GroupData::class.java, causedBy = javaClass))
         }, Auth.defaultRoleAccess)
         delete("${Runner.BASE}/v2_1/group/:id", { ctx ->
             val id = UUID.fromString(ctx.pathParam("id"))
-            val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+            val user: User = ctx.user() ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
             transaction {
                 val existing = Group.findById(id) ?: throw NotFoundResponse("Group not found")
                 // Only allow deletion if user belongs to group (or is admin)
-                if(user.role.name != BasicRoles.ADMIN.name && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
+                if(!user.role.isEqual(BasicRoles.ADMIN) && !existing.users.contains(user)) throw ForbiddenResponse("User not in requested group")
                 Log.i(javaClass, "${user.username} is removing group ${existing.name}")
+                // cleanup the intermediate tables
                 GroupUsers.deleteWhere {
                     GroupUsers.group eq existing.id
                 }
                 existing.delete()
-                ws.invoke(Socket.EVENT_UPDATE_GROUP, Socket.EVENT_UPDATE_GROUP)
-                ctx.status(HttpStatus.NO_CONTENT_204)
             }
+            ws.invoke(Socket.EVENT_UPDATE_GROUP, Socket.EVENT_UPDATE_GROUP)
+            ctx.status(HttpStatus.NO_CONTENT_204)
             EventLog.post(Event(type = EventType.DESTROY, resource = GroupData::class.java, causedBy = javaClass))
         }, Auth.adminRoleAccess)
     }

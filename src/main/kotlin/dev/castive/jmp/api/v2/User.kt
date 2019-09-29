@@ -25,11 +25,12 @@ import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Responses
 import dev.castive.jmp.api.Socket
-import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.User
+import dev.castive.jmp.tasks.GroupsTask
 import dev.castive.jmp.util.asArrayList
 import dev.castive.jmp.util.ok
+import dev.castive.jmp.util.user
 import dev.castive.log2.Log
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
@@ -51,7 +52,7 @@ class User(
 
     override fun addEndpoints() {
         get("${Runner.BASE}/v2/users", { ctx ->
-            val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+            val user: User = ctx.user() ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
             Log.d(javaClass, "list - JWT validation passed")
             val count = ctx.queryParam<Int>("count").value?.coerceAtLeast(5) ?: 10
             val offset = ctx.queryParam<Int>("offset").value?.coerceAtLeast(0) ?: 0
@@ -80,7 +81,7 @@ class User(
         // Add a user
         put("${Runner.BASE}/v2/user", { ctx ->
             if(createLimiter.tryAcquire()) {
-                val user: User? = ctx.attribute(AccessManager.attributeUser)
+                val user: User? = ctx.user()
                 transaction {
                     val blockLocal = configMin.blockLocal
                     Log.d(javaClass, "Block local accounts: $blockLocal")
@@ -94,6 +95,8 @@ class User(
                 transaction {
                     auth.createUser(basicAuth.username, basicAuth.password.toCharArray())
                 }
+                // ask the groupstask cron to update public/default relations
+                GroupsTask.update()
                 EventLog.post(Event(type = EventType.CREATE, resource = UserData::class.java, causedBy = javaClass))
                 ws.invoke(Socket.EVENT_UPDATE_USER, Socket.EVENT_UPDATE_USER)
                 ctx.status(HttpStatus.CREATED_201).result(basicAuth.username)
@@ -103,14 +106,14 @@ class User(
         }, Auth.openAccessRole)
         // Get information about the current user
         get("${Runner.BASE}/v2/user", { ctx ->
-            val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+            val user: User = ctx.user() ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
             transaction {
                 ctx.ok().result(user.role.name)
             }
             EventLog.post(Event(type = EventType.READ, resource = UserData::class.java, causedBy = javaClass))
         }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2_1/user/info", { ctx ->
-            val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+            val user: User = ctx.user() ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
             transaction {
                 ctx.ok().json(UserData(user, arrayListOf()))
             }
@@ -118,7 +121,7 @@ class User(
         // Change the role of a user
         patch("${Runner.BASE}/v2/user", { ctx ->
             val updated = ctx.bodyAsClass(EditUserData::class.java)
-            val u: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+            val u: User = ctx.user() ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
             transaction {
                 val user = User.findById(updated.id) ?: throw BadRequestResponse()
                 // Block dropping the superuser from admin
@@ -141,7 +144,7 @@ class User(
         // Delete a user
         delete("${Runner.BASE}/v2/user/:id", { ctx ->
             val id = UUID.fromString(ctx.pathParam("id"))
-            val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+            val user: User = ctx.user() ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
             transaction {
                 val target = User.findById(id) ?: throw BadRequestResponse()
                 Log.i(javaClass, "[${user.username}] is removing ${target.username}")

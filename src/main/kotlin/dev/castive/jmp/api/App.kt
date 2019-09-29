@@ -45,6 +45,7 @@ import dev.castive.jmp.crypto.KeyProvider
 import dev.castive.jmp.crypto.SSMKeyProvider
 import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.except.ExceptionTracker
+import dev.castive.jmp.tasks.SocketHeartbeatTask
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
 import io.javalin.Javalin
@@ -115,6 +116,7 @@ class App(private val port: Int = 7000) {
 				val ws = Socket(cache).apply {
 					addEndpoints()
 				}
+				SocketHeartbeatTask.broadcaster = ws::fire
 				// General
 				Info(store, arguments).addEndpoints()
 				Props(builder, exceptionTracker).addEndpoints()
@@ -136,6 +138,7 @@ class App(private val port: Int = 7000) {
 			}
 			start(port)
 		}
+		SocketHeartbeatTask.start()
 		Log.i(javaClass, "HTTP server ready in ${System.currentTimeMillis() - javalinStart} ms")
 		println("       _ __  __ _____  \n" +
 				"      | |  \\/  |  __ \\ \n" +

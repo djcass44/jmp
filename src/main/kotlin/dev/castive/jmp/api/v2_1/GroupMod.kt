@@ -20,21 +20,17 @@ import dev.castive.javalin_auth.auth.Roles.BasicRoles
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Responses
-import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.Group
 import dev.castive.jmp.db.dao.User
-import dev.castive.jmp.util.isEqual
-import dev.castive.jmp.util.ok
+import dev.castive.jmp.util.*
 import dev.castive.log2.Log
 import io.javalin.apibuilder.ApiBuilder.patch
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.NotFoundResponse
 import io.javalin.http.UnauthorizedResponse
-import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
-import kotlin.collections.ArrayList
 
 class GroupMod: EndpointGroup {
     data class GroupModPayload(val add: ArrayList<String>, val rm: ArrayList<String>)
@@ -45,7 +41,7 @@ class GroupMod: EndpointGroup {
             val mods = ctx.bodyAsClass(GroupModPayload::class.java)
 
             Log.d(javaClass, "add - queryParams valid")
-            val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+            val user: User = ctx.user() ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
             Log.d(javaClass, "add - JWT validation passed")
             transaction {
                 val newUser = User.findById(addUser) ?: throw NotFoundResponse("Invalid uid")
@@ -54,10 +50,7 @@ class GroupMod: EndpointGroup {
                     val group = Group.findById(UUID.fromString(g)) ?: throw NotFoundResponse("Invalid gid: $g")
                     if(user.role.isEqual(BasicRoles.ADMIN) || group.users.contains(user)) {
                         // Add user to GroupUsers
-                        val newUsers = ArrayList<User>()
-                        newUsers.addAll(group.users)
-                        newUsers.add(newUser)
-                        group.users = SizedCollection(newUsers)
+                        group.users = group.users.add(newUser)
                         Log.i(javaClass, "${user.username} added ${newUser.username} to group ${group.name}")
                     }
                 }
@@ -65,10 +58,7 @@ class GroupMod: EndpointGroup {
                     val group = Group.findById(UUID.fromString(g)) ?: throw NotFoundResponse("Invalid gid: $g")
                     if(user.role.isEqual(BasicRoles.ADMIN) || group.users.contains(user)) {
                         // Remove user from GroupUsers
-                        val newUsers = ArrayList<User>()
-                        newUsers.addAll(group.users)
-                        newUsers.remove(newUser)
-                        group.users = SizedCollection(newUsers)
+                        group.users = group.users.remove(newUser)
                         Log.i(javaClass, "${user.username} removed ${newUser.username} from group ${group.name}")
                     }
                 }

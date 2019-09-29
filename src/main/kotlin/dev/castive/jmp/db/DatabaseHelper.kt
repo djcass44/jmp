@@ -20,6 +20,7 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.source.HikariSource
+import dev.castive.jmp.tasks.GroupsTask
 import dev.castive.log2.Log
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -48,5 +49,7 @@ class DatabaseHelper(private val store: ConfigStore) {
             SchemaUtils.createMissingTablesAndColumns(Jumps, Users, Roles, Groups, GroupUsers, Aliases, Sessions)
             Init(store.dataPath) // Ensure that the default admin/roles is created
         }
+        // start the GroupsTask cron
+        GroupsTask.start()
     }
 }

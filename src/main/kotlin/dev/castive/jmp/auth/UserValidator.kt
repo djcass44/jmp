@@ -46,6 +46,7 @@ class UserValidator(private val auth: Auth, private val min: MinimalConfig): Use
 					DaoGroup.new {
 						name = g.name
 						from = g.source
+						public = false
 						this.users = SizedCollection(users)
 					}
 				}

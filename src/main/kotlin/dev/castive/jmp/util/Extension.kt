@@ -1,14 +1,42 @@
 package dev.castive.jmp.util
 
 import dev.castive.javalin_auth.auth.Roles
+import dev.castive.jmp.api.Socket
+import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.Role
+import dev.castive.jmp.db.dao.User
 import io.javalin.http.Context
 import org.eclipse.jetty.http.HttpStatus
+import org.jetbrains.exposed.sql.SizedCollection
+import org.jetbrains.exposed.sql.SizedIterable
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.util.*
 import kotlin.collections.ArrayList
 
+fun SizedIterable<User>.add(user: User): SizedIterable<User> {
+	val newUsers = ArrayList<User>()
+	newUsers.addAll(this)
+	newUsers.add(user)
+	return SizedCollection(newUsers)
+}
+fun SizedIterable<User>.remove(user: User): SizedIterable<User> {
+	val newUsers = ArrayList<User>()
+	newUsers.addAll(this)
+	newUsers.remove(user)
+	return SizedCollection(newUsers)
+}
+
+/**
+ * Convert a pair into a FSA-compliant payload for sending over a WebSocket
+ */
+fun Pair<String, Any?>.forSocket(error: Boolean = false, meta: Any? = null) = Socket.Payload(first, second, error, meta)
+
+/**
+ * Get the user which has been stored in the context
+ * May be null
+ */
+fun Context.user(): User? = this.attribute(AccessManager.attributeUser)
 /**
  * Converts a String to being URL-safe
  */
@@ -21,7 +49,7 @@ fun String.safe(): String = URLEncoder.encode(this, StandardCharsets.UTF_8)
 fun String.toUUID(): UUID? = runCatching { UUID.fromString(this) }.getOrNull()
 
 /**
- * Checks whether a String is null or blank that includes ECMAScript nullable types
+ * Checks whether a String is null, blank or only includes ECMAScript (JS) nullable types
  */
 fun String?.isESNullOrBlank(): Boolean = isNullOrBlank() || this == "null" || this == "undefined"
 
