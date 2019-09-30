@@ -23,6 +23,14 @@ JMP currently supports the following databases:
 
 `BASE_URL`: the url that the application will be running on (default `http://localhost:8080`)
 
+`JMP_HTTP_SECURE`: enable SSL server configuration (default `false`)
+
+`JMP_SSL_KEYSTORE`: path to jks keystore file (required if `JMP_HTTP_SECURE` is `true`)
+
+`JMP_SSL_PASSWORD`: password for keystore (required if keystore has a password set)
+
+`JMP_HTTP2`: enable HTTP/2 (default `true`). Requires `JMP_HTTP_SECURE` to be `true`
+
 `JMP_HOME`: the directory used to store data (default . (current directory))
 
 `JMP_ALLOW_ERROR_INFO`: allow error information in the web ui (default `false`)
