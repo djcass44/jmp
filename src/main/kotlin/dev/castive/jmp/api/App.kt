@@ -47,14 +47,22 @@ import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.except.ExceptionTracker
 import dev.castive.jmp.tasks.SocketHeartbeatTask
 import dev.castive.jmp.util.EnvUtil
+import dev.castive.jmp.util.asEnv
 import dev.castive.log2.Log
+import dev.castive.log2.loga
+import dev.castive.log2.logi
 import io.javalin.Javalin
 import io.javalin.core.util.RouteOverviewPlugin
 import io.javalin.http.HandlerType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory
 import org.eclipse.jetty.http.HttpStatus
+import org.eclipse.jetty.http2.HTTP2Cipher
+import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory
+import org.eclipse.jetty.server.*
+import org.eclipse.jetty.util.ssl.SslContextFactory
 import java.util.*
 
 
@@ -93,6 +101,10 @@ class App(private val port: Int = 7000) {
 		val javalinStart = System.currentTimeMillis()
 		Javalin.create { config ->
 			config.apply {
+				server {
+					// get our customised server
+					getServer(port)
+				}
 				showJavalinBanner = false
 				if (arguments.enableCors) { enableCorsForAllOrigins() }
 				if (arguments.enableDev) { registerPlugin(RouteOverviewPlugin(Runner.BASE, setOf(BasicRoles.ANYONE))) }
@@ -167,5 +179,52 @@ class App(private val port: Int = 7000) {
 	private fun startCache(cache: BaseCacheLayer) {
 		val existingID = cache.get("appId")
 		if(existingID == null) cache.set("appId", UUID.randomUUID().toString())
+	}
+
+	private fun getServer(port: Int): Server {
+		val server = Server()
+		val secure = EnvUtil.JMP_HTTP_SECURE.asEnv().toBoolean()
+		val h2 = EnvUtil.JMP_HTTP2.asEnv("true").toBoolean()
+		// build an ssl or http connector based on env
+		val connector = if(secure) {
+			"Setting SSL context on base server".logi(javaClass)
+			// prefer http2
+			if(h2) {
+				"Enabling HTTP2 for base server".loga(javaClass)
+				getHTTP2ServerConnector(server)
+			}
+			else ServerConnector(server, getSslContextFactory())
+		} else ServerConnector(server)
+		connector.port = port
+		server.connectors = arrayOf(connector)
+		return server
+	}
+
+	private fun getHTTP2ServerConnector(server: Server): ServerConnector {
+		val alpn = ALPNServerConnectionFactory().apply {
+			defaultProtocol = "h2"
+		}
+		val ssl = SslConnectionFactory(getSslContextFactory(true), alpn.protocol)
+		val httpsConfig = HttpConfiguration().apply {
+			sendServerVersion = false
+			secureScheme = "https"
+			securePort = this@App.port
+			addCustomizer(SecureRequestCustomizer())
+		}
+		val http2 = HTTP2ServerConnectionFactory(httpsConfig)
+		val fallback = HttpConnectionFactory(httpsConfig)
+
+		return ServerConnector(server, ssl, alpn, http2, fallback).apply {
+			this.port = this@App.port
+		}
+	}
+
+	private fun getSslContextFactory(h2: Boolean = true): SslContextFactory = SslContextFactory.Server().apply {
+		keyStorePath = EnvUtil.JMP_SSL_KEYSTORE.asEnv()
+		if(h2) {
+			cipherComparator = HTTP2Cipher.COMPARATOR
+			provider = "Conscrypt"
+		}
+		setKeyStorePassword(EnvUtil.JMP_SSL_PASSWORD.asEnv())
 	}
 }

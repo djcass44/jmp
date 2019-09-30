@@ -64,3 +64,5 @@ fun Role.isEqual(role: Roles.BasicRoles): Boolean = name.equals(role.name, ignor
  * Convert a List to kotlin.collections.ArrayList
  */
 fun <T> List<T>.asArrayList(): ArrayList<T> = ArrayList(this)
+
+fun String.asEnv(default: String = "") = EnvUtil.getEnv(this, default)

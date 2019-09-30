@@ -43,6 +43,7 @@ repositories {
 }
 
 val junitVersion: String by project
+val jettyVersion: String by project
 
 dependencies {
 	implementation(kotlin("stdlib-jdk8"))
@@ -54,7 +55,12 @@ dependencies {
 	implementation("com.github.djcass44:log2:7d9def02d1")
 	implementation("com.github.djcass44:eventlog:72b6dac4e2")
 
-	implementation("io.javalin:javalin:3.4.1")
+	implementation("io.javalin:javalin:3.5.0")
+	// http2
+	implementation("org.eclipse.jetty.http2:http2-server:$jettyVersion")
+	implementation("org.eclipse.jetty:jetty-alpn-conscrypt-server:$jettyVersion")
+	implementation("org.eclipse.jetty.alpn:alpn-api:1.1.3.v20160715")
+	implementation("org.mortbay.jetty.alpn:alpn-boot:8.1.13.v20181017")
 
 	implementation("org.slf4j:slf4j-simple:1.7.26")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.8")

@@ -9,6 +9,14 @@ object EnvUtil {
 		return if (env.isNullOrEmpty()) default else env
 	}
 
+	const val JMP_HTTP_SECURE = "JMP_HTTP_SECURE"
+	const val JMP_SSL_KEYSTORE = "JMP_SSL_KEYSTORE"
+	const val JMP_SSL_PASSWORD = "JMP_SSL_PASSWORD"
+	/**
+	 * Use HTTP2 (requires SSL setup)
+	 */
+	const val JMP_HTTP2 = "JMP_HTTP2"
+
 	const val JMP_HOME = "JMP_HOME"
 
 	/**
