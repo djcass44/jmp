@@ -4,7 +4,9 @@ import dev.castive.jmp.api.Socket
 import dev.castive.jmp.db.dao.Jump
 import dev.castive.jmp.db.dao.Jumps
 import dev.castive.jmp.except.InsecureDomainException
+import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
+import dev.castive.log2.logv
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -13,7 +15,14 @@ import org.jsoup.Jsoup
 import java.net.URI
 
 class TitleAction(private val ws: (tag: String, data: Any) -> (Unit)) {
+    private val allowed = EnvUtil.getEnv(EnvUtil.JMP_ALLOW_EGRESS, "true").toBoolean()
+
     fun get(address: String) = GlobalScope.launch(context = Dispatchers.IO) {
+        // check that we are allowed to make network requests
+        if(!allowed) {
+            "Unable to load title: blocked by JMP_ALLOW_EGRESS policy".logv(javaClass)
+            return@launch
+        }
         try {
             if(address.startsWith("http://")) throw InsecureDomainException()
             val uri = URI(address)

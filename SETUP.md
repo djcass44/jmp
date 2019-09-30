@@ -27,6 +27,9 @@ JMP currently supports the following databases:
 
 `JMP_ALLOW_ERROR_INFO`: allow error information in the web ui (default `false`)
 
+`JMP_ALLOW_EGRESS`: allow network requests leaving JMP. These are used for things such as scraping website metadata.
+Note: this has no effect on requests made to authorisation servers (e.g. Crowd, OAuth2)
+
 `KEY_REALM`: the source of the JWT encryption key (`java` or `aws-ssm`) (default `java`)
 
 `KEY_AWS_SSM_NAME`: the AWS ParameterStore parameter name (required if KEY_REALM is `aws-ssm`)
@@ -36,8 +39,6 @@ JMP currently supports the following databases:
 `PORT`: the port for the application to run on (default `8080`)
 
 `LOG_ENABLED`: logs should be written to files (default `true`)
-
-`LOG_DIRECTORY`: the directory to write logs (default `./logs`)
 
 `FAV2_URL`: the url of the [fav2 microservice](https://github.com/djcass44/fav2fav2 microservice) (optional)
 

@@ -66,6 +66,8 @@ This information is also available in a running UI instance via the `?` button o
 
 **Firefox**
 
+Skip setup using the [Firefox extension](https://addons.mozilla.org/en-US/firefox/addon/jmp-webext/)!
+
 1. Open Bookmarks (`Ctrl + Shift + O`)
 2. Add new
 2.  - Name = JMP

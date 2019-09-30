@@ -20,6 +20,7 @@ ENV DRIVER_URL="jdbc:sqlite:jmp.db" \
     LOG_DIRECTORY="." \
     BASE_URL="localhost:8080" \
     JMP_HOME="/data/" \
+    JMP_ALLOW_EGRESS=true \
     USER=jmp
 
 RUN addgroup -S ${USER} && adduser -S ${USER} -G ${USER}
