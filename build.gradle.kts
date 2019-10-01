@@ -119,6 +119,7 @@ tasks {
 		baseName = "jmp"
 		classifier = null
 		version = null
+		mergeServiceFiles()
 	}
 	withType<Test> {
 		useJUnitPlatform()
