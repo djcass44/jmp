@@ -25,8 +25,8 @@ import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.db.dao.Roles
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
-import dev.castive.jmp.util.SystemUtil
 import dev.castive.jmp.util.isEqual
+import dev.castive.jmp.util.json
 import dev.castive.log2.Log
 import dev.castive.log2.logi
 import dev.castive.log2.logv
@@ -103,7 +103,7 @@ class Auth {
 			// If the provider wants additional data, generate it here
 			val data = when(Providers.primaryProvider) {
 				is CrowdProvider -> {
-					SystemUtil.gson.toJson(arrayListOf(Factor("remote_address", ctx.ip())))
+					arrayListOf(Factor("remote_address", ctx.ip())).json()
 				}
 				else -> null
 			}

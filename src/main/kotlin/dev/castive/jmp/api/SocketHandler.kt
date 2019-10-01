@@ -16,9 +16,9 @@
 
 package dev.castive.jmp.api
 
-import dev.castive.jmp.util.SystemUtil
 import dev.castive.jmp.util.forSocket
 import dev.castive.jmp.util.isESNullOrBlank
+import dev.castive.jmp.util.parse
 import dev.castive.log2.loge
 import dev.castive.log2.logi
 import dev.castive.log2.logv
@@ -38,7 +38,7 @@ class SocketHandler {
 			return
 		}
 		val fsa = try {
-			SystemUtil.gson.fromJson(data, Socket.Payload::class.java)
+			data.parse(Socket.Payload::class.java)
 		}
 		catch (e: Exception) {
 			"Failed to unmarshal message from client: ${messageContext.sessionId}".loge(javaClass)

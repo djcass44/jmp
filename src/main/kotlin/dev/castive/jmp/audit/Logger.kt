@@ -21,6 +21,7 @@ import dev.castive.jmp.io.DataProvider
 import dev.castive.jmp.io.NOutputStream
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
+import dev.castive.log2.logf
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintStream
@@ -40,6 +41,9 @@ class Logger {
 		if(!logEnabled) {
 			Log.a(javaClass, "File based logging has been disabled by ${EnvUtil.LOG_ENABLED}")
 			Log.w(javaClass, "Disabling logging is not recommended in production systems!")
+		}
+		else if(logDir == null) {
+			"Log directory could not be allocated".logf(javaClass)
 		}
 		else {
 			Log.v(javaClass, "Using context directory: ${logDir.absolutePath}")

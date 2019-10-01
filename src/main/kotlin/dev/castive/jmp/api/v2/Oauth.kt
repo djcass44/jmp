@@ -27,15 +27,14 @@ import dev.castive.jmp.Runner
 import dev.castive.jmp.api.App
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Responses
-import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.auth.ClaimConverter
 import dev.castive.jmp.auth.UserUtils
 import dev.castive.jmp.auth.UserVerification
-import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.UserData
-import dev.castive.jmp.util.SystemUtil
+import dev.castive.jmp.util.assertUser
 import dev.castive.jmp.util.isESNullOrBlank
 import dev.castive.jmp.util.ok
+import dev.castive.jmp.util.parse
 import dev.castive.log2.Log
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.post
@@ -61,7 +60,8 @@ class Oauth(private val auth: Auth, private val verify: UserVerification, privat
 		}, Roles.openAccessRole)
 		// Get a users token
 		post("${Runner.BASE}/v2/oauth/token", { ctx ->
-			val basicAuth = ctx.basicAuthCredentials()
+			// Javalin 3.5.0 changes the behaviour to throw if basicauth cant be found
+			val basicAuth = runCatching { ctx.basicAuthCredentials() }.getOrNull()
 			val authHeader = if(App.crowdCookieConfig != null) ctx.cookie(App.crowdCookieConfig!!.name) else null
 			if(basicAuth == null && authHeader == null) {
 				Log.e(javaClass, "Not given any form of identification, cannot authenticate user")
@@ -78,21 +78,21 @@ class Oauth(private val auth: Auth, private val verify: UserVerification, privat
 			when {
 				// Check with Crowd ONLY if the user is from Crowd
 				Providers.primaryProvider is CrowdProvider && login.provided -> {
-					sso = SystemUtil.gson.fromJson(login.token, AuthenticateResponse::class.java)
+					sso = login.token.parse(AuthenticateResponse::class.java)
 					// Try to generate the cookie if we can
 					cookie = runCatching { CrowdCookie(App.crowdCookieConfig!!.domain,
 						"TRUE",
 						App.crowdCookieConfig!!.secure,
 						"",
 						App.crowdCookieConfig!!.name,
-						sso!!.token
+						sso.token
 					) }.getOrNull()
 					name = sso.user.name
 				}
 				else -> {
 					sso = null
 					cookie = null
-					name = basicAuth!!.username
+					name = basicAuth?.username ?: ""
 				}
 			}
 			if(cookie != null) {
@@ -138,7 +138,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification, privat
 		// Verify a users token is still valid
 		get("${Runner.BASE}/v2/oauth/valid", { ctx ->
 			Log.d(javaClass, "Checking session for ${ctx.ip()}")
-			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+			val user = ctx.assertUser()
 			val token = ClaimConverter.getToken(ctx)
 			Log.d(javaClass, "Session for ${user.username} is valid")
 			transaction {
@@ -164,7 +164,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification, privat
 		}, Roles.openAccessRole)
 		// Logout the user and invalidate tokens if needed
 		post("${Runner.BASE}/v2/oauth/logout", { ctx ->
-			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+			val user = ctx.assertUser()
 			val ssoToken = ClaimConverter.getToken(ctx) ?: user.id.value.toString()
 			transaction {
 				val session = userUtils.userHasToken(user.username, ssoToken)

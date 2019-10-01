@@ -35,12 +35,27 @@ object DataProvider {
 		}
 	}
 
-	fun getDirectory(name: String): File {
+	private fun allocate(name: String): File {
 		"Received request for home data allocation: $name".logv(javaClass)
 		val dir = allocations[name] ?: File(dataPath, name)
 		if(allocations[name] != null)
 			"Found existing allocation for $name, we will use that".logw(javaClass)
 		allocations[name] = dir
+		return dir
+	}
+
+	fun get(name: String): File? {
+		val dir = allocate(name)
+
+		if(dir.exists() && !dir.isFile)
+			return null
+		return dir
+	}
+	fun getDirectory(name: String): File? {
+		val dir = allocate(name)
+
+		if(dir.exists() && !dir.isDirectory)
+			return null
 		return dir
 	}
 }

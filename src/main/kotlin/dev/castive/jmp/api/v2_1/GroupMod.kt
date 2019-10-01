@@ -19,16 +19,13 @@ package dev.castive.jmp.api.v2_1
 import dev.castive.javalin_auth.auth.Roles.BasicRoles
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
-import dev.castive.jmp.api.Responses
 import dev.castive.jmp.db.dao.Group
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.util.*
 import dev.castive.log2.Log
 import io.javalin.apibuilder.ApiBuilder.patch
 import io.javalin.apibuilder.EndpointGroup
-import io.javalin.http.BadRequestResponse
 import io.javalin.http.NotFoundResponse
-import io.javalin.http.UnauthorizedResponse
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
@@ -37,11 +34,11 @@ class GroupMod: EndpointGroup {
 
     override fun addEndpoints() {
         patch("${Runner.BASE}/v2_1/groupmod", { ctx ->
-            val addUser = UUID.fromString(ctx.queryParam("uid")) ?: throw BadRequestResponse("UID cannot be null")
+            val addUser = ctx.queryParam("uid", UUID::class.java).get()
             val mods = ctx.bodyAsClass(GroupModPayload::class.java)
 
             Log.d(javaClass, "add - queryParams valid")
-            val user: User = ctx.user() ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+            val user = ctx.assertUser()
             Log.d(javaClass, "add - JWT validation passed")
             transaction {
                 val newUser = User.findById(addUser) ?: throw NotFoundResponse("Invalid uid")

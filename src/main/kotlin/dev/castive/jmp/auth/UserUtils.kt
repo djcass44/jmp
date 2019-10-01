@@ -12,7 +12,7 @@ import dev.castive.jmp.db.dao.Session
 import dev.castive.jmp.db.dao.Sessions
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
-import dev.castive.jmp.util.SystemUtil
+import dev.castive.jmp.util.parse
 import dev.castive.log2.Log
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
@@ -75,7 +75,7 @@ class UserUtils(val cache: BaseCacheLayer) {
 	}
 	fun getTokenInfo(token: String, ctx: Context): AuthenticateResponse? {
 		return runCatching {
-			SystemUtil.gson.fromJson(isValidToken(token, ctx), AuthenticateResponse::class.java)
+			isValidToken(token, ctx).parse(AuthenticateResponse::class.java)
 		}.getOrNull()
 	}
 	fun writeInvalidCookie(ctx: Context, username: String? = null) {

@@ -23,11 +23,13 @@ import dev.castive.javalin_auth.auth.Roles.BasicRoles
 import dev.castive.javalin_auth.auth.provider.InternalProvider
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
-import dev.castive.jmp.api.Responses
 import dev.castive.jmp.api.Socket
-import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.Group
+import dev.castive.jmp.db.dao.GroupData
+import dev.castive.jmp.db.dao.GroupUsers
+import dev.castive.jmp.db.dao.Groups
 import dev.castive.jmp.tasks.GroupsTask
+import dev.castive.jmp.util.assertUser
 import dev.castive.jmp.util.isEqual
 import dev.castive.jmp.util.ok
 import dev.castive.jmp.util.user
@@ -37,11 +39,9 @@ import io.javalin.apibuilder.EndpointGroup
 import io.javalin.http.ConflictResponse
 import io.javalin.http.ForbiddenResponse
 import io.javalin.http.NotFoundResponse
-import io.javalin.http.UnauthorizedResponse
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
@@ -49,36 +49,27 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
     override fun addEndpoints() {
         get("${Runner.BASE}/v2_1/groups", { ctx ->
             val items = arrayListOf<GroupData>()
-            val user: User? = ctx.user()
+            val user = ctx.user()
             Log.d(javaClass, "Listing groups visible to actual user: ${user?.username}")
             if(user != null) {
                 transaction {
-                    if(user.role.name == BasicRoles.ADMIN.name) {
-                        Group.all().forEach {
-                            items.add(GroupData((it)))
-                        }
+                    if(user.role.isEqual(BasicRoles.ADMIN)) {
+                        items.addAll(Group.all().map { GroupData(it) })
                         return@transaction
                     }
-                    val res = (Groups innerJoin GroupUsers innerJoin Users)
-                        .slice(Groups.columns)
-                        .select {
-                            Users.id eq user.id
-                        }
-                        .withDistinct()
-                    items.addAll(Group.wrapRows(res).toList().map { GroupData(it) })
+                    items.addAll(user.getGroups().map { GroupData(it) })
                 }
             }
             ctx.ok().json(items)
         }, Auth.defaultRoleAccess)
         put("${Runner.BASE}/v2_1/group", { ctx ->
             val add = ctx.bodyAsClass(GroupData::class.java)
-            val user: User = ctx.user() ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
-            Log.d(javaClass, "add - JWT validation passed")
+            val user = ctx.assertUser()
             transaction {
                 val existing = Group.find {
                     Groups.name eq add.name
                 }
-                if(existing.count() > 0) throw ConflictResponse("Group already exists")
+                if(!existing.empty()) throw ConflictResponse("Group already exists")
                 Group.new(UUID.randomUUID()) {
                     name = add.name
                     public = add.public
@@ -94,7 +85,7 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
         }, Auth.defaultRoleAccess)
         patch("${Runner.BASE}/v2_1/group", { ctx ->
             val update = ctx.bodyAsClass(GroupData::class.java)
-            val user: User = ctx.user() ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+            val user = ctx.assertUser()
             transaction {
                 val existing = Group.findById(update.id!!) ?: throw NotFoundResponse("Group not found")
                 // Only allow update if user belongs to group (or is admin)
@@ -119,7 +110,7 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
         }, Auth.defaultRoleAccess)
         delete("${Runner.BASE}/v2_1/group/:id", { ctx ->
             val id = UUID.fromString(ctx.pathParam("id"))
-            val user: User = ctx.user() ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+            val user = ctx.assertUser()
             transaction {
                 val existing = Group.findById(id) ?: throw NotFoundResponse("Group not found")
                 // Only allow deletion if user belongs to group (or is admin)

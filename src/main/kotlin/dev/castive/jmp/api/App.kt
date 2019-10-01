@@ -84,11 +84,11 @@ class App(private val port: Int = 7000) {
 		// Start the cache concurrently
 		launch { startCache(cache) }
 		// Setup providers
-		val builder = LDAPConfigBuilder(store)
+		val builder = LDAPConfigBuilder(store).get()
 		val verify = UserVerification(auth)
-		val provider = if(!builder.min.enabled) null else when(builder.type) {
-			"ldap" -> LDAPProvider(builder.ldapConfig, verify)
-			"crowd" -> CrowdProvider(builder.crowdConfig).apply {
+		val provider = when(builder.realm) {
+			"ldap" -> LDAPProvider(builder.ldap, verify)
+			"crowd" -> CrowdProvider(builder.crowd).apply {
 				this.setup()
 				crowdCookieConfig = this.getSSOConfig() as CrowdCookieConfig?
 			}
@@ -131,7 +131,7 @@ class App(private val port: Int = 7000) {
 				SocketHeartbeatTask.broadcaster = ws::fire
 				// General
 				Info(store, arguments).addEndpoints()
-				Props(builder, exceptionTracker).addEndpoints()
+				Props(builder.min, exceptionTracker).addEndpoints()
 
 				// Jumping
 				Jump(ws::fire).addEndpoints()

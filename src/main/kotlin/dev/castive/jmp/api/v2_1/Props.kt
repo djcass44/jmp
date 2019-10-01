@@ -18,10 +18,10 @@ package dev.castive.jmp.api.v2_1
 
 import dev.castive.javalin_auth.api.OAuth2
 import dev.castive.javalin_auth.auth.Providers
+import dev.castive.javalin_auth.auth.connect.MinimalConfig
 import dev.castive.javalin_auth.auth.provider.InternalProvider
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
-import dev.castive.jmp.auth.LDAPConfigBuilder
 import dev.castive.jmp.db.dao.Group
 import dev.castive.jmp.db.dao.Groups
 import dev.castive.jmp.db.dao.User
@@ -34,20 +34,12 @@ import io.javalin.apibuilder.EndpointGroup
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.concurrent.TimeUnit
 
-class Props(private val builder: LDAPConfigBuilder, private val tracker: ExceptionTracker): EndpointGroup {
+class Props(private val minConfig: MinimalConfig, private val tracker: ExceptionTracker): EndpointGroup {
 	data class ProviderPayload(val connected: Boolean, val name: String, val users: Int, val groups: Int)
 
 	override fun addEndpoints() {
-		get("${Runner.BASE}/v2_1/prop/:target", { ctx ->
-			val targetProp = ctx.pathParam("target")
-			val result = when {
-				builder.properties.containsKey(targetProp) -> builder.properties.getProperty(targetProp)
-				else -> builder.properties.getOrDefault(targetProp, "undefined")
-			}
-			ctx.ok().result(result.toString())
-		}, Auth.adminRoleAccess)
 		get("${Runner.BASE}/v2_1/uprop/allow_local", { ctx ->
-			ctx.ok().result(builder.min.blockLocal.toString())
+			ctx.ok().result(minConfig.blockLocal.toString())
 		}, Auth.openAccessRole)
 		get("${Runner.BASE}/v2_1/provider/main", { ctx ->
 			val main = Providers.primaryProvider

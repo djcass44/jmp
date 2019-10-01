@@ -1,11 +1,14 @@
 package dev.castive.jmp.util
 
+import com.google.gson.GsonBuilder
 import dev.castive.javalin_auth.auth.Roles
+import dev.castive.jmp.api.Responses
 import dev.castive.jmp.api.Socket
 import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.Role
 import dev.castive.jmp.db.dao.User
 import io.javalin.http.Context
+import io.javalin.http.UnauthorizedResponse
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.SizedIterable
@@ -27,6 +30,18 @@ fun SizedIterable<User>.remove(user: User): SizedIterable<User> {
 	return SizedCollection(newUsers)
 }
 
+private val gson = GsonBuilder().setPrettyPrinting().create()
+
+/**
+ * Convert an arbitrary object into JSON
+ */
+fun Any.json(): String = gson.toJson(this)
+
+/**
+ * Convert a JSON string into a java class instance
+ */
+fun <T> String.parse(type: Class<T>): T = gson.fromJson(this, type)
+
 /**
  * Convert a pair into a FSA-compliant payload for sending over a WebSocket
  */
@@ -37,6 +52,12 @@ fun Pair<String, Any?>.forSocket(error: Boolean = false, meta: Any? = null) = So
  * May be null
  */
 fun Context.user(): User? = this.attribute(AccessManager.attributeUser)
+
+/**
+ * Get the user which has been stored in the context
+ * Must not be null and will throw 401 if it is
+ */
+fun Context.assertUser(): User = user() ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
 /**
  * Converts a String to being URL-safe
  */
