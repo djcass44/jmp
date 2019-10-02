@@ -1,12 +1,15 @@
 kind: pipeline
-name: package
+name: default
 
 steps:
-  - name: build
+  - name: test
+    image: gradle:5.5.1-jdk12
+    commands:
+      - gradle test
+  - name: docker
     image: plugins/docker
     settings:
-      registry: docker.castive.dev
-      repo: docker.castive.dev/jmp/api
+      repo: djcass44/jmp
       tags:
         - latest
         - ${DRONE_BRANCH}
@@ -17,7 +20,4 @@ steps:
         from_secret: DOCKER_PASSWORD
 trigger:
   when:
-    branch:
-      - master
-      - develop
     event: push
