@@ -83,11 +83,11 @@ class App(private val port: Int = 7000) {
 		// Start the cache concurrently
 		launch { startCache(cache) }
 		// Setup providers
-		val builder = LDAPConfigBuilder().get()
+		val builder = ConfigBuilder().get()
 		val verify = UserVerification(auth)
 		val provider = when(builder.realm) {
-			"ldap" -> LDAPProvider(builder.ldap, verify)
-			"crowd" -> CrowdProvider(builder.crowd).apply {
+			"ldap" -> LDAPProvider(builder.asLDAP2(), verify)
+			"crowd" -> CrowdProvider(builder.asCrowd()).apply {
 				this.setup()
 				crowdCookieConfig = this.getSSOConfig() as CrowdCookieConfig?
 			}

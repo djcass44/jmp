@@ -29,25 +29,49 @@ import java.io.File
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 
-class LDAPConfigBuilder {
+class ConfigBuilder {
+	private val expectedVersion = "2019-10-02"
+
 	data class JMPConfiguration(
+		val version: String,
 		val realm: String,
 		val min: MinimalConfig,
-		val ldap: LDAPConfig2,
-		val crowd: CrowdConfig
+		val ldap: LDAPConfiguration,
+		val crowd: CrowdConfiguration
+	) {
+		fun asLDAP2(): LDAPConfig2 = LDAPConfig2(
+			min,
+			ldap.core,
+			ldap.extra,
+			ldap.groups
+		)
+		fun asCrowd(): CrowdConfig = CrowdConfig(
+			min,
+			crowd.url
+		)
+	}
+
+	data class LDAPConfiguration(
+		val core: LDAPConfig,
+		val extra: LDAPConfig.Extras,
+		val groups: LDAPConfig.Groups
+	)
+	data class CrowdConfiguration(
+		val authentication: BasicAuthentication,
+		val url: String
 	)
 
 	private fun getDefault(): JMPConfiguration = JMPConfiguration(
+		"2019-10-02",
 		"db",
 		MinimalConfig(false, BasicAuthentication("username", "password")),
-		LDAPConfig2(
-			MinimalConfig(false, BasicAuthentication("username", "password")),
+		LDAPConfiguration(
 			LDAPConfig(server = "localhost", contextDN = ""),
 			LDAPConfig.Extras("", "", reconnectOnAuth = false, removeStale = true),
 			LDAPConfig.Groups("", "", "")
 		),
-		CrowdConfig(
-			MinimalConfig(false, BasicAuthentication("username", "password")),
+		CrowdConfiguration(
+			BasicAuthentication("username", "password"),
 			"http://localhost:8095/crowd"
 		)
 	)
@@ -59,7 +83,7 @@ class LDAPConfigBuilder {
 		}
 		Log.v(javaClass, "JSON properties file exists: ${data.exists()}")
 		// read in the JSON
-		return if(data.exists()) {
+		val config = if(data.exists()) {
 			"Reading JMP configuration from disk: ${data.absolutePath}".logok(javaClass)
 			data.readText(StandardCharsets.UTF_8).parse(JMPConfiguration::class.java)
 		}
@@ -75,6 +99,10 @@ class LDAPConfigBuilder {
 			}
 			getDefault()
 		}
+		return if(config.version != expectedVersion) {
+			"JMP configuration has missing or incorrect version: [expected: $expectedVersion, got: ${config.version}], default values will be used".logf(javaClass)
+			getDefault()
+		} else config
 	}
 	private fun writeDefaults(file: File) {
 		file.writeText(getDefault().json(), StandardCharsets.UTF_8)

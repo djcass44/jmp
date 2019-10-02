@@ -38,10 +38,8 @@ class Init {
         transaction {
             // roles must be created before the admin
             if(Role.all().empty()) {
-                for (r in Roles.BasicRoles.values()) {
-                    Role.new {
-                        name = r.name
-                    }
+                Roles.BasicRoles.values().forEach {
+                    Role.new { name = it.name }
                 }
                 "Initialised user roles".logok(javaClass)
             }
