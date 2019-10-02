@@ -32,8 +32,6 @@ import dev.castive.log2.logi
 import dev.castive.log2.logv
 import io.javalin.http.ConflictResponse
 import io.javalin.http.Context
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import dev.castive.javalin_auth.auth.Roles as AuthRoles
@@ -70,7 +68,6 @@ class Auth {
 		if(!userExists(username)) { // Assume the user hasn't been added
 			"Attempting to create user: $username, admin=$admin".logi(javaClass)
 			transaction {
-				addLogger(StdOutSqlLogger)
 				User.new {
 					this.username = username
 					this.hash = hash

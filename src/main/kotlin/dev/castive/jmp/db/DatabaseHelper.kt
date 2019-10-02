@@ -21,20 +21,22 @@ import com.zaxxer.hikari.HikariDataSource
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.source.HikariSource
 import dev.castive.jmp.tasks.GroupsTask
+import dev.castive.jmp.util.EnvUtil
+import dev.castive.jmp.util.asEnv
 import dev.castive.log2.Log
+import dev.castive.log2.logv
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class DatabaseHelper(private val store: ConfigStore) {
+class DatabaseHelper {
     fun start() {
-        Log.v(javaClass, "Database config: [${store.url}, ${store.driver}]")
-        Log.v(javaClass, "Application config: [baseUrl: ${store.baseUrl}, dataPath: ${store.dataPath}]")
         val ds = HikariDataSource(HikariConfig().apply {
-            jdbcUrl = store.url
-            driverClassName = store.driver
-            username = store.tableUser
-            password = store.tablePassword
+            jdbcUrl = EnvUtil.DRIVER_URL.asEnv("jdbc:sqlite:jmp.db")
+            driverClassName = EnvUtil.DRIVER_CLASS.asEnv("org.sqlite.JDBC")
+            username = EnvUtil.DRIVER_USER.asEnv()
+            password = EnvUtil.DRIVER_PASSWORD.asEnv()
         })
+        "Database configuration: [url: ${ds.jdbcUrl}, class: ${ds.driverClassName}]".logv(javaClass)
         HikariSource().connect(ds)
         Runtime.getRuntime().addShutdownHook(Thread {
             Log.w(javaClass, "Running shutdown hook, DO NOT forcibly close the application")
@@ -47,7 +49,7 @@ class DatabaseHelper(private val store: ConfigStore) {
             // Ensure that the tables are created
             Log.i(javaClass, "Checking for database drift")
             SchemaUtils.createMissingTablesAndColumns(Jumps, Users, Roles, Groups, GroupUsers, Aliases, Sessions)
-            Init(store.dataPath) // Ensure that the default admin/roles is created
+            Init() // Ensure that the default admin/roles is created
         }
         // start the GroupsTask cron
         GroupsTask.start()

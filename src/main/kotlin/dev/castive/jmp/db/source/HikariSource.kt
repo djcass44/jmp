@@ -19,7 +19,7 @@ package dev.castive.jmp.db.source
 import com.zaxxer.hikari.HikariDataSource
 import org.jetbrains.exposed.sql.Database
 
-class HikariSource : DataSource() {
+class HikariSource: DataSource() {
     fun connect(ds: HikariDataSource) {
         Database.connect(ds)
         super.postConnect(ds.jdbcUrl)

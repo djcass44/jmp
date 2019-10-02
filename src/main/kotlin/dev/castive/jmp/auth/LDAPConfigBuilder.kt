@@ -21,7 +21,6 @@ import dev.castive.javalin_auth.auth.connect.LDAPConfig
 import dev.castive.javalin_auth.auth.connect.LDAPConfig2
 import dev.castive.javalin_auth.auth.connect.MinimalConfig
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.BasicAuthentication
-import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.io.DataProvider
 import dev.castive.jmp.util.json
 import dev.castive.jmp.util.parse
@@ -30,7 +29,7 @@ import java.io.File
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 
-class LDAPConfigBuilder(private val config: ConfigStore) {
+class LDAPConfigBuilder {
 	data class JMPConfiguration(
 		val realm: String,
 		val min: MinimalConfig,

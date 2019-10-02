@@ -9,6 +9,11 @@ object EnvUtil {
 		return if (env.isNullOrEmpty()) default else env
 	}
 
+	const val DRIVER_URL = "DRIVER_URL"
+	const val DRIVER_CLASS = "DRIVER_CLASS"
+	const val DRIVER_USER = "DRIVER_USER"
+	const val DRIVER_PASSWORD = "DRIVER_PASSWORD"
+
 	const val JMP_HTTP_SECURE = "JMP_HTTP_SECURE"
 	const val JMP_SSL_KEYSTORE = "JMP_SSL_KEYSTORE"
 	const val JMP_SSL_PASSWORD = "JMP_SSL_PASSWORD"

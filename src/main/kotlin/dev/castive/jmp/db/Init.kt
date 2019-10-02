@@ -20,23 +20,22 @@ import dev.castive.javalin_auth.auth.Roles
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.db.dao.Role
 import dev.castive.jmp.db.dao.User
+import dev.castive.jmp.util.EnvUtil
+import dev.castive.jmp.util.asEnv
 import dev.castive.log2.Log
 import dev.castive.log2.logok
 import dev.castive.log2.logv
 import dev.castive.securepass3.PasswordGenerator
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 
-class Init(private val dataPath: String) {
+class Init {
     init {
         val superName = "admin" // Hardcoded into FE, don't change
         transaction {
-            addLogger(StdOutSqlLogger)
             // roles must be created before the admin
             if(Role.all().empty()) {
                 for (r in Roles.BasicRoles.values()) {
@@ -52,7 +51,7 @@ class Init(private val dataPath: String) {
                 Auth().createUser(superName, password, true, "Admin")
                 Log.w(javaClass, "Created superuser with access: [username: $superName]\nPlease change this ASAP!\nThis will also be stored in the current directory in 'initialAdminPassword'")
                 try {
-	                var path = dataPath
+	                var path = EnvUtil.JMP_HOME.asEnv("/data/")
 	                if(!path.endsWith(File.separatorChar)) path += File.separatorChar
                     Files.writeString(Path.of("${path}initialAdminPassword"), String(password), StandardCharsets.UTF_8)
                 }

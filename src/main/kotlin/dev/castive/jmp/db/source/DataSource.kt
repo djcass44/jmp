@@ -17,7 +17,6 @@
 package dev.castive.jmp.db.source
 
 import dev.castive.log2.Log
-import dev.castive.jmp.db.ConfigStore
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.sql.Connection
 
@@ -25,8 +24,8 @@ abstract class DataSource {
     open fun preConnect() {
         Log.v(javaClass, "Connecting to database")
     }
-    open fun connect(store: ConfigStore) {
-        postConnect(store.url)
+    open fun connect(url: String) {
+        postConnect(url)
     }
     open fun postConnect(url: String) {
         if(url.contains("sqlite", true) || url.contains("oracle", true)) {
