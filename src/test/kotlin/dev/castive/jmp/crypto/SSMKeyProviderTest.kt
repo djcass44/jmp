@@ -17,19 +17,23 @@
 package dev.castive.jmp.crypto
 
 import com.amazonaws.http.SdkHttpMetadata
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement
 import com.amazonaws.services.simplesystemsmanagement.model.GetParameterResult
 import com.amazonaws.services.simplesystemsmanagement.model.Parameter
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
 import kotlin.test.assertEquals
 
 class SSMKeyProviderTest {
+	private val client = mock(AWSSimpleSystemsManagement::class.java)
+
 	@Test
 	fun `test validating a valid parameter`() {
-		val metadata = Mockito.mock(SdkHttpMetadata::class.java)
-		Mockito.`when`(metadata.httpStatusCode).thenReturn(200)
+		val metadata = mock(SdkHttpMetadata::class.java)
+		`when`(metadata.httpStatusCode).thenReturn(200)
 
-		val provider = SSMKeyProvider()
+		val provider = SSMKeyProvider(client)
 		assertEquals("password", provider.validateParameter(
 			GetParameterResult().withParameter(
 				Parameter().withValue("password")
@@ -40,10 +44,10 @@ class SSMKeyProviderTest {
 	}
 	@Test
 	fun `test validating a bad request from a parameter`() {
-		val metadata = Mockito.mock(SdkHttpMetadata::class.java)
-		Mockito.`when`(metadata.httpStatusCode).thenReturn(400)
+		val metadata = mock(SdkHttpMetadata::class.java)
+		`when`(metadata.httpStatusCode).thenReturn(400)
 
-		val provider = SSMKeyProvider()
+		val provider = SSMKeyProvider(client)
 		assertEquals(null, provider.validateParameter(
 			GetParameterResult().withParameter(
 				Parameter().withValue("password")
@@ -54,13 +58,13 @@ class SSMKeyProviderTest {
 	}
 	@Test
 	fun `test validating an invalid parameter`() {
-		val metadata = Mockito.mock(SdkHttpMetadata::class.java)
-		Mockito.`when`(metadata.httpStatusCode).thenReturn(200)
+		val metadata = mock(SdkHttpMetadata::class.java)
+		`when`(metadata.httpStatusCode).thenReturn(200)
 
-		val param = Mockito.mock(GetParameterResult::class.java)
-		Mockito.`when`(param.parameter).thenReturn(null)
+		val param = mock(GetParameterResult::class.java)
+		`when`(param.parameter).thenReturn(null)
 
-		val provider = SSMKeyProvider()
+		val provider = SSMKeyProvider(client)
 		assertEquals(null, provider.validateParameter(
 			param.apply {
 				sdkHttpMetadata = metadata
