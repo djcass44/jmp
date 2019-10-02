@@ -21,10 +21,11 @@ import org.sonarqube.gradle.SonarQubeTask
 
 plugins {
 	kotlin("jvm") version "1.3.50"
-	id("com.github.johnrengelman.shadow") version "4.0.3"
+	id("com.github.johnrengelman.shadow") version "5.1.0"
+	id("com.github.ben-manes.versions") version "0.25.0"
 	application
 	jacoco
-	id("org.sonarqube") version "2.7.1"
+	id("org.sonarqube") version "2.8"
 	id("org.ajoberstar.grgit") version "1.7.2"
 }
 
@@ -50,9 +51,10 @@ dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.2")
 	implementation("org.jetbrains.kotlin:kotlin-reflect:1.3.50")
 
+
 	implementation("com.github.djcass44:jmp-auth:176931eec3")
 //    implementation("dev.castive:jmp-auth:0.5.3")
-	implementation("com.github.djcass44:log2:7d9def02d1")
+	implementation("com.github.djcass44:log2:3.4")
 	implementation("com.github.djcass44:eventlog:72b6dac4e2")
 
 	implementation("io.javalin:javalin:3.5.0")
@@ -63,34 +65,34 @@ dependencies {
 	implementation("org.mortbay.jetty.alpn:alpn-boot:8.1.13.v20181017")
 
 	implementation("org.slf4j:slf4j-simple:1.7.26")
-	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.8")
-	implementation("info.debatty:java-string-similarity:1.1.0")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.0")
+	implementation("info.debatty:java-string-similarity:1.2.1")
 	implementation("com.amdelamar:jhash:2.1.0")
 	implementation("com.google.code.gson:gson:2.8.5")
-	implementation("org.jsoup:jsoup:1.11.3")
-	implementation("com.google.guava:guava:28.0-jre")
+	implementation("org.jsoup:jsoup:1.12.1")
+	implementation("com.google.guava:guava:28.1-jre")
 
-	implementation("com.squareup.okhttp3:okhttp:4.0.1")
+	implementation("com.squareup.okhttp3:okhttp:4.2.0")
 
 	implementation("commons-cli:commons-cli:1.4")
 
-	implementation("com.auth0:java-jwt:3.7.0")
-	implementation("com.github.kmehrunes:javalin-jwt:v0.1")
-	implementation("com.github.scribejava:scribejava-apis:6.7.0")
+	implementation("com.auth0:java-jwt:3.8.3")
+	implementation("com.github.kmehrunes:javalin-jwt:0.2")
+	implementation("com.github.scribejava:scribejava-apis:6.8.1")
 
-	implementation("org.jetbrains.exposed:exposed:0.16.3")
-	implementation("com.zaxxer:HikariCP:3.3.1")
+	implementation("org.jetbrains.exposed:exposed:0.17.4")
+	implementation("com.zaxxer:HikariCP:3.4.1")
 
 	// Crypto providers
-	implementation("com.amazonaws:aws-java-sdk-ssm:1.11.595")
+	implementation("com.amazonaws:aws-java-sdk-ssm:1.11.642")
 
 
 	// JDBC drivers (only includes those supported by github.com/JetBrains/Exposed)
-	runtimeOnly("org.xerial:sqlite-jdbc:3.25.2") // tested (django)
-	runtimeOnly("org.postgresql:postgresql:42.2.2") // tested (django)
-	runtimeOnly("mysql:mysql-connector-java:8.0.15") // untested
+	runtimeOnly("org.xerial:sqlite-jdbc:3.28.0") // tested (django)
+	runtimeOnly("org.postgresql:postgresql:42.2.8") // tested (django)
+	runtimeOnly("mysql:mysql-connector-java:8.0.17") // untested
 	runtimeOnly("com.h2database:h2:1.4.199") // untested
-	runtimeOnly("com.microsoft.sqlserver:mssql-jdbc:7.3.0.jre11-preview") // untested
+	runtimeOnly("com.microsoft.sqlserver:mssql-jdbc:7.4.1.jre12") // untested
 
 	testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
 	testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")

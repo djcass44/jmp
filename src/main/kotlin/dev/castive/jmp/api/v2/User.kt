@@ -29,6 +29,7 @@ import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.tasks.GroupsTask
 import dev.castive.jmp.util.asArrayList
+import dev.castive.jmp.util.assertUser
 import dev.castive.jmp.util.ok
 import dev.castive.jmp.util.user
 import dev.castive.log2.Log
@@ -38,7 +39,6 @@ import io.javalin.http.BadRequestResponse
 import io.javalin.http.ForbiddenResponse
 import io.javalin.http.UnauthorizedResponse
 import org.eclipse.jetty.http.HttpStatus
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 import kotlin.math.ceil
@@ -52,25 +52,19 @@ class User(
 
     override fun addEndpoints() {
         get("${Runner.BASE}/v2/users", { ctx ->
-            val user: User = ctx.user() ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+            ctx.assertUser()
             Log.d(javaClass, "list - JWT validation passed")
             val count = ctx.queryParam<Int>("count").value?.coerceAtLeast(5) ?: 10
             val offset = ctx.queryParam<Int>("offset").value?.coerceAtLeast(0) ?: 0
             Log.d(javaClass, "/v2/users [count: $count, offset: $offset]")
-            val users = arrayListOf<UserData>()
+            val users = transaction {
+                // get the users memberships and map them to the user entity
+                User.all().limit(count, offset).map {
+                    UserData(it, it.getGroups().map { g -> g.name }.asArrayList())
+                }.asArrayList()
+            }
             val userCount = transaction {
-                User.all().limit(count, offset).forEach {
-                    val res = (Groups innerJoin GroupUsers innerJoin Users)
-                        .slice(Groups.columns)
-                        .select {
-                            Users.id eq it.id
-                        }
-                        .withDistinct()
-                    val groups = Group.wrapRows(res).toList().map { g -> g.name }
-                    users.add(UserData(it, groups.asArrayList()))
-                }
-                //Determine if there is a next page
-                return@transaction User.all().count()
+                User.all().count()
             }
             EventLog.post(Event(type = EventType.READ, resource = UserData::class.java, causedBy = javaClass))
             val currentPage = (offset / userCount) + 1
@@ -82,19 +76,15 @@ class User(
         put("${Runner.BASE}/v2/user", { ctx ->
             if(createLimiter.tryAcquire()) {
                 val user: User? = ctx.user()
-                transaction {
-                    val blockLocal = configMin.blockLocal
-                    Log.d(javaClass, "Block local accounts: $blockLocal")
-                    if ((user == null || !auth.isAdmin(user)) && blockLocal) {
-                        Log.i(javaClass, "User ${user?.username} is not allowed to create local accounts [reason: POLICY]")
-                        throw UnauthorizedResponse("Creating local accounts has been disabled.")
-                    }
+                val blockLocal = configMin.blockLocal
+                Log.d(javaClass, "Block local accounts: $blockLocal")
+                if ((user == null || !auth.isAdmin(user)) && blockLocal) {
+                    Log.i(javaClass, "User ${user?.username} is not allowed to create local accounts [reason: POLICY]")
+                    throw UnauthorizedResponse("Creating local accounts has been disabled.")
                 }
-                val basicAuth = ctx.basicAuthCredentials() ?: throw BadRequestResponse()
+                val basicAuth = ctx.basicAuthCredentials()
                 Log.i(javaClass, "$user is creating a user [name: ${basicAuth.username}]")
-                transaction {
-                    auth.createUser(basicAuth.username, basicAuth.password.toCharArray())
-                }
+                auth.createUser(basicAuth.username, basicAuth.password.toCharArray())
                 // ask the groupstask cron to update public/default relations
                 GroupsTask.update()
                 EventLog.post(Event(type = EventType.CREATE, resource = UserData::class.java, causedBy = javaClass))
@@ -106,14 +96,14 @@ class User(
         }, Auth.openAccessRole)
         // Get information about the current user
         get("${Runner.BASE}/v2/user", { ctx ->
-            val user: User = ctx.user() ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+            val user = ctx.assertUser()
             transaction {
                 ctx.ok().result(user.role.name)
             }
             EventLog.post(Event(type = EventType.READ, resource = UserData::class.java, causedBy = javaClass))
         }, Auth.defaultRoleAccess)
         get("${Runner.BASE}/v2_1/user/info", { ctx ->
-            val user: User = ctx.user() ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+            val user = ctx.assertUser()
             transaction {
                 ctx.ok().json(UserData(user, arrayListOf()))
             }
@@ -121,7 +111,7 @@ class User(
         // Change the role of a user
         patch("${Runner.BASE}/v2/user", { ctx ->
             val updated = ctx.bodyAsClass(EditUserData::class.java)
-            val u: User = ctx.user() ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+            val u = ctx.assertUser()
             transaction {
                 val user = User.findById(updated.id) ?: throw BadRequestResponse()
                 // Block dropping the superuser from admin
@@ -144,7 +134,7 @@ class User(
         // Delete a user
         delete("${Runner.BASE}/v2/user/:id", { ctx ->
             val id = UUID.fromString(ctx.pathParam("id"))
-            val user: User = ctx.user() ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+            val user = ctx.assertUser()
             transaction {
                 val target = User.findById(id) ?: throw BadRequestResponse()
                 Log.i(javaClass, "[${user.username}] is removing ${target.username}")
@@ -170,13 +160,7 @@ class User(
             }
             val items = transaction {
                 val getUser = User.findById(uid) ?: throw BadRequestResponse("Requested user is null")
-                val res = (Groups innerJoin GroupUsers innerJoin Users)
-                    .slice(Groups.columns)
-                    .select {
-                        Users.id eq getUser.id
-                    }
-                    .withDistinct()
-                return@transaction Group.wrapRows(res).toList().map { GroupData(it) }
+                return@transaction getUser.getGroups().map { GroupData(it) }
             }
             ctx.ok().json(items)
         }, Auth.defaultRoleAccess)

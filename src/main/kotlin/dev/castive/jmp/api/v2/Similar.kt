@@ -18,9 +18,8 @@ package dev.castive.jmp.api.v2
 
 import dev.castive.jmp.api.Similar
 import dev.castive.jmp.api.actions.OwnerAction
-import dev.castive.jmp.auth.AccessManager
-import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.util.ok
+import dev.castive.jmp.util.user
 import dev.castive.log2.Log
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
@@ -30,7 +29,6 @@ class Similar: Handler {
     private val similar = Similar()
 
     override fun handle(ctx: Context) {
-        val user: User? = ctx.attribute(AccessManager.attributeUser)
         val query = ctx.pathParam("query", String::class.java).getOrNull()
         // we require a search term, so error if we dont get it
         if (query.isNullOrBlank()) {
@@ -38,7 +36,7 @@ class Similar: Handler {
             throw BadRequestResponse("Empty or null target")
         }
         // get the jumps visible to the user
-        val userJumps = OwnerAction.getUserVisibleJumps(user, includeAliases = true)
+        val userJumps = OwnerAction.getUserVisibleJumps(ctx.user(), includeAliases = true)
 
         // check if the user wants suggestions instead (only the name)
         val suggest = ctx.queryParam("suggest", Boolean::class.java).getOrNull()

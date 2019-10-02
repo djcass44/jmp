@@ -16,9 +16,9 @@
 
 package dev.castive.jmp.api
 
-import dev.castive.jmp.util.SystemUtil
 import dev.castive.jmp.util.forSocket
 import dev.castive.jmp.util.isESNullOrBlank
+import dev.castive.jmp.util.parse
 import dev.castive.log2.loge
 import dev.castive.log2.logi
 import dev.castive.log2.logv
@@ -38,10 +38,15 @@ class SocketHandler {
 			return
 		}
 		val fsa = try {
-			SystemUtil.gson.fromJson(data, Socket.Payload::class.java)
+			val fsa = data.parse(Socket.Payload::class.java)
+			// may not be senseless if GSON is setting the value to null
+			@Suppress("SENSELESS_COMPARISON")
+			if(fsa.type == null)
+				throw NullPointerException("${Socket.Payload::class.java.name}::type cannot be null")
+			fsa
 		}
 		catch (e: Exception) {
-			"Failed to unmarshal message from client: ${messageContext.sessionId}".loge(javaClass)
+			"Failed to unmarshal message from client: [from: ${messageContext.sessionId}, data: $data]".loge(javaClass)
 			// send the message back in case the ui wants to do forensics
 			messageContext.send((Socket.WS_SEND_FAILURE to "Data may not comply with FSA").forSocket(true, data))
 			return

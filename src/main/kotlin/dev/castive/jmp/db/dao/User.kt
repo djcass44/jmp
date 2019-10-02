@@ -21,6 +21,8 @@ import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.UUIDTable
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 object Users: UUIDTable() {
@@ -55,6 +57,16 @@ class User(id: EntityID<UUID>): UUIDEntity(id) {
     var metaUpdate by Users.metaUpdate
 
     var from by Users.from
+
+    fun getGroups(): List<Group> = transaction {
+        val res = (Groups innerJoin GroupUsers innerJoin Users)
+            .slice(Groups.columns)
+            .select {
+                Users.id eq id
+            }
+            .withDistinct()
+        Group.wrapRows(res).toList()
+    }
 }
 data class UserData(
     val id: UUID,

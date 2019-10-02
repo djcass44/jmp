@@ -96,16 +96,18 @@ object OwnerAction {
     fun getJumpFromUser(user: User?, jump: String, caseSensitive: Boolean = true): ArrayList<Jump> {
         val jumps = getUserVisibleJumps(user)
         val matches = arrayListOf<Jump>()
-        jumps.forEach { jmp ->
-            if(jmp.name.equals(jump, ignoreCase = !caseSensitive)) {
-                matches.add(jmp)
-            }
-            // Check if any aliases match
-            val aliases = Alias.find { Aliases.parent eq jmp.id }
-            for (i in 0 until aliases.count()) {
-                if(aliases.elementAt(i).name.equals(jump, ignoreCase = !caseSensitive)) {
+        transaction {
+            jumps.forEach { jmp ->
+                if (jmp.name.equals(jump, ignoreCase = !caseSensitive)) {
                     matches.add(jmp)
-                    return@forEach
+                }
+                // Check if any aliases match
+                val aliases = Alias.find { Aliases.parent eq jmp.id }
+                for (i in 0 until aliases.count()) {
+                    if (aliases.elementAt(i).name.equals(jump, ignoreCase = !caseSensitive)) {
+                        matches.add(jmp)
+                        return@forEach
+                    }
                 }
             }
         }

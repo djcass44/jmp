@@ -25,15 +25,13 @@ import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.db.dao.Roles
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
-import dev.castive.jmp.util.SystemUtil
 import dev.castive.jmp.util.isEqual
+import dev.castive.jmp.util.json
 import dev.castive.log2.Log
 import dev.castive.log2.logi
 import dev.castive.log2.logv
 import io.javalin.http.ConflictResponse
 import io.javalin.http.Context
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import dev.castive.javalin_auth.auth.Roles as AuthRoles
@@ -70,7 +68,6 @@ class Auth {
 		if(!userExists(username)) { // Assume the user hasn't been added
 			"Attempting to create user: $username, admin=$admin".logi(javaClass)
 			transaction {
-				addLogger(StdOutSqlLogger)
 				User.new {
 					this.username = username
 					this.hash = hash
@@ -103,7 +100,7 @@ class Auth {
 			// If the provider wants additional data, generate it here
 			val data = when(Providers.primaryProvider) {
 				is CrowdProvider -> {
-					SystemUtil.gson.toJson(arrayListOf(Factor("remote_address", ctx.ip())))
+					arrayListOf(Factor("remote_address", ctx.ip())).json()
 				}
 				else -> null
 			}

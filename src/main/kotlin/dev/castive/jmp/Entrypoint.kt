@@ -17,11 +17,12 @@
 package dev.castive.jmp
 
 import dev.castive.jmp.api.App
-import dev.castive.jmp.db.Config
-import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.db.DatabaseHelper
 import dev.castive.jmp.util.EnvUtil
-import dev.castive.jmp.util.checks.*
+import dev.castive.jmp.util.checks.AuditCheck
+import dev.castive.jmp.util.checks.EntropyCheck
+import dev.castive.jmp.util.checks.FavCheck
+import dev.castive.jmp.util.checks.JavaVersionCheck
 import dev.castive.log2.logi
 import dev.castive.log2.logv
 import dev.castive.log2.logw
@@ -34,11 +35,10 @@ class Runner {
         const val BASE = "/api"
         var START_TIME = 0L
     }
-    private fun runInitialChecks(store: ConfigStore, arguments: Arguments) {
+    private fun runInitialChecks() {
         "Checking security configuration".logi(javaClass)
         println("Running setup checks\n")
         val checks = arrayListOf(
-            SecureConfigCheck(store.baseUrl, arguments),
             EntropyCheck(),
             AuditCheck(),
             JavaVersionCheck(),
@@ -57,14 +57,13 @@ class Runner {
         // Alert the user that dev features are enabled
         if(arguments.enableCors) "WARNING: CORS access is enabled for ALL origins. DO NOT allow this in production: WARNING".logw(javaClass)
         if(arguments.enableDev) "WARNING: Development mode is enabled".logw(javaClass)
-        val store = Config().loadEnv()
         launch {
-            runInitialChecks(store, arguments)
+            runInitialChecks()
         }
-        DatabaseHelper(store).start()
+        DatabaseHelper().start()
         // Start the application and wait for it to finish
         val appPort = EnvUtil.getEnv(EnvUtil.PORT, "7000").toIntOrNull() ?: 7000
-        launch { App(appPort).start(store, arguments) }.join()
+        launch { App(appPort).start(arguments) }.join()
     }
 }
 

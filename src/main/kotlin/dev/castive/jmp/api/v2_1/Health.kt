@@ -22,12 +22,11 @@ import dev.castive.javalin_auth.auth.connect.MinimalConfig
 import dev.castive.javalin_auth.auth.provider.InternalProvider
 import dev.castive.jmp.api.App
 import dev.castive.jmp.api.Responses
-import dev.castive.jmp.auth.AccessManager
-import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.util.checks.DatabaseCheck
 import dev.castive.jmp.util.checks.FavCheck
 import dev.castive.jmp.util.checks.ProviderCheck
 import dev.castive.jmp.util.ok
+import dev.castive.jmp.util.user
 import dev.castive.log2.Log
 import io.javalin.http.Context
 import io.javalin.http.Handler
@@ -50,9 +49,8 @@ class Health(private val config: MinimalConfig): Handler {
 		// allow health checks from any origin
 		// this is fine because we are rate-limiting this endpoint
 		ctx.header("Access-Control-Allow-Origin", "*")
-		val user: User? = ctx.attribute(AccessManager.attributeUser)
 		when {
-			App.auth.isAdmin(user) -> {
+			App.auth.isAdmin(ctx.user()) -> {
 				Log.v(javaClass, "Getting health check for an admin")
 				val check = runChecks(safe = false) // Allow the admin to run database checks
 				Log.d(javaClass, check.toString())

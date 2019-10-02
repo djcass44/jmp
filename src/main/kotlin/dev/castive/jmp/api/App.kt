@@ -43,7 +43,6 @@ import dev.castive.jmp.cache.BaseCacheLayer
 import dev.castive.jmp.cache.JvmCache
 import dev.castive.jmp.crypto.KeyProvider
 import dev.castive.jmp.crypto.SSMKeyProvider
-import dev.castive.jmp.db.ConfigStore
 import dev.castive.jmp.except.ExceptionTracker
 import dev.castive.jmp.tasks.SocketHeartbeatTask
 import dev.castive.jmp.util.EnvUtil
@@ -75,7 +74,7 @@ class App(private val port: Int = 7000) {
 		val auth = Auth()
 	}
 
-	suspend fun start(store: ConfigStore, arguments: Arguments) = withContext(Dispatchers.Default) {
+	suspend fun start(arguments: Arguments) = withContext(Dispatchers.Default) {
 		val cache = JvmCache()
 		val logger = Logger()
 		EventLog.stream.add(System.out)
@@ -84,11 +83,11 @@ class App(private val port: Int = 7000) {
 		// Start the cache concurrently
 		launch { startCache(cache) }
 		// Setup providers
-		val builder = LDAPConfigBuilder(store)
+		val builder = ConfigBuilder().get()
 		val verify = UserVerification(auth)
-		val provider = if(!builder.min.enabled) null else when(builder.type) {
-			"ldap" -> LDAPProvider(builder.ldapConfig, verify)
-			"crowd" -> CrowdProvider(builder.crowdConfig).apply {
+		val provider = when(builder.realm) {
+			"ldap" -> LDAPProvider(builder.asLDAP2(), verify)
+			"crowd" -> CrowdProvider(builder.asCrowd()).apply {
 				this.setup()
 				crowdCookieConfig = this.getSSOConfig() as CrowdCookieConfig?
 			}
@@ -130,8 +129,8 @@ class App(private val port: Int = 7000) {
 				}
 				SocketHeartbeatTask.broadcaster = ws::fire
 				// General
-				Info(store, arguments).addEndpoints()
-				Props(builder, exceptionTracker).addEndpoints()
+				Info(arguments).addEndpoints()
+				Props(builder.min, exceptionTracker).addEndpoints()
 
 				// Jumping
 				Jump(ws::fire).addEndpoints()

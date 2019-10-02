@@ -1,5 +1,5 @@
 /*
- *    Copyright 2019 Django Cass
+ *    Copyright [2019 Django Cass
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,15 +14,17 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.db.source
+package dev.castive.jmp.crypto
 
-import dev.castive.jmp.db.ConfigStore
-import org.jetbrains.exposed.sql.Database
+import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 
-class NoAuthSource: DataSource() {
-    override fun connect(store: ConfigStore) {
-        super.preConnect()
-        Database.connect(store.url, store.driver)
-        super.connect(store)
-    }
+class KeyProviderTest {
+	@Test
+	fun `ensure correct length of string`() {
+		for(i in 0 until 1000) {
+			val crypt = KeyProvider().getEncryptionKey()
+			assertEquals(44, crypt.length)
+		}
+	}
 }

@@ -23,23 +23,21 @@ import dev.castive.javalin_auth.auth.Roles.BasicRoles
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.App
 import dev.castive.jmp.api.Auth
-import dev.castive.jmp.api.Responses
 import dev.castive.jmp.api.Socket
 import dev.castive.jmp.api.actions.ImageAction
 import dev.castive.jmp.api.actions.OwnerAction
 import dev.castive.jmp.api.actions.TitleAction
-import dev.castive.jmp.auth.AccessManager
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.Jump
-import dev.castive.jmp.util.EnvUtil
-import dev.castive.jmp.util.isEqual
-import dev.castive.jmp.util.ok
-import dev.castive.jmp.util.toUUID
+import dev.castive.jmp.util.*
 import dev.castive.log2.Log
 import dev.castive.log2.logi
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
-import io.javalin.http.*
+import io.javalin.http.BadRequestResponse
+import io.javalin.http.ConflictResponse
+import io.javalin.http.ForbiddenResponse
+import io.javalin.http.NotFoundResponse
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -68,48 +66,44 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 	override fun addEndpoints() {
 		// List all items in Json format
 		get("${Runner.BASE}/v1/jumps", { ctx ->
-			val user: User? = ctx.attribute(AccessManager.attributeUser)
-			val userJumps = OwnerAction.getUserVisibleJumps(user)
-			val items = transaction {
-				return@transaction userJumps.map { JumpData(it) }
-			}
-			EventLog.post(Event(type = EventType.READ, resource = JumpData::class.java, causedBy = javaClass))
-			Log.v(javaClass, "Found ${items.size} jumps for ${user?.username}")
-			ctx.json(items).status(HttpStatus.OK_200)
+			// get the jumps visible to the user
+			val jumps = OwnerAction.getUserVisibleJumps(ctx.user())
+			// return in a presentable format
+			ctx.ok().json(transaction {
+				jumps.map { JumpData(it) }
+			})
 		}, Auth.openAccessRole)
 		get("${Runner.BASE}/v2/jump/:target", { ctx ->
 			val target = if(caseSensitive) ctx.pathParam("target") else ctx.pathParam("target").toLowerCase()
-			if (target.isBlank()) {
-				Log.i(javaClass, "Received null or empty target request from: ${ctx.userAgent()}")
-				throw BadRequestResponse("Empty or null target")
+			if(target.isBlank()) {
+				"Received null or empty target request from ${ctx.ip()}".logi(javaClass)
+				throw BadRequestResponse("Empty or null target: $target")
 			}
-			val user: User? = ctx.attribute(AccessManager.attributeUser)
-			// get the target jump and inform the user
-			transaction {
-				Log.d(javaClass, "User information: [name: ${user?.username}, token: ${user?.id?.value}]")
-				Log.d(javaClass, "Found user: ${user != null}")
-				val id = ctx.queryParam("id", Int::class.java).getOrNull()
-				val jump = if(id != null) {
-					Log.i(javaClass, "User is specifying jump id: $id")
-					OwnerAction.getJumpById(user, id)
-				}
-				else OwnerAction.getJumpFromUser(user, target, caseSensitive)
-				"Got ${jump.size} jumps as a response to: [name: $target, id: $id]".logi(javaClass)
-				if(jump.size == 1) {
-					val location = jump[0].location
-					jump[0].metaUsage++ // Increment usage count for statistics
-					Log.v(javaClass, "v2: moving to point: $location")
-					ctx.ok().json(JumpResponse(true, location)) // Send the user the result, don't redirect them
-				}
-				// we either found nothing, or more than 1 result. Show a UI to resolve
-				else ctx.ok().json(JumpResponse(false, "/similar?query=$target"))
+			val user = ctx.user()
+			val id = ctx.queryParam("id", Int::class.java).getOrNull()
+			val jumps = if(id != null) {
+				"Got request for specific jump: $id".logi(javaClass)
+				OwnerAction.getJumpById(user, id)
 			}
+			else OwnerAction.getJumpFromUser(user, target, caseSensitive)
+			"Got ${jumps.size} jumps as a response to $target, $id".logi(javaClass)
+			val res = run {
+				val found = jumps.size == 1
+				return@run if(found) {
+					jumps[0].metaUsage++
+					true to jumps[0].location
+				}
+				else false to "/similar?query=$target"
+			}
+			ctx.ok().json(
+				JumpResponse(res.first, res.second)
+			)
 		}, Auth.openAccessRole)
 		// Add a jump point
 		put("${Runner.BASE}/v1/jump", { ctx ->
 			val add = ctx.bodyAsClass(JumpData::class.java)
 			val groupID = (ctx.queryParam<String>("gid").getOrNull() ?: "").toUUID()
-			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+			val user: User = ctx.assertUser()
 			// Block non-admin user from adding global jumps
 			if (add.personal == JumpData.TYPE_GLOBAL && !App.auth.isAdmin(user)) throw ForbiddenResponse("Only an admin can create global Jumps")
 			if (!jumpExists(add, user)) {
@@ -145,7 +139,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 		// Edit a jump point
 		patch("${Runner.BASE}/v1/jump", { ctx ->
 			val update = ctx.bodyAsClass(EditJumpData::class.java)
-			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+			val user = ctx.assertUser()
 			transaction {
 				val existing = Jump.findById(update.id) ?: throw NotFoundResponse()
 
@@ -197,7 +191,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 		// Delete a jump point
 		delete("${Runner.BASE}/v1/jump/:id", { ctx ->
 			val id = ctx.pathParam<Int>("id").getOrNull() ?: throw BadRequestResponse()
-			val user: User = ctx.attribute(AccessManager.attributeUser) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
+			val user: User = ctx.assertUser()
 			transaction {
 				val result = Jump.findById(id) ?: throw NotFoundResponse()
 				// 403 if jump is global and user ISN'T admin
