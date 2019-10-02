@@ -30,7 +30,7 @@ import java.io.IOException
 import java.nio.charset.StandardCharsets
 
 class ConfigBuilder {
-	private val expectedVersion = "2019-10-02"
+	private val configVersion = "2019-10-02"
 
 	data class JMPConfiguration(
 		val version: String,
@@ -61,7 +61,11 @@ class ConfigBuilder {
 		val url: String
 	)
 
-	private fun getDefault(): JMPConfiguration = JMPConfiguration(
+	/**
+	 * Builds a JMPConfiguration with default values
+	 * Most of these values will be empty as they are not generic
+	 */
+	internal fun getDefault(): JMPConfiguration = JMPConfiguration(
 		"2019-10-02",
 		"db",
 		MinimalConfig(false, BasicAuthentication("username", "password")),
@@ -76,11 +80,13 @@ class ConfigBuilder {
 		)
 	)
 
+	internal fun getDataFile(): File? = DataProvider.get("jmp.json") ?: kotlin.run {
+		"Unable to allocate jmp.json file, returning defaults".logf(javaClass)
+		return null
+	}
+
 	fun get(): JMPConfiguration {
-		val data = DataProvider.get("jmp.json") ?: kotlin.run {
-			"Unable to allocate jmp.json file, returning defaults".logf(javaClass)
-			return getDefault()
-		}
+		val data = getDataFile() ?: return getDefault()
 		Log.v(javaClass, "JSON properties file exists: ${data.exists()}")
 		// read in the JSON
 		val config = if(data.exists()) {
@@ -99,11 +105,22 @@ class ConfigBuilder {
 			}
 			getDefault()
 		}
-		return if(config.version != expectedVersion) {
-			"JMP configuration has missing or incorrect version: [expected: $expectedVersion, got: ${config.version}], default values will be used".logf(javaClass)
+		return if(validateConfig(config)) {
 			getDefault()
-		} else config
+		}
+		else config
 	}
+
+	internal fun validateConfig(config: JMPConfiguration): Boolean {
+		return if(config.version != configVersion) {
+			"JMP configuration has missing or incorrect version: [expected: $configVersion, got: ${config.version}], default values will be used".logf(javaClass)
+			false
+		} else true
+	}
+
+	/**
+	 * Write a default JMPConfiguration instance to a file
+	 */
 	private fun writeDefaults(file: File) {
 		file.writeText(getDefault().json(), StandardCharsets.UTF_8)
 	}

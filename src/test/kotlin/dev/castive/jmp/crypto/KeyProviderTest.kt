@@ -1,5 +1,5 @@
 /*
- *    Copyright 2019 Django Cass
+ *    Copyright [2019 Django Cass
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,13 +14,17 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp
+package dev.castive.jmp.crypto
 
-object Version {
-    private const val MAJOR = "0"
-    private const val MINOR = "5"
-    private const val PATCH = "0"
-    private const val BUILD = "40"
+import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 
-    fun getVersion() = "$MAJOR.$MINOR.$PATCH-build.$BUILD"
+class KeyProviderTest {
+	@Test
+	fun `ensure correct length of string`() {
+		for(i in 0 until 1000) {
+			val crypt = KeyProvider().getEncryptionKey()
+			assertEquals(44, crypt.length)
+		}
+	}
 }
