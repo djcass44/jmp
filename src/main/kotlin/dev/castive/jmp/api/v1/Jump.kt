@@ -90,7 +90,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 			val res = run {
 				val found = jumps.size == 1
 				return@run if(found) {
-					jumps[0].metaUsage++
+					transaction { jumps[0].metaUsage++ }
 					true to jumps[0].location
 				}
 				else false to "/similar?query=$target"
