@@ -76,7 +76,7 @@ dependencies {
 
 	implementation("commons-cli:commons-cli:1.4")
 
-	implementation("com.auth0:java-jwt:3.8.3")
+	implementation("com.auth0:java-jwt:3.7.0")
 	implementation("com.github.kmehrunes:javalin-jwt:0.2")
 	implementation("com.github.scribejava:scribejava-apis:6.8.1")
 
