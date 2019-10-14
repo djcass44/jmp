@@ -17,6 +17,7 @@
 package dev.castive.jmp.api
 
 import dev.castive.jmp.db.dao.JumpData
+import dev.castive.jmp.util.url
 import info.debatty.java.stringsimilarity.JaroWinkler
 
 /**
@@ -49,7 +50,7 @@ class Similar(private val threshold: Double = 0.75) {
     fun computeNames(dict: ArrayList<JumpData>, query: String): List<String> {
         val results = compute(dict, query)
         // return the id suffix so that the webextension can skip the /similar hop
-        return results.map { "${it.name}?id=${it.id}" }
+        return results.map { "${it.location.url()?.host}?id=${it.id}" }
     }
 
     // Check to see if any Jumps are exact matches

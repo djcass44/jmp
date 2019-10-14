@@ -12,6 +12,7 @@ import io.javalin.http.UnauthorizedResponse
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.SizedIterable
+import java.net.URL
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -31,6 +32,13 @@ fun SizedIterable<User>.remove(user: User): SizedIterable<User> {
 }
 
 private val gson = GsonBuilder().setPrettyPrinting().create()
+
+/**
+ * Try to convert a string into a url
+ */
+fun String.url(): URL? = runCatching {
+	URL(this)
+}.getOrNull()
 
 /**
  * Convert an arbitrary object into JSON
