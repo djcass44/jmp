@@ -75,12 +75,12 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 		}, Auth.openAccessRole)
 		get("${Runner.BASE}/v2/jump/:target", { ctx ->
 			val target = if(caseSensitive) ctx.pathParam("target") else ctx.pathParam("target").toLowerCase()
-			if(target.isBlank()) {
+			val id = ctx.queryParam("id", Int::class.java).getOrNull()
+			if(target.isBlank() && id == null) {
 				"Received null or empty target request from ${ctx.ip()}".logi(javaClass)
-				throw BadRequestResponse("Empty or null target: $target")
+				throw BadRequestResponse("Empty or null target: $target, id: $id")
 			}
 			val user = ctx.user()
-			val id = ctx.queryParam("id", Int::class.java).getOrNull()
 			val jumps = if(id != null) {
 				"Got request for specific jump: $id".logi(javaClass)
 				OwnerAction.getJumpById(user, id)
