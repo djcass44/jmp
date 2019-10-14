@@ -54,33 +54,46 @@ Note: this has no effect on requests made to authorisation servers (e.g. Crowd, 
 
 ### JMP-managed
 
-Edit or create a file in JMP_HOME called jmp.properties
+#### jmp.json
 
-This file will allow you to configure LDAP/Atlassian Crowd
+`jmp.json` is a file located in `JMP_HOME` which allows for configuration of external identity providers. It currently supports LDAP and Atlassian Crowd.
 
-```properties
-type=ldap or crowd
-ldap=true or false
-ldap.host=localhost
-ldap.port=389
-ldap.context=ldap serviceaccount dn
-ldap.user=ldap serviceaccount user
-ldap.password=ldap serviceaccount password
-jmp.ldap.user_query=ldap query to get users
-jmp.ldap.group_filter=ldap query to filter groups
-jmp.ldap.group_query=ldap query to get groups
-jmp.ldap.user_uid=ldap field for a unique user id
-jmp.ldap.group_uid=ldap field for a unique group id
-jmp.ldap.max_failure=5 # max number of attemps to connect to ldap
-jmp.ldap.auth_reconnect=true # reconnect service account when a user logs in
-jmp.ldap.remove_stale=true # remove jmp users no longer in ldap
-jmp.ldap.sync_rate=300000 # number of milliseconds between each sync
-jmp.ext.block_local=false # block local user creation
-# crowd configuration
-crowd=true or false
-crowd.url=https://crowd.example.org
-crowd.user=app username to connect to crowd
-crowd.pass=app password to connect to crowd
+This file is automatically created on first-run however you can pre-create it.
+
+Commented example: (comments must be removed for actual use)
+
+```yaml
+{
+  "version": "2019-10-02", // schema version, should never change
+  "realm": "db", // set to ldap or crowd
+  "min": {
+    "enabled": false, // enable ldap/crowd
+    "serviceAccount": { // service account for ldap/crowd
+      "username": "username",
+      "password": "password"
+    },
+    "syncRate": 300000, // number of ms to wait between syncing
+    "maxConnectAttempts": 5, // number of failed connection attempts allowed
+    "blockLocal": false, // disable database users when using ldap/crowd
+    "removeStale": true // remove ldap/crowd users no longer found in ldap/crowd
+  },
+  "ldap": {
+    "core": {
+      "server": "localhost",
+      "port": 389,
+      "contextDN": "" // context of service account
+    },
+    "userFilter": "", // query to find users
+    "uid": "", // field used as user id
+    "reconnectOnAuth": false, // force reconnect to ldap
+    "groups": {
+      "groupFilter": "", // query to filter groups
+      "groupQuery": "", // query to find groups
+      "gid": "" // field used as group id
+    }
+  },
+  "crowdUrl": "http://localhost:8095/crowd" // url used to reach crowd
+}
 ```
 
 ### OAuth2
