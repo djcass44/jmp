@@ -37,28 +37,34 @@ class ConfigBuilder {
 		val realm: String,
 		val min: MinimalConfig,
 		val ldap: LDAPConfiguration,
-		val crowd: CrowdConfiguration
+		val crowdUrl: String
 	) {
 		fun asLDAP2(): LDAPConfig2 = LDAPConfig2(
 			min,
 			ldap.core,
-			ldap.extra,
+			LDAPConfig.Extras(
+				ldap.userFilter,
+				ldap.uid,
+				ldap.reconnectOnAuth,
+				min.removeStale,
+				min.syncRate,
+				min.blockLocal,
+				min.maxConnectAttempts
+			),
 			ldap.groups
 		)
 		fun asCrowd(): CrowdConfig = CrowdConfig(
 			min,
-			crowd.url
+			crowdUrl
 		)
 	}
 
 	data class LDAPConfiguration(
 		val core: LDAPConfig,
-		val extra: LDAPConfig.Extras,
+		val userFilter: String,
+		val uid: String,
+		val reconnectOnAuth: Boolean,
 		val groups: LDAPConfig.Groups
-	)
-	data class CrowdConfiguration(
-		val authentication: BasicAuthentication,
-		val url: String
 	)
 
 	/**
@@ -71,13 +77,12 @@ class ConfigBuilder {
 		MinimalConfig(false, BasicAuthentication("username", "password")),
 		LDAPConfiguration(
 			LDAPConfig(server = "localhost", contextDN = ""),
-			LDAPConfig.Extras("", "", reconnectOnAuth = false, removeStale = true),
+			"",
+			"",
+			false,
 			LDAPConfig.Groups("", "", "")
 		),
-		CrowdConfiguration(
-			BasicAuthentication("username", "password"),
-			"http://localhost:8095/crowd"
-		)
+		"http://localhost:8095/crowd"
 	)
 
 	internal fun getDataFile(): File? = DataProvider.get("jmp.json") ?: kotlin.run {
