@@ -13,7 +13,7 @@ import dev.castive.log2.Log
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class OAuth2Callback(private val userUtils: UserUtils): OAuth2.Callback() {
+class OAuth2Callback: OAuth2.Callback() {
 	/**
 	 * Create a user by getting their information from the provider
 	 */

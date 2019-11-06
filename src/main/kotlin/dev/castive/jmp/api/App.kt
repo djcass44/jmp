@@ -140,7 +140,7 @@ class App(private val port: Int = 7000) {
 
 				// Authentication
 				Oauth(auth, verify, userUtils).addEndpoints()
-				OAuth2(Runner.BASE, OAuth2Callback(userUtils)).addEndpoints()
+				OAuth2(Runner.BASE, OAuth2Callback()).addEndpoints()
 //				UserMod(auth).addEndpoints()
 			}
 			start(port)

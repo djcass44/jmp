@@ -1,5 +1,5 @@
 # STAGE 1 - BUILD
-FROM gradle:5.5.1-jdk12 as GRADLE_CACHE
+FROM gradle:5.6.4-jdk12 as GRADLE_CACHE
 LABEL maintainer="Django Cass <dj.cass44@gmail.com>"
 
 WORKDIR /app
@@ -7,10 +7,10 @@ WORKDIR /app
 # Dry run for caching
 COPY . .
 
-RUN gradle buildPackage -x test -x sonarqube -x jacocoTestReport
+RUN gradle buildPackage -x test -x jacocoTestReport
 
 # STAGE 2 - RUN
-FROM adoptopenjdk/openjdk12:jre-12.0.1_12-alpine
+FROM adoptopenjdk/openjdk12:alpine-jre
 LABEL maintainer="Django Cass <dj.cass44@gmail.com>"
 
 ENV DRIVER_URL="jdbc:sqlite:jmp.db" \
@@ -28,19 +28,9 @@ RUN addgroup -S ${USER} && adduser -S ${USER} -G ${USER}
 WORKDIR /app
 COPY --from=GRADLE_CACHE /app/build/libs/jmp.jar .
 
-EXPOSE 7000 $SOCKET_PORT
-VOLUME $JMP_HOME
+EXPOSE 7000
 
-COPY entrypoint.sh /entrypoint.sh
-
-# Add Tini
-ENV TINI_VERSION v0.18.0
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
-RUN chmod +x /tini
-
-RUN chown -R jmp:jmp $JMP_HOME /entrypoint.sh /tini /app && \
-    chmod -R 755 $JMP_HOME
+RUN chown -R ${USER}:${USER} /app
 USER jmp
 
-ENTRYPOINT ["/tini", "--"]
-CMD ["/entrypoint.sh"]
+ENTRYPOINT ["java", "-jar jmp.jar"]
