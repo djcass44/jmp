@@ -20,7 +20,6 @@ import dev.castive.eventlog.EventLog
 import dev.castive.javalin_auth.actions.UserAction
 import dev.castive.javalin_auth.api.OAuth2
 import dev.castive.javalin_auth.auth.Providers
-import dev.castive.javalin_auth.auth.Roles.BasicRoles
 import dev.castive.javalin_auth.auth.TokenProvider
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.CrowdCookieConfig
 import dev.castive.javalin_auth.auth.provider.CrowdProvider
@@ -28,6 +27,7 @@ import dev.castive.javalin_auth.auth.provider.LDAPProvider
 import dev.castive.jmp.Arguments
 import dev.castive.jmp.Runner
 import dev.castive.jmp.Version
+import dev.castive.jmp.api.config.ServerConfig
 import dev.castive.jmp.api.v1.Jump
 import dev.castive.jmp.api.v2.Info
 import dev.castive.jmp.api.v2.Oauth
@@ -46,23 +46,19 @@ import dev.castive.jmp.crypto.SSMKeyProvider
 import dev.castive.jmp.except.ExceptionTracker
 import dev.castive.jmp.tasks.SocketHeartbeatTask
 import dev.castive.jmp.util.EnvUtil
-import dev.castive.jmp.util.asEnv
 import dev.castive.log2.Log
-import dev.castive.log2.loga
-import dev.castive.log2.logi
 import io.javalin.Javalin
-import io.javalin.core.util.RouteOverviewPlugin
 import io.javalin.http.HandlerType
+import io.javalin.plugin.openapi.OpenApiOptions
+import io.javalin.plugin.openapi.OpenApiPlugin
+import io.javalin.plugin.openapi.ui.SwaggerOptions
+import io.swagger.v3.oas.models.info.License
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory
 import org.eclipse.jetty.http.HttpStatus
-import org.eclipse.jetty.http2.HTTP2Cipher
-import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory
-import org.eclipse.jetty.server.*
-import org.eclipse.jetty.util.ssl.SslContextFactory
 import java.util.*
+import io.swagger.v3.oas.models.info.Info as SwaggerInfo
 
 
 class App(private val port: Int = 7000) {
@@ -102,11 +98,11 @@ class App(private val port: Int = 7000) {
 			config.apply {
 				server {
 					// get our customised server
-					getServer(port)
+					ServerConfig(port).getServer()
 				}
 				showJavalinBanner = false
 				if (arguments.enableCors) { enableCorsForAllOrigins() }
-				if (arguments.enableDev) { registerPlugin(RouteOverviewPlugin(Runner.BASE, setOf(BasicRoles.ANYONE))) }
+				registerPlugin(OpenApiPlugin(getOpenApiOptions()))
 				requestLogger { ctx, timeMs ->
 					logger.add("${System.currentTimeMillis()} - ${ctx.method()} ${ctx.path()} took $timeMs ms")
 				}
@@ -180,50 +176,10 @@ class App(private val port: Int = 7000) {
 		if(existingID == null) cache.set("appId", UUID.randomUUID().toString())
 	}
 
-	private fun getServer(port: Int): Server {
-		val server = Server()
-		val secure = EnvUtil.JMP_HTTP_SECURE.asEnv().toBoolean()
-		val h2 = EnvUtil.JMP_HTTP2.asEnv("true").toBoolean()
-		// build an ssl or http connector based on env
-		val connector = if(secure) {
-			"Setting SSL context on base server".logi(javaClass)
-			// prefer http2
-			if(h2) {
-				"Enabling HTTP2 for base server".loga(javaClass)
-				getHTTP2ServerConnector(server)
-			}
-			else ServerConnector(server, getSslContextFactory())
-		} else ServerConnector(server)
-		connector.port = port
-		server.connectors = arrayOf(connector)
-		return server
-	}
-
-	private fun getHTTP2ServerConnector(server: Server): ServerConnector {
-		val alpn = ALPNServerConnectionFactory().apply {
-			defaultProtocol = "h2"
-		}
-		val ssl = SslConnectionFactory(getSslContextFactory(true), alpn.protocol)
-		val httpsConfig = HttpConfiguration().apply {
-			sendServerVersion = false
-			secureScheme = "https"
-			securePort = this@App.port
-			addCustomizer(SecureRequestCustomizer())
-		}
-		val http2 = HTTP2ServerConnectionFactory(httpsConfig)
-		val fallback = HttpConnectionFactory(httpsConfig)
-
-		return ServerConnector(server, ssl, alpn, http2, fallback).apply {
-			this.port = this@App.port
-		}
-	}
-
-	private fun getSslContextFactory(h2: Boolean = true): SslContextFactory = SslContextFactory.Server().apply {
-		keyStorePath = EnvUtil.JMP_SSL_KEYSTORE.asEnv()
-		if(h2) {
-			cipherComparator = HTTP2Cipher.COMPARATOR
-			provider = "Conscrypt"
-		}
-		setKeyStorePassword(EnvUtil.JMP_SSL_PASSWORD.asEnv())
-	}
+	private fun getOpenApiOptions() = OpenApiOptions(SwaggerInfo().apply {
+		license = License().name("Apache License 2.0").url("https://www.apache.org/licenses/LICENSE-2.0.html")
+		title = "JMP"
+		version = "0.5"
+		description = "Utility for quickly navigating to websites & addresses"
+	}).path("/swagger-docs").swagger(SwaggerOptions("/${Runner.BASE}")).roles(Auth.openAccessRole)
 }

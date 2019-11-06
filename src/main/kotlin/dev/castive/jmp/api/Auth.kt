@@ -25,6 +25,7 @@ import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.db.dao.Roles
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
+import dev.castive.jmp.db.repo.existsByUsername
 import dev.castive.jmp.util.isEqual
 import dev.castive.jmp.util.json
 import dev.castive.log2.Log
@@ -46,18 +47,10 @@ class Auth {
 
 	data class UserLoginResponse(val token: String, val provided: Boolean)
 
-	@Deprecated(message = "Do not use strings when dealing with passwords.")
-	fun computeHash(password: String): String {
-		return computeHash(password.toCharArray())
-	}
 	fun computeHash(password: CharArray): String {
 		return Hash.password(password).create()
 	}
-	@Deprecated(message = "Do not use strings when dealing with passwords.")
-	fun hashMatches(password: String, expectedHash: String): Boolean {
-		if(expectedHash.isBlank()) return false
-		return hashMatches(password.toCharArray(), expectedHash)
-	}
+
 	internal fun hashMatches(password: CharArray, expectedHash: String): Boolean {
 		if(expectedHash.isBlank()) return false
 		return Hash.password(password).verify(expectedHash)
@@ -65,7 +58,7 @@ class Auth {
 
 	fun createUser(username: String, password: CharArray, admin: Boolean = false, displayName: String = "") {
 		val hash = computeHash(password)
-		if(!userExists(username)) { // Assume the user hasn't been added
+		if(!Users.existsByUsername(username)) { // Assume the user hasn't been added
 			"Attempting to create user: $username, admin=$admin".logi(javaClass)
 			transaction {
 				User.new {
@@ -74,7 +67,6 @@ class Auth {
 					this.displayName = displayName
 					role = if (admin) getDAOAdminRole() else getDAOUserRole()
 				}
-				commit()
 			}
 		}
 		else {
@@ -125,14 +117,13 @@ class Auth {
 	}
 
 	fun getUserToken(username: String, password: CharArray): String? {
-		assert(userExists(username))
+		assert(Users.existsByUsername(username))
 		return transaction {
-			val existing = User.find {
+			val user = User.find {
 				Users.username eq username
-			}.limit(1)
-			val user = existing.elementAtOrNull(0)
+			}.limit(1).elementAtOrNull(0)
 			// Only return if hashes match (and user was found)
-			return@transaction if(user != null && hashMatches(password, user.hash))
+			if(user != null && hashMatches(password, user.hash))
 				user.id.value.toString()
 			else
 				null
@@ -144,26 +135,15 @@ class Auth {
 	 * ONLY USE THIS ONCE EXTERNAL AUTHENTICATION HAS SUCCEEDED
 	 */
 	fun getUserTokenWithPrivilege(username: String): String {
-		assert(userExists(username)) // Requires users to be synced already
+		assert(Users.existsByUsername(username)) // Requires users to be synced already
 		return transaction {
-			val existing = User.find {
+			val user = User.find {
 				Users.username eq username
-			}.limit(1)
-			val user = existing.elementAtOrNull(0)
+			}.limit(1).elementAtOrNull(0)
 			return@transaction user?.id?.value.toString()
 		}
 	}
-	private fun userExists(username: String): Boolean = transaction {
-		return@transaction !User.find {
-			Users.username.lowerCase() eq username.toLowerCase()
-		}.empty()
-	}
 
-	fun getUser(username: String): User? = transaction {
-		return@transaction User.find {
-			Users.username eq username
-		}.elementAtOrNull(0)
-	}
 	fun getUser(username: String, token: String): User? {
 		if(username.isBlank() || token.isBlank()) return null
 		return transaction {

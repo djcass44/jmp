@@ -16,7 +16,7 @@ class JvmCache: BaseCacheLayer {
 		if(userMap.isEmpty()) return null
 		val res = userMap[token] ?: return null
 		// Consider cache of over 10 seconds to be stale
-		if(System.currentTimeMillis() - res.time > 10000) return null
+		if(System.currentTimeMillis() - res.time > 10_000) return null
 		return res
 	}
 

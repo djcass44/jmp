@@ -17,7 +17,8 @@
 package dev.castive.jmp.api.v2
 
 import dev.castive.jmp.api.Similar
-import dev.castive.jmp.api.actions.OwnerAction
+import dev.castive.jmp.db.dao.Jumps
+import dev.castive.jmp.db.repo.findAllByUser
 import dev.castive.jmp.util.ok
 import dev.castive.jmp.util.user
 import dev.castive.log2.Log
@@ -36,7 +37,7 @@ class Similar: Handler {
             throw BadRequestResponse("Empty or null target")
         }
         // get the jumps visible to the user
-        val userJumps = OwnerAction.getUserVisibleJumps(ctx.user(), includeAliases = true)
+        val userJumps = Jumps.findAllByUser(ctx.user(), includeAliases = true)
 
         // check if the user wants suggestions instead (only the name)
         val suggest = ctx.queryParam("suggest", Boolean::class.java).getOrNull()

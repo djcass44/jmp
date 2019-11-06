@@ -1,5 +1,5 @@
 /*
- *    Copyright 2019 Django Cass
+ *    Copyright [2019 Django Cass
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,13 +14,17 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp
+package dev.castive.jmp.db.repo
 
-object Version {
-    private const val MAJOR = "0"
-    private const val MINOR = "5"
-    private const val PATCH = "0"
-    private const val BUILD = "52"
+import dev.castive.jmp.db.dao.Role
+import dev.castive.jmp.db.dao.Roles
+import org.jetbrains.exposed.sql.transactions.transaction
 
-    fun getVersion() = "$MAJOR.$MINOR.$PATCH-build.$BUILD"
+/**
+ * Find all roles by a  given name
+ */
+fun Roles.findAllByName(name: String): List<Role> = transaction {
+	Role.find {
+		Roles.name eq name
+	}.toList()
 }

@@ -16,6 +16,8 @@
 
 package dev.castive.jmp.db.dao
 
+import dev.castive.jmp.db.repo.findAllByParent
+import dev.castive.jmp.util.asArrayList
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -48,6 +50,10 @@ class Jump(id: EntityID<Int>) : IntEntity(id) {
     var metaCreation by Jumps.metaCreation
     var metaUpdate by Jumps.metaUpdate
     var metaUsage by Jumps.metaUsage
+
+    fun isPublic(): Boolean = transaction {
+        owner == null && ownerGroup == null
+    }
 }
 data class JumpData(val id: Int, val name: String, val location: String, val personal: Int = 0, val owner: String? = null, val image: String? = null,
                     val title: String? = null,
@@ -62,29 +68,24 @@ data class JumpData(val id: Int, val name: String, val location: String, val per
         const val TYPE_PERSONAL = 1
         const val TYPE_GROUP = 2
 
-        fun getType(jump: Jump): Int {
-            if(jump.ownerGroup == null && jump.owner == null)
-                return TYPE_GLOBAL
-            if(jump.owner != null)
-                return TYPE_PERSONAL
-            if(jump.ownerGroup != null)
-                return TYPE_GROUP
-            return TYPE_GLOBAL
+        fun getType(jump: Jump): Int = when {
+            jump.isPublic() -> TYPE_GLOBAL
+            jump.owner != null -> TYPE_PERSONAL
+            jump.ownerGroup != null -> TYPE_GROUP
+            else -> TYPE_GLOBAL
         }
         fun getOwner(jump: Jump): String? = transaction {
-            if(jump.ownerGroup == null && jump.owner == null)
+            if(jump.isPublic())
                 return@transaction null
             if(jump.ownerGroup != null)
                 return@transaction jump.ownerGroup!!.name
             if(jump.owner != null)
                 return@transaction jump.owner!!.username
-            return@transaction null
+            null
         }
         fun getAlias(jump: Jump): ArrayList<AliasData> = transaction {
-            val alias = arrayListOf<AliasData>()
             // Get all the aliases which are owned by @param jump
-            Alias.find { Aliases.parent eq jump.id }.forEach { alias.add(AliasData(it)) }
-            return@transaction alias
+            Aliases.findAllByParent(jump.id.value).map { AliasData(it) }.asArrayList()
         }
     }
 }

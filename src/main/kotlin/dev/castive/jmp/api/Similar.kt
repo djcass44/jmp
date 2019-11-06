@@ -17,6 +17,7 @@
 package dev.castive.jmp.api
 
 import dev.castive.jmp.db.dao.JumpData
+import dev.castive.jmp.util.asArrayList
 import dev.castive.jmp.util.url
 import info.debatty.java.stringsimilarity.JaroWinkler
 
@@ -30,15 +31,15 @@ class Similar(private val threshold: Double = 0.75) {
         if(results.isNotEmpty()) return results
         val jw = JaroWinkler()
         var best: Pair<JumpData?, Double> = null to 0.0
-        for (s in dict) {
+        dict.forEach {
             // generate the similarity metric
-            val metric = jw.similarity(query, s.name)
+            val metric = jw.similarity(query, it.name)
             if (metric > threshold)
                 // add it if it crosses the threshold
-                results.add(s)
+                results.add(it)
             // track 'okay' values as a fallback
             if (metric > 0.65 && metric > best.second)
-                best = s to metric
+                best = it to metric
         }
         // if we got no good results, fallback to the best 'okay' value
         if (results.size == 0 && best.first != null) {
@@ -47,19 +48,14 @@ class Similar(private val threshold: Double = 0.75) {
         }
         return results
     }
-    fun computeNames(dict: ArrayList<JumpData>, query: String): List<String> {
-        val results = compute(dict, query)
-        // return the id suffix so that the webextension can skip the /similar hop
-        return results.map { "${it.location.url()?.host}?id=${it.id}" }
+    // return the id suffix so that the webextension can skip the /similar hop
+    fun computeNames(dict: ArrayList<JumpData>, query: String): List<String> = compute(dict, query).map {
+        "${it.location.url()?.host}?id=${it.id}"
     }
 
     // Check to see if any Jumps are exact matches
     // See #70
-    private fun checkForDuplicates(dict: ArrayList<JumpData>, query: String): ArrayList<JumpData> {
-        val results = arrayListOf<JumpData>()
-        for (j in dict) {
-            if(j.name == query) results.add(j)
-        }
-        return results
-    }
+    private fun checkForDuplicates(dict: ArrayList<JumpData>, query: String): ArrayList<JumpData> = dict.mapNotNull {
+        if(it.name == query) it else null
+    }.asArrayList()
 }

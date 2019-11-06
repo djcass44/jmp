@@ -57,13 +57,4 @@ object EnvUtil {
 	 * the url of the fav2 server
 	 */
 	const val FAV2_URL = "FAV2_URL"
-
-	/**
-	 * whether github oauth2 is enabled
-	 */
-	const val GITHUB_ENABLED = "GITHUB_ENABLED"
-	/**
-	 * whether google oauth2 is enabled
-	 */
-	const val GOOGLE_ENABLED = "GOOGLE_ENABLED"
 }

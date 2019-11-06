@@ -21,6 +21,7 @@ import dev.castive.jmp.io.DataProvider
 import dev.castive.jmp.io.NOutputStream
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
+import dev.castive.log2.loge
 import dev.castive.log2.logf
 import java.io.File
 import java.io.FileOutputStream
@@ -76,6 +77,8 @@ class Logger {
 	fun add(text: String) {
 		if(!logEnabled) return
 		val res = runCatching { logRequest.appendText("$text\n", StandardCharsets.UTF_8) }.exceptionOrNull()
-		if(res != null) Log.e(javaClass, "Failed to log: $res")
+		res?.let {
+			"Failed to log: $res".loge(javaClass)
+		}
 	}
 }

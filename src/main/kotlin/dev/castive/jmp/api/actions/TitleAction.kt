@@ -1,8 +1,8 @@
 package dev.castive.jmp.api.actions
 
 import dev.castive.jmp.api.Socket
-import dev.castive.jmp.db.dao.Jump
 import dev.castive.jmp.db.dao.Jumps
+import dev.castive.jmp.db.repo.findAllByLocation
 import dev.castive.jmp.except.InsecureDomainException
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
@@ -31,7 +31,7 @@ class TitleAction(private val ws: (tag: String, data: Any) -> (Unit)) {
             val document = Jsoup.connect(host).get()
             val title = document.head().getElementsByTag("title").text()
             transaction {
-                val results = Jump.find { Jumps.location eq address }
+                val results = Jumps.findAllByLocation(address)
                 for (r in results) if (r.title == null || r.title != title) {
                     Log.v(javaClass, "Updating title for ${r.name} [previous: ${r.title}, new: $title]")
                     r.title = title

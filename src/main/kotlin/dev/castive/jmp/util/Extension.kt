@@ -33,6 +33,12 @@ fun SizedIterable<User>.remove(user: User): SizedIterable<User> {
 
 private val gson = GsonBuilder().setPrettyPrinting().create()
 
+fun User.isAdmin() = this.role.isEqual(Roles.BasicRoles.ADMIN)
+
+fun User.isNormal() = this.role.isEqual(Roles.BasicRoles.USER)
+
+fun User.isAnon() = this.role.isEqual(Roles.BasicRoles.ANYONE)
+
 /**
  * Try to convert a string into a url
  */

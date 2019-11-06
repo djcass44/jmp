@@ -15,9 +15,7 @@
  */
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import org.ajoberstar.grgit.Grgit
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.sonarqube.gradle.SonarQubeTask
 
 plugins {
 	kotlin("jvm") version "1.3.50"
@@ -25,8 +23,6 @@ plugins {
 	id("com.github.ben-manes.versions") version "0.25.0"
 	application
 	jacoco
-	id("org.sonarqube") version "2.8"
-	id("org.ajoberstar.grgit") version "1.7.2"
 }
 
 group = "dev.castive"
@@ -45,11 +41,12 @@ repositories {
 
 val junitVersion: String by project
 val jettyVersion: String by project
+val kotlinVersion: String by project
 
 dependencies {
-	implementation(kotlin("stdlib-jdk8"))
+	implementation(kotlin("stdlib-jdk8:$kotlinVersion"))
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.2")
-	implementation("org.jetbrains.kotlin:kotlin-reflect:1.3.50")
+	implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
 
 	implementation("com.github.djcass44:jmp-auth:176931eec3")
@@ -83,6 +80,10 @@ dependencies {
 	implementation("org.jetbrains.exposed:exposed:0.17.4")
 	implementation("com.zaxxer:HikariCP:3.4.1")
 
+	// swagger
+	implementation("io.swagger.core.v3:swagger-core:2.0.8")
+	implementation("org.webjars:swagger-ui:3.23.8")
+
 	// Crypto providers
 	implementation("com.amazonaws:aws-java-sdk-ssm:1.11.642")
 
@@ -99,7 +100,7 @@ dependencies {
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
 
 	testImplementation("org.mockito:mockito-core:3.0.0")
-	testImplementation("org.jetbrains.kotlin:kotlin-test:1.3.50")
+	testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
 }
 
 application {
@@ -131,7 +132,6 @@ tasks {
 			xml.isEnabled = true
 		}
 	}
-	withType<SonarQubeTask> { dependsOn("test", "jacocoTestReport") }
 }
 jacoco {
 	toolVersion = "0.8.4"
@@ -140,26 +140,6 @@ task("buildPackage") {
 	println("Building package...")
 	finalizedBy("increment-patch", "shadowJar")
 }
-val codeCoverageReport by tasks.creating(JacocoReport::class) { dependsOn("test") }
-
-sonarqube {
-	val git = runCatching {Grgit.open(project.rootDir)}.getOrNull()
-	// Don't run an analysis if we can't get git context
-	val name = (if(git == null) null else runCatching {git.branch.current.name}.getOrNull())
-	val target = when(name) {
-		null -> null
-		"develop" -> "master"
-		else -> "develop"
-	}
-	val branch = if(name != null && target != null) Pair(name, target) else null
-	this.isSkipProject = branch == null
-	properties{
-		property("sonar.projectKey", "djcass44:jmp")
-		property("sonar.projectName", "djcass44/jmp")
-//		if(branch != null) {
-//			property("sonar.branch.name", branch.first)
-//			property("sonar.branch.target", branch.second)
-//		}
-		property("sonar.junit.reportsPath", "$projectDir/build/test-results")
-	}
+val codeCoverageReport by tasks.creating(JacocoReport::class) {
+	dependsOn("test")
 }

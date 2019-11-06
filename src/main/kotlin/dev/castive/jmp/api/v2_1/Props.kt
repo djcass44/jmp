@@ -44,8 +44,8 @@ class Props(private val minConfig: MinimalConfig, private val tracker: Exception
 		get("${Runner.BASE}/v2_1/provider/main", { ctx ->
 			val main = Providers.primaryProvider
 			val connected = main != null && main.connected()
-			val users = if(main != null) transaction { return@transaction User.find { Users.from eq main.getName() }.count() } else 0
-			val groups = if(main != null) transaction { return@transaction Group.find { Groups.from eq main.getName() }.count() } else 0
+			val users = if(main != null) transaction { User.find { Users.from eq main.getName() }.count() } else 0
+			val groups = if(main != null) transaction { Group.find { Groups.from eq main.getName() }.count() } else 0
 			ctx.ok().json(ProviderPayload(connected, main?.getName() ?: InternalProvider.SOURCE_NAME, users, groups))
 		}, Auth.adminRoleAccess)
 		get("${Runner.BASE}/v2_1/statistics/providers", { ctx ->

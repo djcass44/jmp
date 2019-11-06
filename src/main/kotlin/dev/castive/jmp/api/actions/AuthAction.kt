@@ -5,9 +5,9 @@ import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.Factor
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.ValidateRequest
 import dev.castive.jmp.db.dao.Session
 import dev.castive.jmp.db.dao.Sessions
+import dev.castive.jmp.db.repo.findFirstBySsoToken
 import dev.castive.log2.Log
 import io.javalin.http.Context
-import org.jetbrains.exposed.sql.transactions.transaction
 
 object AuthAction {
 	/**
@@ -28,10 +28,6 @@ object AuthAction {
 			Log.v(javaClass, "::userHadToken: provided null token")
 			return null
 		}
-		return transaction {
-			return@transaction Session.find {
-				Sessions.ssoToken eq token
-			}.elementAtOrNull(0)
-		}
+		return Sessions.findFirstBySsoToken(token)
 	}
 }

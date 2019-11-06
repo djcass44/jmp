@@ -28,6 +28,8 @@ import dev.castive.jmp.db.dao.Group
 import dev.castive.jmp.db.dao.GroupData
 import dev.castive.jmp.db.dao.GroupUsers
 import dev.castive.jmp.db.dao.Groups
+import dev.castive.jmp.db.repo.findAllByName
+import dev.castive.jmp.db.repo.findAllContainingUser
 import dev.castive.jmp.tasks.GroupsTask
 import dev.castive.jmp.util.assertUser
 import dev.castive.jmp.util.isEqual
@@ -57,7 +59,7 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
                         items.addAll(Group.all().map { GroupData(it) })
                         return@transaction
                     }
-                    items.addAll(user.getGroups().map { GroupData(it) })
+                    items.addAll(Groups.findAllContainingUser(user).map { GroupData(it) })
                 }
             }
             ctx.ok().json(items)
@@ -66,10 +68,8 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
             val add = ctx.bodyAsClass(GroupData::class.java)
             val user = ctx.assertUser()
             transaction {
-                val existing = Group.find {
-                    Groups.name eq add.name
-                }
-                if(!existing.empty()) throw ConflictResponse("Group already exists")
+                val existing = Groups.findAllByName(add.name)
+                if(existing.isNotEmpty()) throw ConflictResponse("Group already exists")
                 Group.new(UUID.randomUUID()) {
                     name = add.name
                     public = add.public

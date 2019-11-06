@@ -1,15 +1,13 @@
 package dev.castive.jmp.util.checks
 
-import dev.castive.jmp.db.dao.User
+import dev.castive.jmp.db.dao.Users
+import dev.castive.jmp.db.repo.count
 import dev.castive.log2.Log
-import org.jetbrains.exposed.sql.transactions.transaction
 
 class DatabaseCheck: StartupCheck("Database connection") {
     override fun runCheck(): Boolean = try {
-        transaction {
-            // Assumes that initial db setup has already been executed
-            assert(User.all().count() > 0)
-        }
+        // Assumes that initial db setup has already been executed
+        assert(Users.count() > 0)
         onSuccess()
         true
     }

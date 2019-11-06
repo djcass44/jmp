@@ -19,9 +19,13 @@ package dev.castive.jmp.auth
 import dev.castive.javalin_auth.api.OAuth2
 import dev.castive.javalin_auth.auth.Providers
 import dev.castive.jmp.api.App
+import dev.castive.jmp.db.dao.Sessions
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
+import dev.castive.jmp.db.repo.findFirstByRefreshTokenAndActive
+import dev.castive.jmp.db.repo.findFirstByUsername
 import dev.castive.log2.Log
+import dev.castive.log2.logi
 import io.javalin.http.Context
 import org.jetbrains.exposed.sql.transactions.transaction
 import dev.castive.javalin_auth.auth.data.User as AuthUser
@@ -52,27 +56,31 @@ object ClaimConverter {
 				Log.v(javaClass, "Got accessToken: $header")
 				// Check that the accessToken is still valid
 				val maybeUsername = userUtils.cache.getUser(header)
-				val maybeUser = if(maybeUsername != null) userUtils.getUser(maybeUsername.username) else null
+				val maybeUser = if(maybeUsername != null) Users.findFirstByUsername(maybeUsername.username) else null
 				if(maybeUser != null) {
 					Log.i(javaClass, "Found user in cache: ${maybeUsername?.username}")
 					user2 = maybeUser
 				}
-				else {
-					val source = OAuth2.providers[ctx.header("X-Auth-Source")]
-					if(source != null) {
-						val res = source.isTokenValid(header)
-						if (res) {
-							Log.v(javaClass, "AccessToken is valid, lets get its session")
-							// Get the session the accessToken belongs to
-							val session = userUtils.getSession(header)
-							// Get the user from the session
-							if (session != null) {
-								user2 = transaction { session.user }
-								userUtils.onUserValid(user2, header)
-								Log.i(javaClass, "Found session for ${user2.username}")
+				userUtils.cache.getUser(header)?.let { cached ->
+					Users.findFirstByUsername(cached.username)?.let {
+						"Found user in cache: ${cached.username}"
+						user2 = it
+					} ?: kotlin.run {
+						val source = OAuth2.providers[ctx.header("X-Auth-Source")]
+						if(source != null) {
+							if (source.isTokenValid(header)) {
+								Log.v(javaClass, "AccessToken is valid, lets get its session")
+								// Get the session the accessToken belongs to
+								Sessions.findFirstByRefreshTokenAndActive(header)?.let {
+									// Get the user from the session
+									user2 = transaction { it.user }
+									userUtils.onUserValid(user2!!, header)
+									"Found session for ${user2!!.username}".logi(javaClass)
+								}
 							}
-						} else
-							userUtils.onUserInvalid(header)
+							else
+								userUtils.onUserInvalid(header)
+						}
 					}
 				}
 			}
@@ -81,12 +89,7 @@ object ClaimConverter {
 			Log.i(javaClass, "[${ctx.path()}] Failed to locate user with any provider")
 			return null
 		}
-		return user2 ?: transaction {
-			User.find {
-				// user2 is null so user cannot be null
-				Users.username eq user!!.username
-			}.elementAtOrNull(0)
-		}
+		return user2 ?: Users.findFirstByUsername(user!!.username)
 	}
 
 	/**

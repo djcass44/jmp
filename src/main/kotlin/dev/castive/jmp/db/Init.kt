@@ -18,6 +18,7 @@ package dev.castive.jmp.db
 
 import dev.castive.javalin_auth.auth.Roles
 import dev.castive.jmp.api.Auth
+import dev.castive.jmp.crypto.KeyProvider
 import dev.castive.jmp.db.dao.Role
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.util.EnvUtil
@@ -25,7 +26,6 @@ import dev.castive.jmp.util.asEnv
 import dev.castive.log2.Log
 import dev.castive.log2.logok
 import dev.castive.log2.logv
-import dev.castive.securepass3.PasswordGenerator
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
 import java.nio.charset.StandardCharsets
@@ -45,20 +45,18 @@ class Init {
             }
 	        "Located ${User.all().count()} existing users...".logv(javaClass)
             if(User.all().empty()) {
-                val password = PasswordGenerator().generate(32, strong = false) // Strong causes blocking issues in Docker
-                Auth().createUser(superName, password, true, "Admin")
+                val password = KeyProvider().createKey()
+                Auth().createUser(superName, password.toCharArray(), true, "Admin")
                 Log.w(javaClass, "Created superuser with access: [username: $superName]\nPlease change this ASAP!\nThis will also be stored in the current directory in 'initialAdminPassword'")
                 try {
 	                var path = EnvUtil.JMP_HOME.asEnv("/data/")
 	                if(!path.endsWith(File.separatorChar)) path += File.separatorChar
-                    Files.writeString(Path.of("${path}initialAdminPassword"), String(password), StandardCharsets.UTF_8)
+                    Files.writeString(Path.of("${path}initialAdminPassword"), password, StandardCharsets.UTF_8)
                 }
                 catch (e: Exception) {
                     Log.e(javaClass, "Failed to save admin password: $e")
                 }
-                for (c in password) // Probably useless if converted to a string above
-                    print(c)
-                println()
+                println("\n$password\n")
             }
         }
     }

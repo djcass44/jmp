@@ -25,10 +25,12 @@ import dev.castive.jmp.api.App
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Socket
 import dev.castive.jmp.api.actions.ImageAction
-import dev.castive.jmp.api.actions.OwnerAction
 import dev.castive.jmp.api.actions.TitleAction
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.Jump
+import dev.castive.jmp.db.repo.findAllById
+import dev.castive.jmp.db.repo.findAllByUser
+import dev.castive.jmp.db.repo.searchByTerm
 import dev.castive.jmp.util.*
 import dev.castive.log2.Log
 import dev.castive.log2.logi
@@ -54,7 +56,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 			 * Get Jumps for user
 			 * Return TRUE if both name & location matches any
 			 */
-			val existing = OwnerAction.getJumpFromUser(user, add.name, caseSensitive)
+			val existing = Jumps.searchByTerm(user, add.name, caseSensitive)
 			existing.forEach {
 				if(it.name.equals(add.name, ignoreCase = !caseSensitive) && it.location == add.location)
 					return@transaction true
@@ -67,7 +69,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 		// List all items in Json format
 		get("${Runner.BASE}/v1/jumps", { ctx ->
 			// get the jumps visible to the user
-			val jumps = OwnerAction.getUserVisibleJumps(ctx.user())
+			val jumps = Jumps.findAllByUser(ctx.user())
 			// return in a presentable format
 			ctx.ok().json(transaction {
 				jumps.map { JumpData(it) }
@@ -83,9 +85,9 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 			val user = ctx.user()
 			val jumps = if(id != null) {
 				"Got request for specific jump: $id".logi(javaClass)
-				OwnerAction.getJumpById(user, id)
+				Jumps.findAllById(user, id)
 			}
-			else OwnerAction.getJumpFromUser(user, target, caseSensitive)
+			else Jumps.searchByTerm(user, target, caseSensitive)
 			"Got ${jumps.size} jumps as a response to $target, $id".logi(javaClass)
 			val res = run {
 				val found = jumps.size == 1
@@ -145,7 +147,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 
 				// User can change personal jumps
 				if(existing.owner == user || user.role.isEqual(BasicRoles.ADMIN) ||
-					(OwnerAction.getJumpById(user, existing.id.value).isNotEmpty() && !OwnerAction.isPublic(existing))) {
+					(Jumps.findAllById(user, existing.id.value).isNotEmpty() && !existing.isPublic())) {
 					existing.apply {
 						name = update.name
 						location = update.location

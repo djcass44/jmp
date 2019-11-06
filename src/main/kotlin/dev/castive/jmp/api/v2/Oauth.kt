@@ -30,7 +30,11 @@ import dev.castive.jmp.api.Responses
 import dev.castive.jmp.auth.ClaimConverter
 import dev.castive.jmp.auth.UserUtils
 import dev.castive.jmp.auth.UserVerification
+import dev.castive.jmp.db.dao.Sessions
 import dev.castive.jmp.db.dao.UserData
+import dev.castive.jmp.db.dao.Users
+import dev.castive.jmp.db.repo.findFirstByUserAndRefreshTokenAndActive
+import dev.castive.jmp.db.repo.findFirstByUsername
 import dev.castive.jmp.util.assertUser
 import dev.castive.jmp.util.isESNullOrBlank
 import dev.castive.jmp.util.ok
@@ -106,7 +110,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification, privat
 				Log.d(javaClass, "Setting cookie to: $ck")
 				ctx.cookie(ck)
 			}
-			val user = userUtils.getUser(name) ?: throw UnauthorizedResponse()
+			val user = Users.findFirstByUsername(name) ?: throw UnauthorizedResponse()
 			val actualToken = sso?.token ?: login.token
 			val result = userUtils.createSession(user, actualToken)
 			ctx.ok().json(result)
@@ -122,7 +126,7 @@ class Oauth(private val auth: Auth, private val verify: UserVerification, privat
 			ctx.attribute("LAX", true)
 			val user = ClaimConverter.getUser(ctx, userUtils) ?: throw UnauthorizedResponse(Responses.AUTH_INVALID)
 			val response = transaction {
-				val existingSession = userUtils.getSession(user, refresh) ?: run {
+				val existingSession = Sessions.findFirstByUserAndRefreshTokenAndActive(user, refresh) ?: run {
 					Log.d(Oauth::class.java, "Failed to find matching refresh token")
 					throw UnauthorizedResponse("Invalid refresh token")
 				}

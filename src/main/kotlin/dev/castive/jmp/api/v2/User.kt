@@ -27,6 +27,9 @@ import dev.castive.jmp.api.Responses
 import dev.castive.jmp.api.Socket
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.User
+import dev.castive.jmp.db.repo.count
+import dev.castive.jmp.db.repo.findAllByName
+import dev.castive.jmp.db.repo.findAllContainingUser
 import dev.castive.jmp.tasks.GroupsTask
 import dev.castive.jmp.util.asArrayList
 import dev.castive.jmp.util.assertUser
@@ -60,12 +63,10 @@ class User(
             val users = transaction {
                 // get the users memberships and map them to the user entity
                 User.all().limit(count, offset).map {
-                    UserData(it, it.getGroups().map { g -> g.name }.asArrayList())
+                    UserData(it, Groups.findAllContainingUser(it).map { g -> g.name }.asArrayList())
                 }.asArrayList()
             }
-            val userCount = transaction {
-                User.all().count()
-            }
+            val userCount = Users.count()
             EventLog.post(Event(type = EventType.READ, resource = UserData::class.java, causedBy = javaClass))
             val currentPage = (offset / userCount) + 1
             val totalPages = ceil(userCount / count.toDouble()).toInt()
@@ -118,9 +119,7 @@ class User(
                 if(user.username == "admin") throw ForbiddenResponse()
                 // Block the user from changing their own permissions
                 if(user.username == u.username) throw ForbiddenResponse()
-                val role = Role.find {
-                    Roles.name eq updated.role
-                }.elementAtOrNull(0) ?: throw BadRequestResponse()
+                val role = Roles.findAllByName(updated.role).elementAtOrNull(0) ?: throw BadRequestResponse()
                 Log.i(javaClass, "User role updated [user: ${user.username}, from: ${user.role.name}, to: ${role.name}] by ${u.username}")
                 EventLog.post(Event(type = EventType.UPDATE, resource = UserData::class.java, causedBy = javaClass))
                 user.apply {
@@ -160,7 +159,7 @@ class User(
             }
             val items = transaction {
                 val getUser = User.findById(uid) ?: throw BadRequestResponse("Requested user is null")
-                return@transaction getUser.getGroups().map { GroupData(it) }
+                return@transaction Groups.findAllContainingUser(getUser).map { GroupData(it) }
             }
             ctx.ok().json(items)
         }, Auth.defaultRoleAccess)

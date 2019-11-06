@@ -8,6 +8,7 @@ import dev.castive.eventlog.schema.Event
 import dev.castive.eventlog.schema.EventType
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
+import dev.castive.log2.loge
 
 class SSMKeyProvider(
 	private val client: AWSSimpleSystemsManagement = AWSSimpleSystemsManagementClientBuilder.defaultClient()
@@ -25,8 +26,8 @@ class SSMKeyProvider(
 		val paramRequest = runCatching {
 			client.getParameter(GetParameterRequest().withName(parameterName).withWithDecryption(true))
 		}
-		if(paramRequest.exceptionOrNull() != null) {
-			Log.e(javaClass, "GetParameter failed: ${paramRequest.exceptionOrNull()}")
+		paramRequest.exceptionOrNull()?.let {
+			"GetParameter failed: ${paramRequest.exceptionOrNull()}".loge(javaClass)
 		}
 		val param = paramRequest.getOrNull()
 		val keyResult = validateParameter(param) ?: createKey()
@@ -45,7 +46,7 @@ class SSMKeyProvider(
 		val keyResult = runCatching {
 			param.parameter.value
 		}
-		if(keyResult.exceptionOrNull() != null) {
+		keyResult.exceptionOrNull()?.let {
 			Log.e(javaClass, "Failed to get parameter: ${keyResult.exceptionOrNull()}")
 			return null
 		}

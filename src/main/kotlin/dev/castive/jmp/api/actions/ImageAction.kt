@@ -17,8 +17,8 @@
 package dev.castive.jmp.api.actions
 
 import dev.castive.jmp.api.Socket
-import dev.castive.jmp.db.dao.Jump
 import dev.castive.jmp.db.dao.Jumps
+import dev.castive.jmp.db.repo.findAllByLocation
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.jmp.util.safe
 import dev.castive.log2.loge
@@ -60,7 +60,7 @@ class ImageAction(private val ws: (tag: String, data: Any) -> (Unit)) {
 			response.close() // ensure no leakages
 			transaction {
 				// Get the jumps which may use this favicon
-				val results = Jump.find { Jumps.location eq address }
+				val results = Jumps.findAllByLocation(address)
 				for (r in results) if(r.image == null || r.image != destUrl) {
 					// Update the image url to the new one
 					"Updating icon for ${r.name} [previous: ${r.image}, new: $destUrl]".logv(javaClass)
