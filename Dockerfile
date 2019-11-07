@@ -33,4 +33,4 @@ EXPOSE 7000
 RUN chown -R ${USER}:${USER} /app
 USER jmp
 
-ENTRYPOINT ["java", "-jar jmp.jar"]
+ENTRYPOINT ["java", "-jar", "jmp.jar"]

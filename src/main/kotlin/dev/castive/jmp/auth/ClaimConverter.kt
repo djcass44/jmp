@@ -25,65 +25,25 @@ import dev.castive.jmp.db.dao.Users
 import dev.castive.jmp.db.repo.findFirstByRefreshTokenAndActive
 import dev.castive.jmp.db.repo.findFirstByUsername
 import dev.castive.log2.Log
-import dev.castive.log2.logi
+import dev.castive.log2.logd
 import io.javalin.http.Context
 import org.jetbrains.exposed.sql.transactions.transaction
 import dev.castive.javalin_auth.auth.data.User as AuthUser
 
 object ClaimConverter {
+
 	fun getUser(ctx: Context, userUtils: UserUtils): User? {
-		var user: AuthUser? = null
+		var user: AuthUser?
 		var user2: User? = null
 		// See if the primary provider can find the user
-		if(Providers.primaryProvider != null) {
-			Log.v(javaClass, "Searching context for user with provider: ${Providers.primaryProvider!!::class.java.name}")
-			val res = Providers.primaryProvider!!.hasUser(ctx)
-			user = res.first
-			Log.d(javaClass, "Discovered external user: ${user?.username}")
-		}
+		user = getPrimary(ctx)
 		// Fall-back to the internal provider
 		if(user == null) {
-			Log.v(javaClass, "Searching context for user with fallback provider: ${Providers.internalProvider::class.java.name}")
-			val res = Providers.internalProvider.hasUser(ctx)
-			user = res.first
-			Log.d(javaClass, "Discovered internal user: ${user?.username}")
+			user = getSecondary(ctx)
 		}
+		// try to find an OAuth user
 		if(user == null) {
-			Log.v(javaClass, "Searching context for user with Oauth provider")
-			// TRY to get the accessToken from the Authorization header
-			val header = kotlin.runCatching { ctx.header("Authorization")!!.split(" ")[1] }.getOrNull()
-			if(header != null) {
-				Log.v(javaClass, "Got accessToken: $header")
-				// Check that the accessToken is still valid
-				val maybeUsername = userUtils.cache.getUser(header)
-				val maybeUser = if(maybeUsername != null) Users.findFirstByUsername(maybeUsername.username) else null
-				if(maybeUser != null) {
-					Log.i(javaClass, "Found user in cache: ${maybeUsername?.username}")
-					user2 = maybeUser
-				}
-				userUtils.cache.getUser(header)?.let { cached ->
-					Users.findFirstByUsername(cached.username)?.let {
-						"Found user in cache: ${cached.username}"
-						user2 = it
-					} ?: kotlin.run {
-						val source = OAuth2.providers[ctx.header("X-Auth-Source")]
-						if(source != null) {
-							if (source.isTokenValid(header)) {
-								Log.v(javaClass, "AccessToken is valid, lets get its session")
-								// Get the session the accessToken belongs to
-								Sessions.findFirstByRefreshTokenAndActive(header)?.let {
-									// Get the user from the session
-									user2 = transaction { it.user }
-									userUtils.onUserValid(user2!!, header)
-									"Found session for ${user2!!.username}".logi(javaClass)
-								}
-							}
-							else
-								userUtils.onUserInvalid(header)
-						}
-					}
-				}
-			}
+			user2 = getOAuth2(ctx, userUtils)
 		}
 		if(user == null && user2 == null) {
 			Log.i(javaClass, "[${ctx.path()}] Failed to locate user with any provider")
@@ -91,6 +51,84 @@ object ClaimConverter {
 		}
 		return user2 ?: Users.findFirstByUsername(user!!.username)
 	}
+
+	/**
+	 * Try to find a user in the primary provider
+	 */
+	private fun getPrimary(ctx: Context): AuthUser? {
+		if(Providers.primaryProvider != null) {
+			Log.v(javaClass, "Searching context for user with provider: ${Providers.primaryProvider!!::class.java.name}")
+			val res = Providers.primaryProvider!!.hasUser(ctx)
+			res.first?.let {
+				Log.d(javaClass, "Discovered external user: ${it.username}")
+			}
+			return res.first
+		}
+		return null
+	}
+
+	/**
+	 * Try to find a user in the internal provider
+	 */
+	private fun getSecondary(ctx: Context): AuthUser? {
+		Log.v(javaClass, "Searching context for user with fallback provider: ${Providers.internalProvider::class.java.name}")
+		val res = Providers.internalProvider.hasUser(ctx)
+		res.first?.let {
+			Log.d(javaClass, "Discovered internal user: ${it.username}")
+		}
+		return res.first
+	}
+
+	/**
+	 * Try to find a user from an OAuth2 provider
+	 */
+	private fun getOAuth2(ctx: Context, userUtils: UserUtils): User? {
+		Log.v(javaClass, "Searching context for user with Oauth provider")
+		// TRY to get the accessToken from the Authorization header
+		val header = getAuthHeader(ctx)
+		if(header != null) {
+			Log.v(javaClass, "Got accessToken: $header")
+			// Check that the accessToken is still valid
+			val maybeUsername = userUtils.cache.getUser(header)
+			val maybeUser = if(maybeUsername != null) Users.findFirstByUsername(maybeUsername.username) else null
+			if(maybeUser != null) {
+				Log.i(javaClass, "Found user in cache: ${maybeUsername?.username}")
+				return maybeUser
+			}
+			else {
+				val source = OAuth2.providers[ctx.header("X-Auth-Source")]
+				"Unable to find user in cache, searching manually via provider: ${source?.sourceName}".logd(javaClass)
+				if(source != null) {
+					if (source.isTokenValid(header)) {
+						Log.v(javaClass, "AccessToken is valid, lets get its session")
+						// Get the session the accessToken belongs to
+						val session = Sessions.findFirstByRefreshTokenAndActive(header)
+						// Get the user from the session
+						if (session != null) {
+							val user = transaction {
+								session.user
+							}
+							userUtils.onUserValid(user, header)
+							Log.i(javaClass, "Found session for ${user.username}")
+							return user
+						}
+					}
+					else {
+						"Got invalid token: $header".logd(javaClass)
+						userUtils.onUserInvalid(header)
+					}
+				}
+			}
+		}
+		return null
+	}
+
+	/**
+	 * Get the 'Authorization' header from the network request
+	 */
+	private fun getAuthHeader(ctx: Context): String? = kotlin.runCatching {
+		ctx.header("Authorization")!!.split(" ")[1]
+	}.getOrNull()
 
 	/**
 	 * Get a users SSO cookie, if it exists

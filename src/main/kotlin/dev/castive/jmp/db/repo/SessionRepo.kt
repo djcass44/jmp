@@ -30,7 +30,7 @@ fun Sessions.findFirstByUserAndRefreshTokenAndActive(user: User, refreshToken: S
 }
 fun Sessions.findFirstByRefreshTokenAndActive(refreshToken: String): Session? = transaction {
 	Session.find {
-		Sessions.refreshToken eq refreshToken and (Sessions.active eq true)
+		Sessions.refreshToken eq refreshToken and (active eq true)
 	}.limit(1).elementAtOrNull(0)
 }
 fun Sessions.findFirstBySsoToken(ssoToken: String): Session? = transaction {
