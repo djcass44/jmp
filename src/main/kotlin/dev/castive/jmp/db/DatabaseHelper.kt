@@ -39,7 +39,7 @@ class DatabaseHelper {
         "Database configuration: [url: ${ds.jdbcUrl}, class: ${ds.driverClassName}]".logv(javaClass)
         HikariSource().connect(ds)
         Runtime.getRuntime().addShutdownHook(Thread {
-            Log.w(javaClass, "Running shutdown hook, DO NOT forcibly close the application")
+            Log.w(javaClass, "Attempting to cleanly disconnect from database, DO NOT forcibly close the application")
             ds.close()
         })
         setup()
@@ -48,9 +48,18 @@ class DatabaseHelper {
         transaction {
             // Ensure that the tables are created
             Log.i(javaClass, "Checking for database drift")
-            SchemaUtils.createMissingTablesAndColumns(Jumps, Users, Roles, Groups, GroupUsers, Aliases, Sessions)
-            Init() // Ensure that the default admin/roles is created
+            SchemaUtils.createMissingTablesAndColumns(
+	            Jumps,
+	            Users,
+	            Roles,
+	            Groups,
+	            GroupUsers,
+	            Aliases,
+	            Sessions,
+	            Metas
+            )
         }
+	    Init() // Ensure that the default admin/roles is created
         // start the GroupsTask cron
         GroupsTask.start()
     }

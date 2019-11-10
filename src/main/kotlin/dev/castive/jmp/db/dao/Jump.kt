@@ -35,6 +35,8 @@ object Jumps : IntIdTable() {
     val metaCreation = long("metaCreation").default(System.currentTimeMillis())
     val metaUpdate = long("metaUpdate").default(System.currentTimeMillis())
     val metaUsage = integer("metaUsage").default(0)
+
+	val meta = optReference("meta", Metas)
 }
 
 class Jump(id: EntityID<Int>) : IntEntity(id) {
@@ -51,6 +53,8 @@ class Jump(id: EntityID<Int>) : IntEntity(id) {
     var metaUpdate by Jumps.metaUpdate
     var metaUsage by Jumps.metaUsage
 
+	var meta by Meta optionalReferencedOn Jumps.meta
+
     fun isPublic(): Boolean = transaction {
         owner == null && ownerGroup == null
     }
@@ -60,8 +64,21 @@ data class JumpData(val id: Int, val name: String, val location: String, val per
                     val alias: ArrayList<AliasData>,
                     val metaCreation: Long = 0,
                     val metaUpdate: Long = 0,
-                    val metaUsage: Int = 0) {
-    constructor(jump: Jump): this(jump.id.value, jump.name, jump.location, getType(jump), getOwner(jump), jump.image, jump.title, getAlias(jump), jump.metaCreation, jump.metaUpdate, jump.metaUsage)
+                    val metaUsage: Int = 0,
+                    val meta: MetaEntity? = null) {
+    constructor(jump: Jump): this(jump.id.value,
+	    jump.name,
+	    jump.location,
+	    getType(jump),
+	    getOwner(jump),
+	    jump.image,
+	    jump.title,
+	    getAlias(jump),
+	    jump.metaCreation,
+	    jump.metaUpdate,
+	    jump.metaUsage,
+	    jump.meta?.let { MetaEntity(it) }
+    )
 
     companion object {
         const val TYPE_GLOBAL = 0
@@ -75,13 +92,11 @@ data class JumpData(val id: Int, val name: String, val location: String, val per
             else -> TYPE_GLOBAL
         }
         fun getOwner(jump: Jump): String? = transaction {
-            if(jump.isPublic())
-                return@transaction null
-            if(jump.ownerGroup != null)
-                return@transaction jump.ownerGroup!!.name
-            if(jump.owner != null)
-                return@transaction jump.owner!!.username
-            null
+	        when {
+		        jump.ownerGroup != null -> jump.ownerGroup!!.name
+		        jump.owner != null -> jump.owner!!.username
+		        else -> null
+	        }
         }
         fun getAlias(jump: Jump): ArrayList<AliasData> = transaction {
             // Get all the aliases which are owned by @param jump

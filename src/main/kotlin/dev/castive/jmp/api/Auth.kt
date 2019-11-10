@@ -56,11 +56,11 @@ class Auth {
 		return Hash.password(password).verify(expectedHash)
 	}
 
-	fun createUser(username: String, password: CharArray, admin: Boolean = false, displayName: String = "") {
+	fun createUser(username: String, password: CharArray, admin: Boolean = false, displayName: String = ""): User {
 		val hash = computeHash(password)
 		if(!Users.existsByUsername(username)) { // Assume the user hasn't been added
 			"Attempting to create user: $username, admin=$admin".logi(javaClass)
-			transaction {
+			return transaction {
 				User.new {
 					this.username = username
 					this.hash = hash

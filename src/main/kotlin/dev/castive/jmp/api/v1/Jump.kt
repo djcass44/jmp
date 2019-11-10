@@ -118,6 +118,13 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 						ownerGroup = group
 						metaCreation = System.currentTimeMillis()
 						metaUpdate = System.currentTimeMillis()
+						// create the v2 meta
+						meta = Meta.new {
+							created = System.currentTimeMillis()
+							edited = System.currentTimeMillis()
+							createdBy = user
+							editedBy = user
+						}
 					}
 					// Create aliases for newly added Jump
 					add.alias.forEach {
@@ -152,6 +159,10 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 						name = update.name
 						location = update.location
 						metaUpdate = System.currentTimeMillis()
+						meta?.apply {
+							edited = System.currentTimeMillis()
+							editedBy = user
+						}
 					}
 					EventLog.post(Event(type = EventType.UPDATE, resource = JumpData::class.java, causedBy = javaClass))
 					// Add aliases

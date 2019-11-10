@@ -19,11 +19,12 @@ package dev.castive.jmp.db
 import dev.castive.javalin_auth.auth.Roles
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.crypto.KeyProvider
-import dev.castive.jmp.db.dao.Role
-import dev.castive.jmp.db.dao.User
+import dev.castive.jmp.db.dao.*
+import dev.castive.jmp.db.repo.findFirstByUsername
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.jmp.util.asEnv
 import dev.castive.log2.Log
+import dev.castive.log2.logi
 import dev.castive.log2.logok
 import dev.castive.log2.logv
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -35,6 +36,9 @@ import java.nio.file.Path
 class Init {
     init {
         val superName = "admin" // Hardcoded into FE, don't change
+	    val systemUser = "system"
+	    val keygen = KeyProvider()
+	    var system: User
         transaction {
             // roles must be created before the admin
             if(Role.all().empty()) {
@@ -45,7 +49,7 @@ class Init {
             }
 	        "Located ${User.all().count()} existing users...".logv(javaClass)
             if(User.all().empty()) {
-                val password = KeyProvider().createKey()
+                val password = keygen.createKey()
                 Auth().createUser(superName, password.toCharArray(), true, "Admin")
                 Log.w(javaClass, "Created superuser with access: [username: $superName]\nPlease change this ASAP!\nThis will also be stored in the current directory in 'initialAdminPassword'")
                 try {
@@ -59,5 +63,24 @@ class Init {
                 println("\n$password\n")
             }
         }
+	    transaction {
+		    // find the system user or create it
+		    system = Users.findFirstByUsername(systemUser) ?: Auth().createUser(systemUser, keygen.createKey().toCharArray(), false, displayName = "System")
+		    "Updating meta[*] to v2 format".logi(javaClass)
+		    var count = 0
+		    Jump.all().forEach {
+			    // create v2 meta objects for jumps without them
+			    if(it.meta == null) {
+				    it.meta = Meta.new {
+					    created = it.metaCreation
+					    edited = it.metaUpdate
+					    createdBy = system
+					    editedBy = system
+				    }
+				    count++
+			    }
+		    }
+		    "Generated v2 Meta format for $count Jumps".logv(javaClass)
+	    }
     }
 }

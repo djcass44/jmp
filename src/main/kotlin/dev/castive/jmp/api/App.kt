@@ -46,7 +46,9 @@ import dev.castive.jmp.crypto.SSMKeyProvider
 import dev.castive.jmp.except.ExceptionTracker
 import dev.castive.jmp.tasks.SocketHeartbeatTask
 import dev.castive.jmp.util.EnvUtil
+import dev.castive.jmp.util.asEnv
 import dev.castive.log2.Log
+import dev.castive.log2.logw
 import io.javalin.Javalin
 import io.javalin.http.HandlerType
 import io.javalin.plugin.openapi.OpenApiOptions
@@ -102,6 +104,11 @@ class App(private val port: Int = 7000) {
 				}
 				showJavalinBanner = false
 				if (arguments.enableCors) { enableCorsForAllOrigins() }
+				val urls = EnvUtil.JMP_PROXY_URL.asEnv("")
+				if(urls.isNotBlank()) {
+					"Enabling CORS for the following URLs: $urls".logw(javaClass)
+					enableCorsForOrigin(*urls.split(",").toTypedArray())
+				}
 				registerPlugin(OpenApiPlugin(getOpenApiOptions()))
 				requestLogger { ctx, timeMs ->
 					logger.add("${System.currentTimeMillis()} - ${ctx.method()} ${ctx.path()} took $timeMs ms")

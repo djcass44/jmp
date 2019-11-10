@@ -72,3 +72,12 @@ data class UserData(
 }
 data class PagedUserData(val currentPage: Int, val totalPages: Int, val users: ArrayList<UserData>, val next: Boolean)
 data class EditUserData(val id: UUID, val role: String)
+
+data class SafeUserEntity(
+	val id: UUID,
+	val username: String,
+	val displayName: String,
+	val avatarUrl: String?
+) {
+	constructor(user: User): this(user.id.value, user.username, user.displayName, user.avatarUrl)
+}
