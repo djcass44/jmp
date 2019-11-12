@@ -34,6 +34,8 @@ import dev.castive.jmp.db.repo.searchByTerm
 import dev.castive.jmp.util.*
 import dev.castive.log2.Log
 import dev.castive.log2.logi
+import dev.dcas.castive_utilities.extend.env
+import dev.dcas.castive_utilities.extend.uuid
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.http.BadRequestResponse
@@ -44,7 +46,7 @@ import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
-	private val caseSensitive = EnvUtil.getEnv(EnvUtil.CASE_SENSITIVE, "false").toBoolean()
+	private val caseSensitive = EnvUtil.CASE_SENSITIVE.env("false").toBoolean()
 	private val imageAction = ImageAction(ws)
 	private val titleAction = TitleAction(ws)
 
@@ -104,7 +106,7 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 		// Add a jump point
 		put("${Runner.BASE}/v1/jump", { ctx ->
 			val add = ctx.bodyAsClass(JumpData::class.java)
-			val groupID = (ctx.queryParam<String>("gid").getOrNull() ?: "").toUUID()
+			val groupID = (ctx.queryParam<String>("gid").getOrNull() ?: "").uuid()
 			val user: User = ctx.assertUser()
 			// Block non-admin user from adding global jumps
 			if (add.personal == JumpData.TYPE_GLOBAL && !App.auth.isAdmin(user)) throw ForbiddenResponse("Only an admin can create global Jumps")

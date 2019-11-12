@@ -23,6 +23,7 @@ import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
 import dev.castive.log2.loge
 import dev.castive.log2.logf
+import dev.dcas.castive_utilities.extend.env
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintStream
@@ -36,7 +37,7 @@ class Logger {
 	private val logOut = File(logDir, "jmp-stdout_${App.id}.log")
 	private val logErr = File(logDir, "jmp-stderr_${App.id}.log")
 
-	private val logEnabled = EnvUtil.getEnv(EnvUtil.LOG_ENABLED, "true").toBoolean()
+	private val logEnabled = EnvUtil.LOG_ENABLED.env("true").toBoolean()
 
 	init {
 		if(!logEnabled) {

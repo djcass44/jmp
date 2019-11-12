@@ -20,9 +20,10 @@ import dev.castive.jmp.api.Socket
 import dev.castive.jmp.db.dao.Jumps
 import dev.castive.jmp.db.repo.findAllByLocation
 import dev.castive.jmp.util.EnvUtil
-import dev.castive.jmp.util.safe
 import dev.castive.log2.loge
 import dev.castive.log2.logv
+import dev.dcas.castive_utilities.extend.env
+import dev.dcas.castive_utilities.extend.safe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -32,8 +33,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class ImageAction(private val ws: (tag: String, data: Any) -> (Unit)) {
-	private val favUrl = EnvUtil.getEnv(EnvUtil.FAV2_URL, "http://localhost:8080")
-	private val allowed = EnvUtil.getEnv(EnvUtil.JMP_ALLOW_EGRESS, "true").toBoolean()
+	private val favUrl = EnvUtil.FAV2_URL.env("http://localhost:8080")
+	private val allowed = EnvUtil.JMP_ALLOW_EGRESS.env("true").toBoolean()
 	private val client = OkHttpClient()
 
 	fun get(address: String) = GlobalScope.launch(context = Dispatchers.IO) {

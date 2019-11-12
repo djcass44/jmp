@@ -12,8 +12,8 @@ import dev.castive.jmp.db.dao.Session
 import dev.castive.jmp.db.dao.Sessions
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
-import dev.castive.jmp.util.parse
 import dev.castive.log2.Log
+import dev.dcas.castive_utilities.extend.parse
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import org.jetbrains.exposed.sql.and

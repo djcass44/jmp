@@ -46,9 +46,9 @@ import dev.castive.jmp.crypto.SSMKeyProvider
 import dev.castive.jmp.except.ExceptionTracker
 import dev.castive.jmp.tasks.SocketHeartbeatTask
 import dev.castive.jmp.util.EnvUtil
-import dev.castive.jmp.util.asEnv
 import dev.castive.log2.Log
 import dev.castive.log2.logw
+import dev.dcas.castive_utilities.extend.env
 import io.javalin.Javalin
 import io.javalin.http.HandlerType
 import io.javalin.plugin.openapi.OpenApiOptions
@@ -66,7 +66,7 @@ import io.swagger.v3.oas.models.info.Info as SwaggerInfo
 class App(private val port: Int = 7000) {
 	companion object {
 		val id = UUID.randomUUID().toString()
-		var exceptionTracker = ExceptionTracker(blockLeak = EnvUtil.getEnv(EnvUtil.JMP_ALLOW_ERROR_INFO, "false").toBoolean())
+		var exceptionTracker = ExceptionTracker(blockLeak = EnvUtil.JMP_ALLOW_ERROR_INFO.env("false").toBoolean())
 //		@Deprecated(message = "Config is stored by the provider")
 		var crowdCookieConfig: CrowdCookieConfig? = null
 		val auth = Auth()
@@ -104,7 +104,7 @@ class App(private val port: Int = 7000) {
 				}
 				showJavalinBanner = false
 				if (arguments.enableCors) { enableCorsForAllOrigins() }
-				val urls = EnvUtil.JMP_PROXY_URL.asEnv("")
+				val urls = EnvUtil.JMP_PROXY_URL.env("")
 				if(urls.isNotBlank()) {
 					"Enabling CORS for the following URLs: $urls".logw(javaClass)
 					enableCorsForOrigin(*urls.split(",").toTypedArray())
@@ -165,7 +165,7 @@ class App(private val port: Int = 7000) {
 	}
 
 	private fun getKeyProvider(): KeyProvider {
-		return when(EnvUtil.getEnv(EnvUtil.KEY_REALM, KeyProvider.shortName)) {
+		return when(EnvUtil.KEY_REALM.env(KeyProvider.shortName)) {
 			SSMKeyProvider.shortName -> SSMKeyProvider()
 			else -> KeyProvider()
 		}

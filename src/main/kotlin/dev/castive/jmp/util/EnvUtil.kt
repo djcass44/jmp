@@ -4,6 +4,7 @@ object EnvUtil {
 	/**
 	 * Load an environment variable from the system, or return a default value if it can't be found
 	 */
+	@Deprecated(message = "Replaced by castive-utilities", level = DeprecationLevel.WARNING)
 	fun getEnv(name: String, default: String = ""): String {
 		val env = System.getenv(name)
 		return if (env.isNullOrEmpty()) default else env

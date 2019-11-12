@@ -18,7 +18,7 @@ package dev.castive.jmp.api
 
 import dev.castive.jmp.db.dao.JumpData
 import dev.castive.jmp.util.asArrayList
-import dev.castive.jmp.util.url
+import dev.dcas.castive_utilities.extend.url
 import info.debatty.java.stringsimilarity.JaroWinkler
 
 /**

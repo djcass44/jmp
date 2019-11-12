@@ -17,7 +17,7 @@
 package dev.castive.jmp.api
 
 import dev.castive.jmp.util.forSocket
-import dev.castive.jmp.util.json
+import dev.dcas.castive_utilities.extend.json
 import io.javalin.websocket.WsMessageContext
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*

@@ -52,9 +52,10 @@ dependencies {
 	implementation("com.github.djcass44:jmp-auth:176931eec3")
 //    implementation("dev.castive:jmp-auth:0.5.3")
 	implementation("com.github.djcass44:log2:3.4")
+	implementation("com.github.djcass44:castive-utilities:v2")
 	implementation("com.github.djcass44:eventlog:72b6dac4e2")
 
-	implementation("io.javalin:javalin:3.5.0")
+	implementation("io.javalin:javalin:3.6.0")
 	// http2
 	implementation("org.eclipse.jetty.http2:http2-server:$jettyVersion")
 	implementation("org.eclipse.jetty:jetty-alpn-conscrypt-server:$jettyVersion")

@@ -22,19 +22,19 @@ import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.source.HikariSource
 import dev.castive.jmp.tasks.GroupsTask
 import dev.castive.jmp.util.EnvUtil
-import dev.castive.jmp.util.asEnv
 import dev.castive.log2.Log
 import dev.castive.log2.logv
+import dev.dcas.castive_utilities.extend.env
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class DatabaseHelper {
     fun start() {
         val ds = HikariDataSource(HikariConfig().apply {
-            jdbcUrl = EnvUtil.DRIVER_URL.asEnv("jdbc:sqlite:jmp.db")
-            driverClassName = EnvUtil.DRIVER_CLASS.asEnv("org.sqlite.JDBC")
-            username = EnvUtil.DRIVER_USER.asEnv()
-            password = EnvUtil.DRIVER_PASSWORD.asEnv()
+            jdbcUrl = EnvUtil.DRIVER_URL.env("jdbc:sqlite:jmp.db")
+            driverClassName = EnvUtil.DRIVER_CLASS.env("org.sqlite.JDBC")
+            username = EnvUtil.DRIVER_USER.env()
+            password = EnvUtil.DRIVER_PASSWORD.env()
         })
         "Database configuration: [url: ${ds.jdbcUrl}, class: ${ds.driverClassName}]".logv(javaClass)
         HikariSource().connect(ds)

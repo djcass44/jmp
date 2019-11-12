@@ -7,6 +7,7 @@ import dev.castive.jmp.except.InsecureDomainException
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
 import dev.castive.log2.logv
+import dev.dcas.castive_utilities.extend.env
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -15,7 +16,7 @@ import org.jsoup.Jsoup
 import java.net.URI
 
 class TitleAction(private val ws: (tag: String, data: Any) -> (Unit)) {
-    private val allowed = EnvUtil.getEnv(EnvUtil.JMP_ALLOW_EGRESS, "true").toBoolean()
+    private val allowed = EnvUtil.JMP_ALLOW_EGRESS.env("true").toBoolean()
 
     fun get(address: String) = GlobalScope.launch(context = Dispatchers.IO) {
         // check that we are allowed to make network requests

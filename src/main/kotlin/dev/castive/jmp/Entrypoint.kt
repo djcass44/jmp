@@ -26,6 +26,7 @@ import dev.castive.jmp.util.checks.JavaVersionCheck
 import dev.castive.log2.logi
 import dev.castive.log2.logv
 import dev.castive.log2.logw
+import dev.dcas.castive_utilities.extend.env
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -62,7 +63,7 @@ class Runner {
         }
         DatabaseHelper().start()
         // Start the application and wait for it to finish
-        val appPort = EnvUtil.getEnv(EnvUtil.PORT, "7000").toIntOrNull() ?: 7000
+        val appPort = EnvUtil.PORT.env("7000").toIntOrNull() ?: 7000
         launch { App(appPort).start(arguments) }.join()
     }
 }

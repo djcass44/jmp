@@ -19,10 +19,11 @@ package dev.castive.jmp.io
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.logv
 import dev.castive.log2.logw
+import dev.dcas.castive_utilities.extend.env
 import java.io.File
 
 object DataProvider {
-	private val dataPath = File(EnvUtil.getEnv(EnvUtil.JMP_HOME, "/data"))
+	private val dataPath = File(EnvUtil.JMP_HOME.env("/data"))
 
 	private val allocations = hashMapOf<String, File>()
 

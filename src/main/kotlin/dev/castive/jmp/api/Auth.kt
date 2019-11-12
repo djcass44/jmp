@@ -27,10 +27,10 @@ import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
 import dev.castive.jmp.db.repo.existsByUsername
 import dev.castive.jmp.util.isEqual
-import dev.castive.jmp.util.json
 import dev.castive.log2.Log
 import dev.castive.log2.logi
 import dev.castive.log2.logv
+import dev.dcas.castive_utilities.extend.json
 import io.javalin.http.ConflictResponse
 import io.javalin.http.Context
 import org.jetbrains.exposed.sql.lowerCase

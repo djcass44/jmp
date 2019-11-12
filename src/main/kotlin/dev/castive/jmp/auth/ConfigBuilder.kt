@@ -22,9 +22,9 @@ import dev.castive.javalin_auth.auth.connect.LDAPConfig2
 import dev.castive.javalin_auth.auth.connect.MinimalConfig
 import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.BasicAuthentication
 import dev.castive.jmp.io.DataProvider
-import dev.castive.jmp.util.json
-import dev.castive.jmp.util.parse
 import dev.castive.log2.*
+import dev.dcas.castive_utilities.extend.json
+import dev.dcas.castive_utilities.extend.parse
 import java.io.File
 import java.io.IOException
 import java.nio.charset.StandardCharsets

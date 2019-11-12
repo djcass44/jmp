@@ -17,9 +17,9 @@
 package dev.castive.jmp.api.config
 
 import dev.castive.jmp.util.EnvUtil
-import dev.castive.jmp.util.asEnv
 import dev.castive.log2.loga
 import dev.castive.log2.logi
+import dev.dcas.castive_utilities.extend.env
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory
 import org.eclipse.jetty.http2.HTTP2Cipher
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory
@@ -33,8 +33,8 @@ class ServerConfig(private val port: Int) {
 	 */
 	fun getServer(): Server {
 		val server = Server()
-		val secure = EnvUtil.JMP_HTTP_SECURE.asEnv().toBoolean()
-		val h2 = EnvUtil.JMP_HTTP2.asEnv("true").toBoolean()
+		val secure = EnvUtil.JMP_HTTP_SECURE.env().toBoolean()
+		val h2 = EnvUtil.JMP_HTTP2.env("true").toBoolean()
 		// build an ssl or http connector based on env
 		val connector = if(secure) {
 			"Setting SSL context on base server".logi(javaClass)
@@ -70,11 +70,11 @@ class ServerConfig(private val port: Int) {
 	}
 
 	private fun getSslContextFactory(h2: Boolean = true): SslContextFactory = SslContextFactory.Server().apply {
-		keyStorePath = EnvUtil.JMP_SSL_KEYSTORE.asEnv()
+		keyStorePath = EnvUtil.JMP_SSL_KEYSTORE.env()
 		if(h2) {
 			cipherComparator = HTTP2Cipher.COMPARATOR
 			provider = "Conscrypt"
 		}
-		setKeyStorePassword(EnvUtil.JMP_SSL_PASSWORD.asEnv())
+		setKeyStorePassword(EnvUtil.JMP_SSL_PASSWORD.env())
 	}
 }

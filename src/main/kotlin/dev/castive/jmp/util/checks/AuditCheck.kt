@@ -17,10 +17,11 @@
 package dev.castive.jmp.util.checks
 
 import dev.castive.jmp.util.EnvUtil
+import dev.dcas.castive_utilities.extend.env
 
 class AuditCheck: StartupCheck("File logging") {
     override fun runCheck(): Boolean {
-        val logEnabled = EnvUtil.getEnv(EnvUtil.LOG_ENABLED, "true").toBoolean()
+        val logEnabled = EnvUtil.LOG_ENABLED.env("true").toBoolean()
         return if(logEnabled) {
             onSuccess()
             true

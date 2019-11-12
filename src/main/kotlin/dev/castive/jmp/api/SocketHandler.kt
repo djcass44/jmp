@@ -17,11 +17,11 @@
 package dev.castive.jmp.api
 
 import dev.castive.jmp.util.forSocket
-import dev.castive.jmp.util.isESNullOrBlank
-import dev.castive.jmp.util.parse
 import dev.castive.log2.loge
 import dev.castive.log2.logi
 import dev.castive.log2.logv
+import dev.dcas.castive_utilities.extend.isESNullOrBlank
+import dev.dcas.castive_utilities.extend.parse
 import io.javalin.websocket.WsMessageContext
 
 /**

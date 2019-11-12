@@ -22,11 +22,11 @@ import dev.castive.jmp.crypto.KeyProvider
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.repo.findFirstByUsername
 import dev.castive.jmp.util.EnvUtil
-import dev.castive.jmp.util.asEnv
 import dev.castive.log2.Log
 import dev.castive.log2.logi
 import dev.castive.log2.logok
 import dev.castive.log2.logv
+import dev.dcas.castive_utilities.extend.env
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
 import java.nio.charset.StandardCharsets
@@ -53,7 +53,7 @@ class Init {
                 Auth().createUser(superName, password.toCharArray(), true, "Admin")
                 Log.w(javaClass, "Created superuser with access: [username: $superName]\nPlease change this ASAP!\nThis will also be stored in the current directory in 'initialAdminPassword'")
                 try {
-	                var path = EnvUtil.JMP_HOME.asEnv("/data/")
+	                var path = EnvUtil.JMP_HOME.env("/data/")
 	                if(!path.endsWith(File.separatorChar)) path += File.separatorChar
                     Files.writeString(Path.of("${path}initialAdminPassword"), password, StandardCharsets.UTF_8)
                 }
