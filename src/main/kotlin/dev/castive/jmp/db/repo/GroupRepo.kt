@@ -38,6 +38,12 @@ fun Groups.findAllNotFrom(from: String): List<Group> = transaction {
 	}.toList()
 }
 
+fun Groups.findAllPublic(): List<Group> = transaction {
+	Group.find {
+		public eq true
+	}.toList()
+}
+
 /**
  * Find all groups that a given has is a member of
  */

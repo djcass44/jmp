@@ -16,25 +16,24 @@
 
 package dev.castive.jmp.api.config
 
-import dev.castive.jmp.util.EnvUtil
+import dev.castive.jmp.config.ServerConfig
 import dev.castive.log2.loga
 import dev.castive.log2.logi
-import dev.dcas.castive_utilities.extend.env
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory
 import org.eclipse.jetty.http2.HTTP2Cipher
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory
 import org.eclipse.jetty.server.*
 import org.eclipse.jetty.util.ssl.SslContextFactory
 
-class ServerConfig(private val port: Int) {
+class ServerConfig(private val config: ServerConfig) {
 	/**
 	 * Get the customised server
 	 * Configures SSL, HTTP/2
 	 */
 	fun getServer(): Server {
 		val server = Server()
-		val secure = EnvUtil.JMP_HTTP_SECURE.env().toBoolean()
-		val h2 = EnvUtil.JMP_HTTP2.env("true").toBoolean()
+		val secure = config.ssl
+		val h2 = config.http2
 		// build an ssl or http connector based on env
 		val connector = if(secure) {
 			"Setting SSL context on base server".logi(javaClass)
@@ -45,7 +44,7 @@ class ServerConfig(private val port: Int) {
 			}
 			else ServerConnector(server, getSslContextFactory())
 		} else ServerConnector(server)
-		connector.port = port
+		connector.port = config.port
 		server.connectors = arrayOf(connector)
 		return server
 	}
@@ -58,23 +57,23 @@ class ServerConfig(private val port: Int) {
 		val httpsConfig = HttpConfiguration().apply {
 			sendServerVersion = false
 			secureScheme = "https"
-			securePort = this@ServerConfig.port
+			securePort = config.port
 			addCustomizer(SecureRequestCustomizer())
 		}
 		val http2 = HTTP2ServerConnectionFactory(httpsConfig)
 		val fallback = HttpConnectionFactory(httpsConfig)
 
 		return ServerConnector(server, ssl, alpn, http2, fallback).apply {
-			this.port = this@ServerConfig.port
+			this.port = config.port
 		}
 	}
 
 	private fun getSslContextFactory(h2: Boolean = true): SslContextFactory = SslContextFactory.Server().apply {
-		keyStorePath = EnvUtil.JMP_SSL_KEYSTORE.env()
+		keyStorePath = config.keyStore
 		if(h2) {
 			cipherComparator = HTTP2Cipher.COMPARATOR
 			provider = "Conscrypt"
 		}
-		setKeyStorePassword(EnvUtil.JMP_SSL_PASSWORD.env())
+		setKeyStorePassword(config.keyStorePassword)
 	}
 }

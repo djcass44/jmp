@@ -46,8 +46,8 @@ data class MetaEntity(
 	val id: Long,
 	val created: Long,
 	val edited: Long,
-	val createdBy: SafeUserEntity,
-	val editedBy: SafeUserEntity
+	val createdBy: SafeUserEntity?,
+	val editedBy: SafeUserEntity?
 ) {
-	constructor(meta: Meta): this(meta.id.value, meta.created, meta.edited, SafeUserEntity(meta.createdBy), SafeUserEntity(meta.editedBy))
+	constructor(meta: Meta): this(meta.id.value, meta.created, meta.edited, kotlin.runCatching { SafeUserEntity(meta.createdBy) }.getOrNull(), kotlin.runCatching { SafeUserEntity(meta.editedBy) }.getOrNull())
 }

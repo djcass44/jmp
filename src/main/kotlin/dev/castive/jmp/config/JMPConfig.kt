@@ -1,5 +1,5 @@
 /*
- *    Copyright 2019 Django Cass
+ *    Copyright [2019 Django Cass
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,6 +14,9 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.except
+package dev.castive.jmp.config
 
-class MinimalConnectionBreachException: Exception("This query is minimal or nested, it is not allowed for standard queries.")
+data class JMPConfig(
+	val server: ServerConfig,
+	val database: DataConfig
+)

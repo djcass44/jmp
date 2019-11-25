@@ -16,8 +16,7 @@
 
 package dev.castive.jmp.api.actions
 
-import dev.castive.javalin_auth.auth.Providers
-import dev.castive.javalin_auth.auth.provider.InternalProvider
+import dev.castive.javalin_auth.auth.RequestUserLocator
 import dev.castive.jmp.Arguments
 import dev.castive.jmp.Runner
 import dev.castive.jmp.db.dao.Group
@@ -75,8 +74,8 @@ class InfoAction(private val arguments: Arguments) {
         val uptime = System.currentTimeMillis() - Runner.START_TIME
         val uptimeString = timeSpan(uptime)
         val identityInfo = IdentityInfo(
-            Providers.primaryProvider?.getName() ?: InternalProvider.SOURCE_NAME,
-            if(Providers.primaryProvider != null) { Providers.primaryProvider!!::class.java.name } else InternalProvider::class.java.name
+	        RequestUserLocator::class.java.name,
+	        RequestUserLocator::class.java.name
         )
         return@transaction AppInfo(version, 2.1, users, groups, identityInfo, jumpInfo, uptimeString, ArrayList(arguments.args.toList()))
     }

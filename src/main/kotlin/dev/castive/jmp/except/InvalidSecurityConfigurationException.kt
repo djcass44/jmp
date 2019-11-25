@@ -16,4 +16,4 @@
 
 package dev.castive.jmp.except
 
-class InvalidSecurityConfigurationException: Exception("CORS + Secure context is not allowed.")
+class InvalidSecurityConfigurationException: RuntimeException("CORS + Secure context is not allowed.")

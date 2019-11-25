@@ -17,14 +17,11 @@
 package dev.castive.jmp.api.v2_1
 
 import com.google.common.util.concurrent.RateLimiter
-import dev.castive.javalin_auth.auth.Providers
-import dev.castive.javalin_auth.auth.connect.MinimalConfig
-import dev.castive.javalin_auth.auth.provider.InternalProvider
+import dev.castive.javalin_auth.auth.RequestUserLocator
 import dev.castive.jmp.api.App
 import dev.castive.jmp.api.Responses
 import dev.castive.jmp.util.checks.DatabaseCheck
 import dev.castive.jmp.util.checks.FavCheck
-import dev.castive.jmp.util.checks.ProviderCheck
 import dev.castive.jmp.util.ok
 import dev.castive.jmp.util.user
 import dev.castive.log2.Log
@@ -32,7 +29,7 @@ import io.javalin.http.Context
 import io.javalin.http.Handler
 import org.eclipse.jetty.http.HttpStatus
 
-class Health(private val config: MinimalConfig): Handler {
+class Health: Handler {
 	// Used for JSON response to the front-end
 	data class HealthPayload(
 		val code: Int = HttpStatus.OK_200,
@@ -67,11 +64,9 @@ class Health(private val config: MinimalConfig): Handler {
 	}
 	private fun runChecks(safe: Boolean = true): HealthPayload {
 		val dbCheck = if(!safe) DatabaseCheck().runCheck() else null
-		val providerCheck = if(config.enabled) ProviderCheck().runCheck() else null
 		val favStatus = if(!safe) FavCheck().runCheck() else null
-		val providerName = if(config.enabled) Providers.primaryProvider?.getName() ?: InternalProvider.SOURCE_NAME else InternalProvider.SOURCE_NAME
-		val code = if(dbCheck == false || providerCheck == false) HttpStatus.INTERNAL_SERVER_ERROR_500 else HttpStatus.OK_200
+		val code = if(dbCheck == false) HttpStatus.INTERNAL_SERVER_ERROR_500 else HttpStatus.OK_200
 
-		return HealthPayload(code, "OK", dbCheck, providerCheck, providerName, favStatus)
+		return HealthPayload(code, "OK", dbCheck, true, RequestUserLocator::class.java.name, favStatus)
 	}
 }

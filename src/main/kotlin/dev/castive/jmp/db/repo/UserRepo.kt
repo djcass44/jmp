@@ -16,16 +16,40 @@
 
 package dev.castive.jmp.db.repo
 
+import dev.castive.javalin_auth.auth.data.User2
+import dev.castive.javalin_auth.auth.data.UserEntity
+import dev.castive.jmp.api.App
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.*
 
 /**
  * Get the number of stored users
  */
 fun Users.count(): Int = transaction {
 	User.all().count()
+}
+
+fun Users.findFirstByEntity(entity: UserEntity<UUID>): User? = transaction {
+	User.findById(entity.id)
+}
+
+/**
+ * Create a new user from an Authentication claim
+ * This must only be used for federated identities
+ */
+fun Users.new(user: User2): User = transaction {
+	return@transaction User.new {
+		username = user.username
+		displayName = user.displayName
+		avatarUrl = user.avatarUrl
+		hash = ""
+		role = App.auth.getDAOUserRole() // assume user for now
+		from = user.source
+	}
 }
 
 /**
@@ -58,5 +82,11 @@ fun Users.findAllByUsername(username: String): List<User> = transaction {
 fun Users.findFirstByUsername(username: String): User? = transaction {
 	User.find {
 		Users.username eq username
+	}.elementAtOrNull(0)
+}
+
+fun Users.findFirstByUsernameAndSource(username: String, source: String): User? = transaction {
+	User.find {
+		Users.username eq username and from.eq(source)
 	}.elementAtOrNull(0)
 }

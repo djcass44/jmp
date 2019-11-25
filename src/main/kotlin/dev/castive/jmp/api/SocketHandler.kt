@@ -20,8 +20,8 @@ import dev.castive.jmp.util.forSocket
 import dev.castive.log2.loge
 import dev.castive.log2.logi
 import dev.castive.log2.logv
-import dev.dcas.castive_utilities.extend.isESNullOrBlank
-import dev.dcas.castive_utilities.extend.parse
+import dev.dcas.util.extend.isESNullOrBlank
+import dev.dcas.util.extend.parse
 import io.javalin.websocket.WsMessageContext
 
 /**

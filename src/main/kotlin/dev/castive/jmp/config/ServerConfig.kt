@@ -1,5 +1,5 @@
 /*
- *    Copyright 2019 Django Cass
+ *    Copyright [2019 Django Cass
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,6 +14,12 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.except
+package dev.castive.jmp.config
 
-class LowEntropyException: RuntimeException("Entropy pool isn't high enough for Cryptographic operations, increase entropy or use a weaker algorithm")
+data class ServerConfig(
+	val port: Int,
+	val ssl: Boolean,
+	val keyStore: String,
+	val keyStorePassword: String,
+	val http2: Boolean
+)

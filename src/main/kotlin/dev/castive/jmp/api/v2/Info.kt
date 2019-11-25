@@ -26,13 +26,12 @@ import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.NotFoundResponse
-import org.eclipse.jetty.http.HttpStatus
 
 class Info(private val arguments: Arguments): EndpointGroup {
     override fun addEndpoints() {
         // Version/info
         get("${Runner.BASE}/v2/version", { ctx ->
-            ctx.status(HttpStatus.OK_200).result("v${Version.getVersion()}")
+            ctx.ok().result("v${Version.getVersion()}")
         }, Auth.openAccessRole)
         // get application/system information
         get("${Runner.BASE}/v2/info/:type", { ctx ->

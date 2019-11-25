@@ -1,0 +1,30 @@
+---
+# default configuration
+version: "2019-10-02"
+blockLocal: false
+jmp:
+  server:
+    port: 7000
+    ssl: false
+    keyStore: ""
+    keyStorePassword: ""
+    http2: false
+  database:
+    url: "jdbc:sqlite:jmp.db"
+    driverClass: "org.sqlite.JDBC"
+    username: ""
+    password: ""
+crowd:
+  enabled: false
+  url: "http://localhost:8095/crowd"
+  username: "user"
+  password: "hunter2"
+ldap:
+  enabled: false
+  url: "localhost"
+  port: 389
+  contextDN: "dc=example,dc=org"
+  uidField: "uid"
+  username: "user"
+  password: "hunter2"
+oauth2: {}

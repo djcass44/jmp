@@ -16,55 +16,28 @@
 
 package dev.castive.jmp.auth
 
-import dev.castive.javalin_auth.auth.connect.CrowdConfig
-import dev.castive.javalin_auth.auth.connect.LDAPConfig
-import dev.castive.javalin_auth.auth.connect.LDAPConfig2
-import dev.castive.javalin_auth.auth.connect.MinimalConfig
-import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.BasicAuthentication
+import dev.castive.javalin_auth.config.Crowd2Config
+import dev.castive.javalin_auth.config.LDAP2Config
+import dev.castive.javalin_auth.config.OAuth2Config
+import dev.castive.jmp.config.DataConfig
+import dev.castive.jmp.config.JMPConfig
+import dev.castive.jmp.config.ServerConfig
 import dev.castive.jmp.io.DataProvider
 import dev.castive.log2.*
-import dev.dcas.castive_utilities.extend.json
-import dev.dcas.castive_utilities.extend.parse
+import dev.dcas.simpleconfig.ConfigLoader
 import java.io.File
 import java.io.IOException
-import java.nio.charset.StandardCharsets
 
 class ConfigBuilder {
 	private val configVersion = "2019-10-02"
 
 	data class JMPConfiguration(
 		val version: String,
-		val realm: String,
-		val min: MinimalConfig,
-		val ldap: LDAPConfiguration,
-		val crowdUrl: String
-	) {
-		fun asLDAP2(): LDAPConfig2 = LDAPConfig2(
-			min,
-			ldap.core,
-			LDAPConfig.Extras(
-				ldap.userFilter,
-				ldap.uid,
-				ldap.reconnectOnAuth,
-				min.removeStale,
-				min.syncRate,
-				min.blockLocal,
-				min.maxConnectAttempts
-			),
-			ldap.groups
-		)
-		fun asCrowd(): CrowdConfig = CrowdConfig(
-			min,
-			crowdUrl
-		)
-	}
-
-	data class LDAPConfiguration(
-		val core: LDAPConfig,
-		val userFilter: String,
-		val uid: String,
-		val reconnectOnAuth: Boolean,
-		val groups: LDAPConfig.Groups
+		val blockLocal: Boolean,
+		val jmp: JMPConfig,
+		val crowd: Crowd2Config,
+		val ldap: LDAP2Config,
+		val oauth2: Map<String, OAuth2Config> = mapOf()
 	)
 
 	/**
@@ -73,20 +46,40 @@ class ConfigBuilder {
 	 */
 	internal fun getDefault(): JMPConfiguration = JMPConfiguration(
 		"2019-10-02",
-		"db",
-		MinimalConfig(false, BasicAuthentication("username", "password")),
-		LDAPConfiguration(
-			LDAPConfig(server = "localhost", contextDN = ""),
-			"",
-			"",
-			false,
-			LDAPConfig.Groups("", "", "")
+		false,
+		JMPConfig(
+			ServerConfig(
+				7000,
+				false,
+				"",
+				"",
+				false
+			),
+			DataConfig(
+				"jdbc:sqlite:jmp.db",
+				"org.sqlite.JDBC"
+			)
 		),
-		"http://localhost:8095/crowd"
+		Crowd2Config(
+			false,
+			"http://localhost:8095/crowd",
+			"user",
+			"hunter2"
+		),
+		LDAP2Config(
+			false,
+			"localhost",
+			389,
+			"dc=example,dc=org",
+			"uid",
+			"user",
+			"hunter2"
+		),
+		mapOf()
 	)
 
-	internal fun getDataFile(): File? = DataProvider.get("jmp.json") ?: kotlin.run {
-		"Unable to allocate jmp.json file, returning defaults".logf(javaClass)
+	internal fun getDataFile(): File? = DataProvider.get("jmp.yaml") ?: kotlin.run {
+		"Unable to allocate jmp.yaml file, returning defaults".logf(javaClass)
 		return null
 	}
 
@@ -96,21 +89,22 @@ class ConfigBuilder {
 		// read in the JSON
 		val config = if(data.exists()) {
 			"Reading JMP configuration from disk: ${data.absolutePath}".logok(javaClass)
-			data.readText(StandardCharsets.UTF_8).parse(JMPConfiguration::class.java)
+			ConfigLoader(JMPConfiguration::class.java).load(data.absolutePath)
 		}
 		else {
 			try {
-				"Attempting to create new jmp.json file".logi(javaClass)
+				"Attempting to create new jmp.yaml file".logi(javaClass)
 				data.createNewFile()
 				Log.i(javaClass, "Created properties file in ${data.absolutePath}")
-				writeDefaults(data)
+				write(data)
 			} catch (e: IOException) {
-				"Failed to create jmp.json file, default values will be used until next restart".loge(javaClass)
+				"Failed to create jmp.yaml file, default values will be used until next restart".loge(javaClass)
 				Log.e(javaClass, "Failed to setup properties: $e, ${data.absolutePath}")
 			}
 			getDefault()
 		}
-		return if(validateConfig(config)) {
+		write(data, config)
+		return if(!validateConfig(config)) {
 			getDefault()
 		}
 		else config
@@ -126,7 +120,15 @@ class ConfigBuilder {
 	/**
 	 * Write a default JMPConfiguration instance to a file
 	 */
-	private fun writeDefaults(file: File) {
-		file.writeText(getDefault().json(), StandardCharsets.UTF_8)
+	private fun write(file: File) {
+		write(file, getDefault())
+	}
+
+	/**
+	 * Write a configuration to file
+	 */
+	private fun write(file: File, config: JMPConfiguration) {
+		"Writing configuration: ${config.version} to file: ${file.absolutePath}".logi(javaClass)
+		ConfigLoader.mapper.writeValue(file, config)
 	}
 }

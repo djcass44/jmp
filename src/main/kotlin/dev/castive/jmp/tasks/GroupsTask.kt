@@ -32,6 +32,7 @@ object GroupsTask: Task {
 	private const val delay = 60_000L
 	// use an atomic value to reduce weird async behaviour
 	private val running = AtomicBoolean(false)
+	private val alive = AtomicBoolean(true)
 	/**
 	 * Request that the task performs an update
 	 * This will not always be actioned and serves as more of a recommendation
@@ -46,9 +47,19 @@ object GroupsTask: Task {
 		timer(javaClass.name, true, 0, delay) {
 			GroupsTask::run.invoke()
 		}
+		Runtime.getRuntime().addShutdownHook(Thread {
+			alive.set(false)
+		})
 	}
 
 	override fun run() {
+		/* we shouldn't be running DB queries if the app is shutting down
+		 * this is because the database connector (probably Hikari) is disconnecting
+		*/
+		if(!alive.get()) {
+			"Unable to action ${javaClass.simpleName} as the JVM is in shutdown mode".logv(javaClass)
+			return
+		}
 		if(running.get()) {
 			"Unable to action ${javaClass.simpleName} as there is already one running".loga(javaClass)
 			return

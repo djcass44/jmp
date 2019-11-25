@@ -26,7 +26,7 @@ import dev.castive.log2.Log
 import dev.castive.log2.logi
 import dev.castive.log2.logok
 import dev.castive.log2.logv
-import dev.dcas.castive_utilities.extend.env
+import dev.dcas.util.extend.env
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
 import java.nio.charset.StandardCharsets

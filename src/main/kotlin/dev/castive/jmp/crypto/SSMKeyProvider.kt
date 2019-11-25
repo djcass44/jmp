@@ -2,14 +2,14 @@ package dev.castive.jmp.crypto
 
 import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement
 import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder
-import com.amazonaws.services.simplesystemsmanagement.model.*
-import dev.castive.eventlog.EventLog
-import dev.castive.eventlog.schema.Event
-import dev.castive.eventlog.schema.EventType
+import com.amazonaws.services.simplesystemsmanagement.model.GetParameterRequest
+import com.amazonaws.services.simplesystemsmanagement.model.GetParameterResult
+import com.amazonaws.services.simplesystemsmanagement.model.ParameterType
+import com.amazonaws.services.simplesystemsmanagement.model.PutParameterRequest
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
 import dev.castive.log2.loge
-import dev.dcas.castive_utilities.extend.env
+import dev.dcas.util.extend.env
 
 class SSMKeyProvider(
 	private val client: AWSSimpleSystemsManagement = AWSSimpleSystemsManagementClientBuilder.defaultClient()
@@ -32,7 +32,6 @@ class SSMKeyProvider(
 		}
 		val param = paramRequest.getOrNull()
 		val keyResult = validateParameter(param) ?: createKey()
-		EventLog.post(Event(type = EventType.READ, resource = Parameter::class.java, causedBy = javaClass))
 		super.postCreate()
 		Log.ok(javaClass, "We appear to have successfully retrieved the encryption key")
 		return keyResult
@@ -58,7 +57,6 @@ class SSMKeyProvider(
 	 * Generate a key and attempt to store it in AWS ParameterStore
 	 */
 	override fun createKey(): String {
-		EventLog.post(Event(type = EventType.CREATE, resource = javaClass, causedBy = javaClass))
 		Log.v(javaClass, "Creating new encryption key...")
 		val key = super.createKey()
 		val r = client.putParameter(PutParameterRequest().withName(parameterName).withType(ParameterType.SecureString).withValue(key))

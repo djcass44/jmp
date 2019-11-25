@@ -3,7 +3,7 @@ package dev.castive.jmp.util.checks
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
 import dev.castive.log2.logw
-import dev.dcas.castive_utilities.extend.env
+import dev.dcas.util.extend.env
 import okhttp3.OkHttpClient
 import okhttp3.Request
 

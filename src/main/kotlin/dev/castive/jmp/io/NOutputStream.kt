@@ -18,6 +18,10 @@ package dev.castive.jmp.io
 
 import java.io.OutputStream
 
+/**
+ * Allows writing to N number of streams
+ * Similar to TeeOutputStream
+ */
 class NOutputStream: OutputStream() {
     private val streams = arrayListOf<OutputStream>()
 

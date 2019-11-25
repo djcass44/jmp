@@ -17,22 +17,15 @@
 package dev.castive.jmp.api
 
 import com.amdelamar.jhash.Hash
-import dev.castive.javalin_auth.auth.Providers
 import dev.castive.javalin_auth.auth.Roles.BasicRoles
-import dev.castive.javalin_auth.auth.data.model.atlassian_crowd.Factor
-import dev.castive.javalin_auth.auth.provider.CrowdProvider
-import dev.castive.jmp.api.actions.AuthAction
 import dev.castive.jmp.db.dao.Roles
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.dao.Users
 import dev.castive.jmp.db.repo.existsByUsername
 import dev.castive.jmp.util.isEqual
-import dev.castive.log2.Log
 import dev.castive.log2.logi
 import dev.castive.log2.logv
-import dev.dcas.castive_utilities.extend.json
 import io.javalin.http.ConflictResponse
-import io.javalin.http.Context
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import dev.castive.javalin_auth.auth.Roles as AuthRoles
@@ -44,8 +37,6 @@ class Auth {
 		val defaultRoleAccess = AuthRoles.defaultAccessRole
 		val adminRoleAccess = AuthRoles.adminAccessRole
 	}
-
-	data class UserLoginResponse(val token: String, val provided: Boolean)
 
 	fun computeHash(password: CharArray): String {
 		return Hash.password(password).create()
@@ -74,85 +65,7 @@ class Auth {
 			throw ConflictResponse()
 		}
 	}
-	fun loginUser(token: String, ctx: Context): UserLoginResponse? {
-		Log.v(javaClass, "Attempting to login user via SSO token")
-		if(Providers.primaryProvider != null) {
-			val primaryAttempt = AuthAction.isValidToken(token, ctx)
-			if(primaryAttempt.isNotEmpty()) {
-				Log.v(javaClass, "Found user using token: $primaryAttempt")
-				return UserLoginResponse(primaryAttempt, true)
-			}
-		}
-		return null
-	}
-	fun loginUser(username: String, password: String, ctx: Context): UserLoginResponse? {
-		Log.v(javaClass, "Attempting to login user via basic authentication")
-		var result: String?
-		if(Providers.primaryProvider != null) { // Try to use primary provider if it exists
-			// If the provider wants additional data, generate it here
-			val data = when(Providers.primaryProvider) {
-				is CrowdProvider -> {
-					arrayListOf(Factor("remote_address", ctx.ip())).json()
-				}
-				else -> null
-			}
-			val primaryAttempt = runCatching { Providers.primaryProvider?.getLogin(username, password, data) }
-			// This is for logging
-//			App.exceptionTracker.onExceptionTriggered(primaryAttempt.exceptionOrNull() ?: Exception("Failed to load actual exception class"))
-			result = primaryAttempt.getOrNull()
-			if(result != null) {
-				Log.v(javaClass, "Found user in primary provider: $result")
-				return UserLoginResponse(result, true)
-			}
-		}
-		Log.v(javaClass, "Failed to locate user in primary provider, checking local provider")
-		// Fallback to internal database checks
-		result = Providers.internalProvider.getLogin(username, password)
-		if(result != null && result.isBlank()) result = null
-		Log.d(javaClass, "Found local user: $result")
-		return if(result != null) {
-			UserLoginResponse(result, false)
-		}
-		else null
-	}
 
-	fun getUserToken(username: String, password: CharArray): String? {
-		assert(Users.existsByUsername(username))
-		return transaction {
-			val user = User.find {
-				Users.username eq username
-			}.limit(1).elementAtOrNull(0)
-			// Only return if hashes match (and user was found)
-			if(user != null && hashMatches(password, user.hash))
-				user.id.value.toString()
-			else
-				null
-		}
-	}
-
-	/**
-	 * Get a users token without checking password
-	 * ONLY USE THIS ONCE EXTERNAL AUTHENTICATION HAS SUCCEEDED
-	 */
-	fun getUserTokenWithPrivilege(username: String): String {
-		assert(Users.existsByUsername(username)) // Requires users to be synced already
-		return transaction {
-			val user = User.find {
-				Users.username eq username
-			}.limit(1).elementAtOrNull(0)
-			return@transaction user?.id?.value.toString()
-		}
-	}
-
-	fun getUser(username: String, token: String): User? {
-		if(username.isBlank() || token.isBlank()) return null
-		return transaction {
-			val u = User.find {
-				Users.username eq username
-			}.elementAtOrNull(0)
-			return@transaction if(AuthAction.userHadToken(token) != null) u else null
-		}
-	}
 	fun isAdmin(user: User?): Boolean {
 		if(user == null) return false
 		return transaction { return@transaction user.role.isEqual(BasicRoles.ADMIN) }

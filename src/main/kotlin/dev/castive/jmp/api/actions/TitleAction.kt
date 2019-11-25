@@ -7,7 +7,7 @@ import dev.castive.jmp.except.InsecureDomainException
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.Log
 import dev.castive.log2.logv
-import dev.dcas.castive_utilities.extend.env
+import dev.dcas.util.extend.env
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch

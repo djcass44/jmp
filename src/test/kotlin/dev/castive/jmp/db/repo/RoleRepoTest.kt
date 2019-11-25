@@ -1,5 +1,5 @@
 /*
- *    Copyright 2019 Django Cass
+ *    Copyright [2019 Django Cass
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,21 +14,25 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.util.checks
+package dev.castive.jmp.db.repo
 
-import dev.castive.jmp.util.EnvUtil
-import dev.dcas.castive_utilities.extend.env
+import dev.castive.jmp.db.DatabaseTest
+import dev.castive.jmp.db.dao.Roles
+import org.hamcrest.CoreMatchers.`is`
+import org.hamcrest.MatcherAssert.assertThat
+import org.junit.jupiter.api.Test
 
-class AuditCheck: StartupCheck("File logging") {
-    override fun runCheck(): Boolean {
-        val logEnabled = EnvUtil.LOG_ENABLED.env("true").toBoolean()
-        return if(logEnabled) {
-            onSuccess()
-            true
-        }
-        else {
-            onFail()
-            false
-        }
-    }
+class RoleRepoTest: DatabaseTest() {
+	@Test
+	fun `user role exists`() {
+		assertThat(Roles.findAllByName("USER").size, `is`(1))
+	}
+	@Test
+	fun `admin role exists`() {
+		assertThat(Roles.findAllByName("ADMIN").size, `is`(1))
+	}
+	@Test
+	fun `unknown role doesn't exist`() {
+		assertThat(Roles.findAllByName("FRIENDS").size, `is`(0))
+	}
 }

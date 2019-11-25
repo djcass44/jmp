@@ -16,8 +16,8 @@
 
 package dev.castive.jmp.auth
 
-import dev.dcas.castive_utilities.extend.json
-import dev.dcas.castive_utilities.extend.parse
+import dev.dcas.util.extend.json
+import dev.dcas.util.extend.parse
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import java.io.File

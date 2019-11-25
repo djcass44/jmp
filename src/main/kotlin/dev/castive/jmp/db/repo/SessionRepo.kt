@@ -28,6 +28,11 @@ fun Sessions.findFirstByUserAndRefreshTokenAndActive(user: User, refreshToken: S
 		Sessions.user eq user.id and (Sessions.refreshToken eq refreshToken) and (active eq true)
 	}.limit(1).elementAtOrNull(0)
 }
+fun Sessions.findFirstByRequestTokenAndActive(requestToken: String): Session? = transaction {
+	Session.find {
+		Sessions.requestToken eq requestToken and (active eq true)
+	}.limit(1).elementAtOrNull(0)
+}
 fun Sessions.findFirstByRefreshTokenAndActive(refreshToken: String): Session? = transaction {
 	Session.find {
 		Sessions.refreshToken eq refreshToken and (active eq true)

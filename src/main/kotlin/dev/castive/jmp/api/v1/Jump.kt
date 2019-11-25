@@ -16,9 +16,6 @@
 
 package dev.castive.jmp.api.v1
 
-import dev.castive.eventlog.EventLog
-import dev.castive.eventlog.schema.Event
-import dev.castive.eventlog.schema.EventType
 import dev.castive.javalin_auth.auth.Roles.BasicRoles
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.App
@@ -34,8 +31,8 @@ import dev.castive.jmp.db.repo.searchByTerm
 import dev.castive.jmp.util.*
 import dev.castive.log2.Log
 import dev.castive.log2.logi
-import dev.dcas.castive_utilities.extend.env
-import dev.dcas.castive_utilities.extend.uuid
+import dev.dcas.util.extend.env
+import dev.dcas.util.extend.uuid
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.apibuilder.EndpointGroup
 import io.javalin.http.BadRequestResponse
@@ -135,7 +132,6 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 							parent = jump
 						}
 					}
-					EventLog.post(Event(type = EventType.CREATE, resource = JumpData::class.java, causedBy = Jump::class.java))
 					imageAction.get(add.location)
 					titleAction.get(add.location)
 				}
@@ -143,7 +139,6 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 				ctx.status(HttpStatus.CREATED_201).json(add)
 			}
 			else {
-				EventLog.post(Event(type = "CONFLICT", resource = JumpData::class.java, causedBy = javaClass))
 				throw ConflictResponse("${add.name} already exists!")
 			}
 		}, Auth.openAccessRole)
@@ -161,12 +156,8 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 						name = update.name
 						location = update.location
 						metaUpdate = System.currentTimeMillis()
-						meta?.apply {
-							edited = System.currentTimeMillis()
-							editedBy = user
-						}
+						meta?.onEdit(user)
 					}
-					EventLog.post(Event(type = EventType.UPDATE, resource = JumpData::class.java, causedBy = javaClass))
 					// Add aliases
 					val updated = arrayListOf<Int>()
 					update.alias.forEach {
@@ -216,7 +207,6 @@ class Jump(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
 				// Delete all aliased children so that they don't become orphans
 				Alias.find { Aliases.parent eq result.id }.forEach { it.delete() }
 				result.delete()
-				EventLog.post(Event(type = EventType.DESTROY, resource = JumpData::class.java, causedBy = javaClass))
 			}
 			ws.invoke(Socket.EVENT_UPDATE, Socket.EVENT_UPDATE)
 			ctx.status(HttpStatus.NO_CONTENT_204)

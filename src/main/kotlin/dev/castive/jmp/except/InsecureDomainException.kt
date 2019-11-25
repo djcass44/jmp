@@ -16,4 +16,4 @@
 
 package dev.castive.jmp.except
 
-class InsecureDomainException: Exception("Loading external resources via HTTP is not allowed.")
+class InsecureDomainException: RuntimeException("Loading external resources via HTTP is not allowed.")

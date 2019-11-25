@@ -16,9 +16,6 @@
 
 package dev.castive.jmp.api.v2_1
 
-import dev.castive.eventlog.EventLog
-import dev.castive.eventlog.schema.Event
-import dev.castive.eventlog.schema.EventType
 import dev.castive.javalin_auth.auth.Roles.BasicRoles
 import dev.castive.javalin_auth.auth.provider.InternalProvider
 import dev.castive.jmp.Runner
@@ -79,7 +76,6 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
                     users = SizedCollection(arrayListOf(user))
                 }
             }
-            EventLog.post(Event(type = EventType.CREATE, resource = GroupData::class.java, causedBy = javaClass))
             ws.invoke(Socket.EVENT_UPDATE_GROUP, Socket.EVENT_UPDATE_GROUP)
             ctx.status(HttpStatus.CREATED_201).json(add)
         }, Auth.defaultRoleAccess)
@@ -106,7 +102,6 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
             GroupsTask.update()
             ws.invoke(Socket.EVENT_UPDATE_GROUP, Socket.EVENT_UPDATE_GROUP)
             ctx.status(HttpStatus.NO_CONTENT_204).json(update)
-            EventLog.post(Event(type = EventType.UPDATE, resource = GroupData::class.java, causedBy = javaClass))
         }, Auth.defaultRoleAccess)
         delete("${Runner.BASE}/v2_1/group/:id", { ctx ->
             val id = UUID.fromString(ctx.pathParam("id"))
@@ -124,7 +119,6 @@ class Group(private val ws: (tag: String, data: Any) -> (Unit)): EndpointGroup {
             }
             ws.invoke(Socket.EVENT_UPDATE_GROUP, Socket.EVENT_UPDATE_GROUP)
             ctx.status(HttpStatus.NO_CONTENT_204)
-            EventLog.post(Event(type = EventType.DESTROY, resource = GroupData::class.java, causedBy = javaClass))
         }, Auth.adminRoleAccess)
     }
 }

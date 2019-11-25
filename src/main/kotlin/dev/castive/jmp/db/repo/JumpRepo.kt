@@ -37,6 +37,13 @@ fun Jumps.findAllByUser(user: User?): ArrayList<Jump> {
 		results.addAll(Jump.find {
 			owner.isNull() and ownerGroup.isNull()
 		})
+		// add jumps in public groups
+		Groups.findAllPublic().forEach { group ->
+			Jumps.findAllByOwnerGroup(group).forEach {
+				if(!results.contains(it))
+					results.add(it)
+			}
+		}
 		if(user == null)
 			return@transaction
 		// get jumps owned by the user
@@ -45,9 +52,7 @@ fun Jumps.findAllByUser(user: User?): ArrayList<Jump> {
 		})
 		// get jumps in groups user is in
 		Groups.findAllContainingUser(user).forEach {
-			results.addAll(Jump.find {
-				ownerGroup eq it.id
-			})
+			results.addAll(Jumps.findAllByOwnerGroup(it))
 		}
 	}
 	return results
@@ -89,6 +94,12 @@ fun Jumps.findAllById(user: User?, id: Int): ArrayList<Jump> {
 			if(it.id.value == id) it else null
 		}
 	}.asArrayList()
+}
+
+fun Jumps.findAllByOwnerGroup(group: Group): List<Jump> = transaction {
+	Jump.find {
+		ownerGroup eq group.id
+	}.toList()
 }
 
 /**

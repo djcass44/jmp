@@ -1,6 +1,10 @@
 package dev.castive.jmp.except
 
+import org.hamcrest.CoreMatchers.`is`
+import org.hamcrest.CoreMatchers.not
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test
+import kotlin.test.assertTrue
 
 class ExceptionTrackerTest {
 	private val dummyText = "This is a test!"
@@ -9,10 +13,10 @@ class ExceptionTrackerTest {
 	 * Ensure that it's actually added
 	 */
 	@Test
-	fun testAdd() {
+	fun `adding an item to the list`() {
 		val tracker = ExceptionTracker(false)
 		tracker.onExceptionTriggered(Exception("Test"))
-		assert(tracker.getData().isNotEmpty())
+		assertTrue(tracker.getData().isNotEmpty())
 	}
 
 	/**
@@ -20,12 +24,12 @@ class ExceptionTrackerTest {
 	 * Ensure that the specific time is still there
 	 */
 	@Test
-	fun testAddTime() {
+	fun `adding an item to the list with a specific time`() {
 		val tracker = ExceptionTracker(false)
 		val time = System.currentTimeMillis()
 		tracker.onExceptionTriggered(Exception("Test"), time)
 		val res = tracker.getData()
-		assert(res[0].second == time)
+		assertThat(res[0].second, `is`(time))
 	}
 
 	/**
@@ -33,12 +37,12 @@ class ExceptionTrackerTest {
 	 * Ensure that the entry has the correct name
 	 */
 	@Test
-	fun testInsecureAdd() {
+	fun `(blockLeak false) adding an item retains its className`() {
 		val except = NullPointerException(dummyText)
 		val tracker = ExceptionTracker(false)
 		tracker.onExceptionTriggered(except)
 		val res = tracker.getData()
-		assert(res[0].first == except::class.java.name)
+		assertThat(res[0].first, `is`(except::class.java.name))
 	}
 
 	/**
@@ -46,27 +50,27 @@ class ExceptionTrackerTest {
 	 * Ensure that the entry isn't using the actual name
 	 */
 	@Test
-	fun testSecureAdd() {
+	fun `(blockLeak true) adding an item uses a generic className`() {
 		val except = NullPointerException(dummyText)
 		val tracker = ExceptionTracker(true)
 		tracker.onExceptionTriggered(except)
 		val res = tracker.getData()
-		assert(res[0].first != except::class.java.name)
-		assert(res[0].first == tracker.generic)
+		assertThat(res[0].first, not(except::class.java.name))
+		assertThat(res[0].first, `is`(tracker.generic))
 	}
 	@Test
-	fun testSecureAddCustomGeneric() {
+	fun `(blockLeak true) adding an item uses a specified className`() {
 		val except = NullPointerException(dummyText)
 		val tracker = ExceptionTracker(true, "Test!")
 		tracker.onExceptionTriggered(except)
 		val res = tracker.getData()
-		assert(res[0].first != except::class.java.name)
-		assert(res[0].first == tracker.generic)
+		assertThat(res[0].first, not(except::class.java.name))
+		assertThat(res[0].first, `is`(tracker.generic))
 	}
 	@Test
-	fun testVeryOld() {
+	fun `stale item is not returned`() {
 		val tracker = ExceptionTracker(false)
 		tracker.onExceptionTriggered(Exception("Test"), 0)
-		assert(tracker.getData().isEmpty())
+		assertTrue(tracker.getData().isEmpty())
 	}
 }

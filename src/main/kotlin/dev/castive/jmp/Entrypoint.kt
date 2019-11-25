@@ -17,16 +17,14 @@
 package dev.castive.jmp
 
 import dev.castive.jmp.api.App
+import dev.castive.jmp.auth.ConfigBuilder
 import dev.castive.jmp.db.DatabaseHelper
-import dev.castive.jmp.util.EnvUtil
-import dev.castive.jmp.util.checks.AuditCheck
 import dev.castive.jmp.util.checks.EntropyCheck
 import dev.castive.jmp.util.checks.FavCheck
 import dev.castive.jmp.util.checks.JavaVersionCheck
 import dev.castive.log2.logi
 import dev.castive.log2.logv
 import dev.castive.log2.logw
-import dev.dcas.castive_utilities.extend.env
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -34,14 +32,13 @@ import kotlinx.coroutines.runBlocking
 class Runner {
     companion object {
         const val BASE = "/api"
-        var START_TIME = 0L
+        val START_TIME = System.currentTimeMillis()
     }
     private fun runInitialChecks() {
         "Checking security configuration".logi(javaClass)
         println("Running setup checks\n")
         val checks = arrayListOf(
             EntropyCheck(),
-            AuditCheck(),
             JavaVersionCheck(),
             FavCheck()
         )
@@ -52,19 +49,21 @@ class Runner {
         println("Setup checks completed ($count/${checks.size} passed)\n")
     }
     fun start(args: Array<String>) = runBlocking {
-        START_TIME = System.currentTimeMillis()
         args.contentToString().logv(javaClass)
         val arguments = Arguments(args)
         // Alert the user that dev features are enabled
-        if(arguments.enableCors) "WARNING: CORS access is enabled for ALL origins. DO NOT allow this in production: WARNING".logw(javaClass)
-        if(arguments.enableDev) "WARNING: Development mode is enabled".logw(javaClass)
+        if(arguments.enableCors) "CORS access is enabled for ALL origins. This should only be allowed for development".logw(javaClass)
+        if(arguments.enableDev) "Development mode is enabled".logw(javaClass)
         launch {
             runInitialChecks()
         }
-        DatabaseHelper().start()
+	    // load application configuration
+	    val appConfig = ConfigBuilder().get()
+        DatabaseHelper(appConfig.jmp.database).start()
         // Start the application and wait for it to finish
-        val appPort = EnvUtil.PORT.env("7000").toIntOrNull() ?: 7000
-        launch { App(appPort).start(arguments) }.join()
+        launch {
+	        App(appConfig).start(arguments)
+        }.join()
     }
 }
 

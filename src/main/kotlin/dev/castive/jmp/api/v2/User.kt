@@ -17,14 +17,11 @@
 package dev.castive.jmp.api.v2
 
 import com.google.common.util.concurrent.RateLimiter
-import dev.castive.eventlog.EventLog
-import dev.castive.eventlog.schema.Event
-import dev.castive.eventlog.schema.EventType
-import dev.castive.javalin_auth.auth.connect.MinimalConfig
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
 import dev.castive.jmp.api.Responses
 import dev.castive.jmp.api.Socket
+import dev.castive.jmp.auth.ConfigBuilder
 import dev.castive.jmp.db.dao.*
 import dev.castive.jmp.db.dao.User
 import dev.castive.jmp.db.repo.count
@@ -49,7 +46,7 @@ import kotlin.math.ceil
 class User(
     private val auth: Auth,
     private val ws: (tag: String, data: Any) -> (Unit),
-    private val configMin: MinimalConfig
+    private val config: ConfigBuilder.JMPConfiguration
 ): EndpointGroup {
     private val createLimiter = RateLimiter.create(5.0)
 
@@ -67,7 +64,6 @@ class User(
                 }.asArrayList()
             }
             val userCount = Users.count()
-            EventLog.post(Event(type = EventType.READ, resource = UserData::class.java, causedBy = javaClass))
             val currentPage = (offset / userCount) + 1
             val totalPages = ceil(userCount / count.toDouble()).toInt()
             Log.d(javaClass, "Returning ${users.size} users")
@@ -77,7 +73,7 @@ class User(
         put("${Runner.BASE}/v2/user", { ctx ->
             if(createLimiter.tryAcquire()) {
                 val user: User? = ctx.user()
-                val blockLocal = configMin.blockLocal
+                val blockLocal = config.blockLocal
                 Log.d(javaClass, "Block local accounts: $blockLocal")
                 if ((user == null || !auth.isAdmin(user)) && blockLocal) {
                     Log.i(javaClass, "User ${user?.username} is not allowed to create local accounts [reason: POLICY]")
@@ -88,7 +84,6 @@ class User(
                 auth.createUser(basicAuth.username, basicAuth.password.toCharArray())
                 // ask the groupstask cron to update public/default relations
                 GroupsTask.update()
-                EventLog.post(Event(type = EventType.CREATE, resource = UserData::class.java, causedBy = javaClass))
                 ws.invoke(Socket.EVENT_UPDATE_USER, Socket.EVENT_UPDATE_USER)
                 ctx.status(HttpStatus.CREATED_201).result(basicAuth.username)
             }
@@ -98,16 +93,9 @@ class User(
         // Get information about the current user
         get("${Runner.BASE}/v2/user", { ctx ->
             val user = ctx.assertUser()
-            transaction {
-                ctx.ok().result(user.role.name)
-            }
-            EventLog.post(Event(type = EventType.READ, resource = UserData::class.java, causedBy = javaClass))
-        }, Auth.defaultRoleAccess)
-        get("${Runner.BASE}/v2_1/user/info", { ctx ->
-            val user = ctx.assertUser()
-            transaction {
-                ctx.ok().json(UserData(user, arrayListOf()))
-            }
+	        transaction {
+		        ctx.ok().json(UserData(user, arrayListOf()))
+	        }
         }, Auth.defaultRoleAccess)
         // Change the role of a user
         patch("${Runner.BASE}/v2/user", { ctx ->
@@ -121,7 +109,6 @@ class User(
                 if(user.username == u.username) throw ForbiddenResponse()
                 val role = Roles.findAllByName(updated.role).elementAtOrNull(0) ?: throw BadRequestResponse()
                 Log.i(javaClass, "User role updated [user: ${user.username}, from: ${user.role.name}, to: ${role.name}] by ${u.username}")
-                EventLog.post(Event(type = EventType.UPDATE, resource = UserData::class.java, causedBy = javaClass))
                 user.apply {
                     this.role = role
                     metaUpdate = System.currentTimeMillis()
@@ -146,7 +133,6 @@ class User(
                     throw ForbiddenResponse()
                 } // Stop the users deleting themselves
                 target.delete()
-                EventLog.post(Event(type = EventType.DESTROY, resource = UserData::class.java, causedBy = dev.castive.jmp.api.v2.User::class.java))
             }
             ws.invoke(Socket.EVENT_UPDATE_USER, Socket.EVENT_UPDATE_USER)
             ctx.status(HttpStatus.NO_CONTENT_204)

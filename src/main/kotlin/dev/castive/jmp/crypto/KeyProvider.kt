@@ -1,8 +1,6 @@
 package dev.castive.jmp.crypto
 
-import dev.castive.eventlog.EventLog
-import dev.castive.eventlog.schema.Event
-import dev.castive.eventlog.schema.EventType
+import dev.castive.log2.logok
 import java.util.*
 import javax.crypto.KeyGenerator
 
@@ -28,6 +26,6 @@ open class KeyProvider {
 	}
 
 	fun postCreate() {
-		EventLog.post(Event(type = EventType.CREATE, resource = javaClass, causedBy = javaClass))
+		"Created new key".logok(javaClass)
 	}
 }

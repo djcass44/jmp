@@ -16,6 +16,7 @@
 
 package dev.castive.jmp.db.dao
 
+import dev.castive.javalin_auth.auth.data.UserEntity
 import dev.castive.javalin_auth.auth.provider.InternalProvider
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.UUIDEntity
@@ -55,6 +56,8 @@ class User(id: EntityID<UUID>): UUIDEntity(id) {
     var metaUpdate by Users.metaUpdate
 
     var from by Users.from
+
+	fun asUserEntity(): UserEntity<UUID> = UserEntity(id.value, username, from)
 }
 data class UserData(
     val id: UUID,

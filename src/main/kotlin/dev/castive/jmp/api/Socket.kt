@@ -1,7 +1,6 @@
 package dev.castive.jmp.api
 
 import dev.castive.jmp.Runner
-import dev.castive.jmp.cache.BaseCacheLayer
 import dev.castive.log2.Log
 import io.javalin.apibuilder.ApiBuilder
 import io.javalin.apibuilder.EndpointGroup
@@ -10,7 +9,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 
-class Socket(private val cache: BaseCacheLayer): EndpointGroup {
+class Socket: EndpointGroup {
 	companion object {
 		const val INIT_APP = "INIT_APP"
 		const val EVENT_PING = "@API/EVENT_PING"
@@ -57,7 +56,7 @@ class Socket(private val cache: BaseCacheLayer): EndpointGroup {
 	}
 
 	private fun onConnect(ctx: WsContext) {
-		ctx.send(Payload(INIT_APP, cache.get("appId")))
+		ctx.send(Payload(INIT_APP, App.id))
 	}
 
 	/**

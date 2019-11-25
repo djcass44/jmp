@@ -19,7 +19,7 @@ package dev.castive.jmp.io
 import dev.castive.jmp.util.EnvUtil
 import dev.castive.log2.logv
 import dev.castive.log2.logw
-import dev.dcas.castive_utilities.extend.env
+import dev.dcas.util.extend.env
 import java.io.File
 
 object DataProvider {

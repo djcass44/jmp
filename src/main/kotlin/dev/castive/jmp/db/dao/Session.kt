@@ -7,6 +7,7 @@ import org.jetbrains.exposed.dao.UUIDTable
 import java.util.*
 
 object Sessions: UUIDTable() {
+	val requestToken = text("requestToken").default("")
     val refreshToken = text("refreshToken")
     val ssoToken = text("ssoToken").nullable()
     val createdAt = long("createdAt").default(System.currentTimeMillis())
@@ -18,6 +19,7 @@ object Sessions: UUIDTable() {
 class Session(id: EntityID<UUID>): UUIDEntity(id) {
     companion object: UUIDEntityClass<Session>(Sessions)
 
+	var requestToken by Sessions.requestToken
     var refreshToken by Sessions.refreshToken
     var ssoToken by Sessions.ssoToken
     var createdAt by Sessions.createdAt

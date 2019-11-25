@@ -17,42 +17,26 @@
 package dev.castive.jmp.api.v2_1
 
 import dev.castive.javalin_auth.api.OAuth2
-import dev.castive.javalin_auth.auth.Providers
-import dev.castive.javalin_auth.auth.connect.MinimalConfig
 import dev.castive.javalin_auth.auth.provider.InternalProvider
 import dev.castive.jmp.Runner
 import dev.castive.jmp.api.Auth
-import dev.castive.jmp.db.dao.Group
-import dev.castive.jmp.db.dao.Groups
-import dev.castive.jmp.db.dao.User
-import dev.castive.jmp.db.dao.Users
+import dev.castive.jmp.auth.ConfigBuilder
 import dev.castive.jmp.except.ExceptionTracker
 import dev.castive.jmp.util.ok
 import dev.castive.log2.logi
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.EndpointGroup
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.concurrent.TimeUnit
 
-class Props(private val minConfig: MinimalConfig, private val tracker: ExceptionTracker): EndpointGroup {
-	data class ProviderPayload(val connected: Boolean, val name: String, val users: Int, val groups: Int)
+class Props(private val config: ConfigBuilder.JMPConfiguration, private val tracker: ExceptionTracker): EndpointGroup {
 
 	override fun addEndpoints() {
 		get("${Runner.BASE}/v2_1/uprop/allow_local", { ctx ->
-			ctx.ok().result(minConfig.blockLocal.toString())
+			ctx.ok().result(config.blockLocal.toString())
 		}, Auth.openAccessRole)
-		get("${Runner.BASE}/v2_1/provider/main", { ctx ->
-			val main = Providers.primaryProvider
-			val connected = main != null && main.connected()
-			val users = if(main != null) transaction { User.find { Users.from eq main.getName() }.count() } else 0
-			val groups = if(main != null) transaction { Group.find { Groups.from eq main.getName() }.count() } else 0
-			ctx.ok().json(ProviderPayload(connected, main?.getName() ?: InternalProvider.SOURCE_NAME, users, groups))
-		}, Auth.adminRoleAccess)
 		get("${Runner.BASE}/v2_1/statistics/providers", { ctx ->
 			// get the names of all possible auth providers
 			ctx.ok().json(arrayListOf(InternalProvider.SOURCE_NAME).apply {
-				if(Providers.primaryProvider != null)
-					add(Providers.primaryProvider!!.getName())
 				// add oauth2 providers
 				addAll(OAuth2.providers.keys)
 			})

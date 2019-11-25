@@ -1,17 +1,21 @@
 package dev.castive.jmp.except
 
 import dev.castive.log2.Log
+import dev.castive.log2.logd
+import dev.castive.log2.logv
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-class ExceptionTracker(private val blockLeak: Boolean = true,
-                       internal val generic: String = Exception::class.java.name) {
+class ExceptionTracker(
+	private val blockLeak: Boolean = true,
+	internal val generic: String = Exception::class.java.name
+) {
 	private val items = arrayListOf<Pair<String, Long>>()
 
 	fun onExceptionTriggered(e: Throwable, time: Long = System.currentTimeMillis()) {
-		Log.d(javaClass, "Adding exception item")
+		"Adding exception item: ${e::class.java.name}".logv(javaClass)
 		items.add(e::class.java.name to time)
-		Log.d(javaClass, items.toTypedArray().contentToString())
+		items.toTypedArray().contentToString().logd(javaClass)
 	}
 	fun getData(timeframe: Long = TimeUnit.MINUTES.toMillis(5)): ArrayList<Pair<String, Long>> {
 		val currentTime = System.currentTimeMillis()
