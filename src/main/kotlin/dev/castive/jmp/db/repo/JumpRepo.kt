@@ -30,8 +30,8 @@ fun Jumps.findAllByLocation(location: String): List<Jump> = transaction {
 	}.toList()
 }
 
-fun Jumps.findAllByUser(user: User?): ArrayList<Jump> {
-	val results = arrayListOf<Jump>()
+fun Jumps.findAllByUser(user: User?): List<Jump> {
+	val results = mutableSetOf<Jump>()
 	transaction {
 		// get global jumps
 		results.addAll(Jump.find {
@@ -55,7 +55,7 @@ fun Jumps.findAllByUser(user: User?): ArrayList<Jump> {
 			results.addAll(Jumps.findAllByOwnerGroup(it))
 		}
 	}
-	return results
+	return results.toList()
 }
 
 fun Jumps.findAllByUser(user: User?, includeAliases: Boolean): ArrayList<JumpData> {
