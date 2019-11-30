@@ -11,11 +11,11 @@ class FavCheck: StartupCheck("Image API") {
 	override fun runCheck(): Boolean {
 		// check if we are actually allowed to make network calls
 		if(!EnvUtil.JMP_ALLOW_EGRESS.env("true").toBoolean()) {
-			"FAV2 access blocked by JMP_ALLOW_EGRESS".logw(javaClass)
+			"FAV2 access blocked by egress policy".logw(javaClass)
 			onWarning()
 			return true
 		}
-		val request = Request.Builder().url("${EnvUtil.FAV2_URL.env("http://localhost:8080")}/healthz").get().build()
+		val request = Request.Builder().url("${EnvUtil.FAV2_URL.env("http://localhost:8080")}/actuator/health").get().build()
 		return try {
 			OkHttpClient().newCall(request).execute().use {
 				if(it.code != 200) {
