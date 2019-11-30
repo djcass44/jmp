@@ -29,7 +29,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class ImageAction(private val ws: (tag: String, data: Any) -> (Unit)) {
@@ -40,25 +39,15 @@ class ImageAction(private val ws: (tag: String, data: Any) -> (Unit)) {
 	fun get(address: String) = GlobalScope.launch(context = Dispatchers.IO) {
 		// check that we are allowed to make network requests
 		if(!allowed) {
-			"Unable to load favicon: blocked by JMP_ALLOW_EGRESS policy".logv(javaClass)
+			"Unable to load favicon: blocked by egress policy".logv(javaClass)
 			return@launch
 		}
 		// Create the request for fav2
-		val request = Request.Builder().url("$favUrl/icon?site=${address.safe()}").post("".toRequestBody(null)).build()
+		val destUrl = "$favUrl/icon?site=${address.safe()}"
+		val request = Request.Builder().url(destUrl).get().build()
 		try {
-			val response = client.newCall(request).execute()
-			// If the response isn't OK, return
-			if(!response.isSuccessful) {
-				"FAV2 POST request failed: ${response.message}".loge(javaClass)
-				response.close()
-				return@launch
-			}
-			// Try to get the body response
-			val destUrl = response.body?.string() ?: run {
-				response.close()
-				throw Exception("No body returned from request")
-			}
-			response.close() // ensure no leakages
+			// make the request to warm fav2
+			client.newCall(request).execute().close()
 			transaction {
 				// Get the jumps which may use this favicon
 				val results = Jumps.findAllByLocation(address)
