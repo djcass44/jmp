@@ -14,19 +14,16 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.util
+package dev.castive.jmp.entity
 
-import dev.castive.jmp.util.checks.EntropyCheck
-import dev.castive.log2.Log
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Test
+import javax.persistence.*
 
-class EntropyPoolTest {
-    @Test
-    fun getLocalPool() {
-        val pool = EntropyCheck().getEntropyPool()
-        Log.d(javaClass, "Result: $pool")
-        assertNotNull(pool)
-        assert(pool > 0)
-    }
-}
+@Entity
+@Table(name = "Aliases")
+data class Alias(
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	val id: Int,
+	var name: String,
+	val parent: Int
+)

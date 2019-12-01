@@ -14,19 +14,24 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.util
+package dev.castive.jmp.entity
 
-import dev.castive.jmp.util.checks.EntropyCheck
-import dev.castive.log2.Log
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Test
+import com.fasterxml.jackson.annotation.JsonIgnore
+import dev.castive.jmp.util.UUIDConverterCompat
+import java.util.UUID
+import javax.persistence.*
 
-class EntropyPoolTest {
-    @Test
-    fun getLocalPool() {
-        val pool = EntropyCheck().getEntropyPool()
-        Log.d(javaClass, "Result: $pool")
-        assertNotNull(pool)
-        assert(pool > 0)
-    }
-}
+@Entity
+@Table(name = "Groups")
+data class Group(
+	@Id
+	@Convert(converter = UUIDConverterCompat::class)
+	val id: UUID = UUID.randomUUID(),
+	var name: String,
+	val source: String,
+	var public: Boolean = false,
+	var defaultFor: String? = null,
+	@JsonIgnore
+	@ManyToMany
+	val users: MutableSet<User> = mutableSetOf()
+)

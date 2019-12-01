@@ -16,50 +16,31 @@
 
 package dev.castive.jmp.tasks
 
-import dev.castive.jmp.db.dao.Group
-import dev.castive.jmp.db.dao.User
-import dev.castive.jmp.util.add
+import dev.castive.jmp.entity.Group
+import dev.castive.jmp.repo.GroupRepo
+import dev.castive.jmp.repo.UserRepo
 import dev.castive.log2.loga
 import dev.castive.log2.logi
 import dev.castive.log2.logv
 import dev.castive.log2.logw
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.concurrent.timer
+import javax.transaction.Transactional
 import kotlin.system.measureTimeMillis
 
-object GroupsTask: Task {
-	private const val delay = 60_000L
+@Transactional
+@Component
+class GroupsTask @Autowired constructor(
+	private val groupRepo: GroupRepo,
+	private val userRepo: UserRepo
+) {
 	// use an atomic value to reduce weird async behaviour
 	private val running = AtomicBoolean(false)
-	private val alive = AtomicBoolean(true)
-	/**
-	 * Request that the task performs an update
-	 * This will not always be actioned and serves as more of a recommendation
-	 */
-	fun update() {
-		run()
-	}
 
-	override fun start() {
-		// start the task
-		"Starting timer: ${javaClass.name}".logi(javaClass)
-		timer(javaClass.name, true, 0, delay) {
-			GroupsTask::run.invoke()
-		}
-		Runtime.getRuntime().addShutdownHook(Thread {
-			alive.set(false)
-		})
-	}
-
-	override fun run() {
-		/* we shouldn't be running DB queries if the app is shutting down
-		 * this is because the database connector (probably Hikari) is disconnecting
-		*/
-		if(!alive.get()) {
-			"Unable to action ${javaClass.simpleName} as the JVM is in shutdown mode".logv(javaClass)
-			return
-		}
+	@Scheduled(fixedDelay = 60 * 1000)
+	fun run() {
 		if(running.get()) {
 			"Unable to action ${javaClass.simpleName} as there is already one running".loga(javaClass)
 			return
@@ -67,14 +48,11 @@ object GroupsTask: Task {
 		running.set(true)
 		"Starting ${javaClass.name} at ${System.currentTimeMillis()}".logv(javaClass)
 		"Scanned group relations in ${measureTimeMillis {
-			transaction {
-				Group.all().forEach {
-					// public groups take precedence over default groups
-					if (it.public)
-						addUsersToPublicGroups(it)
-					else if (it.defaultFor != null)
-						addUsersToDefaultGroup(it)
-				}
+			groupRepo.findAll().forEach {
+				if(it.public)
+					addUsersToPublicGroups(it)
+				else if(it.defaultFor != null)
+					addUsersToDefaultGroup(it)
 			}
 		}} ms".logv(javaClass)
 		running.set(false)
@@ -91,13 +69,14 @@ object GroupsTask: Task {
 			return
 		}
 		var count = 0
-		User.all().forEach {
+		userRepo.findAll().forEach {
 			// if the user isn't in the group, add them
 			if(!group.users.contains(it)) {
-				group.users = group.users.add(it)
+				group.users.add(it)
 				count++
 			}
 		}
+		groupRepo.save(group)
 		"Added $count users to public group: ${group.name}".logi(javaClass)
 	}
 
@@ -112,13 +91,14 @@ object GroupsTask: Task {
 			return
 		}
 		var count = 0
-		User.all().forEach {
-			if(it.from == group.defaultFor && !group.users.contains(it)) {
+		userRepo.findAll().forEach {
+			if(it.source == group.defaultFor && !group.users.contains(it)) {
 				// if the user isn't in the group, add them
-				group.users = group.users.add(it)
+				group.users.add(it)
 				count++
 			}
 		}
+		groupRepo.save(group)
 		"Added $count users from ${group.defaultFor} to default group: ${group.name}".logi(javaClass)
 	}
 }

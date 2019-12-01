@@ -14,19 +14,16 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.util
+package dev.castive.jmp.repo
 
-import dev.castive.jmp.util.checks.EntropyCheck
-import dev.castive.log2.Log
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Test
+import dev.castive.jmp.entity.Session
+import dev.castive.jmp.entity.User
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
+import java.util.UUID
 
-class EntropyPoolTest {
-    @Test
-    fun getLocalPool() {
-        val pool = EntropyCheck().getEntropyPool()
-        Log.d(javaClass, "Result: $pool")
-        assertNotNull(pool)
-        assert(pool > 0)
-    }
+@Repository
+interface SessionRepo: JpaRepository<Session, UUID> {
+	fun findAllByUserAndActiveIsTrue(user: User): List<Session>
+	fun findFirstByRefreshTokenAndActiveTrue(refreshToken: String): Session?
 }

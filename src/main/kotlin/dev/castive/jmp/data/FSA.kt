@@ -14,19 +14,24 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.util
+package dev.castive.jmp.data
 
-import dev.castive.jmp.util.checks.EntropyCheck
-import dev.castive.log2.Log
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Test
+data class FSA(
+	val type: String,
+	val payload: Any?,
+	val error: Boolean = false,
+	val meta: Any? = null
+) {
+	companion object {
+		const val INIT_APP = "INIT_APP"
+		const val TYPE_PING = "@API/PING"
+		const val EVENT_UPDATE_JUMP = "EVENT_UPDATE"
+		const val EVENT_UPDATE_USER = "EVENT_UPDATE_USER"
+		const val EVENT_UPDATE_GROUP = "EVENT_UPDATE_GROUP"
+		const val EVENT_UPDATE_TITLE = "EVENT_UPDATE_TITLE"
+		const val EVENT_UPDATE_FAVICON = "EVENT_UPDATE_FAVICON"
 
-class EntropyPoolTest {
-    @Test
-    fun getLocalPool() {
-        val pool = EntropyCheck().getEntropyPool()
-        Log.d(javaClass, "Result: $pool")
-        assertNotNull(pool)
-        assert(pool > 0)
-    }
+		// message sent when we were unable to process a websocket message
+		const val WS_SEND_FAILURE = "WS_SEND_FAILURE"
+	}
 }

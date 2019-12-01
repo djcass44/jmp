@@ -7,4 +7,6 @@ object Responses {
 
 	const val NOT_FOUND_USER = "That user could not be found."
 	const val NOT_FOUND_SESSION = "That session could not be found."
+	const val NOT_FOUND_GROUP = "That group could not be found."
+	const val NOT_FOUND_JUMP = "That jump could not be found."
 }

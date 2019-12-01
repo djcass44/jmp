@@ -16,17 +16,16 @@
 
 package dev.castive.jmp.util
 
-import dev.castive.jmp.util.checks.EntropyCheck
-import dev.castive.log2.Log
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Test
+import dev.dcas.util.extend.uuid
+import java.util.UUID
+import javax.persistence.AttributeConverter
 
-class EntropyPoolTest {
-    @Test
-    fun getLocalPool() {
-        val pool = EntropyCheck().getEntropyPool()
-        Log.d(javaClass, "Result: $pool")
-        assertNotNull(pool)
-        assert(pool > 0)
-    }
+class UUIDConverterCompat: AttributeConverter<UUID, String> {
+	override fun convertToDatabaseColumn(attribute: UUID): String {
+		return attribute.toString()
+	}
+
+	override fun convertToEntityAttribute(dbData: String): UUID {
+		return dbData.uuid() ?: error("Cannot convert to UUID: $dbData")
+	}
 }

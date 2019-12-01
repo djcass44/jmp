@@ -14,19 +14,14 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.util
+package dev.castive.jmp.repo
 
-import dev.castive.jmp.util.checks.EntropyCheck
-import dev.castive.log2.Log
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Test
+import dev.castive.jmp.entity.Jump
+import dev.castive.jmp.entity.User
 
-class EntropyPoolTest {
-    @Test
-    fun getLocalPool() {
-        val pool = EntropyCheck().getEntropyPool()
-        Log.d(javaClass, "Result: $pool")
-        assertNotNull(pool)
-        assert(pool > 0)
-    }
+interface JumpRepoCustom {
+	fun findAllByUser(user: User?): List<Jump>
+	fun findAllByUser(user: User?, includeAliases: Boolean): List<Jump>
+	fun findAllByUserAndId(user: User?, id: Int): List<Jump>
+	fun searchByTerm(user: User?, term: String): List<Jump>
 }

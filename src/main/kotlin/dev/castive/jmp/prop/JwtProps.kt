@@ -14,19 +14,17 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.util
+package dev.castive.jmp.prop
 
-import dev.castive.jmp.util.checks.EntropyCheck
-import dev.castive.log2.Log
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Test
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
 
-class EntropyPoolTest {
-    @Test
-    fun getLocalPool() {
-        val pool = EntropyCheck().getEntropyPool()
-        Log.d(javaClass, "Result: $pool")
-        assertNotNull(pool)
-        assert(pool > 0)
-    }
+@Component
+@ConfigurationProperties(prefix = "security.jwt")
+class JwtProps {
+	lateinit var secretKey: String
+	var requestLimit: Long = TimeUnit.HOURS.toMillis(1)
+	var refreshLimit: Long = TimeUnit.HOURS.toMillis(8)
+	var leewaySeconds: Long = TimeUnit.HOURS.toSeconds(1)
 }

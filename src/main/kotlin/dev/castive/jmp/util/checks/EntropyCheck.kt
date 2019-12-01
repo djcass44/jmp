@@ -17,12 +17,13 @@
 package dev.castive.jmp.util.checks
 
 import dev.castive.jmp.except.LowEntropyException
-import dev.castive.jmp.util.SystemUtil
 import dev.castive.log2.Log
+import java.nio.charset.StandardCharsets
+import java.util.concurrent.TimeUnit
 
 class EntropyCheck: StartupCheck("Entropy pool") {
     override fun runCheck(): Boolean {
-        val entropy = SystemUtil.getEntropyPool()
+        val entropy = getEntropyPool()
         return when {
             entropy in 1..999 -> {
                 onFail()
@@ -40,4 +41,26 @@ class EntropyCheck: StartupCheck("Entropy pool") {
             }
         }
     }
+
+	internal fun getEntropyPool(): Int {
+		val os = System.getProperty("os.name").toLowerCase()
+		return if(os.contains("nix") || os.contains("nux") || os.contains("aix")) {
+			// This is Linux, probably has 'cat'
+			try {
+				val process = ProcessBuilder("cat", "/proc/sys/kernel/random/entropy_avail").start()
+				val result = process.inputStream.bufferedReader(StandardCharsets.UTF_8).use {
+					val text = it.readText().replace("\n", "")
+					Log.d(javaClass, "Entropy size: '$text'")
+					return@use text.toIntOrNull() ?: -1
+				}
+				process.waitFor(1, TimeUnit.SECONDS)
+				result
+			}
+			catch (e: Exception) {
+				Log.e(javaClass, "Failed to read entropy pool, this may cause blocking issues [$e]")
+				-1
+			}
+		}
+		else -1
+	}
 }

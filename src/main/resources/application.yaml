@@ -1,30 +1,48 @@
----
-# default configuration
-version: "2019-10-02"
-blockLocal: false
+spring:
+  application:
+    name: jmp
+  profiles:
+    active: dev
+  datasource:
+    url: jdbc:sqlite:data/jmp.db
+    initialization-mode: always
+  jpa:
+    database-platform: org.hibernate.dialect.SQLiteDialect
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+      naming:
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+  cloud:
+    config:
+      enabled: false
+      fail-fast: true
+      uri: http://dcas-cloud-config:8888
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: 7000
+  servlet:
+    context-path: /api
+
 jmp:
-  server:
-    port: 7000
-    ssl: false
-    keyStore: ""
-    keyStorePassword: ""
-    http2: false
-  database:
-    url: "jdbc:sqlite:jmp.db"
-    driverClass: "org.sqlite.JDBC"
-    username: ""
-    password: ""
-crowd:
-  enabled: false
-  url: "http://localhost:8095/crowd"
-  username: "user"
-  password: "hunter2"
-ldap:
-  enabled: false
-  url: "localhost"
-  port: 389
-  contextDN: "dc=example,dc=org"
-  uidField: "uid"
-  username: "user"
-  password: "hunter2"
-oauth2: {}
+  egress:
+    enabled: true
+  security:
+    allowCors: true
+    baseUrl: http://localhost:7000
+
+security:
+  jwt:
+    secretKey: "password"
+
+logging:
+  level:
+    dev.castive.jmp: trace

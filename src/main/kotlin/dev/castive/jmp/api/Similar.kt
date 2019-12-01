@@ -16,7 +16,7 @@
 
 package dev.castive.jmp.api
 
-import dev.castive.jmp.db.dao.JumpData
+import dev.castive.jmp.entity.Jump
 import dev.castive.jmp.util.asArrayList
 import dev.dcas.util.extend.url
 import info.debatty.java.stringsimilarity.JaroWinkler
@@ -25,12 +25,12 @@ import info.debatty.java.stringsimilarity.JaroWinkler
  * Do a fuzzy search against a list of jumps
  */
 class Similar(private val threshold: Double = 0.75) {
-    fun compute(dict: ArrayList<JumpData>, query: String): ArrayList<JumpData> {
+    fun compute(dict: ArrayList<Jump>, query: String): ArrayList<Jump> {
         val results = checkForDuplicates(dict, query)
         // if we have exact matches, return them straight away
         if(results.isNotEmpty()) return results
         val jw = JaroWinkler()
-        var best: Pair<JumpData?, Double> = null to 0.0
+        var best: Pair<Jump?, Double> = null to 0.0
         dict.forEach {
             // generate the similarity metric
             val metric = jw.similarity(query, it.name)
@@ -49,13 +49,13 @@ class Similar(private val threshold: Double = 0.75) {
         return results
     }
     // return the id suffix so that the webextension can skip the /similar hop
-    fun computeNames(dict: ArrayList<JumpData>, query: String): List<String> = compute(dict, query).map {
+    fun computeNames(dict: ArrayList<Jump>, query: String): List<String> = compute(dict, query).map {
         "${it.location.url()?.host}?id=${it.id}"
     }
 
     // Check to see if any Jumps are exact matches
     // See #70
-    private fun checkForDuplicates(dict: ArrayList<JumpData>, query: String): ArrayList<JumpData> = dict.mapNotNull {
+    private fun checkForDuplicates(dict: ArrayList<Jump>, query: String): ArrayList<Jump> = dict.mapNotNull {
         if(it.name == query) it else null
     }.asArrayList()
 }
