@@ -48,7 +48,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 
 
-	implementation("com.github.djcass44:jmp-auth:0c39a5879f")
+	implementation("com.github.djcass44:jmp-auth:a923eb2c30")
 //    implementation("dev.castive:jmp-auth:0.6.6")
 	implementation("com.github.djcass44:simpleconfig:0.1-alpha1")
 	implementation("com.github.djcass44:log2:3.4")

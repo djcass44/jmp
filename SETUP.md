@@ -45,6 +45,9 @@ This includes the following authentication providers:
 * LDAP (OpenLDAP/Microsoft AD)
 * Atlassian Crowd
 
+LDAP configuration allows for user searching using a service account (recommended) or anonymously.
+In order to do anonymous searches, you must set the `ldap.username` or `ldap.password` values to blank `""`
+
 # Configuration
 
 Application configuration is done via the `jmp.yaml` file located in `JMP_HOME`.
@@ -89,7 +92,7 @@ crowd:
   enabled: false # enable/disable crowd integration
   url: "http://localhost:8095/crowd" # crowd url
   username: "user" # jmp app username
-  password: "hunter2" jmp app password
+  password: "hunter2" # jmp app password
 ldap:
   enabled: false # enable/disable ldap integration
   url: "localhost" # hostname of ldap server
@@ -97,7 +100,7 @@ ldap:
   contextDN: "dc=example,dc=org" # base DN to search
   uidField: "uid" # field to identify user
   username: "user" # service account userDN
-  password: "hunter2" service account password
+  password: "hunter2" # service account password
 oauth2: # oauth2 providers
   github:
     enabled: true
