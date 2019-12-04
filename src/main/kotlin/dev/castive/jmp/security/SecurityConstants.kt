@@ -18,4 +18,5 @@ package dev.castive.jmp.security
 
 object SecurityConstants {
 	const val authHeader = "Authorization"
+	const val sourceLocal = "local"
 }

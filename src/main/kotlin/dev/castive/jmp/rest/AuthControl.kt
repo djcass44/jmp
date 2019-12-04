@@ -30,6 +30,7 @@ import dev.castive.jmp.repo.SessionRepo
 import dev.castive.jmp.repo.SessionRepoCustom
 import dev.castive.jmp.repo.UserRepo
 import dev.castive.jmp.security.JwtTokenProvider
+import dev.castive.jmp.security.SecurityConstants
 import dev.castive.log2.logi
 import dev.dcas.util.extend.isESNullOrBlank
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,18 +48,18 @@ class AuthControl @Autowired constructor(
 	private val metaRepo: MetaRepo,
 	private val jwtTokenProvider: JwtTokenProvider
 ) {
-	@PostMapping("/login", produces = [MediaType.APPLICATION_JSON_VALUE])
+	@PostMapping("/login", produces = [MediaType.APPLICATION_JSON_VALUE], consumes = [MediaType.APPLICATION_JSON_VALUE])
 	fun createToken(@RequestBody basic: BasicAuth): AuthToken {
 		val user = userRepo.findFirstByUsername(basic.username) ?: throw NotFoundResponse(Responses.NOT_FOUND_USER)
 		// only allow JWT generation for local users
-		if(user.hash.isESNullOrBlank() || user.source != "local")
+		if(user.hash.isESNullOrBlank() || user.source != SecurityConstants.sourceLocal)
 			throw BadRequestResponse("Cannot generate token for this user")
 		if(!Hash.password(basic.password.toCharArray()).verify(user.hash))
 			throw UnauthorizedResponse("Incorrect username or password")
 		"Generating new request token for ${user.username}".logi(javaClass)
 		val (session, request, refresh) = Session.fromUser(user, metaRepo.save(Meta.fromUser(user)), jwtTokenProvider)
 		sessionRepo.save(session)
-		return AuthToken(request, refresh, "local")
+		return AuthToken(request, refresh, SecurityConstants.sourceLocal)
 	}
 
 	@GetMapping("/refresh", produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -75,7 +76,7 @@ class AuthControl @Autowired constructor(
 		val (session, request, refresh) = Session.fromUser(user, metaRepo.save(Meta.fromUser(user)), jwtTokenProvider)
 		sessionRepo.save(session)
 		"Generating new refresh token for ${user.username}".logi(javaClass)
-		return AuthToken(request, refresh, "local")
+		return AuthToken(request, refresh, SecurityConstants.sourceLocal)
 	}
 
 	@PreAuthorize("hasRole('USER')")

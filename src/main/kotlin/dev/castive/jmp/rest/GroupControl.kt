@@ -24,6 +24,7 @@ import dev.castive.jmp.except.ForbiddenResponse
 import dev.castive.jmp.except.NotFoundResponse
 import dev.castive.jmp.repo.GroupRepo
 import dev.castive.jmp.repo.UserRepo
+import dev.castive.jmp.security.SecurityConstants
 import dev.castive.jmp.service.UserService
 import dev.castive.jmp.tasks.GroupsTask
 import dev.castive.jmp.util.broadcast
@@ -54,7 +55,7 @@ class GroupControl @Autowired constructor(
 		val created = groupRepo.save(Group(
 			UUID.randomUUID(),
 			group.name,
-			group.source,
+			SecurityConstants.sourceLocal,
 			group.public,
 			group.defaultFor,
 			mutableSetOf(user)
@@ -73,7 +74,7 @@ class GroupControl @Autowired constructor(
 			throw ForbiddenResponse()
 		existing.apply {
 			name = group.name
-			if (source == "local") { // && user is admin
+			if (source == SecurityConstants.sourceLocal) { // && user is admin
 				public = group.public
 				// we cannot have a public AND default group
 				if(!public)

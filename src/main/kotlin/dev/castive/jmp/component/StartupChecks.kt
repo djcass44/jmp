@@ -23,6 +23,7 @@ import dev.castive.jmp.entity.User
 import dev.castive.jmp.repo.GroupRepo
 import dev.castive.jmp.repo.MetaRepo
 import dev.castive.jmp.repo.UserRepo
+import dev.castive.jmp.security.SecurityConstants
 import dev.castive.jmp.util.hash
 import dev.castive.log2.loga
 import dev.castive.log2.logf
@@ -47,7 +48,7 @@ class StartupChecks @Autowired constructor(
 		if (admin == null) {
 			val password = 32.randomString()
 			val id = UUID.randomUUID()
-			val user = userRepo.save(User(id, "admin", "Admin", "", password.hash(), mutableListOf(Role.ROLE_ADMIN, Role.ROLE_USER), metaRepo.save(Meta.fromUser(id)), "local"))
+			val user = userRepo.save(User(id, "admin", "Admin", "", password.hash(), mutableListOf(Role.ROLE_ADMIN, Role.ROLE_USER), metaRepo.save(Meta.fromUser(id)), SecurityConstants.sourceLocal))
 			"Created an admin with password: $password, id: ${user.id}".logs(javaClass)
 			kotlin.runCatching {
 				File("initialAdminPassword.txt").writeText(password)
@@ -69,9 +70,9 @@ class StartupChecks @Autowired constructor(
 
 	@PostConstruct
 	fun ensureLocalGroup() {
-		val localGroup = groupRepo.findFirstByName("local")
+		val localGroup = groupRepo.findFirstByName(SecurityConstants.sourceLocal)
 		if(localGroup == null) {
-			groupRepo.save(Group(UUID.randomUUID(), "local", "local", false, "local"))
+			groupRepo.save(Group(UUID.randomUUID(), "Internal users", SecurityConstants.sourceLocal, false, SecurityConstants.sourceLocal))
 			"Created 'local' default group".logi(javaClass)
 		}
 	}

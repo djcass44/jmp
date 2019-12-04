@@ -33,7 +33,7 @@ class WebSocketConfig @Autowired constructor(
 ): WebSocketConfigurer {
 
 	override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
-		registry.addHandler(SocketHandler(), "/ws").apply {
+		registry.addHandler(SocketHandler(), "/ws2").apply {
 			if(securityConfig.allowCors) {
 				"Enabling CORS requests for WebSocket resources".loga(javaClass)
 				setAllowedOrigins("*")

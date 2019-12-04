@@ -18,6 +18,7 @@ package dev.castive.jmp.entity
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import dev.castive.jmp.util.UUIDConverterCompat
+import dev.castive.log2.logv
 import java.util.UUID
 import javax.persistence.*
 
@@ -40,4 +41,12 @@ data class User(
 	val source: String
 ) {
 	fun isAdmin(): Boolean = roles.contains(Role.ROLE_ADMIN)
+
+	fun addRole(role: Role) {
+		// only add the role if it isn't already there
+		if(!roles.contains(role)) {
+			"Adding role ${role.name} to user $username".logv(javaClass)
+			roles.add(role)
+		}
+	}
 }

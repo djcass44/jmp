@@ -18,7 +18,6 @@ package dev.castive.jmp.rest
 
 import com.google.common.util.concurrent.RateLimiter
 import dev.castive.jmp.api.Responses
-import dev.castive.jmp.component.SocketHandler
 import dev.castive.jmp.data.BasicAuth
 import dev.castive.jmp.data.FSA
 import dev.castive.jmp.entity.Group
@@ -26,14 +25,18 @@ import dev.castive.jmp.entity.Meta
 import dev.castive.jmp.entity.Role
 import dev.castive.jmp.entity.User
 import dev.castive.jmp.except.BadRequestResponse
+import dev.castive.jmp.except.ForbiddenResponse
 import dev.castive.jmp.except.NotFoundResponse
 import dev.castive.jmp.repo.GroupRepo
 import dev.castive.jmp.repo.MetaRepo
 import dev.castive.jmp.repo.UserRepo
+import dev.castive.jmp.security.SecurityConstants
 import dev.castive.jmp.service.UserService
 import dev.castive.jmp.tasks.GroupsTask
+import dev.castive.jmp.util.broadcast
 import dev.castive.jmp.util.hash
 import dev.castive.log2.loga
+import dev.castive.log2.logw
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
@@ -77,16 +80,36 @@ class UserControl @Autowired constructor(
 					basicAuth.password.hash(),
 					mutableListOf(Role.ROLE_USER),
 					meta,
-					"local"
+					SecurityConstants.sourceLocal
 				)
 			)
 			// ask the groupstask cron to update public/default relations
 			groupTask.run()
-			SocketHandler.broadcast(FSA(FSA.EVENT_UPDATE_USER, null))
+			FSA(FSA.EVENT_UPDATE_USER, null).broadcast()
 			return ResponseEntity(created.username, HttpStatus.CREATED)
 		}
 		else
 			return ResponseEntity(Responses.GENERIC_RATE_LIMITED, HttpStatus.TOO_MANY_REQUESTS)
+	}
+
+	@PreAuthorize("hasRole('ADMIN')")
+	@PatchMapping
+	fun patchUser(@RequestParam uid: UUID, @RequestParam admin: Boolean) {
+		val user = userService.assertUser()
+		val targetUser = userRepo.findByIdOrNull(uid) ?: throw NotFoundResponse(Responses.NOT_FOUND_USER)
+		// block removing the superuser from admin
+		if(targetUser.username == "admin")
+			throw ForbiddenResponse()
+		// block the user from modifying their own permissions
+		if(targetUser.username == user.username)
+			throw ForbiddenResponse()
+		"${user.username} is updating role for ${targetUser.username}, admin: $admin".logw(javaClass)
+		if(admin)
+			targetUser.addRole(Role.ROLE_ADMIN)
+		else
+			targetUser.roles.remove(Role.ROLE_ADMIN)
+		FSA(FSA.EVENT_UPDATE_USER, null).broadcast()
+		userRepo.save(targetUser)
 	}
 
 	@PreAuthorize("hasRole('ADMIN')")
@@ -98,6 +121,7 @@ class UserControl @Autowired constructor(
 		}.onFailure {
 			throw BadRequestResponse()
 		}
+		FSA(FSA.EVENT_UPDATE_USER, null).broadcast()
 		return true
 	}
 
