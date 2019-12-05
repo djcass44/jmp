@@ -33,8 +33,12 @@ server:
     context-path: /api
 
 jmp:
-  egress:
-    enabled: true
+  metadata:
+    title:
+      enabled: true
+    icon:
+      enabled: false
+      url: http://localhost:8080
   security:
     allowCors: true
     baseUrl: http://localhost:7000
@@ -42,7 +46,14 @@ jmp:
 security:
   jwt:
     secretKey: "password"
+    requestLimit: 3_600_000
+    refreshLimit: 86_400_000
+    leeway: 3_600_000
 
 logging:
   level:
     dev.castive.jmp: trace
+management:
+  endpoint:
+    health:
+      show-details: always

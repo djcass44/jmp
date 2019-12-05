@@ -1,5 +1,6 @@
 package dev.castive.jmp.util
 
+@Deprecated("Replaced by Spring environment")
 object EnvUtil {
 	const val JMP_PROXY_URL = "JMP_PROXY_URL"
 	const val JMP_HOME = "JMP_HOME"
@@ -24,8 +25,4 @@ object EnvUtil {
 	 */
 	const val CASE_SENSITIVE = "JMP_CASE_SENSITIVE"
 
-	/**
-	 * the url of the fav2 server
-	 */
-	const val FAV2_URL = "FAV2_URL"
 }

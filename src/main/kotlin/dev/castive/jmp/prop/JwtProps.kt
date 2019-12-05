@@ -26,5 +26,5 @@ class JwtProps {
 	lateinit var secretKey: String
 	var requestLimit: Long = TimeUnit.HOURS.toMillis(1)
 	var refreshLimit: Long = TimeUnit.HOURS.toMillis(8)
-	var leewaySeconds: Long = TimeUnit.HOURS.toSeconds(1)
+	var leeway: Long = TimeUnit.HOURS.toMillis(1)
 }

@@ -18,29 +18,15 @@ package dev.castive.jmp.util.checks
 
 import dev.castive.jmp.except.LowEntropyException
 import dev.castive.log2.Log
+import dev.castive.log2.logw
+import org.springframework.boot.actuate.health.Health
+import org.springframework.boot.actuate.health.HealthIndicator
+import org.springframework.stereotype.Component
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 
-class EntropyCheck: StartupCheck("Entropy pool") {
-    override fun runCheck(): Boolean {
-        val entropy = getEntropyPool()
-        return when {
-            entropy in 1..999 -> {
-                onFail()
-                Log.w(javaClass, "Entropy pool is low, this will cause issues when using strong cryptography")
-                throw LowEntropyException()
-            }
-            entropy <= 0 -> {
-                onWarning()
-                Log.w(javaClass, "Entropy pool could not be determined, this may cause blocking issues when using strong cryptography")
-                true
-            }
-            else -> {
-                onSuccess()
-                true
-            }
-        }
-    }
+@Component
+class EntropyHealthIndicator: HealthIndicator {
 
 	internal fun getEntropyPool(): Int {
 		val os = System.getProperty("os.name").toLowerCase()
@@ -62,5 +48,21 @@ class EntropyCheck: StartupCheck("Entropy pool") {
 			}
 		}
 		else -1
+	}
+
+	override fun health(): Health {
+		val entropy = getEntropyPool()
+		return when {
+			entropy in 1..999 -> {
+				Health.down().withDetail("Reason", "0 < $entropy < 1000")
+				Log.w(javaClass, "Entropy pool is low, this will cause issues when using strong cryptography")
+				throw LowEntropyException()
+			}
+			entropy <= 0 -> {
+				"Entropy pool could not be determined, this may cause blocking issues when using strong cryptography".logw(javaClass)
+				Health.unknown()
+			}
+			else -> Health.up()
+		}.build()
 	}
 }

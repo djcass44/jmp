@@ -18,6 +18,7 @@ package dev.castive.jmp.security
 
 import dev.castive.jmp.entity.Role
 import dev.castive.jmp.prop.JwtProps
+import dev.castive.jmp.util.ellipsize
 import dev.castive.log2.loge
 import dev.dcas.util.extend.base64
 import io.jsonwebtoken.Jwts
@@ -73,7 +74,7 @@ class JwtTokenProvider @Autowired constructor(
 	fun getUsername(token: String): String? = kotlin.runCatching {
 		Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).body.subject
 	}.onFailure {
-		"Encountered expired or invalid Jwt token: $token".loge(javaClass)
+		"Encountered expired or invalid Jwt token: ${token.ellipsize(24)}".loge(javaClass)
 	}.getOrNull()
 
 	fun resolveToken(request: HttpServletRequest): String? {
@@ -86,10 +87,10 @@ class JwtTokenProvider @Autowired constructor(
 	fun validateToken(token: String): Boolean = kotlin.runCatching {
 		Jwts.parser()
 			.setSigningKey(secretKey)
-			.setAllowedClockSkewSeconds(jwtProps.leewaySeconds)
+			.setAllowedClockSkewSeconds(jwtProps.leeway / 1000)
 			.parseClaimsJws(token)
 		true
 	}.onFailure {
-		"Encountered expired or invalid Jwt token: $token".loge(javaClass)
+		"Encountered expired or invalid Jwt token: ${token.ellipsize(24)}".loge(javaClass)
 	}.getOrDefault(false)
 }

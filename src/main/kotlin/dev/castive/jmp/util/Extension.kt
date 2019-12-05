@@ -25,3 +25,5 @@ fun WebSocketSession.send(data: FSA) {
 fun FSA.broadcast() = SocketHandler.broadcast(this)
 
 fun String.hash(): String = Hash.password(this.toCharArray()).create()
+
+fun String.ellipsize(after: Int = length): String = "${substring(0, after)}..."

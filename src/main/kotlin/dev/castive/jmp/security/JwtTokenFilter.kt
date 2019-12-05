@@ -16,6 +16,7 @@
 
 package dev.castive.jmp.security
 
+import dev.castive.jmp.util.ellipsize
 import dev.castive.log2.logd
 import dev.castive.log2.logv
 import org.springframework.security.core.context.SecurityContextHolder
@@ -41,7 +42,7 @@ class JwtTokenFilter(private val jwtTokenProvider: JwtTokenProvider): OncePerReq
 				SecurityContextHolder.clearContext()
 		}
 		else {
-			"Failed to parse token: $token".logd(javaClass)
+			"Failed to parse token: ${token?.ellipsize(24)}".logd(javaClass)
 			// ensure context is cleared
 			SecurityContextHolder.clearContext()
 		}

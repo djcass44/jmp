@@ -40,11 +40,17 @@ class MetadataService @Autowired constructor(
 	private val jumpRepo: JumpRepo,
 	private val restTemplate: RestTemplate
 ) {
-	@Value("\${jmp.egress.enabled}")
-	private val allowEgress: Boolean = true
+	@Value("\${jmp.metadata.title.enabled}")
+	private val allowTitle: Boolean = true
+
+	@Value("\${jmp.metadata.icon.enabled}")
+	private val allowImage: Boolean = true
+
+	@Value("\${jmp.metadata.icon.url}")
+	private lateinit var iconUrl: String
 
 	fun getTitle(address: String) = GlobalScope.launch(Dispatchers.IO) {
-		if(!allowEgress) {
+		if(!allowTitle) {
 			"Refusing to scrape title metadata: egress is disabled".logv(MetadataService::class.java)
 			return@launch
 		}
@@ -73,11 +79,11 @@ class MetadataService @Autowired constructor(
 	}
 
 	fun getImage(address: String) = GlobalScope.launch(Dispatchers.IO) {
-		if(!allowEgress) {
+		if(!allowImage) {
 			"Refusing to scrape image metadata: egress is disabled".logv(MetadataService::class.java)
 			return@launch
 		}
-		val destUrl = "http://localhost:8080/icon?site=${address.safe()}"
+		val destUrl = "$iconUrl/icon?site=${address.safe()}"
 		try {
 			restTemplate.getForEntity<String>(destUrl)
 			jumpRepo.saveAll(jumpRepo.findAllByLocation(address).map {

@@ -14,13 +14,10 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp
+package dev.castive.jmp.data
 
-object Version {
-    private const val MAJOR = "0"
-    private const val MINOR = "5"
-    private const val PATCH = "0"
-    private const val BUILD = "321"
-
-    fun getVersion() = "$MAJOR.$MINOR.$PATCH-build.$BUILD"
-}
+data class CreateGroupDTO(
+	val name: String,
+	val public: Boolean = false,
+	val defaultFor: String? = null
+)

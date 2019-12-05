@@ -17,6 +17,7 @@
 package dev.castive.jmp.rest
 
 import dev.castive.jmp.api.Responses
+import dev.castive.jmp.data.CreateGroupDTO
 import dev.castive.jmp.data.FSA
 import dev.castive.jmp.data.GroupUserEditEntity
 import dev.castive.jmp.entity.Group
@@ -50,7 +51,7 @@ class GroupControl @Autowired constructor(
 
 	@PreAuthorize("hasRole('USER')")
 	@PutMapping
-	fun createGroup(@RequestBody group: Group): Group {
+	fun createGroup(@RequestBody group: CreateGroupDTO): Group {
 		val user = userService.assertUser()
 		val created = groupRepo.save(Group(
 			UUID.randomUUID(),
@@ -60,6 +61,7 @@ class GroupControl @Autowired constructor(
 			group.defaultFor,
 			mutableSetOf(user)
 		))
+		"Group created: ${created.name} by ${user.username}".logi(javaClass)
 		FSA(FSA.EVENT_UPDATE_GROUP, null).broadcast()
 		return created
 	}
@@ -81,6 +83,7 @@ class GroupControl @Autowired constructor(
 					defaultFor = group.defaultFor
 			}
 		}
+		"Group ${existing.id} modified by ${user.username}".logi(javaClass)
 		// ask the groupstask cron to update public/default relations
 		groupTask.run()
 		FSA(FSA.EVENT_UPDATE_GROUP, null).broadcast()
@@ -95,7 +98,7 @@ class GroupControl @Autowired constructor(
 		// check that user can delete group
 		if(!user.isAdmin() && !existing.users.contains(user))
 			throw ForbiddenResponse()
-		"${user.username} is removing group ${existing.name}".logi(javaClass)
+		"Group ${existing.name} removed by ${user.username}".logi(javaClass)
 		groupRepo.delete(existing)
 		FSA(FSA.EVENT_UPDATE_GROUP, null).broadcast()
 	}

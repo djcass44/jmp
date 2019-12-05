@@ -124,6 +124,10 @@ configure<JavaPluginConvention> {
 	targetCompatibility = JavaVersion.VERSION_11
 }
 
+springBoot {
+	buildInfo()
+}
+
 tasks {
 	wrapper {
 		gradleVersion = "6.0.1"
