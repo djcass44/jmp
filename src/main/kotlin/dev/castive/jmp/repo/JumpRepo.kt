@@ -16,15 +16,29 @@
 
 package dev.castive.jmp.repo
 
+import dev.castive.jmp.entity.Group
 import dev.castive.jmp.entity.Jump
+import dev.castive.jmp.entity.User
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import java.util.UUID
+import org.springframework.transaction.annotation.Transactional
 
 @Repository
 interface JumpRepo: JpaRepository<Jump, Int> {
 	fun findAllByLocation(location: String): List<Jump>
-	fun findAllByOwnerGroup(ownerGroup: UUID): List<Jump>
+	fun findAllByOwnerGroup(ownerGroup: Group): List<Jump>
 	fun findAllByOwnerIsNullAndOwnerGroupIsNull(): List<Jump>
-	fun findAllByOwner(owner: UUID): List<Jump>
+	fun findAllByOwner(owner: User): List<Jump>
+
+	@Modifying
+	@Transactional
+	@Query("UPDATE Jump SET image = :icon WHERE location = :address")
+	fun updateIconWithAddress(address: String, icon: String)
+
+	@Modifying
+	@Transactional
+	@Query("UPDATE Jump SET title = :title WHERE location = :address")
+	fun updateTitleWithAddress(address: String, title: String)
 }

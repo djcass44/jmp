@@ -14,15 +14,10 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.data
+package dev.castive.jmp.data.dto
 
-import dev.castive.jmp.entity.Alias
-
-
-data class JumpEditEntity(
-	val id: Int,
+data class CreateGroupDTO(
 	val name: String,
-	val location: String,
-	val personal: Int,
-	val alias: List<Alias>
+	val public: Boolean = false,
+	val defaultFor: String? = null
 )

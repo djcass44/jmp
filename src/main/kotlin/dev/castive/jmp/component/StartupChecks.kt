@@ -51,9 +51,9 @@ class StartupChecks @Autowired constructor(
 			val user = userRepo.save(User(id, "admin", "Admin", "", password.hash(), mutableListOf(Role.ROLE_ADMIN, Role.ROLE_USER), metaRepo.save(Meta.fromUser(id)), SecurityConstants.sourceLocal))
 			"Created an admin with password: $password, id: ${user.id}".logs(javaClass)
 			kotlin.runCatching {
-				File("initialAdminPassword.txt").writeText(password)
+				File("initialAdminPassword").writeText(password)
 			}.onFailure {
-				"Unable to write 'initialAdminPassword.txt', password may not persist".logf(javaClass)
+				"Unable to write 'initialAdminPassword', password may not persist".logf(javaClass, it)
 			}
 		}
 		else {
@@ -72,7 +72,7 @@ class StartupChecks @Autowired constructor(
 	fun ensureLocalGroup() {
 		val localGroup = groupRepo.findFirstByName(SecurityConstants.sourceLocal)
 		if(localGroup == null) {
-			groupRepo.save(Group(UUID.randomUUID(), "Internal users", SecurityConstants.sourceLocal, false, SecurityConstants.sourceLocal))
+			groupRepo.save(Group(UUID.randomUUID(), SecurityConstants.sourceLocal, SecurityConstants.sourceLocal, false, SecurityConstants.sourceLocal))
 			"Created 'local' default group".logi(javaClass)
 		}
 	}

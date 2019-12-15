@@ -4,10 +4,12 @@ spring:
   profiles:
     active: dev
   datasource:
-    url: jdbc:sqlite:data/jmp.db
+    url: jdbc:postgresql://localhost:5432/jmp
     initialization-mode: always
+    username: postgres
+    password: password
   jpa:
-    database-platform: org.hibernate.dialect.SQLiteDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
     hibernate:
       ddl-auto: update
@@ -19,6 +21,7 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
+    generate-ddl: true
   cloud:
     config:
       enabled: false
@@ -37,8 +40,8 @@ jmp:
     title:
       enabled: true
     icon:
-      enabled: false
-      url: http://localhost:8080
+      enabled: true
+      url: https://icon.dcas.dev
   security:
     allowCors: true
     baseUrl: http://localhost:7000

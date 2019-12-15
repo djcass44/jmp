@@ -78,7 +78,7 @@ class SocketHandler: TextWebSocketHandler() {
 			fsa
 		}
 		catch (e: Exception) {
-			"Failed to unmarshal message from client: ${session.id}, data: $data".loge(javaClass)
+			"Failed to unmarshal message from client: ${session.id}, data: $data".loge(javaClass, e)
 			session.send(FSA(FSA.WS_SEND_FAILURE, "Data may not comply with FSA", true, data))
 			return
 		}

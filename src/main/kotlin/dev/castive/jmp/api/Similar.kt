@@ -55,7 +55,7 @@ class Similar(private val threshold: Double = 0.75) {
 
     // Check to see if any Jumps are exact matches
     // See #70
-    private fun checkForDuplicates(dict: ArrayList<Jump>, query: String): ArrayList<Jump> = dict.mapNotNull {
-        if(it.name == query) it else null
+    private fun checkForDuplicates(dict: ArrayList<Jump>, query: String): ArrayList<Jump> = dict.filter {
+        it.name == query
     }.asArrayList()
 }

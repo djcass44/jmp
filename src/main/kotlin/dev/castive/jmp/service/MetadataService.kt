@@ -16,10 +16,10 @@
 
 package dev.castive.jmp.service
 
-import dev.castive.jmp.component.SocketHandler
 import dev.castive.jmp.data.FSA
 import dev.castive.jmp.data.FaviconPayload
 import dev.castive.jmp.repo.JumpRepo
+import dev.castive.jmp.util.broadcast
 import dev.castive.log2.loge
 import dev.castive.log2.logi
 import dev.castive.log2.logv
@@ -32,7 +32,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
-import org.springframework.web.client.getForEntity
 import java.net.URI
 
 @Service
@@ -63,15 +62,18 @@ class MetadataService @Autowired constructor(
 			val host = "https://${uri.host}"
 			val document = Jsoup.connect(host).get()
 			// get the <title/> text
-			val title = document.head().getElementsByTag("title").text()
-			jumpRepo.saveAll(jumpRepo.findAllByLocation(address).map {
+			val title: String? = document.head().getElementsByTag("title").text()
+			if(title.isNullOrBlank()) {
+				"Got null or blank title for address: $address".logi(MetadataService::class.java)
+				return@launch
+			}
+			jumpRepo.updateTitleWithAddress(address, title)
+			jumpRepo.findAllByLocation(address).forEach {
 				if(it.title == null || it.title != title) {
 					"Updating title for ${it.name}, was: ${it.title}, now: $title".logv(MetadataService::class.java)
 				}
-				it.title = title
-				SocketHandler.broadcast(FSA(FSA.EVENT_UPDATE_TITLE, FaviconPayload(it.id, title)))
-				return@map it
-			})
+				FSA(FSA.EVENT_UPDATE_TITLE, FaviconPayload(it.id, title)).broadcast()
+			}
 		}
 		catch (e: Exception) {
 			"Failed to load title for $address, $e".loge(MetadataService::class.java)
@@ -85,15 +87,13 @@ class MetadataService @Autowired constructor(
 		}
 		val destUrl = "$iconUrl/icon?site=${address.safe()}"
 		try {
-			restTemplate.getForEntity<String>(destUrl)
-			jumpRepo.saveAll(jumpRepo.findAllByLocation(address).map {
-				it.image = destUrl
-				SocketHandler.broadcast(FSA(FSA.EVENT_UPDATE_FAVICON, FaviconPayload(it.id, destUrl)))
-				return@map it
-			})
+			jumpRepo.updateIconWithAddress(address, destUrl)
+			jumpRepo.findAllByLocation(address).forEach {
+				FSA(FSA.EVENT_UPDATE_FAVICON, FaviconPayload(it.id, destUrl)).broadcast()
+			}
 		}
 		catch (e: Exception) {
-			"Failed favicon metadata location request: $address, $e".loge(MetadataService::class.java)
+			"Failed favicon metadata location request: $address, $destUrl".loge(MetadataService::class.java, e)
 		}
 	}
 }

@@ -14,23 +14,19 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.entity
+package dev.castive.jmp.rest
 
-import dev.castive.log2.logv
-import javax.persistence.*
+import dev.castive.jmp.security.SecurityConstants
+import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 
-@Entity
-@Table(name = "Aliases")
-data class Alias(
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	val id: Int,
-	var name: String,
-	val parent: Int
-) {
+@RestController
+@RequestMapping("/v2/providers")
+class ProviderControl {
 
-	@PreRemove
-	fun onPreRemove() {
-		"Removing ${javaClass.simpleName} with id: $id".logv(javaClass)
-	}
+	@PreAuthorize("hasRole('USER')")
+	@GetMapping
+	fun getAll(): List<String> = listOf(SecurityConstants.sourceLocal)
 }

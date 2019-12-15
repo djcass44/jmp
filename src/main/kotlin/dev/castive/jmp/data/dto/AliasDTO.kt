@@ -14,10 +14,9 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.data
+package dev.castive.jmp.data.dto
 
-data class CreateGroupDTO(
-	val name: String,
-	val public: Boolean = false,
-	val defaultFor: String? = null
+data class AliasDTO(
+	val id: Int? = 0,
+	val name: String
 )

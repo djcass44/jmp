@@ -71,9 +71,7 @@ dependencies {
 
 	implementation("org.springframework.cloud:spring-cloud-starter-config")
 
-	implementation("com.github.djcass44:log2:4.0") {
-		exclude("org.slf4j")
-	}
+	implementation("com.github.djcass44:log2:4.1")
 	implementation("com.github.djcass44:castive-utilities:v3")
 
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.0")

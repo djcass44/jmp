@@ -14,11 +14,13 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.data
+package dev.castive.jmp.data.dto
 
-import java.util.ArrayList
 
-data class GroupUserEditEntity(
-	val add: ArrayList<String>,
-	val rm: ArrayList<String>
+data class EditJumpDTO(
+	val id: Int,
+	val name: String,
+	val location: String,
+	val personal: Int,
+	val alias: List<AliasDTO>
 )

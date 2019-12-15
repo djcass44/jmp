@@ -19,6 +19,7 @@ package dev.castive.jmp.util.checks
 import com.google.gson.JsonObject
 import dev.castive.log2.loge
 import dev.castive.log2.logi
+import dev.castive.log2.logv
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.actuate.health.Health
@@ -48,8 +49,10 @@ class MetadataHealthIndicator @Autowired constructor(
 			"Unable to perform icon loader health check due to egress policy".logi(javaClass)
 			return Health.unknown().withDetail("Reason", "Egress policy").build()
 		}
+		"Running health check @ $iconUrl/actuator/health".logv(javaClass)
 		// do a standard http health check
 		val httpCheck = kotlin.runCatching { restTemplate.getForEntity<JsonObject>("$iconUrl/actuator/health") }.getOrNull()
+		"Got response from $iconUrl: ${httpCheck?.statusCodeValue}".logv(javaClass)
 		if(httpCheck == null || httpCheck.statusCode != HttpStatus.OK) {
 			"Got non-OK response from $iconUrl, ${httpCheck?.statusCodeValue ?: -1}".loge(javaClass)
 			return Health.down().withDetail("Status Code", httpCheck?.statusCodeValue ?: -1).build()
@@ -58,10 +61,7 @@ class MetadataHealthIndicator @Autowired constructor(
 			"No body in response from $iconUrl".loge(javaClass)
 			Health.down().withDetail("Reason", "No body returned").build()
 		}
-		val state = httpCheck.body!!.get("status").asString
-		return if(state == "UP")
-			Health.up().build()
-		else
-			Health.down().withDetail("Reason", state).build()
+		// consider a 200 good enough
+		return Health.up().build()
 	}
 }

@@ -14,9 +14,8 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.data
+package dev.castive.jmp.security
 
-data class JumpResponse(
-	val found: Boolean,
-	val location: String
-)
+import org.springframework.security.core.userdetails.User
+
+class User(val dao: dev.castive.jmp.entity.User): User(dao.username, dao.hash, dao.roles)

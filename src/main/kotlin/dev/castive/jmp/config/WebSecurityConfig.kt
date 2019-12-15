@@ -65,12 +65,14 @@ class WebSecurityConfig @Autowired constructor(
 
 	override fun configure(web: WebSecurity) {
 		// allow swagger access without authentication
-		web.ignoring().antMatchers("/v2/api-docs")
-			.antMatchers("/swagger-resources/**")
-			.antMatchers("/swagger-ui.html")
-			.antMatchers("/configuration/**")
-			.antMatchers("/webjars/**")
-			.antMatchers("/public")
+		web.ignoring().antMatchers(
+			"/v2/api-docs",
+			"/swagger-resources/**",
+			"/swagger-ui.html",
+			"/configuration/**",
+			"/webjars/**",
+			"/public"
+		)
 	}
 
 	@Bean

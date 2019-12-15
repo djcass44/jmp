@@ -14,23 +14,11 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.entity
+package dev.castive.jmp.data.dto
 
-import dev.castive.log2.logv
-import javax.persistence.*
+import java.util.ArrayList
 
-@Entity
-@Table(name = "Aliases")
-data class Alias(
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	val id: Int,
-	var name: String,
-	val parent: Int
-) {
-
-	@PreRemove
-	fun onPreRemove() {
-		"Removing ${javaClass.simpleName} with id: $id".logv(javaClass)
-	}
-}
+data class EditGroupUsersDTO(
+	val add: ArrayList<String>,
+	val rm: ArrayList<String>
+)

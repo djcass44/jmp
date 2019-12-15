@@ -17,8 +17,8 @@
 package dev.castive.jmp.security
 
 import dev.castive.jmp.repo.UserRepo
+import dev.castive.log2.loge
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.UsernameNotFoundException
@@ -29,15 +29,11 @@ class UserDetails @Autowired constructor(
 	private val userRepo: UserRepo
 ): UserDetailsService {
 
-	override fun loadUserByUsername(username: String): UserDetails {
-		val user = userRepo.findFirstByUsername(username) ?: throw UsernameNotFoundException("User '$username' not found")
-		return User.withUsername(username)
-			.password(user.hash)
-			.authorities(user.roles)
-			.accountExpired(false)
-			.accountLocked(false)
-			.credentialsExpired(false)
-			.disabled(false)
-			.build()
+	override fun loadUserByUsername(username: String): UserDetails? {
+		val user = userRepo.findFirstByUsername(username) ?: run {
+			"Found valid claim for non-existent user: $username".loge(javaClass, UsernameNotFoundException("User '$username' not found"))
+			return null
+		}
+		return User(user)
 	}
 }

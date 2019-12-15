@@ -16,7 +16,8 @@
 
 package dev.castive.jmp.except
 
+import dev.castive.jmp.api.Responses
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 
-class UnauthorizedResponse(message: String = "Unauthorized."): ResponseStatusException(HttpStatus.UNAUTHORIZED, message)
+class UnauthorizedResponse(message: String = Responses.AUTH_NONE): ResponseStatusException(HttpStatus.UNAUTHORIZED, message)

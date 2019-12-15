@@ -16,7 +16,6 @@
 
 package dev.castive.jmp.entity
 
-import java.util.UUID
 import javax.persistence.*
 
 @Entity
@@ -28,8 +27,12 @@ data class Jump(
 	var name: String,
 	var location: String,
 	var title: String? = null,
-	val owner: UUID? = null,
-	val ownerGroup: UUID? = null,
+	@OneToMany
+	val alias: MutableSet<Alias> = mutableSetOf(),
+	@ManyToOne
+	val owner: User? = null,
+	@ManyToOne
+	val ownerGroup: Group? = null,
 	var image: String? = null,
 	@OneToOne
 	val meta: Meta,

@@ -36,7 +36,7 @@ class JumpRepoCustomImpl @Autowired constructor(
 		results.addAll(jumpRepo.findAllByOwnerIsNullAndOwnerGroupIsNull())
 		// add jumps in public groups
 		groupRepo.findAllByPublicIsTrue().forEach { g ->
-			jumpRepo.findAllByOwnerGroup(g.id).forEach {
+			jumpRepo.findAllByOwnerGroup(g).forEach {
 				results.add(it)
 			}
 		}
@@ -44,10 +44,10 @@ class JumpRepoCustomImpl @Autowired constructor(
 		if(user == null)
 			return results.toList()
 		// get personal jumps
-		results.addAll(jumpRepo.findAllByOwner(user.id))
+		results.addAll(jumpRepo.findAllByOwner(user))
 		// get jumps in groups that the user is in
 		groupRepo.findAllByUsersIsContaining(user).forEach {
-			results.addAll(jumpRepo.findAllByOwnerGroup(it.id))
+			results.addAll(jumpRepo.findAllByOwnerGroup(it))
 		}
 		return results.toList()
 	}
@@ -64,6 +64,7 @@ class JumpRepoCustomImpl @Autowired constructor(
 					alias.name,
 					it.location,
 					it.title,
+					mutableSetOf(),
 					it.owner,
 					it.ownerGroup,
 					it.image,

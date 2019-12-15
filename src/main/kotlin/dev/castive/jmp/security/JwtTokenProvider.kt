@@ -67,14 +67,14 @@ class JwtTokenProvider @Autowired constructor(
 	}
 
 	fun getAuthentication(token: String): Authentication? {
-		val user = userDetails.loadUserByUsername(getUsername(token) ?: return null)
+		val user = userDetails.loadUserByUsername(getUsername(token) ?: return null) ?: return null
 		return UsernamePasswordAuthenticationToken(user, "", user.authorities)
 	}
 
 	fun getUsername(token: String): String? = kotlin.runCatching {
 		Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).body.subject
 	}.onFailure {
-		"Encountered expired or invalid Jwt token: ${token.ellipsize(24)}".loge(javaClass)
+		"Encountered expired or invalid Jwt token: ${token.ellipsize(24)}".loge(javaClass, it)
 	}.getOrNull()
 
 	fun resolveToken(request: HttpServletRequest): String? {
@@ -91,6 +91,6 @@ class JwtTokenProvider @Autowired constructor(
 			.parseClaimsJws(token)
 		true
 	}.onFailure {
-		"Encountered expired or invalid Jwt token: ${token.ellipsize(24)}".loge(javaClass)
+		"Encountered expired or invalid Jwt token: ${token.ellipsize(24)}".loge(javaClass, it)
 	}.getOrDefault(false)
 }

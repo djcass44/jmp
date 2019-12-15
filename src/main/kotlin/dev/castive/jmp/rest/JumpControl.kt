@@ -18,8 +18,8 @@ package dev.castive.jmp.rest
 
 import dev.castive.jmp.api.Responses
 import dev.castive.jmp.data.FSA
-import dev.castive.jmp.data.JumpEditEntity
-import dev.castive.jmp.data.JumpResponse
+import dev.castive.jmp.data.dto.DoJumpDTO
+import dev.castive.jmp.data.dto.EditJumpDTO
 import dev.castive.jmp.entity.Alias
 import dev.castive.jmp.entity.Jump
 import dev.castive.jmp.entity.Meta
@@ -29,17 +29,21 @@ import dev.castive.jmp.except.ForbiddenResponse
 import dev.castive.jmp.except.NotFoundResponse
 import dev.castive.jmp.repo.*
 import dev.castive.jmp.service.MetadataService
-import dev.castive.jmp.service.UserService
+import dev.castive.jmp.util.assertUser
 import dev.castive.jmp.util.broadcast
+import dev.castive.jmp.util.user
 import dev.castive.log2.logi
 import dev.castive.log2.logv
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
 import java.util.UUID
+import javax.transaction.Transactional
 
+@Transactional
 @RestController
 @RequestMapping("/v2/jump")
 class JumpControl @Autowired constructor(
@@ -48,15 +52,14 @@ class JumpControl @Autowired constructor(
 	private val jumpRepoCustom: JumpRepoCustom,
 	private val groupRepo: GroupRepo,
 	private val metaRepo: MetaRepo,
-	private val aliasRepo: AliasRepo,
-	private val userService: UserService
+	private val aliasRepo: AliasRepo
 ) {
 	@GetMapping
-	fun getAll(): List<Jump> = jumpRepoCustom.findAllByUser(userService.getUser())
+	fun getAll(): List<Jump> = jumpRepoCustom.findAllByUser(SecurityContextHolder.getContext().user())
 
 	@GetMapping("/{target}")
-	fun jumpTo(@PathVariable target: String, @RequestParam(required = false) id: Int?): JumpResponse {
-		val user = userService.getUser()
+	fun jumpTo(@PathVariable target: String, @RequestParam(required = false) id: Int?): DoJumpDTO {
+		val user = SecurityContextHolder.getContext().user()
 		if(target.isBlank() && id == null) {
 			throw BadRequestResponse("Empty or null target: $target, id: $id")
 		}
@@ -77,16 +80,16 @@ class JumpControl @Autowired constructor(
 			else
 				false to "/similar?query=$target"
 		}
-		return JumpResponse(res.first, res.second)
+		return DoJumpDTO(res.first, res.second)
 	}
 
 	@PreAuthorize("hasRole('USER')")
 	@PutMapping
 	fun createJump(
-		@RequestBody add: JumpEditEntity,
+		@RequestBody add: EditJumpDTO,
 		@RequestParam(required = false) gid: UUID?
 	): Jump {
-		val user = userService.assertUser()
+		val user = SecurityContextHolder.getContext().assertUser()
 		// block non-admin users from creating global jumps
 		if(add.personal == Jump.TYPE_GLOBAL && !user.isAdmin())
 			throw ForbiddenResponse("Only an admin can create global Jumps")
@@ -100,8 +103,9 @@ class JumpControl @Autowired constructor(
 			add.name,
 			add.location,
 			null,
-			if(add.personal == Jump.TYPE_PERSONAL) user.id else null,
-			group?.id,
+			mutableSetOf(),
+			if(add.personal == Jump.TYPE_PERSONAL) user else null,
+			group,
 			null,
 			metaRepo.save(Meta.fromUser(user))
 		))
@@ -109,74 +113,69 @@ class JumpControl @Autowired constructor(
 			aliasRepo.save(Alias(0, it.name, created.id))
 		}
 		// get additional metadata
-		metadata.getImage(add.location)
-		metadata.getTitle(add.location)
+		metadata.getImage(created.location)
+		metadata.getTitle(created.location)
 		FSA(FSA.EVENT_UPDATE_JUMP, null).broadcast()
 		return created
 	}
 
 	@PreAuthorize("hasRole('USER')")
 	@PatchMapping
-	fun updateJump(
-		@RequestBody update: JumpEditEntity
-	): Jump {
-		val user = userService.assertUser()
+	fun updateJump(@RequestBody update: EditJumpDTO): ResponseEntity<*> {
+		val user = SecurityContextHolder.getContext().assertUser()
 		val existing = jumpRepo.findByIdOrNull(update.id) ?: throw NotFoundResponse(Responses.NOT_FOUND_JUMP)
 		// check if user is allowed to modify the jump
-		if(existing.owner != user.id && !user.isAdmin() && (jumpRepoCustom.findAllByUserAndId(user, existing.id).isEmpty() || existing.isPublic()))
+		if(existing.owner != user && !user.isAdmin() && (jumpRepoCustom.findAllByUserAndId(user, existing.id).isEmpty() || existing.isPublic()))
 			throw ForbiddenResponse()
 		metaRepo.save(existing.meta.onUpdate(user))
-		jumpRepo.save(existing.apply {
+		// add aliases
+		val updated = arrayListOf<Alias>()
+		update.alias.forEach {
+			// create the alias if it doesn't exist
+			if(it.id == null || it.id == 0) {
+				val a = Alias(0, it.name, existing.id)
+				updated.add(a)
+				existing.alias.add(a)
+			}
+			else {
+				aliasRepo.findByIdOrNull(it.id)?.let { a ->
+					updated.add(a.apply { name = a.name })
+				}
+			}
+		}
+		// batch-save
+		aliasRepo.saveAll(updated)
+		// remove dangling aliases
+		val dangling = aliasRepo.findAllByParent(existing.id)
+		aliasRepo.deleteAll(dangling.filter {
+			!updated.contains(it)
+		})
+		// save changes to jump
+		val jump = jumpRepo.save(existing.apply {
 			name = update.name
 			location = update.location
 		})
-		// add aliases
-		val updated = arrayListOf<Int>()
-		update.alias.forEach {
-			// create the alias if it doesn't exist
-			@Suppress("SENSELESS_COMPARISON")
-			if(it.id == null || it.id == 0) {
-				updated.add(
-					aliasRepo.save(Alias(0, it.name, existing.id)).id
-				)
-			}
-			else {
-				updated.add(
-					aliasRepo.save(it.apply { name = it.name }).id
-				)
-			}
-		}
-		// remove dangling aliases
-		val dangling = aliasRepo.findAllByParent(existing.id)
-		var gc = 0
-		dangling.forEach {
-			if(!updated.contains(it.id)) {
-				aliasRepo.delete(it)
-				gc++
-			}
-		}
-		"GC cleanup up $gc orphaned aliases for ${existing.id}, ${existing.name}".logi(javaClass)
 		// update metadata
-		metadata.getImage(update.location)
-		metadata.getTitle(update.location)
+		metadata.getImage(jump.location)
+		metadata.getTitle(jump.location)
 		FSA(FSA.EVENT_UPDATE_JUMP, null).broadcast()
-		return existing
+		return ResponseEntity.ok(jump.id)
 	}
 
 	@PreAuthorize("hasRole('USER')")
 	@DeleteMapping("/{id}")
 	fun deleteJump(@PathVariable id: Int): ResponseEntity<Nothing> {
-		val user = userService.assertUser()
+		val user = SecurityContextHolder.getContext().assertUser()
 		val jump = jumpRepo.findByIdOrNull(id) ?: throw NotFoundResponse(Responses.NOT_FOUND_JUMP)
 		// check if jump is global and user is admin
 		if(jump.isPublic() && !user.isAdmin())
 			throw ForbiddenResponse()
-		if(jump.owner != null && jump.owner != user.id)
+		if(jump.owner != null && jump.owner != user)
 			throw ForbiddenResponse()
 		// check that the user is part of the group owning the jump
 		if(jump.ownerGroup != null) {
 			val groups = groupRepo.findAllByUsersIsContaining(user).filter {
-				it.id == jump.ownerGroup
+				it == jump.ownerGroup
 			}
 			if (groups.isEmpty() && !user.isAdmin())
 				throw ForbiddenResponse()

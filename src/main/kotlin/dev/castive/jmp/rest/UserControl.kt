@@ -31,17 +31,20 @@ import dev.castive.jmp.repo.GroupRepo
 import dev.castive.jmp.repo.MetaRepo
 import dev.castive.jmp.repo.UserRepo
 import dev.castive.jmp.security.SecurityConstants
-import dev.castive.jmp.service.UserService
 import dev.castive.jmp.tasks.GroupsTask
+import dev.castive.jmp.util.assertUser
 import dev.castive.jmp.util.broadcast
 import dev.castive.jmp.util.hash
+import dev.castive.jmp.util.user
 import dev.castive.log2.loga
+import dev.castive.log2.logi
 import dev.castive.log2.logw
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
 import java.util.UUID
 
@@ -51,7 +54,6 @@ class UserControl @Autowired constructor(
 	private val userRepo: UserRepo,
 	private val groupRepo: GroupRepo,
 	private val metaRepo: MetaRepo,
-	private val userService: UserService,
 	private val groupTask: GroupsTask
 ) {
 	private val limiter = RateLimiter.create(5.0)
@@ -64,7 +66,7 @@ class UserControl @Autowired constructor(
 
 	@PreAuthorize("hasRole('USER')")
 	@GetMapping("/me")
-	fun getCurrentUser(): User? = userService.getUser()
+	fun getCurrentUser(): User? = SecurityContextHolder.getContext().user()
 
 	@PutMapping
 	fun createUser(@RequestBody basicAuth: BasicAuth): ResponseEntity<String> {
@@ -73,7 +75,7 @@ class UserControl @Autowired constructor(
 			val meta = metaRepo.save(Meta.fromUser(id))
 			val created = userRepo.save(
 				User(
-					UUID.randomUUID(),
+					id,
 					basicAuth.username,
 					"",
 					null,
@@ -83,6 +85,8 @@ class UserControl @Autowired constructor(
 					SecurityConstants.sourceLocal
 				)
 			)
+			metaRepo.save(created.meta)
+			"Created user ${created.username} with id: ${created.id}".logi(javaClass)
 			// ask the groupstask cron to update public/default relations
 			groupTask.run()
 			FSA(FSA.EVENT_UPDATE_USER, null).broadcast()
@@ -95,7 +99,7 @@ class UserControl @Autowired constructor(
 	@PreAuthorize("hasRole('ADMIN')")
 	@PatchMapping
 	fun patchUser(@RequestParam uid: UUID, @RequestParam admin: Boolean) {
-		val user = userService.assertUser()
+		val user = SecurityContextHolder.getContext().assertUser()
 		val targetUser = userRepo.findByIdOrNull(uid) ?: throw NotFoundResponse(Responses.NOT_FOUND_USER)
 		// block removing the superuser from admin
 		if(targetUser.username == "admin")
