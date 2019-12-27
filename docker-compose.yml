@@ -1,10 +1,24 @@
 ---
 version: '3'
 services:
-  psql:
-    image: postgres:12-alpine
+  jmp:
+    build: .
+    image: jmp/api
+    volumes:
+      - ./data:/data
     ports:
-      - 5432:5432
+      - 7000:7000
+    environment:
+      - JMP_METADATA_ICON_ENABLED=false
+      - JMP_METADATA_ICON_URL=https://icon.dcas.dev
+  psql:
+    image: postgres:12.1-alpine
+    ports:
+    - 5432:5432
+    volumes:
+    - db:/var/lib/psql
     environment:
       - POSTGRES_DB=jmp
       - POSTGRES_PASSWORD=password
+volumes:
+  db:
