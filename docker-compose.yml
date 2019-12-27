@@ -3,15 +3,22 @@ version: '3'
 services:
   jmp:
     build: .
-    image: jmp
-    command: ["java", "-jar", "jmp.jar", "--enable-dev"]
-    ports:
-      - "7000:7000"
-      - "7001:7001"
+    image: jmp/api
     volumes:
       - ./data:/data
+    ports:
+      - 7000:7000
     environment:
-      - DRIVER_URL=jdbc:sqlite:/data/jmp.db
-      - DRIVER_CLASS=org.sqlite.JDBC
-      - ENV_LOG_REQUEST_DIRECTORY="/data/logs"
-      - BASE_URL=http://localhost:3000
+      - JMP_METADATA_ICON_ENABLED=false
+      - JMP_METADATA_ICON_URL=https://icon.dcas.dev
+  psql:
+    image: postgres:12.1-alpine
+    ports:
+    - 5432:5432
+    volumes:
+    - db:/var/lib/psql
+    environment:
+      - POSTGRES_DB=jmp
+      - POSTGRES_PASSWORD=password
+volumes:
+  db:

@@ -107,5 +107,5 @@ hs_err_pid*
 
 logs
 jmp.properties
-initialAdminPassword
+initialAdminPassword.txt
 /data/

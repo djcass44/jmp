@@ -13,11 +13,10 @@ RUN gradle build -x test
 FROM adoptopenjdk/openjdk13:alpine-jre
 LABEL maintainer="Django Cass <dj.cass44@gmail.com>"
 
-ENV BASE_URL="localhost:7000" \
-    JMP_HOME="/data/" \
-    USER=jmp
+ENV USER=jmp
 
 RUN addgroup -S ${USER} && adduser -S ${USER} -G ${USER}
+RUN apk upgrade --no-cache -q
 
 WORKDIR /app
 COPY --from=GRADLE_CACHE /app/build/libs/jmp.jar .
@@ -27,4 +26,4 @@ EXPOSE 7000
 RUN chown -R ${USER}:${USER} /app
 USER jmp
 
-ENTRYPOINT ["java", "-jar", "jmp.jar"]
+CMD ["java", "-jar", "jmp.jar"]

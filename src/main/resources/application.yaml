@@ -4,10 +4,12 @@ spring:
   profiles:
     active: dev
   datasource:
-    url: jdbc:sqlite:data/jmp.db
-    initialization-mode: always
+    url: jdbc:postgresql://localhost:5432/jmp
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: password
   jpa:
-    database-platform: org.hibernate.dialect.SQLiteDialect
+    database-platform: org.hibernate.dialect.PostgreSQL95Dialect
     show-sql: false
     hibernate:
       ddl-auto: update
@@ -56,4 +58,4 @@ logging:
 management:
   endpoint:
     health:
-      show-details: always
+      show-details: when_authorized
