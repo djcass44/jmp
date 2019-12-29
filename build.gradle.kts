@@ -91,10 +91,7 @@ dependencies {
 	// Crypto providers
 	implementation("com.amazonaws:aws-java-sdk-ssm:1.11.642")
 
-
-	implementation("com.github.gwenn:sqlite-dialect:0.1.0")
 	// JDBC drivers
-	runtimeOnly("org.xerial:sqlite-jdbc:3.28.0") // tested (django)
 	runtimeOnly("org.postgresql:postgresql:42.2.8") // tested (django)
 
 	testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")

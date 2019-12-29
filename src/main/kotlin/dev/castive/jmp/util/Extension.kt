@@ -43,9 +43,11 @@ fun <T> List<T>.toPage(pageable: Pageable): Page<T> {
 }
 
 fun SecurityContext.user(): User? = kotlin.runCatching {
+	if(SecurityContextHolder.getContext().authentication.principal == "anonymousUser")
+		return null
 	(SecurityContextHolder.getContext().authentication.principal as dev.castive.jmp.security.User).dao
 }.onFailure {
-	"Failed to extract user from SecurityContextHolder".loge(javaClass, it)
+	"Failed to extract user from SecurityContextHolder: ${SecurityContextHolder.getContext().authentication.principal}".loge(javaClass, it)
 }.getOrNull()
 
 fun SecurityContext.assertUser(): User = user() ?: throw UnauthorizedResponse()

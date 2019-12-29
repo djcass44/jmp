@@ -19,8 +19,6 @@ package dev.castive.jmp.rest
 import dev.castive.jmp.api.Responses
 import dev.castive.jmp.data.FSA
 import dev.castive.jmp.data.JumpDTO
-import dev.castive.jmp.data.JumpEditEntity
-import dev.castive.jmp.data.JumpResponse
 import dev.castive.jmp.data.dto.DoJumpDTO
 import dev.castive.jmp.data.dto.EditJumpDTO
 import dev.castive.jmp.entity.Alias
@@ -35,15 +33,13 @@ import dev.castive.jmp.service.MetadataService
 import dev.castive.jmp.service.OwnerService
 import dev.castive.jmp.util.assertUser
 import dev.castive.jmp.util.broadcast
-import dev.castive.jmp.util.user
-import dev.castive.jmp.util.user
 import dev.castive.jmp.util.toPage
+import dev.castive.jmp.util.user
 import dev.castive.log2.logi
 import dev.castive.log2.logv
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -66,8 +62,11 @@ class JumpControl @Autowired constructor(
 	private val ownerService: OwnerService
 ) {
 	@GetMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
-	fun getAll(@RequestParam("size", defaultValue = "20") size: Int = 20, @RequestParam("page", defaultValue = "0") page: Int = 0): Page<JumpDTO> {
-		return jumpRepoCustom.findAllByUser(SecurityContextHolder.getContext().user()).map {
+	fun getAll(
+		@RequestParam("size", defaultValue = "20") size: Int = 20,
+		@RequestParam("page", defaultValue = "0") page: Int = 0,
+		@RequestParam("query", defaultValue = "") query: String = ""): Page<JumpDTO> {
+		return jumpRepoCustom.searchByTerm(SecurityContextHolder.getContext().user(), query, exact = false).map {
 			ownerService.getDTO(it)
 		}.toPage(PageRequest.of(page, size))
 	}

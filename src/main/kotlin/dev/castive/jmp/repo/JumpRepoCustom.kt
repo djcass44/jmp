@@ -23,5 +23,5 @@ interface JumpRepoCustom {
 	fun findAllByUser(user: User?): List<Jump>
 	fun findAllByUser(user: User?, includeAliases: Boolean): List<Jump>
 	fun findAllByUserAndId(user: User?, id: Int): List<Jump>
-	fun searchByTerm(user: User?, term: String): List<Jump>
+	fun searchByTerm(user: User?, term: String, exact: Boolean = true): List<Jump>
 }

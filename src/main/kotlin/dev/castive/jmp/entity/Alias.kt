@@ -16,6 +16,7 @@
 
 package dev.castive.jmp.entity
 
+import dev.castive.jmp.data.dto.AliasDTO
 import dev.castive.log2.logv
 import javax.persistence.*
 
@@ -33,4 +34,6 @@ data class Alias(
 	fun onPreRemove() {
 		"Removing ${javaClass.simpleName} with id: $id".logv(javaClass)
 	}
+
+	fun asDTO(): AliasDTO = AliasDTO(id, name)
 }

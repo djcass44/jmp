@@ -16,8 +16,8 @@
 
 package dev.castive.jmp.rest
 
-import dev.castive.jmp.api.Similar
 import dev.castive.jmp.repo.JumpRepoCustom
+import dev.castive.jmp.service.SimilarityService
 import dev.castive.jmp.util.asArrayList
 import dev.castive.jmp.util.user
 import org.springframework.beans.factory.annotation.Autowired
@@ -27,18 +27,18 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/v2/similar")
 class SimilarControl @Autowired constructor(
-	private val jumpRepoCustom: JumpRepoCustom
+	private val jumpRepoCustom: JumpRepoCustom,
+	private val similar: SimilarityService
 ) {
-	private val similar = Similar()
 
 	@GetMapping("/{query}")
 	fun checkSimilarity(@PathVariable query: String, @RequestParam(required = false) suggest: Boolean = false): List<*> {
 		val user = SecurityContextHolder.getContext().user()
 		val userJumps = jumpRepoCustom.findAllByUser(user, true).asArrayList()
 		return if(suggest)
-			similar.computeNames(userJumps, query)
+			similar.forSuggesting(userJumps, query)
 		else
-			similar.compute(userJumps, query)
+			similar.forJumping(userJumps, query)
 	}
 
 }

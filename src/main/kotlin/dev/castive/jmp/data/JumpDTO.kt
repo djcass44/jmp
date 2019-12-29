@@ -1,6 +1,10 @@
 package dev.castive.jmp.data
 
-import dev.castive.jmp.entity.*
+import dev.castive.jmp.data.dto.AliasDTO
+import dev.castive.jmp.entity.Group
+import dev.castive.jmp.entity.Jump
+import dev.castive.jmp.entity.Meta
+import dev.castive.jmp.entity.User
 
 data class JumpDTO(
 	val id: Int,
@@ -12,10 +16,10 @@ data class JumpDTO(
 	val image: String? = null,
 	val meta: Meta,
 	val usage: Int = 0,
-	val isPublic: Boolean,
-	val alias: List<Alias>
+	val public: Boolean,
+	val alias: List<AliasDTO>
 ) {
-	constructor(jump: Jump, owner: User?, ownerGroup: Group?, alias: List<Alias>): this(
+	constructor(jump: Jump, owner: User?, ownerGroup: Group?, alias: List<AliasDTO>): this(
 		jump.id,
 		jump.name,
 		jump.location,

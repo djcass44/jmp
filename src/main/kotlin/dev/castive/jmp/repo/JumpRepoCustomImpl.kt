@@ -18,10 +18,9 @@ package dev.castive.jmp.repo
 
 import dev.castive.jmp.entity.Jump
 import dev.castive.jmp.entity.User
-import dev.castive.jmp.util.toPage
+import dev.castive.jmp.service.SimilarityService
+import dev.castive.log2.logv
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 
@@ -30,7 +29,8 @@ import org.springframework.transaction.annotation.Transactional
 class JumpRepoCustomImpl @Autowired constructor(
 	private val jumpRepo: JumpRepo,
 	private val groupRepo: GroupRepo,
-	private val aliasRepo: AliasRepo
+	private val aliasRepo: AliasRepo,
+	private val similar: SimilarityService
 ): JumpRepoCustom {
 
 	override fun findAllByUser(user: User?): List<Jump> {
@@ -87,17 +87,27 @@ class JumpRepoCustomImpl @Autowired constructor(
 		}
 	}
 
-	override fun searchByTerm(user: User?, term: String): List<Jump> {
+	override fun searchByTerm(user: User?, term: String, exact: Boolean): List<Jump> {
 		val jumps = findAllByUser(user)
-		val results = arrayListOf<Jump>()
-		jumps.forEach {
-			if(it.name.equals(term, ignoreCase = true))
-				results.add(it)
-			// check aliases
-			results.addAll(aliasRepo.findAllByParent(it.id).mapNotNull { alias ->
-				if(alias.name.equals(term, ignoreCase = true)) it else null
-			})
+		// if the search is empty, don't bother doing any further checks
+		if(term.isBlank()) {
+			"Searching using blank search term, backing out (user: ${user?.username})".logv(javaClass)
+			return jumps
 		}
-		return results
+		val results = arrayListOf<Jump>()
+		return if(exact) {
+			jumps.forEach {
+				if (it.name.equals(term, ignoreCase = true))
+					results.add(it)
+				// check aliases
+				results.addAll(aliasRepo.findAllByParent(it.id).mapNotNull { alias ->
+					if (alias.name.equals(term, ignoreCase = true)) it else null
+				})
+			}
+			results
+		}
+		else {
+			similar.forSearch(jumps, term)
+		}
 	}
 }
