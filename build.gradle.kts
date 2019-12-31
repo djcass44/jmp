@@ -62,8 +62,10 @@ dependencies {
 	// spring
 	implementation("org.springframework.boot:spring-boot-starter")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	implementation("org.springframework.boot:spring-boot-starter-data-ldap")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-websocket")
+	implementation("org.springframework.boot:spring-boot-starter-cache")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
@@ -83,6 +85,9 @@ dependencies {
 
 	implementation("io.jsonwebtoken:jjwt:0.7.0")
 	implementation("com.github.scribejava:scribejava-apis:6.8.1")
+
+	// ldap
+	implementation("com.unboundid:unboundid-ldapsdk:4.0.14")
 
 	// swagger
 	implementation("io.springfox:springfox-swagger2:2.9.2")

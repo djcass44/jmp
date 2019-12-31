@@ -31,6 +31,7 @@ import dev.castive.log2.logi
 import dev.castive.log2.logs
 import dev.dcas.util.extend.randomString
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.io.File
 import java.util.UUID
@@ -42,6 +43,9 @@ class StartupChecks @Autowired constructor(
 	private val metaRepo: MetaRepo,
 	private val groupRepo: GroupRepo
 ) {
+	@Value("\${spring.ldap.enabled:false}")
+	private val ldapEnabled: Boolean = false
+
 	@PostConstruct
 	fun ensureAdmin() {
 		val admin = userRepo.findFirstByUsername("admin")
@@ -70,10 +74,19 @@ class StartupChecks @Autowired constructor(
 
 	@PostConstruct
 	fun ensureLocalGroup() {
-		val localGroup = groupRepo.findFirstByName(SecurityConstants.sourceLocal)
-		if(localGroup == null) {
+		groupRepo.findFirstByName(SecurityConstants.sourceLocal) ?: run {
 			groupRepo.save(Group(UUID.randomUUID(), SecurityConstants.sourceLocal, SecurityConstants.sourceLocal, false, SecurityConstants.sourceLocal))
 			"Created 'local' default group".logi(javaClass)
+		}
+	}
+
+	@PostConstruct
+	fun ensureLdapGroup() {
+		if(!ldapEnabled)
+			return
+		groupRepo.findFirstByName(SecurityConstants.sourceLdap) ?: run {
+			groupRepo.save(Group(UUID.randomUUID(), SecurityConstants.sourceLdap, SecurityConstants.sourceLdap, false, SecurityConstants.sourceLdap))
+			"Created 'ldap' default group".logi(javaClass)
 		}
 	}
 }

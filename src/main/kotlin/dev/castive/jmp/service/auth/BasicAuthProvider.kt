@@ -14,20 +14,13 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.repo
+package dev.castive.jmp.service.auth
 
+import dev.castive.jmp.data.BasicAuth
 import dev.castive.jmp.entity.User
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.stereotype.Repository
-import java.util.UUID
 
-@Repository
-interface UserRepo: JpaRepository<User, UUID> {
-	fun existsByUsername(username: String): Boolean
-	fun findAllBySourceIsNot(source: String): List<User>
-	fun findAllByUsername(username: String): List<User>
-	fun findFirstByUsername(username: String): User?
-	fun findFirstByUsernameAndSource(username: String, source: String): User?
+interface BasicAuthProvider {
+	val sourceName: String
 
-	fun countAllBySource(source: String): Int
+	fun getUserByName(basicAuth: BasicAuth): User?
 }

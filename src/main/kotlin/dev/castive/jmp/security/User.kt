@@ -18,4 +18,4 @@ package dev.castive.jmp.security
 
 import org.springframework.security.core.userdetails.User
 
-class User(val dao: dev.castive.jmp.entity.User): User(dao.username, dao.hash, dao.roles)
+class User(val dao: dev.castive.jmp.entity.User): User(dao.username, dao.hash ?: "", dao.roles)

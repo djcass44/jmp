@@ -16,17 +16,27 @@
 
 package dev.castive.jmp.rest
 
+import dev.castive.jmp.repo.UserRepo
 import dev.castive.jmp.security.SecurityConstants
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cache.annotation.CacheConfig
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
+@CacheConfig(cacheNames = ["providers"])
 @RestController
 @RequestMapping("/v2/providers")
-class ProviderControl {
+class ProviderControl @Autowired constructor(
+	private val userRepo: UserRepo
+) {
 
+	@Cacheable
 	@PreAuthorize("hasRole('USER')")
 	@GetMapping
-	fun getAll(): List<String> = listOf(SecurityConstants.sourceLocal)
+	fun getAll(): List<Pair<String, Int>> = listOf(SecurityConstants.sourceLocal, SecurityConstants.sourceLdap).map {
+		it to userRepo.countAllBySource(it)
+	}
 }

@@ -21,11 +21,13 @@ import dev.castive.jmp.util.asArrayList
 import dev.castive.log2.logd
 import dev.dcas.util.extend.url
 import info.debatty.java.stringsimilarity.JaroWinkler
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class SimilarityService {
-	// TODO pull from @Value
+
+	@Value("\${jmp.similarity.threshold:0.7}")
 	private val threshold: Double = 0.70
 
 	private val jw = JaroWinkler()
