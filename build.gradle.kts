@@ -18,7 +18,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
-	id("org.springframework.boot") version "2.2.1.RELEASE"
+	id("org.springframework.boot") version "2.2.3.RELEASE"
 	id("io.spring.dependency-management") version "1.0.8.RELEASE"
 	id("com.github.ben-manes.versions") version "0.27.0"
 	kotlin("jvm") version "1.3.61"
@@ -59,7 +59,7 @@ dependencies {
 
 	implementation("com.sun.activation:javax.activation:1.2.0")
 
-	// spring
+	// spring boot
 	implementation("org.springframework.boot:spring-boot-starter")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-data-ldap")
@@ -71,17 +71,18 @@ dependencies {
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 	implementation("org.springframework.boot:spring-boot-configuration-processor")
 
+	// spring misc
 	implementation("org.springframework.cloud:spring-cloud-starter-config")
 
 	implementation("com.github.djcass44:log2:4.1")
 	implementation("com.github.djcass44:castive-utilities:v3")
 
-	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.0")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.2")
 	implementation("info.debatty:java-string-similarity:1.2.1")
 	implementation("com.amdelamar:jhash:2.1.0")
-	implementation("com.google.code.gson:gson:2.8.5")
+	implementation("com.google.code.gson:gson:2.8.6")
 	implementation("org.jsoup:jsoup:1.12.1")
-	implementation("com.google.guava:guava:28.1-jre")
+	implementation("com.google.guava:guava:28.2-jre")
 
 	implementation("io.jsonwebtoken:jjwt:0.7.0")
 	implementation("com.github.scribejava:scribejava-apis:6.8.1")
@@ -94,10 +95,10 @@ dependencies {
 	implementation("io.springfox:springfox-swagger-ui:2.9.2")
 
 	// Crypto providers
-	implementation("com.amazonaws:aws-java-sdk-ssm:1.11.642")
+	implementation("com.amazonaws:aws-java-sdk-ssm:1.11.708")
 
 	// JDBC drivers
-	runtimeOnly("org.postgresql:postgresql:42.2.8") // tested (django)
+	runtimeOnly("org.postgresql:postgresql:42.2.9") // tested (django)
 
 	testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
 	testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
@@ -108,7 +109,7 @@ dependencies {
 	testImplementation("org.jetbrains.kotlin:kotlin-test")
 
 	testImplementation("org.hamcrest:hamcrest:2.2")
-	testImplementation("org.mockito:mockito-core:3.0.0")
+	testImplementation("org.mockito:mockito-core:3.2.4")
 	testImplementation("com.github.stefanbirkner:system-rules:1.19.0")
 	implementation(kotlin("script-runtime"))
 }
@@ -130,7 +131,7 @@ springBoot {
 
 tasks {
 	wrapper {
-		gradleVersion = "6.0.1"
+		gradleVersion = "6.1"
 		distributionType = Wrapper.DistributionType.ALL
 	}
 	withType<KotlinCompile>().all {

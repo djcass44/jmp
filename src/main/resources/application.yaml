@@ -69,6 +69,7 @@ security:
 logging:
   level:
     dev.castive.jmp: trace
+    dev.dcas: trace
 management:
   endpoint:
     health:

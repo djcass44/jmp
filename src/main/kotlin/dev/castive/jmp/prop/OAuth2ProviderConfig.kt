@@ -1,5 +1,5 @@
 /*
- *    Copyright 2019 Django Cass
+ *    Copyright 2020 Django Cass
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,13 +14,11 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp
+package dev.castive.jmp.prop
 
-object Version {
-    private const val MAJOR = "0"
-    private const val MINOR = "5"
-    private const val PATCH = "0"
-    private const val BUILD = "452"
-
-    fun getVersion() = "$MAJOR.$MINOR.$PATCH-build.$BUILD"
-}
+data class OAuth2ProviderConfig(
+	val callbackUrl: String,
+	val scope: String,
+	val clientId: String,
+	val clientSecret: String
+)
