@@ -80,7 +80,9 @@ class OAuth2Control @Autowired constructor(
 	@PreAuthorize("hasRole('USER')")
 	@PostMapping("/logout/{name}")
 	fun revokeToken(@PathVariable("name") name: String, @RequestParam("accessToken", required = true) accessToken: String) {
-		val provider = oauth2Service.findProviderByNameOrThrow(name)
+		// name is given by the ui with the oauth2/ prefix, so we need to strip that
+		val providerName = name.removePrefix("oauth2/")
+		val provider = oauth2Service.findProviderByNameOrThrow(providerName)
 		"Performing logout for OAuth2 token: ${accessToken.ellipsize(24)}".loga(javaClass)
 		/* sometimes revoking the token is unsupported and throws an exception
 		   this is okay and we still want to return the 200

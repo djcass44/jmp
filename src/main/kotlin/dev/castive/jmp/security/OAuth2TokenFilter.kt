@@ -48,7 +48,7 @@ class OAuth2TokenFilter(
 			filterChain.doFilter(request, response)
 			return
 		}
-		val providerName = source.split("/")[1]
+		val providerName = source.removePrefix("oauth2/")
 		val provider = oauth2Service.findProviderByName(providerName) ?: run {
 			"Unable to find wired provider with name: $providerName".logi(javaClass)
 			SecurityContextHolder.clearContext()
