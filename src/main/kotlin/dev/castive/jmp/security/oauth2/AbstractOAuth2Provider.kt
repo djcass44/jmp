@@ -19,12 +19,15 @@ package dev.castive.jmp.security.oauth2
 import com.github.scribejava.core.builder.ServiceBuilder
 import com.github.scribejava.core.builder.api.DefaultApi20
 import com.github.scribejava.core.model.OAuth2AccessToken
-import dev.castive.jmp.data.BasicAuth
+import dev.castive.jmp.data.UserProjection
 import dev.castive.jmp.prop.OAuth2ProviderConfig
+import dev.castive.log2.loge
 import dev.castive.log2.logv
 import dev.dcas.util.extend.base64Url
 import dev.dcas.util.extend.decodeBase64Url
 import dev.dcas.util.extend.randomString
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import java.util.concurrent.Future
 import javax.annotation.PostConstruct
 
@@ -62,11 +65,6 @@ abstract class AbstractOAuth2Provider(
 	fun getAccessToken(code: String): OAuth2AccessToken = service.getAccessToken(code)
 
 	/**
-	 * Gets a token using basic authentication
-	 */
-	open fun getBasicAccessToken(basicAuth: BasicAuth): OAuth2AccessToken = throw NotImplementedError("This method must be overridden")
-
-	/**
 	 * Get a new access token using our refresh token
 	 */
 	fun refreshToken(refreshToken: String): OAuth2AccessToken = service.refreshAccessToken(refreshToken)
@@ -74,6 +72,7 @@ abstract class AbstractOAuth2Provider(
 	/**
 	 * Used for logout
 	 * Revokes the oauth2 token (assuming the api supports revoking tokens)
+	 * this::revokeTokenAsync is preferred
 	 */
 	open fun revokeToken(accessToken: String) = service.revokeToken(accessToken)
 
@@ -87,6 +86,21 @@ abstract class AbstractOAuth2Provider(
 	 * Check if the access token is still valid
 	 */
 	abstract fun isTokenValid(accessToken: String): Boolean
+
+	abstract fun getUserInformation(accessToken: String): UserProjection?
+
+	fun validateUserResponse(response: ResponseEntity<*>): Boolean {
+		if(response.statusCode != HttpStatus.OK) {
+			"Failed to load user information: ${response.statusCodeValue}".loge(javaClass)
+			return false
+		}
+		if(!response.hasBody()) {
+			"Got response with no body".loge(javaClass)
+			return false
+		}
+		// assume nothing else has gone  wrong
+		return true
+	}
 
 	private fun getState(meta: String = ""): String = "$name:$meta:${32.randomString()}".base64Url()
 }

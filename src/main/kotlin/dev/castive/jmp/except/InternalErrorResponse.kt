@@ -1,5 +1,5 @@
 /*
- *    Copyright 2020 Django Cass
+ *    Copyright 2019 Django Cass
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,12 +14,9 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.prop
+package dev.castive.jmp.except
 
-data class OAuth2ProviderConfig(
-	val apiUrl: String,
-	val callbackUrl: String,
-	val scope: String,
-	val clientId: String,
-	val clientSecret: String
-)
+import org.springframework.http.HttpStatus
+import org.springframework.web.server.ResponseStatusException
+
+class InternalErrorResponse(message: String = "Internal server error."): ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, message)

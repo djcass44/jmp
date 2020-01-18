@@ -127,7 +127,7 @@ class LdapService @Autowired constructor(
 		private val userRepo: UserRepo
 	): AttributesMapper<User> {
 		override fun mapFromAttributes(attr: Attributes): User {
-			val username = attr.get("uid").get() as String
+			val username = "ldap/${attr.get("uid").get() as String}"
 			// if there is an existing user, return them
 			userRepo.findFirstByUsernameAndSource(username, SecurityConstants.sourceLdap)?.let {
 				"Found existing match for LDAP user: $username".logv(javaClass)

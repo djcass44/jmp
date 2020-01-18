@@ -14,12 +14,15 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.prop
+package dev.castive.jmp.data
 
-data class OAuth2ProviderConfig(
-	val apiUrl: String,
-	val callbackUrl: String,
-	val scope: String,
-	val clientId: String,
-	val clientSecret: String
+data class UserProjection(
+	val username: String,
+	val displayName: String,
+	val avatarUrl: String,
+	val source: String
 )
+
+interface OAuth2User {
+	fun project(): UserProjection
+}

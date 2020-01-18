@@ -18,6 +18,7 @@ package dev.castive.jmp.rest
 
 import dev.castive.jmp.repo.UserRepo
 import dev.castive.jmp.security.SecurityConstants
+import dev.castive.jmp.security.oauth2.AbstractOAuth2Provider
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cache.annotation.CacheConfig
 import org.springframework.cache.annotation.Cacheable
@@ -30,13 +31,18 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/v2/providers")
 class ProviderControl @Autowired constructor(
-	private val userRepo: UserRepo
-) {
+	private val userRepo: UserRepo,
+	private val providers: List<AbstractOAuth2Provider>
+	) {
+
+	private val internalProviders = arrayListOf(SecurityConstants.sourceLocal, SecurityConstants.sourceLdap).apply {
+		addAll(providers.map { "oauth2/${it.name}" })
+	}
 
 	@Cacheable
 	@PreAuthorize("hasRole('USER')")
 	@GetMapping
-	fun getAll(): List<Pair<String, Int>> = listOf(SecurityConstants.sourceLocal, SecurityConstants.sourceLdap).map {
+	fun getAll(): List<Pair<String, Int>> = internalProviders.map {
 		it to userRepo.countAllBySource(it)
 	}
 }

@@ -30,8 +30,8 @@ data class User(
 	val id: UUID = UUID.randomUUID(),
 	@Column(unique = true, nullable = false)
 	val username: String,
-	val displayName: String,
-	val avatarUrl: String? = null,
+	var displayName: String,
+	var avatarUrl: String? = null,
 	@JsonIgnore
 	val hash: String? = null,
 	@ElementCollection(fetch = FetchType.EAGER)
