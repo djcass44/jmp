@@ -16,9 +16,9 @@
 
 package dev.castive.jmp.security
 
-import dev.castive.jmp.util.ellipsize
 import dev.castive.log2.logd
 import dev.castive.log2.logv
+import dev.dcas.util.extend.ellipsize
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.filter.OncePerRequestFilter
 import javax.servlet.FilterChain

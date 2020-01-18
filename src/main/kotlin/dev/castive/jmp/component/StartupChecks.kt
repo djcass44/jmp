@@ -24,11 +24,11 @@ import dev.castive.jmp.repo.GroupRepo
 import dev.castive.jmp.repo.MetaRepo
 import dev.castive.jmp.repo.UserRepo
 import dev.castive.jmp.security.SecurityConstants
-import dev.castive.jmp.util.hash
 import dev.castive.log2.loga
 import dev.castive.log2.logf
 import dev.castive.log2.logi
 import dev.castive.log2.logs
+import dev.dcas.util.extend.hash
 import dev.dcas.util.extend.randomString
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value

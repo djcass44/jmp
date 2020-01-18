@@ -18,7 +18,7 @@ package dev.castive.jmp.entity
 
 import dev.castive.jmp.security.JwtTokenProvider
 import dev.castive.jmp.util.UUIDConverterCompat
-import dev.castive.jmp.util.hash
+import dev.dcas.util.extend.hash
 import java.util.UUID
 import javax.persistence.*
 

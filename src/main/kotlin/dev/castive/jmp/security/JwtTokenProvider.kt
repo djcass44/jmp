@@ -18,9 +18,9 @@ package dev.castive.jmp.security
 
 import dev.castive.jmp.entity.Role
 import dev.castive.jmp.prop.JwtProps
-import dev.castive.jmp.util.ellipsize
 import dev.castive.log2.loge
 import dev.dcas.util.extend.base64
+import dev.dcas.util.extend.ellipsize
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import org.springframework.beans.factory.annotation.Autowired

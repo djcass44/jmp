@@ -34,11 +34,11 @@ import dev.castive.jmp.security.SecurityConstants
 import dev.castive.jmp.tasks.GroupsTask
 import dev.castive.jmp.util.assertUser
 import dev.castive.jmp.util.broadcast
-import dev.castive.jmp.util.hash
 import dev.castive.jmp.util.user
 import dev.castive.log2.loga
 import dev.castive.log2.logi
 import dev.castive.log2.logw
+import dev.dcas.util.extend.hash
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus

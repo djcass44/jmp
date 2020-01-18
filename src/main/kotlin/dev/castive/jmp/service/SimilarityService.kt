@@ -17,8 +17,8 @@
 package dev.castive.jmp.service
 
 import dev.castive.jmp.entity.Jump
-import dev.castive.jmp.util.asArrayList
 import dev.castive.log2.logd
+import dev.dcas.util.extend.asArrayList
 import dev.dcas.util.extend.url
 import info.debatty.java.stringsimilarity.JaroWinkler
 import org.springframework.beans.factory.annotation.Value

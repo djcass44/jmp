@@ -75,7 +75,7 @@ dependencies {
 	implementation("org.springframework.cloud:spring-cloud-starter-config")
 
 	implementation("com.github.djcass44:log2:4.1")
-	implementation("com.github.djcass44:castive-utilities:v3")
+	implementation("com.github.djcass44:castive-utilities:v4")
 
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.2")
 	implementation("info.debatty:java-string-similarity:1.2.1")

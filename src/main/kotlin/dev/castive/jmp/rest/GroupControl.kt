@@ -30,6 +30,7 @@ import dev.castive.jmp.tasks.GroupsTask
 import dev.castive.jmp.util.assertUser
 import dev.castive.jmp.util.broadcast
 import dev.castive.log2.loga
+import dev.castive.log2.loge
 import dev.castive.log2.logi
 import dev.dcas.util.extend.isESNullOrBlank
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,7 +39,9 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
 import java.util.UUID
+import javax.transaction.Transactional
 
+@Transactional
 @RestController
 @RequestMapping("/v2_1/group")
 class GroupControl @Autowired constructor(
@@ -116,24 +119,26 @@ class GroupControl @Autowired constructor(
 		val newUser = userRepo.findByIdOrNull(uid) ?: throw NotFoundResponse(Responses.NOT_FOUND_USER)
 		// add user to groups
 		mods.add.forEach { g ->
-			groupRepo.findFirstByName(g)?.let {
+			groupRepo.findByIdOrNull(g)?.let {
 				// check if user is admin
-				if((user.isAdmin() || it.users.contains(user)) && !it.name.startsWith("_")) {
+				if((user.isAdmin() || it.containsUser(user)) && !it.name.startsWith("_")) {
 					it.users.add(newUser)
+					"${user.username} added ${newUser.username} to group: ${it.name}".logi(javaClass)
+					groupRepo.save(it)
 				}
-				groupRepo.save(it)
-				"${user.username} added ${newUser.username} to group: ${it.name}".logi(javaClass)
-			}
+				else
+					"Cannot add to group: ${it.name}: [${user.isAdmin()}, ${it.containsUser(user)}]".logi(javaClass)
+			} ?: "[add] Failed to find group with id: $g".loge(javaClass)
 		}
 		mods.rm.forEach { g ->
-			groupRepo.findFirstByName(g)?.let {
+			groupRepo.findByIdOrNull(g)?.let {
 				// check if user is admin
-				if((user.isAdmin() || it.users.contains(user)) && !it.name.startsWith("_")) {
+				if((user.isAdmin() || it.containsUser(user)) && !it.name.startsWith("_")) {
 					it.users.remove(newUser)
+					"${user.username} removed ${newUser.username} from group: ${it.name}".logi(javaClass)
+					groupRepo.save(it)
 				}
-				groupRepo.save(it)
-				"${user.username} removed ${newUser.username} from group: ${it.name}".logi(javaClass)
-			}
+			} ?: "[rm] Failed to find group with id: $g".loge(javaClass)
 		}
 	}
 }

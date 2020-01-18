@@ -34,4 +34,8 @@ data class Group(
 	@JsonIgnore
 	@ManyToMany
 	val users: MutableSet<User> = mutableSetOf()
-)
+) {
+	fun containsUser(user: User): Boolean = users.any {
+		it.id == user.id
+	}
+}

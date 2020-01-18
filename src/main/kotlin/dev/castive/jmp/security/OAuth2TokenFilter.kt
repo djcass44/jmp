@@ -17,11 +17,11 @@
 package dev.castive.jmp.security
 
 import dev.castive.jmp.service.auth.OAuth2Service
-import dev.castive.jmp.util.ellipsize
 import dev.castive.log2.logd
 import dev.castive.log2.logi
 import dev.castive.log2.logv
 import dev.castive.log2.logw
+import dev.dcas.util.extend.ellipsize
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.filter.OncePerRequestFilter
 import javax.servlet.FilterChain
@@ -56,7 +56,7 @@ class OAuth2TokenFilter(
 			return
 		}
 		val token = resolveToken(request)
-		if(token != null && provider.isTokenValid(token)) {
+		if(token != null && oauth2Service.isTokenValid(token, provider)) {
 			val auth = oauth2Service.getAuthentication(token)
 			if(auth != null) {
 				"Located user principal: ${auth.name} with roles: ${auth.authorities.size}".logv(javaClass)

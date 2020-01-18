@@ -21,11 +21,11 @@ import dev.castive.jmp.except.BadRequestResponse
 import dev.castive.jmp.except.InternalErrorResponse
 import dev.castive.jmp.security.oauth2.AbstractOAuth2Provider
 import dev.castive.jmp.service.auth.OAuth2Service
-import dev.castive.jmp.util.ellipsize
 import dev.castive.log2.loga
 import dev.castive.log2.loge
 import dev.castive.log2.logv
 import dev.castive.log2.logw
+import dev.dcas.util.extend.ellipsize
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize

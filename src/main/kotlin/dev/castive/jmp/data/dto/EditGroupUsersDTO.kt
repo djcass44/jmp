@@ -17,8 +17,9 @@
 package dev.castive.jmp.data.dto
 
 import java.util.ArrayList
+import java.util.UUID
 
 data class EditGroupUsersDTO(
-	val add: ArrayList<String>,
-	val rm: ArrayList<String>
+	val add: ArrayList<UUID>,
+	val rm: ArrayList<UUID>
 )
