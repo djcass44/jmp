@@ -22,11 +22,6 @@ spring:
           lob:
             non_contextual_creation: true
     generate-ddl: true
-  cloud:
-    config:
-      enabled: false
-      fail-fast: true
-      uri: http://dcas-cloud-config:8888
   jackson:
     default-property-inclusion: non_null
   ldap:

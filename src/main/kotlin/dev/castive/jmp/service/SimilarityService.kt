@@ -17,7 +17,6 @@
 package dev.castive.jmp.service
 
 import dev.castive.jmp.entity.Jump
-import dev.castive.log2.logd
 import dev.dcas.util.extend.asArrayList
 import dev.dcas.util.extend.url
 import info.debatty.java.stringsimilarity.JaroWinkler
@@ -44,7 +43,6 @@ class SimilarityService {
 				jw.similarity(query, d)
 			})
 		}
-		"Similarity metrics for $query -> ${it.name}: (${metrics.joinToString(", ")})".logd(javaClass)
 		return@filter metrics.any { d ->
 			d >= threshold
 		}

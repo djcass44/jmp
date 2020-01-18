@@ -6,3 +6,5 @@ spring:
   cloud:
     config:
       enabled: false
+      fail-fast: true
+      uri: http://dcas-cloud-config:8888
