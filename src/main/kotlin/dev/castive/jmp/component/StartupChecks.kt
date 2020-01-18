@@ -74,7 +74,7 @@ class StartupChecks @Autowired constructor(
 
 	@PostConstruct
 	fun ensureLocalGroup() {
-		groupRepo.findFirstByName(SecurityConstants.sourceLocal) ?: run {
+		groupRepo.findFirstByName("_${SecurityConstants.sourceLocal}") ?: run {
 			groupRepo.save(Group(UUID.randomUUID(), SecurityConstants.sourceLocal, SecurityConstants.sourceLocal, false, SecurityConstants.sourceLocal))
 			"Created 'local' default group".logi(javaClass)
 		}
@@ -84,7 +84,7 @@ class StartupChecks @Autowired constructor(
 	fun ensureLdapGroup() {
 		if(!ldapEnabled)
 			return
-		groupRepo.findFirstByName(SecurityConstants.sourceLdap) ?: run {
+		groupRepo.findFirstByName("_${SecurityConstants.sourceLdap}") ?: run {
 			groupRepo.save(Group(UUID.randomUUID(), SecurityConstants.sourceLdap, SecurityConstants.sourceLdap, false, SecurityConstants.sourceLdap))
 			"Created 'ldap' default group".logi(javaClass)
 		}

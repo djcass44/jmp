@@ -20,7 +20,6 @@ import dev.castive.jmp.entity.Group
 import dev.castive.jmp.repo.GroupRepo
 import dev.castive.jmp.repo.UserRepo
 import dev.castive.log2.loga
-import dev.castive.log2.logi
 import dev.castive.log2.logv
 import dev.castive.log2.logw
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,10 +48,10 @@ class GroupsTask @Autowired constructor(
 		"Starting ${javaClass.name} at ${System.currentTimeMillis()}".logv(javaClass)
 		"Scanned group relations in ${measureTimeMillis {
 			groupRepo.findAll().forEach {
-				if(it.public)
-					addUsersToPublicGroups(it)
-				else if(it.defaultFor != null)
-					addUsersToDefaultGroup(it)
+				when {
+					it.public -> addUsersToPublicGroups(it)
+					it.defaultFor != null -> addUsersToDefaultGroup(it)
+				}
 			}
 		}} ms".logv(javaClass)
 		running.set(false)
@@ -77,7 +76,7 @@ class GroupsTask @Autowired constructor(
 			}
 		}
 		groupRepo.save(group)
-		"Added $count users to public group: ${group.name}".logi(javaClass)
+		"Added $count users to public group: ${group.name}".logv(javaClass)
 	}
 
 	/**
@@ -99,6 +98,6 @@ class GroupsTask @Autowired constructor(
 			}
 		}
 		groupRepo.save(group)
-		"Added $count users from ${group.defaultFor} to default group: ${group.name}".logi(javaClass)
+		"Added $count users from ${group.defaultFor} to default group: ${group.name}".logv(javaClass)
 	}
 }

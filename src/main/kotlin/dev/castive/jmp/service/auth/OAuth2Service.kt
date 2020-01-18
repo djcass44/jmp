@@ -17,20 +17,15 @@
 package dev.castive.jmp.service.auth
 
 import dev.castive.jmp.api.Responses
-import dev.castive.jmp.entity.Meta
-import dev.castive.jmp.entity.Role
-import dev.castive.jmp.entity.Session
-import dev.castive.jmp.entity.User
+import dev.castive.jmp.entity.*
 import dev.castive.jmp.except.NotFoundResponse
-import dev.castive.jmp.repo.MetaRepo
-import dev.castive.jmp.repo.SessionRepo
-import dev.castive.jmp.repo.SessionRepoCustom
-import dev.castive.jmp.repo.UserRepo
+import dev.castive.jmp.repo.*
 import dev.castive.jmp.security.oauth2.AbstractOAuth2Provider
 import dev.castive.jmp.util.ellipsize
 import dev.castive.jmp.util.hash
 import dev.castive.log2.loge
 import dev.castive.log2.logi
+import dev.castive.log2.logv
 import dev.castive.log2.logw
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -44,6 +39,7 @@ class OAuth2Service @Autowired constructor(
 	private val providers: List<AbstractOAuth2Provider>,
 	private val userRepo: UserRepo,
 	private val metaRepo: MetaRepo,
+	private val groupRepo: GroupRepo,
 	private val sessionRepo: SessionRepo,
 	private val sessionRepoCustom: SessionRepoCustom
 ) {
@@ -51,6 +47,15 @@ class OAuth2Service @Autowired constructor(
 	@PostConstruct
 	fun init() {
 		"Found ${providers.size} oauth2 provider(s): [${providers.joinToString(", ") { it.name }}]".logi(javaClass)
+		providers.forEach {
+			groupRepo.findFirstByName("_oauth2/${it.name}") ?: groupRepo.save(Group(
+				// create the group if it doesn't exist
+				name = "_oauth2/${it.name}",
+				source = it.name,
+				defaultFor = "oauth2/${it.name}"
+			))
+		}
+		"Finished oauth2 group checks".logv(javaClass)
 	}
 
 	fun createUser(accessToken: String, refreshToken: String, provider: AbstractOAuth2Provider): Boolean {

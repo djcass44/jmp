@@ -29,6 +29,7 @@ import dev.castive.jmp.security.SecurityConstants
 import dev.castive.jmp.tasks.GroupsTask
 import dev.castive.jmp.util.assertUser
 import dev.castive.jmp.util.broadcast
+import dev.castive.log2.loga
 import dev.castive.log2.logi
 import dev.dcas.util.extend.isESNullOrBlank
 import org.springframework.beans.factory.annotation.Autowired
@@ -54,6 +55,10 @@ class GroupControl @Autowired constructor(
 	@PutMapping
 	fun createGroup(@RequestBody group: CreateGroupDTO): Group {
 		val user = SecurityContextHolder.getContext().assertUser()
+		if(group.name.startsWith("_")) {
+			"Blocked attempt to create reserved group: ${group.name} by ${user.username}".loga(javaClass)
+			throw ForbiddenResponse("'_' group names are reserved")
+		}
 		val created = groupRepo.save(Group(
 			UUID.randomUUID(),
 			group.name,
