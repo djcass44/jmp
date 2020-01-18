@@ -22,4 +22,5 @@ import dev.castive.jmp.entity.User
 interface SessionRepoCustom {
 	fun findFirstByUserAndRefreshTokenAndActiveTrue(user: User, refreshToken: String): Session?
 	fun findFirstByUserAndRequestTokenAndActiveTrue(user: User, requestToken: String): Session?
+	fun findFirstByRequestTokenAndActiveTrue(requestToken: String): Session?
 }

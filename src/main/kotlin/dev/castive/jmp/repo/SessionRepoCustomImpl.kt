@@ -43,4 +43,14 @@ class SessionRepoCustomImpl @Autowired constructor(
 			hash.verify(it.requestToken)
 		}
 	}
+
+	override fun findFirstByRequestTokenAndActiveTrue(requestToken: String): Session? {
+		val sessions = sessionRepo.findAllByActiveTrue()
+		val hash = Hash.password(requestToken.toCharArray())
+		return sessions.firstOrNull {
+			kotlin.runCatching {
+				hash.verify(it.requestToken)
+			}.getOrDefault(false)
+		}
+	}
 }

@@ -19,6 +19,8 @@ package dev.castive.jmp.config
 import dev.castive.jmp.prop.SecurityProps
 import dev.castive.jmp.security.JwtTokenFilterConfigurer
 import dev.castive.jmp.security.JwtTokenProvider
+import dev.castive.jmp.security.OAuth2TokenFilterConfigurer
+import dev.castive.jmp.service.auth.OAuth2Service
 import dev.castive.log2.loga
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
@@ -39,7 +41,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @EnableGlobalMethodSecurity(securedEnabled = true, jsr250Enabled = true, prePostEnabled = true)
 class WebSecurityConfig @Autowired constructor(
 	private val jwtTokenProvider: JwtTokenProvider,
-	private val securityProps: SecurityProps
+	private val securityProps: SecurityProps,
+	private val oauth2Service: OAuth2Service
 ): WebSecurityConfigurerAdapter() {
 
 	override fun configure(http: HttpSecurity) {
@@ -59,7 +62,8 @@ class WebSecurityConfig @Autowired constructor(
 		http.authorizeRequests()
 			.anyRequest().permitAll()
 
-		// apply jwt
+		// apply jwt, oauth2 filters
+		http.apply(OAuth2TokenFilterConfigurer(oauth2Service))
 		http.apply(JwtTokenFilterConfigurer(jwtTokenProvider))
 	}
 

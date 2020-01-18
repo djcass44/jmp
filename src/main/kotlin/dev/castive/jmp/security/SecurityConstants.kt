@@ -21,4 +21,5 @@ object SecurityConstants {
 	const val authHeader = "Authorization"
 	const val sourceLocal = "local"
 	const val sourceLdap = "ldap"
+	const val sourceOAuth2 = "oauth2"
 }

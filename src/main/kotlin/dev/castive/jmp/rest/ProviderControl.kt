@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RestController
 class ProviderControl @Autowired constructor(
 	private val userRepo: UserRepo,
 	private val providers: List<AbstractOAuth2Provider>
-	) {
+) {
 
 	private val internalProviders = arrayListOf(SecurityConstants.sourceLocal, SecurityConstants.sourceLdap).apply {
 		addAll(providers.map { "oauth2/${it.name}" })

@@ -16,28 +16,43 @@
 
 package dev.castive.jmp.service.auth
 
+import dev.castive.jmp.api.Responses
 import dev.castive.jmp.entity.Meta
 import dev.castive.jmp.entity.Role
 import dev.castive.jmp.entity.Session
 import dev.castive.jmp.entity.User
+import dev.castive.jmp.except.NotFoundResponse
 import dev.castive.jmp.repo.MetaRepo
 import dev.castive.jmp.repo.SessionRepo
+import dev.castive.jmp.repo.SessionRepoCustom
 import dev.castive.jmp.repo.UserRepo
 import dev.castive.jmp.security.oauth2.AbstractOAuth2Provider
 import dev.castive.jmp.util.ellipsize
+import dev.castive.jmp.util.hash
 import dev.castive.log2.loge
 import dev.castive.log2.logi
 import dev.castive.log2.logw
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Service
 import java.util.UUID
+import javax.annotation.PostConstruct
 
 @Service
 class OAuth2Service @Autowired constructor(
+	private val providers: List<AbstractOAuth2Provider>,
 	private val userRepo: UserRepo,
 	private val metaRepo: MetaRepo,
-	private val sessionRepo: SessionRepo
+	private val sessionRepo: SessionRepo,
+	private val sessionRepoCustom: SessionRepoCustom
 ) {
+
+	@PostConstruct
+	fun init() {
+		"Found ${providers.size} oauth2 provider(s): [${providers.joinToString(", ") { it.name }}]".logi(javaClass)
+	}
+
 	fun createUser(accessToken: String, refreshToken: String, provider: AbstractOAuth2Provider): Boolean {
 		val userData = provider.getUserInformation(accessToken)
 		if(userData == null) {
@@ -97,11 +112,34 @@ class OAuth2Service @Autowired constructor(
 		// create the new session
 		sessionRepo.save(Session(
 			UUID.randomUUID(),
-			requestToken,
-			refreshToken,
+			requestToken.hash(),
+			refreshToken.hash(),
 			meta,
 			user ?: existingSession!!.user,
 			true
 		))
+	}
+
+	fun getAuthentication(token: String): Authentication? {
+		val session = sessionRepoCustom.findFirstByRequestTokenAndActiveTrue(token) ?: return null
+		val user = dev.castive.jmp.security.User(session.user)
+		return UsernamePasswordAuthenticationToken(user, "", user.authorities)
+	}
+
+	/**
+	 * Find an OAuth2 provider by its common name (e.g. 'github', 'google')
+	 * @param name: the name of the provider
+	 * @return AbstractOAuth2Provider or throw http 404 if it can't be found
+	 */
+	fun findProviderByNameOrThrow(name: String): AbstractOAuth2Provider = findProviderByName(name) ?: throw NotFoundResponse(
+		Responses.NOT_FOUND_PROVIDER)
+
+	/**
+	 * Find an OAuth2 provider by its common name (e.g. 'github', 'google')
+	 * @param name: the name of the provider
+	 * @return AbstractOAuth2Provider or null if it can't be found
+	 */
+	fun findProviderByName(name: String): AbstractOAuth2Provider? = providers.firstOrNull {
+		it.name == name
 	}
 }

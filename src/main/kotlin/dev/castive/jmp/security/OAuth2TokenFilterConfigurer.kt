@@ -16,14 +16,16 @@
 
 package dev.castive.jmp.security
 
+import dev.castive.jmp.service.auth.OAuth2Service
 import org.springframework.security.config.annotation.SecurityConfigurerAdapter
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.web.DefaultSecurityFilterChain
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 
-class JwtTokenFilterConfigurer(private val jwtTokenProvider: JwtTokenProvider): SecurityConfigurerAdapter<DefaultSecurityFilterChain, HttpSecurity>() {
+class OAuth2TokenFilterConfigurer(private val oauth2Service: OAuth2Service): SecurityConfigurerAdapter<DefaultSecurityFilterChain, HttpSecurity>() {
 
 	override fun configure(builder: HttpSecurity) {
-		val filter = JwtTokenFilter(jwtTokenProvider)
-		builder.addFilterBefore(filter, OAuth2TokenFilter::class.java)
+		val filter = OAuth2TokenFilter(oauth2Service)
+		builder.addFilterBefore(filter, UsernamePasswordAuthenticationFilter::class.java)
 	}
 }

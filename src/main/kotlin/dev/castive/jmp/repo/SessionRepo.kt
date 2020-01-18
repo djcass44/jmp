@@ -26,4 +26,5 @@ import java.util.UUID
 interface SessionRepo: JpaRepository<Session, UUID> {
 	fun findAllByUserAndActiveIsTrue(user: User): List<Session>
 	fun findFirstByRefreshTokenAndActiveTrue(refreshToken: String): Session?
+	fun findAllByActiveTrue(): List<Session>
 }

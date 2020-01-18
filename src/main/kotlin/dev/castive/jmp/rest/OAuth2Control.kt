@@ -16,48 +16,40 @@
 
 package dev.castive.jmp.rest
 
-import dev.castive.jmp.api.Responses
 import dev.castive.jmp.data.AuthToken
 import dev.castive.jmp.except.BadRequestResponse
 import dev.castive.jmp.except.InternalErrorResponse
-import dev.castive.jmp.except.NotFoundResponse
-import dev.castive.jmp.security.SecurityConstants
 import dev.castive.jmp.security.oauth2.AbstractOAuth2Provider
 import dev.castive.jmp.service.auth.OAuth2Service
 import dev.castive.jmp.util.ellipsize
-import dev.castive.log2.*
+import dev.castive.log2.loga
+import dev.castive.log2.loge
+import dev.castive.log2.logv
+import dev.castive.log2.logw
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
-import javax.annotation.PostConstruct
-import javax.servlet.http.HttpServletRequest
 
 @RequestMapping("/o2")
 @RestController
 class OAuth2Control @Autowired constructor(
-	private val providers: List<AbstractOAuth2Provider>,
 	private val oauth2Service: OAuth2Service
 ) {
-
-	@PostConstruct
-	fun init() {
-		"Found ${providers.size} oauth2 provider(s): [${providers.joinToString(", ") { it.name }}]".logi(javaClass)
-	}
 
 	/**
 	 * Check whether a provider exists
 	 * Used by the front end for showing social login buttons
 	 */
 	@GetMapping("/api/{name}")
-	fun getProvider(@PathVariable("name") name: String): String = findProviderByNameOrThrow(name).name
+	fun getProvider(@PathVariable("name") name: String): String = oauth2Service.findProviderByNameOrThrow(name).name
 
 	@GetMapping("/callback")
 	fun createToken(@RequestParam("code", required = true) code: String, @RequestParam("state", required = true) state: String): AuthToken {
 		val (name, _, _) = AbstractOAuth2Provider.parseState(state)
 		"Got callback request for provider: $name".logv(javaClass)
 		// get the provider
-		val provider = findProviderByNameOrThrow(name)
+		val provider = oauth2Service.findProviderByNameOrThrow(name)
 		// create our token
 		val token = kotlin.runCatching {
 			provider.getAccessToken(code)
@@ -81,14 +73,14 @@ class OAuth2Control @Autowired constructor(
 	 */
 	@GetMapping("/{name}", produces = [MediaType.APPLICATION_JSON_VALUE])
 	fun getProviderUrl(@PathVariable("name") name: String): Pair<String, String> {
-		val provider = findProviderByNameOrThrow(name)
+		val provider = oauth2Service.findProviderByNameOrThrow(name)
 		return provider.name to provider.getAuthoriseUrl()
 	}
 
 	@PreAuthorize("hasRole('USER')")
 	@PostMapping("/logout/{name}")
 	fun revokeToken(@PathVariable("name") name: String, @RequestParam("accessToken", required = true) accessToken: String) {
-		val provider = findProviderByNameOrThrow(name)
+		val provider = oauth2Service.findProviderByNameOrThrow(name)
 		"Performing logout for OAuth2 token: ${accessToken.ellipsize(24)}".loga(javaClass)
 		/* sometimes revoking the token is unsupported and throws an exception
 		   this is okay and we still want to return the 200
@@ -98,21 +90,5 @@ class OAuth2Control @Autowired constructor(
 		}.onFailure {
 			"Failed to perform logout using provider: $name, it is probably unsupported".logw(javaClass)
 		}
-	}
-
-	/**
-	 * Find an OAuth2 provider by its common name (e.g. 'github', 'google')
-	 * @param name: the name of the provider
-	 * @return AbstractOAuth2Provider or throw http 404 if it can't be found
-	 */
-	private fun findProviderByNameOrThrow(name: String): AbstractOAuth2Provider = findProviderByName(name) ?: throw NotFoundResponse(Responses.NOT_FOUND_PROVIDER)
-
-	/**
-	 * Find an OAuth2 provider by its common name (e.g. 'github', 'google')
-	 * @param name: the name of the provider
-	 * @return AbstractOAuth2Provider or null if it can't be found
-	 */
-	private fun findProviderByName(name: String): AbstractOAuth2Provider? = providers.firstOrNull {
-		it.name == name
 	}
 }
