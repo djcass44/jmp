@@ -78,7 +78,7 @@ class GroupControl @Autowired constructor(
 		val user = SecurityContextHolder.getContext().assertUser()
 		val existing = groupRepo.findByIdOrNull(group.id) ?: throw NotFoundResponse(Responses.NOT_FOUND_GROUP)
 		// check that user can modify group
-		if(!user.isAdmin() && !existing.users.contains(user))
+		if(!user.isAdmin() && !existing.users.contains(user) && !existing.name.startsWith("_"))
 			throw ForbiddenResponse()
 		existing.apply {
 			name = group.name
@@ -102,7 +102,7 @@ class GroupControl @Autowired constructor(
 		val user = SecurityContextHolder.getContext().assertUser()
 		val existing = groupRepo.findByIdOrNull(id) ?: throw NotFoundResponse(Responses.NOT_FOUND_GROUP)
 		// check that user can delete group
-		if(!user.isAdmin() && !existing.users.contains(user))
+		if(!user.isAdmin() && !existing.users.contains(user) && !existing.name.startsWith("_"))
 			throw ForbiddenResponse()
 		"Group ${existing.name} removed by ${user.username}".logi(javaClass)
 		groupRepo.delete(existing)
@@ -118,7 +118,7 @@ class GroupControl @Autowired constructor(
 		mods.add.forEach { g ->
 			groupRepo.findFirstByName(g)?.let {
 				// check if user is admin
-				if(user.isAdmin() || it.users.contains(user)) {
+				if((user.isAdmin() || it.users.contains(user)) && !it.name.startsWith("_")) {
 					it.users.add(newUser)
 				}
 				groupRepo.save(it)
@@ -128,7 +128,7 @@ class GroupControl @Autowired constructor(
 		mods.rm.forEach { g ->
 			groupRepo.findFirstByName(g)?.let {
 				// check if user is admin
-				if(user.isAdmin() || it.users.contains(user)) {
+				if((user.isAdmin() || it.users.contains(user)) && !it.name.startsWith("_")) {
 					it.users.remove(newUser)
 				}
 				groupRepo.save(it)
