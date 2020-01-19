@@ -36,4 +36,8 @@ class SwaggerControl {
 	fun csrf() {
 		// noop to appease swagger
 	}
+
+	// not sure where to put this for now
+	@GetMapping("/ping")
+	fun ping(): String = "pong"
 }

@@ -26,18 +26,17 @@ import dev.castive.log2.logv
 import dev.dcas.util.extend.safe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.jsoup.Jsoup
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import org.springframework.web.client.RestTemplate
 import java.net.URI
 
 @Service
 class MetadataService @Autowired constructor(
-	private val jumpRepo: JumpRepo,
-	private val restTemplate: RestTemplate
+	private val jumpRepo: JumpRepo
 ) {
 	@Value("\${jmp.metadata.title.enabled}")
 	private val allowTitle: Boolean = true
@@ -48,7 +47,7 @@ class MetadataService @Autowired constructor(
 	@Value("\${jmp.metadata.icon.url}")
 	private lateinit var iconUrl: String
 
-	fun getTitle(address: String) = GlobalScope.launch(Dispatchers.IO) {
+	fun getTitle(address: String): Job = GlobalScope.launch(Dispatchers.IO) {
 		if(!allowTitle) {
 			"Refusing to scrape title metadata: egress is disabled".logv(MetadataService::class.java)
 			return@launch
@@ -80,7 +79,7 @@ class MetadataService @Autowired constructor(
 		}
 	}
 
-	fun getImage(address: String) = GlobalScope.launch(Dispatchers.IO) {
+	fun getImage(address: String): Job = GlobalScope.launch(Dispatchers.IO) {
 		if(!allowImage) {
 			"Refusing to scrape image metadata: egress is disabled".logv(MetadataService::class.java)
 			return@launch
