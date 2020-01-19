@@ -18,9 +18,9 @@ package dev.castive.jmp
 
 object Version {
     private const val MAJOR = "0"
-    private const val MINOR = "5"
+    private const val MINOR = "6"
     private const val PATCH = "0"
-    private const val BUILD = "480"
+    private const val BUILD = "0"
 
     fun getVersion() = "$MAJOR.$MINOR.$PATCH-build.$BUILD"
 }
