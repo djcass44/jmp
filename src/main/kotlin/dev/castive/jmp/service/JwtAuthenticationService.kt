@@ -29,6 +29,7 @@ import dev.castive.jmp.repo.UserRepo
 import dev.castive.jmp.security.JwtTokenProvider
 import dev.castive.log2.logi
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 
 @Service
@@ -37,11 +38,12 @@ class JwtAuthenticationService @Autowired constructor(
 	private val sessionRepo: SessionRepo,
 	private val sessionRepoCustom: SessionRepoCustom,
 	private val metaRepo: MetaRepo,
-	private val jwtTokenProvider: JwtTokenProvider
+	private val jwtTokenProvider: JwtTokenProvider,
+	private val passwordEncoder: PasswordEncoder
 ) {
 	fun createToken(user: User): AuthToken {
 		"Generating new request token for ${user.username}".logi(javaClass)
-		val (session, request, refresh) = Session.fromUser(user, metaRepo.save(Meta.fromUser(user)), jwtTokenProvider)
+		val (session, request, refresh) = Session.fromUser(user, metaRepo.save(Meta.fromUser(user)), jwtTokenProvider, passwordEncoder)
 		sessionRepo.save(session)
 		return AuthToken(request, refresh, user.source)
 	}
@@ -56,7 +58,7 @@ class JwtAuthenticationService @Autowired constructor(
 			active = false
 		})
 		// create a new session
-		val (session, request, refresh) = Session.fromUser(user, metaRepo.save(Meta.fromUser(user)), jwtTokenProvider)
+		val (session, request, refresh) = Session.fromUser(user, metaRepo.save(Meta.fromUser(user)), jwtTokenProvider, passwordEncoder)
 		sessionRepo.save(session)
 		"Generating new refresh token for ${user.username}".logi(javaClass)
 		return AuthToken(request, refresh, user.source)

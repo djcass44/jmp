@@ -16,40 +16,38 @@
 
 package dev.castive.jmp.repo
 
-import com.amdelamar.jhash.Hash
 import dev.castive.jmp.entity.Session
 import dev.castive.jmp.entity.User
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 
 @Repository
 @Transactional(readOnly = true)
 class SessionRepoCustomImpl @Autowired constructor(
-	private val sessionRepo: SessionRepo
+	private val sessionRepo: SessionRepo,
+	private val passwordEncoder: PasswordEncoder
 ): SessionRepoCustom {
 	override fun findFirstByUserAndRefreshTokenAndActiveTrue(user: User, refreshToken: String): Session? {
 		val sessions = sessionRepo.findAllByUserAndActiveIsTrue(user)
-		val hash = Hash.password(refreshToken.toCharArray())
 		return sessions.firstOrNull {
-			hash.verify(it.refreshToken)
+			passwordEncoder.matches(refreshToken, it.refreshToken)
 		}
 	}
 
 	override fun findFirstByUserAndRequestTokenAndActiveTrue(user: User, requestToken: String): Session? {
 		val sessions = sessionRepo.findAllByUserAndActiveIsTrue(user)
-		val hash = Hash.password(requestToken.toCharArray())
 		return sessions.firstOrNull {
-			hash.verify(it.requestToken)
+			passwordEncoder.matches(requestToken, it.requestToken)
 		}
 	}
 
 	override fun findFirstByRequestTokenAndActiveTrue(requestToken: String): Session? {
 		val sessions = sessionRepo.findAllByActiveTrue()
-		val hash = Hash.password(requestToken.toCharArray())
 		return sessions.firstOrNull {
 			kotlin.runCatching {
-				hash.verify(it.requestToken)
+				passwordEncoder.matches(requestToken, it.requestToken)
 			}.getOrDefault(false)
 		}
 	}

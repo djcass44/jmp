@@ -16,7 +16,8 @@ LABEL maintainer="Django Cass <dj.cass44@gmail.com>"
 ENV USER=jmp
 
 RUN addgroup -S ${USER} && adduser -S ${USER} -G ${USER}
-RUN apk upgrade --no-cache -q
+RUN apk upgrade --no-cache -q && \
+    apk add --no-cache tomcat-native
 
 WORKDIR /app
 COPY --from=GRADLE_CACHE /app/build/libs/jmp.jar .

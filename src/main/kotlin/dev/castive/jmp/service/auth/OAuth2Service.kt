@@ -24,10 +24,10 @@ import dev.castive.jmp.security.oauth2.AbstractOAuth2Provider
 import dev.castive.log2.*
 import dev.dcas.util.cache.TimedCache
 import dev.dcas.util.extend.ellipsize
-import dev.dcas.util.extend.hash
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.util.UUID
 import javax.annotation.PostConstruct
@@ -39,7 +39,8 @@ class OAuth2Service @Autowired constructor(
 	private val metaRepo: MetaRepo,
 	private val groupRepo: GroupRepo,
 	private val sessionRepo: SessionRepo,
-	private val sessionRepoCustom: SessionRepoCustom
+	private val sessionRepoCustom: SessionRepoCustom,
+	private val passwordEncoder: PasswordEncoder
 ) {
 	// hold tokens for 60 seconds (tick every 10)
 	private val tokenCache = TimedCache<String, String>(6, tickDelay = 10_000L)
@@ -142,8 +143,8 @@ class OAuth2Service @Autowired constructor(
 		// create the new session
 		sessionRepo.save(Session(
 			UUID.randomUUID(),
-			requestToken.hash(),
-			refreshToken.hash(),
+			passwordEncoder.encode(requestToken),
+			passwordEncoder.encode(refreshToken),
 			meta,
 			user ?: existingSession!!.user,
 			true

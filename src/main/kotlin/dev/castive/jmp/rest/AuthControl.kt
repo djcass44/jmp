@@ -16,7 +16,6 @@
 
 package dev.castive.jmp.rest
 
-import com.amdelamar.jhash.Hash
 import dev.castive.jmp.api.Responses
 import dev.castive.jmp.data.AuthToken
 import dev.castive.jmp.data.BasicAuth
@@ -35,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.web.bind.annotation.*
 import javax.servlet.http.HttpServletRequest
 
@@ -44,7 +44,8 @@ class AuthControl @Autowired constructor(
 	private val userRepo: UserRepo,
 	private val ldapService: LdapService,
 	private val jwtTokenProvider: JwtTokenProvider,
-	private val authService: JwtAuthenticationService
+	private val authService: JwtAuthenticationService,
+	private val passwordEncoder: PasswordEncoder
 ) {
 	@PostMapping("/login", produces = [MediaType.APPLICATION_JSON_VALUE], consumes = [MediaType.APPLICATION_JSON_VALUE])
 	fun createToken(@RequestBody basic: BasicAuth): AuthToken {
@@ -62,7 +63,7 @@ class AuthControl @Autowired constructor(
 		// only allow JWT generation for local users
 		if(user.hash.isESNullOrBlank() || user.source != SecurityConstants.sourceLocal)
 			throw BadRequestResponse("Cannot generate token for this user")
-		if(!Hash.password(basic.password.toCharArray()).verify(user.hash))
+		if(!passwordEncoder.matches(basic.password, user.hash))
 			throw UnauthorizedResponse("Incorrect username or password")
 		return authService.createToken(user)
 	}

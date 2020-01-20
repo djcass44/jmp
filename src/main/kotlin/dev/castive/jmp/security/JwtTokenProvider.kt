@@ -45,8 +45,8 @@ class JwtTokenProvider @Autowired constructor(
 		secretKey = jwtProps.secretKey.base64()
 	}
 
-	fun createRequestToken(username: String, roles: List<Role>) = createToken(username, roles, jwtProps.requestLimit)
-	fun createRefreshToken(username: String, roles: List<Role>) = createToken(username, roles, jwtProps.refreshLimit)
+	fun createRequestToken(username: String, roles: List<Role>): String = createToken(username, roles, jwtProps.requestLimit)
+	fun createRefreshToken(username: String, roles: List<Role>): String = createToken(username, roles, jwtProps.refreshLimit)
 
 	private fun createToken(username: String, roles: List<Role>, limit: Long): String {
 		val claims = Jwts.claims().setSubject(username)

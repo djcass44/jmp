@@ -38,13 +38,13 @@ import dev.castive.jmp.util.user
 import dev.castive.log2.loga
 import dev.castive.log2.logi
 import dev.castive.log2.logw
-import dev.dcas.util.extend.hash
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.web.bind.annotation.*
 import java.util.UUID
 
@@ -54,7 +54,8 @@ class UserControl @Autowired constructor(
 	private val userRepo: UserRepo,
 	private val groupRepo: GroupRepo,
 	private val metaRepo: MetaRepo,
-	private val groupTask: GroupsTask
+	private val groupTask: GroupsTask,
+	private val passwordEncoder: PasswordEncoder
 ) {
 	private val limiter = RateLimiter.create(5.0)
 
@@ -79,7 +80,7 @@ class UserControl @Autowired constructor(
 					basicAuth.username,
 					"",
 					null,
-					basicAuth.password.hash(),
+					passwordEncoder.encode(basicAuth.password),
 					mutableListOf(Role.ROLE_USER),
 					meta,
 					SecurityConstants.sourceLocal

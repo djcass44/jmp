@@ -28,10 +28,10 @@ import dev.castive.log2.loga
 import dev.castive.log2.logf
 import dev.castive.log2.logi
 import dev.castive.log2.logs
-import dev.dcas.util.extend.hash
 import dev.dcas.util.extend.randomString
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
 import java.io.File
 import java.util.UUID
@@ -41,7 +41,8 @@ import javax.annotation.PostConstruct
 class StartupChecks @Autowired constructor(
 	private val userRepo: UserRepo,
 	private val metaRepo: MetaRepo,
-	private val groupRepo: GroupRepo
+	private val groupRepo: GroupRepo,
+	private val passwordEncoder: PasswordEncoder
 ) {
 	@Value("\${spring.ldap.enabled:false}")
 	private val ldapEnabled: Boolean = false
@@ -52,7 +53,7 @@ class StartupChecks @Autowired constructor(
 		if (admin == null) {
 			val password = 32.randomString()
 			val id = UUID.randomUUID()
-			val user = userRepo.save(User(id, "admin", "Admin", "", password.hash(), mutableListOf(Role.ROLE_ADMIN, Role.ROLE_USER), metaRepo.save(Meta.fromUser(id)), SecurityConstants.sourceLocal))
+			val user = userRepo.save(User(id, "admin", "Admin", "", passwordEncoder.encode(password), mutableListOf(Role.ROLE_ADMIN, Role.ROLE_USER), metaRepo.save(Meta.fromUser(id)), SecurityConstants.sourceLocal))
 			"Created an admin with password: $password, id: ${user.id}".logs(javaClass)
 			kotlin.runCatching {
 				File("initialAdminPassword").writeText(password)
