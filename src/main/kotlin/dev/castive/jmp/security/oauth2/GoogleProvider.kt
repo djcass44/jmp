@@ -65,7 +65,7 @@ class GoogleProvider @Autowired constructor(
 	}
 
 	override fun isTokenValid(accessToken: String): Boolean {
-		val request = OAuthRequest(Verb.GET, "/v1/tokeninfo")
+		val request = OAuthRequest(Verb.GET, "$apiUrl/v1/tokeninfo")
 		service.signRequest(accessToken, request)
 		val response = service.execute(request)
 		// if the request failed, return false
