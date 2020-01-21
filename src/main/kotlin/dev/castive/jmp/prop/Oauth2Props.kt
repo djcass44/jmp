@@ -22,5 +22,5 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 @ConfigurationProperties(prefix = "security")
 class Oauth2Props {
-	lateinit var oauth2: List<OAuth2ProviderConfig>
+	var oauth2: List<OAuth2ProviderConfig> = listOf()
 }
