@@ -26,27 +26,11 @@ import dev.castive.jmp.prop.OAuth2ProviderConfig
 import dev.castive.log2.logd
 import dev.castive.log2.loge
 import dev.dcas.util.extend.parse
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
-import org.springframework.stereotype.Service
 
-@Service
-@ConditionalOnExpression("!'\${security.oauth2.google}'.isEmpty()")
-class GoogleProvider @Autowired constructor(
-	// why cant I just wire an OAuth2ProviderConfig bean??
-	@Value("\${security.oauth2.google.apiUrl}")
-	private val apiUrl: String,
-	@Value("\${security.oauth2.google.callbackUrl}")
-	callbackUrl: String,
-	@Value("\${security.oauth2.google.scope}")
-	scope: String,
-	@Value("\${security.oauth2.google.clientId}")
-	private val clientId: String,
-	@Value("\${security.oauth2.google.clientSecret}")
-	private val clientSecret: String,
+class GoogleProvider(
+	private val config: OAuth2ProviderConfig,
 	private val objectMapper: ObjectMapper
-): AbstractOAuth2Provider(OAuth2ProviderConfig(apiUrl, callbackUrl, scope, clientId, clientSecret), GoogleApi20.instance(), "google") {
+): AbstractOAuth2Provider(config, GoogleApi20.instance()) {
 
 	data class GoogleUser(
 		val sub: String,
@@ -65,7 +49,7 @@ class GoogleProvider @Autowired constructor(
 	}
 
 	override fun isTokenValid(accessToken: String): Boolean {
-		val request = OAuthRequest(Verb.GET, "$apiUrl/v1/tokeninfo")
+		val request = OAuthRequest(Verb.GET, "${config.apiUrl}/v1/tokeninfo")
 		service.signRequest(accessToken, request)
 		val response = service.execute(request)
 		// if the request failed, return false
@@ -74,12 +58,12 @@ class GoogleProvider @Autowired constructor(
 			return false
 		}
 		// verify that our clientId matches the one in the token
-		return objectMapper.readTree(response.body).path("audience").asText() == clientId
+		return objectMapper.readTree(response.body).path("audience").asText() == config.clientId
 	}
 
 	override fun getUserInformation(accessToken: String): UserProjection? {
 		// create and sign the request
-		val request = OAuthRequest(Verb.GET, "$apiUrl/v3/userinfo")
+		val request = OAuthRequest(Verb.GET, "${config.apiUrl}/v3/userinfo")
 		service.signRequest(accessToken, request)
 		val response = service.execute(request)
 		// if the request failed, return null

@@ -14,13 +14,13 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp
+package dev.castive.jmp.prop
 
-object Version {
-    private const val MAJOR = "0"
-    private const val MINOR = "6"
-    private const val PATCH = "0"
-    private const val BUILD = "46"
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.context.annotation.Configuration
 
-    fun getVersion() = "$MAJOR.$MINOR.$PATCH-build.$BUILD"
+@Configuration
+@ConfigurationProperties(prefix = "security")
+class Oauth2Props {
+	lateinit var oauth2: List<OAuth2ProviderConfig>
 }

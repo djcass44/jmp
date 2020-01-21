@@ -25,7 +25,7 @@ fun WebSocketSession.send(data: FSA) {
 	else
 		"Unable to send message to closed socket: $id".logv(javaClass)
 }
-fun FSA.broadcast() = SocketHandler.broadcast(this)
+fun FSA.broadcast(): Unit = SocketHandler.broadcast(this)
 
 fun <T> List<T>.toPage(pageable: Pageable): Page<T> {
 	val start = pageable.offset.toInt()

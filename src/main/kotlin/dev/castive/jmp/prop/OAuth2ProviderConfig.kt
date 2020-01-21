@@ -16,10 +16,12 @@
 
 package dev.castive.jmp.prop
 
-data class OAuth2ProviderConfig(
-	val apiUrl: String,
-	val callbackUrl: String,
-	val scope: String,
-	val clientId: String,
-	val clientSecret: String
-)
+class OAuth2ProviderConfig {
+	lateinit var name: String
+	var enabled: Boolean = false
+	lateinit var apiUrl: String
+	lateinit var callbackUrl: String
+	lateinit var scope: String
+	lateinit var clientId: String
+	lateinit var clientSecret: String
+}

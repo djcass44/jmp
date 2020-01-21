@@ -21,20 +21,16 @@ import com.github.scribejava.core.builder.api.DefaultApi20
 import com.github.scribejava.core.model.OAuth2AccessToken
 import dev.castive.jmp.data.UserProjection
 import dev.castive.jmp.prop.OAuth2ProviderConfig
-import dev.castive.log2.loge
 import dev.castive.log2.logv
 import dev.dcas.util.extend.base64Url
 import dev.dcas.util.extend.decodeBase64Url
 import dev.dcas.util.extend.randomString
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import java.util.concurrent.Future
 import javax.annotation.PostConstruct
 
 abstract class AbstractOAuth2Provider(
-	provider: OAuth2ProviderConfig,
-	api: DefaultApi20,
-	internal val name: String
+	private val provider: OAuth2ProviderConfig,
+	api: DefaultApi20
 ) {
 	companion object {
 		fun parseState(state: String): Triple<String, String, String> {
@@ -42,6 +38,8 @@ abstract class AbstractOAuth2Provider(
 			return Triple(name, meta, code)
 		}
 	}
+
+	val name: String = provider.name
 
 	internal val service = ServiceBuilder(provider.clientId)
 		.apiSecret(provider.clientSecret)
@@ -51,7 +49,7 @@ abstract class AbstractOAuth2Provider(
 
 	@PostConstruct
 	fun init() {
-		"Initialising bean for OAuth2 provider: $name".logv(javaClass)
+		"Initialising bean for OAuth2 provider: ${provider.name}".logv(javaClass)
 	}
 
 	/**
@@ -89,18 +87,5 @@ abstract class AbstractOAuth2Provider(
 
 	abstract fun getUserInformation(accessToken: String): UserProjection?
 
-	fun validateUserResponse(response: ResponseEntity<*>): Boolean {
-		if(response.statusCode != HttpStatus.OK) {
-			"Failed to load user information: ${response.statusCodeValue}".loge(javaClass)
-			return false
-		}
-		if(!response.hasBody()) {
-			"Got response with no body".loge(javaClass)
-			return false
-		}
-		// assume nothing else has gone  wrong
-		return true
-	}
-
-	private fun getState(meta: String = ""): String = "$name:$meta:${32.randomString()}".base64Url()
+	private fun getState(meta: String = ""): String = "${provider.name}:$meta:${32.randomString()}".base64Url()
 }

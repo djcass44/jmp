@@ -16,11 +16,15 @@
 
 package dev.castive.jmp.service.auth
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import dev.castive.jmp.api.Responses
 import dev.castive.jmp.entity.*
 import dev.castive.jmp.except.NotFoundResponse
+import dev.castive.jmp.prop.Oauth2Props
 import dev.castive.jmp.repo.*
 import dev.castive.jmp.security.oauth2.AbstractOAuth2Provider
+import dev.castive.jmp.security.oauth2.GitHubProvider
+import dev.castive.jmp.security.oauth2.GoogleProvider
 import dev.castive.log2.*
 import dev.dcas.util.cache.TimedCache
 import dev.dcas.util.extend.ellipsize
@@ -34,18 +38,44 @@ import javax.annotation.PostConstruct
 
 @Service
 class OAuth2Service @Autowired constructor(
-	private val providers: List<AbstractOAuth2Provider>,
+	private val oauth2Config: Oauth2Props,
 	private val userRepo: UserRepo,
 	private val metaRepo: MetaRepo,
 	private val groupRepo: GroupRepo,
 	private val sessionRepo: SessionRepo,
 	private val sessionRepoCustom: SessionRepoCustom,
-	private val passwordEncoder: PasswordEncoder
+	private val passwordEncoder: PasswordEncoder,
+	private val objectMapper: ObjectMapper
 ) {
 	// hold tokens for 60 seconds (tick every 10)
 	private val tokenCache = TimedCache<String, String>(6, tickDelay = 10_000L)
 	private var counter = 0
 
+	private val providers = mutableSetOf<AbstractOAuth2Provider>()
+
+
+	@PostConstruct
+	fun init() {
+		"Found ${oauth2Config.oauth2.size} oauth2 configurations listed".logv(javaClass)
+		// build our providers
+		oauth2Config.oauth2.filter { it.enabled }.forEach {
+			when(it.name) {
+				"github" -> providers.add(GitHubProvider(it))
+				"google" -> providers.add(GoogleProvider(it, objectMapper))
+				else -> "Found unsupported OAuth2 provider: ${it.name}".loga(javaClass)
+			}
+		}
+		"Activated ${providers.size} oauth2 provider(s): [${providers.joinToString(", ") { it.name }}]".logi(javaClass)
+		providers.forEach {
+			groupRepo.findFirstByName("_oauth2/${it.name}") ?: groupRepo.save(Group(
+				// create the group if it doesn't exist
+				name = "_oauth2/${it.name}",
+				source = it.name,
+				defaultFor = "oauth2/${it.name}"
+			))
+		}
+		"Finished oauth2 group checks".logv(javaClass)
+	}
 
 	/**
 	 * Checks whether an OAuth2 token is valid or was valid recently
@@ -67,21 +97,6 @@ class OAuth2Service @Autowired constructor(
 			return true
 		}
 		return false
-	}
-
-
-	@PostConstruct
-	fun init() {
-		"Found ${providers.size} oauth2 provider(s): [${providers.joinToString(", ") { it.name }}]".logi(javaClass)
-		providers.forEach {
-			groupRepo.findFirstByName("_oauth2/${it.name}") ?: groupRepo.save(Group(
-				// create the group if it doesn't exist
-				name = "_oauth2/${it.name}",
-				source = it.name,
-				defaultFor = "oauth2/${it.name}"
-			))
-		}
-		"Finished oauth2 group checks".logv(javaClass)
 	}
 
 	fun createUser(accessToken: String, refreshToken: String, provider: AbstractOAuth2Provider): Boolean {

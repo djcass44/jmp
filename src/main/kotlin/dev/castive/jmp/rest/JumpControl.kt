@@ -68,9 +68,10 @@ class JumpControl @Autowired constructor(
 		@RequestParam("query", defaultValue = "") query: String = ""): Page<JumpDTO> {
 		return jumpRepoCustom.searchByTerm(SecurityContextHolder.getContext().user(), query, exact = false).map {
 			ownerService.getDTO(it)
-		}.sortedByDescending {
-			it.usage
-		}.toPage(PageRequest.of(page, size))
+		}.sortedWith(
+			// sort by usage first, then name
+			compareBy({ -it.usage }, { it.name })
+		).toPage(PageRequest.of(page, size))
 	}
 
 	@GetMapping("/{target}")
