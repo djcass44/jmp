@@ -32,6 +32,7 @@ import dev.castive.jmp.util.broadcast
 import dev.castive.jmp.util.user
 import dev.castive.log2.logi
 import dev.castive.log2.logv
+import dev.dcas.util.extend.decodeBase64Url
 import dev.dcas.util.spring.responses.BadRequestResponse
 import dev.dcas.util.spring.responses.ConflictResponse
 import dev.dcas.util.spring.responses.ForbiddenResponse
@@ -46,7 +47,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
-import java.util.*
+import java.util.UUID
 import javax.transaction.Transactional
 
 @Transactional
@@ -75,7 +76,8 @@ class JumpControl @Autowired constructor(
 	}
 
 	@GetMapping("/{target}")
-	fun jumpTo(@PathVariable target: String, @RequestParam(required = false) id: Int?): DoJumpDTO {
+	fun jumpTo(@PathVariable("target") encodedTarget: String, @RequestParam(required = false) id: Int?): DoJumpDTO {
+		val target = encodedTarget.decodeBase64Url()
 		val user = SecurityContextHolder.getContext().user()
 		if(target.isBlank() && id == null) {
 			throw BadRequestResponse("Empty or null target: $target, id: $id")
