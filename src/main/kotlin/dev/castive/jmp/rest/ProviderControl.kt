@@ -17,8 +17,8 @@
 package dev.castive.jmp.rest
 
 import dev.castive.jmp.repo.UserRepo
-import dev.castive.jmp.security.SecurityConstants
-import dev.castive.jmp.security.oauth2.AbstractOAuth2Provider
+import dev.dcas.jmp.spring.security.SecurityConstants
+import dev.dcas.jmp.spring.security.oauth2.impl.AbstractOAuth2Provider
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cache.annotation.CacheConfig
 import org.springframework.cache.annotation.Cacheable

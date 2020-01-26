@@ -18,6 +18,7 @@ package dev.castive.jmp.repo
 
 import dev.castive.jmp.entity.Session
 import dev.castive.jmp.entity.User
+import dev.dcas.jmp.spring.security.model.entity.UserEntity
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Repository
@@ -29,15 +30,15 @@ class SessionRepoCustomImpl @Autowired constructor(
 	private val sessionRepo: SessionRepo,
 	private val passwordEncoder: PasswordEncoder
 ): SessionRepoCustom {
-	override fun findFirstByUserAndRefreshTokenAndActiveTrue(user: User, refreshToken: String): Session? {
-		val sessions = sessionRepo.findAllByUserAndActiveIsTrue(user)
+	override fun findFirstByUserAndRefreshTokenAndActiveTrue(user: UserEntity, refreshToken: String): Session? {
+		val sessions = sessionRepo.findAllByUserAndActiveIsTrue(user as User)
 		return sessions.firstOrNull {
 			passwordEncoder.matches(refreshToken, it.refreshToken)
 		}
 	}
 
-	override fun findFirstByUserAndRequestTokenAndActiveTrue(user: User, requestToken: String): Session? {
-		val sessions = sessionRepo.findAllByUserAndActiveIsTrue(user)
+	override fun findFirstByUserAndRequestTokenAndActiveTrue(user: UserEntity, requestToken: String): Session? {
+		val sessions = sessionRepo.findAllByUserAndActiveIsTrue(user as User)
 		return sessions.firstOrNull {
 			passwordEncoder.matches(requestToken, it.requestToken)
 		}

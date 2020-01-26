@@ -16,10 +16,9 @@
 
 package dev.castive.jmp.entity
 
-import dev.castive.jmp.security.JwtTokenProvider
-import dev.castive.jmp.util.UUIDConverterCompat
-import org.springframework.security.crypto.password.PasswordEncoder
-import java.util.UUID
+import dev.dcas.jmp.spring.security.model.entity.SessionEntity
+import dev.dcas.util.spring.data.UUIDConverterCompat
+import java.util.*
 import javax.persistence.*
 
 @Entity
@@ -27,33 +26,12 @@ import javax.persistence.*
 data class Session(
 	@Id
 	@Convert(converter = UUIDConverterCompat::class)
-	val id: UUID,
+	override val id: UUID,
 	val requestToken: String,
 	val refreshToken: String,
 	@OneToOne
 	val meta: Meta,
 	@ManyToOne
-	val user: User,
+	override val user: User,
 	var active: Boolean = false
-) {
-	companion object {
-		/**
-		 * Creates a session object and generates access keys
-		 * Generated session contains hashed tokens for security
-		 * @return triple containing the session, request token, refresh token
-		 */
-		fun fromUser(user: User, meta: Meta, provider: JwtTokenProvider, passwordEncoder: PasswordEncoder): Triple<Session, String, String> {
-			val request = provider.createRequestToken(user.username, user.roles)
-			val refresh = provider.createRefreshToken(user.username, user.roles)
-			val session = Session(
-				UUID.randomUUID(),
-				passwordEncoder.encode(request),
-				passwordEncoder.encode(refresh),
-				meta,
-				user,
-				true
-			)
-			return Triple(session, request, refresh)
-		}
-	}
-}
+): SessionEntity

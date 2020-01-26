@@ -79,20 +79,23 @@ class MetadataService @Autowired constructor(
 		}
 	}
 
-	fun getImage(address: String): Job = GlobalScope.launch(Dispatchers.IO) {
+	fun getImage(address: String): String? {
 		if(!allowImage) {
 			"Refusing to scrape image metadata: egress is disabled".logv(MetadataService::class.java)
-			return@launch
+			return null
 		}
 		val destUrl = "$iconUrl/icon?site=${address.safe()}"
-		try {
-			jumpRepo.updateIconWithAddress(address, destUrl)
-			jumpRepo.findAllByLocation(address).forEach {
-				FSA(FSA.EVENT_UPDATE_FAVICON, FaviconPayload(it.id, destUrl)).broadcast()
+		GlobalScope.launch {
+			try {
+				jumpRepo.updateIconWithAddress(address, destUrl)
+				jumpRepo.findAllByLocation(address).forEach {
+					FSA(FSA.EVENT_UPDATE_FAVICON, FaviconPayload(it.id, destUrl)).broadcast()
+				}
+			}
+			catch (e: Exception) {
+				"Failed favicon metadata location request: $address, $destUrl".loge(MetadataService::class.java, e)
 			}
 		}
-		catch (e: Exception) {
-			"Failed favicon metadata location request: $address, $destUrl".loge(MetadataService::class.java, e)
-		}
+		return destUrl
 	}
 }

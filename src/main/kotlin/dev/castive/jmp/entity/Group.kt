@@ -17,8 +17,9 @@
 package dev.castive.jmp.entity
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import dev.castive.jmp.util.UUIDConverterCompat
-import java.util.UUID
+import dev.dcas.jmp.spring.security.model.entity.GroupEntity
+import dev.dcas.util.spring.data.UUIDConverterCompat
+import java.util.*
 import javax.persistence.*
 
 @Entity
@@ -34,7 +35,7 @@ data class Group(
 	@JsonIgnore
 	@ManyToMany
 	val users: MutableSet<User> = mutableSetOf()
-) {
+): GroupEntity {
 	fun containsUser(user: User): Boolean = users.any {
 		it.id == user.id
 	}

@@ -17,9 +17,11 @@
 package dev.castive.jmp.entity
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import dev.castive.jmp.util.UUIDConverterCompat
 import dev.castive.log2.logv
-import java.util.UUID
+import dev.dcas.jmp.spring.security.model.entity.UserEntity
+import dev.dcas.util.spring.data.UUIDConverterCompat
+import org.springframework.security.core.GrantedAuthority
+import java.util.*
 import javax.persistence.*
 
 @Entity
@@ -27,19 +29,19 @@ import javax.persistence.*
 data class User(
 	@Id
 	@Convert(converter = UUIDConverterCompat::class)
-	val id: UUID = UUID.randomUUID(),
+	override val id: UUID = UUID.randomUUID(),
 	@Column(unique = true, nullable = false)
-	val username: String,
+	override val username: String,
 	var displayName: String,
 	var avatarUrl: String? = null,
 	@JsonIgnore
-	val hash: String? = null,
+	override val hash: String? = null,
 	@ElementCollection(fetch = FetchType.EAGER)
-	val roles: MutableList<Role> = mutableListOf(Role.ROLE_USER),
+	override val roles: MutableList<GrantedAuthority> = mutableListOf(Role.ROLE_USER),
 	@OneToOne
 	val meta: Meta,
-	val source: String
-) {
+	override val source: String
+): UserEntity {
 	fun isAdmin(): Boolean = roles.contains(Role.ROLE_ADMIN)
 
 	fun addRole(role: Role) {

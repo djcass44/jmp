@@ -24,6 +24,8 @@ spring:
     generate-ddl: true
   jackson:
     default-property-inclusion: non_null
+    deserialization:
+      fail-on-unknown-properties: false
   ldap:
     enabled: true
     embedded:
@@ -55,6 +57,7 @@ jmp:
     baseUrl: http://localhost:7000
 
 security:
+  allowCors: true
   jwt:
     secretKey: "password"
     requestLimit: 3_600_000
@@ -69,3 +72,7 @@ management:
   endpoint:
     health:
       show-details: when_authorized
+  endpoints:
+    web:
+      exposure:
+        include: health, info, beans

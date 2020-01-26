@@ -36,7 +36,7 @@ class SwaggerConfig: WebMvcConfigurationSupport() {
 
 	@Bean
 	fun getSwaggerConfig(): Docket = Docket(DocumentationType.SWAGGER_2).select()
-		.apis(RequestHandlerSelectors.basePackage("dev.castive"))
+		.apis(RequestHandlerSelectors.basePackage("dev"))
 		.paths(PathSelectors.any())
 		.build()
 		.securityContexts(listOf(securityContext()))

@@ -16,12 +16,16 @@
 
 package dev.castive.jmp
 
+import dev.dcas.jmp.spring.security.aop.EnableJwt
+import dev.dcas.jmp.spring.security.aop.EnableOAuth2
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.scheduling.annotation.EnableScheduling
 
+@EnableOAuth2
+@EnableJwt
 @EnableCaching
 @EnableConfigurationProperties
 @EnableScheduling

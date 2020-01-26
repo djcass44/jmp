@@ -3,13 +3,11 @@ package dev.castive.jmp.util
 import dev.castive.jmp.component.SocketHandler
 import dev.castive.jmp.data.FSA
 import dev.castive.jmp.entity.User
-import dev.castive.jmp.except.UnauthorizedResponse
 import dev.castive.log2.loge
 import dev.castive.log2.logv
+import dev.dcas.jmp.spring.security.model.UserPrincipal
 import dev.dcas.util.extend.json
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.Pageable
+import dev.dcas.util.spring.responses.UnauthorizedResponse
 import org.springframework.security.core.context.SecurityContext
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.socket.TextMessage
@@ -27,16 +25,10 @@ fun WebSocketSession.send(data: FSA) {
 }
 fun FSA.broadcast(): Unit = SocketHandler.broadcast(this)
 
-fun <T> List<T>.toPage(pageable: Pageable): Page<T> {
-	val start = pageable.offset.toInt()
-	val end = if (start + pageable.pageSize > size) size else start + pageable.pageSize
-	return PageImpl<T>(this.subList(start, end), pageable, size.toLong())
-}
-
 fun SecurityContext.user(): User? = kotlin.runCatching {
 	if(SecurityContextHolder.getContext().authentication.principal == "anonymousUser")
 		return null
-	(SecurityContextHolder.getContext().authentication.principal as dev.castive.jmp.security.User).dao
+	(SecurityContextHolder.getContext().authentication.principal as UserPrincipal).dao as User
 }.onFailure {
 	"Failed to extract user from SecurityContextHolder: ${SecurityContextHolder.getContext().authentication.principal}".loge(javaClass, it)
 }.getOrNull()

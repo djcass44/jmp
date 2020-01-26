@@ -17,10 +17,10 @@
 package dev.castive.jmp.repo
 
 import dev.castive.jmp.entity.Session
-import dev.castive.jmp.entity.User
+import dev.dcas.jmp.spring.security.model.entity.UserEntity
 
 interface SessionRepoCustom {
-	fun findFirstByUserAndRefreshTokenAndActiveTrue(user: User, refreshToken: String): Session?
-	fun findFirstByUserAndRequestTokenAndActiveTrue(user: User, requestToken: String): Session?
+	fun findFirstByUserAndRefreshTokenAndActiveTrue(user: UserEntity, refreshToken: String): Session?
+	fun findFirstByUserAndRequestTokenAndActiveTrue(user: UserEntity, requestToken: String): Session?
 	fun findFirstByRequestTokenAndActiveTrue(requestToken: String): Session?
 }

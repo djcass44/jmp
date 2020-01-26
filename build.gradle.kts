@@ -18,8 +18,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
-	id("org.springframework.boot") version "2.2.3.RELEASE"
-	id("io.spring.dependency-management") version "1.0.8.RELEASE"
+	id("org.springframework.boot") version "2.2.4.RELEASE"
+	id("io.spring.dependency-management") version "1.0.9.RELEASE"
 	id("com.github.ben-manes.versions") version "0.27.0"
 	kotlin("jvm") version "1.3.61"
 	kotlin("plugin.spring") version "1.3.61"
@@ -51,7 +51,7 @@ repositories {
 }
 
 val junitVersion: String by project
-extra["springCloudVersion"] = "Hoxton.RELEASE"
+extra["springCloudVersion"] = "Hoxton.SR1"
 
 dependencies {
 	implementation(kotlin("stdlib-jdk8"))
@@ -76,16 +76,13 @@ dependencies {
 	implementation("org.springframework.cloud:spring-cloud-starter-config")
 
 	implementation("com.github.djcass44:log2:4.1")
-	implementation("com.github.djcass44:castive-utilities:v4.1")
+	implementation("com.github.djcass44:castive-utilities:v5.RC3")
+	implementation("com.github.djcass44:jmp-security-utils:0.1.RC2")
 
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.2")
 	implementation("info.debatty:java-string-similarity:1.2.1")
-	implementation("com.google.code.gson:gson:2.8.6")
 	implementation("org.jsoup:jsoup:1.12.1")
 	implementation("com.google.guava:guava:28.2-jre")
-
-	implementation("io.jsonwebtoken:jjwt:0.7.0")
-	implementation("com.github.scribejava:scribejava-apis:6.8.1")
 
 	// ldap
 	implementation("com.unboundid:unboundid-ldapsdk:4.0.14")

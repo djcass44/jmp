@@ -4,13 +4,8 @@ services:
   jmp:
     build: .
     image: jmp/api
-    volumes:
-      - ./data:/data
     ports:
       - 7000:7000
-    environment:
-      - JMP_METADATA_ICON_ENABLED=false
-      - JMP_METADATA_ICON_URL=https://icon.dcas.dev
   psql:
     image: postgres:12.1-alpine
     ports:

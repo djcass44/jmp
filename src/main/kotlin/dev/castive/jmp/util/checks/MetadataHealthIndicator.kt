@@ -16,7 +16,6 @@
 
 package dev.castive.jmp.util.checks
 
-import com.google.gson.JsonObject
 import dev.castive.log2.loge
 import dev.castive.log2.logi
 import dev.castive.log2.logv
@@ -51,7 +50,7 @@ class MetadataHealthIndicator @Autowired constructor(
 		}
 		"Running health check @ $iconUrl/actuator/health".logv(javaClass)
 		// do a standard http health check
-		val httpCheck = kotlin.runCatching { restTemplate.getForEntity<JsonObject>("$iconUrl/actuator/health") }.getOrNull()
+		val httpCheck = kotlin.runCatching { restTemplate.getForEntity<String>("$iconUrl/actuator/health") }.getOrNull()
 		"Got response from $iconUrl: ${httpCheck?.statusCodeValue}".logv(javaClass)
 		if(httpCheck == null || httpCheck.statusCode != HttpStatus.OK) {
 			"Got non-OK response from $iconUrl, ${httpCheck?.statusCodeValue ?: -1}".loge(javaClass)

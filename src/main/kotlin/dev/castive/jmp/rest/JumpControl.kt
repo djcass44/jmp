@@ -24,19 +24,19 @@ import dev.castive.jmp.data.dto.EditJumpDTO
 import dev.castive.jmp.entity.Alias
 import dev.castive.jmp.entity.Jump
 import dev.castive.jmp.entity.Meta
-import dev.castive.jmp.except.BadRequestResponse
-import dev.castive.jmp.except.ConflictResponse
-import dev.castive.jmp.except.ForbiddenResponse
-import dev.castive.jmp.except.NotFoundResponse
 import dev.castive.jmp.repo.*
 import dev.castive.jmp.service.MetadataService
 import dev.castive.jmp.service.OwnerService
 import dev.castive.jmp.util.assertUser
 import dev.castive.jmp.util.broadcast
-import dev.castive.jmp.util.toPage
 import dev.castive.jmp.util.user
 import dev.castive.log2.logi
 import dev.castive.log2.logv
+import dev.dcas.util.spring.responses.BadRequestResponse
+import dev.dcas.util.spring.responses.ConflictResponse
+import dev.dcas.util.spring.responses.ForbiddenResponse
+import dev.dcas.util.spring.responses.NotFoundResponse
+import dev.dcas.util.spring.toPage
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -46,7 +46,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
-import java.util.UUID
+import java.util.*
 import javax.transaction.Transactional
 
 @Transactional
@@ -123,14 +123,13 @@ class JumpControl @Autowired constructor(
 			mutableSetOf(),
 			if(add.personal == Jump.TYPE_PERSONAL) user else null,
 			group,
-			null,
+			metadata.getImage(add.location),
 			metaRepo.save(Meta.fromUser(user))
 		))
-		add.alias.forEach {
-			aliasRepo.save(Alias(0, it.name, created.id))
-		}
+		aliasRepo.saveAll(add.alias.map {
+			Alias(0, it.name, created.id)
+		})
 		// get additional metadata
-		metadata.getImage(created.location)
 		metadata.getTitle(created.location)
 		FSA(FSA.EVENT_UPDATE_JUMP, null).broadcast()
 		return created
@@ -171,9 +170,9 @@ class JumpControl @Autowired constructor(
 		val jump = jumpRepo.save(existing.apply {
 			name = update.name
 			location = update.location
+			image = metadata.getImage(update.location)
 		})
 		// update metadata
-		metadata.getImage(jump.location)
 		metadata.getTitle(jump.location)
 		FSA(FSA.EVENT_UPDATE_JUMP, null).broadcast()
 		return ResponseEntity.ok(jump.id)
