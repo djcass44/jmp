@@ -79,7 +79,7 @@ class SimilarityService {
 	 * return the id suffix so that the webextension can skip the /similar hop
 	 */
 	fun forSuggesting(dict: ArrayList<Jump>, query: String): List<String> = forJumping(dict, query).map {
-		"${it.location.url()?.host}?id=${it.id}"
+		"${it.location.url()?.host}&id=${it.id}"
 	}
 
 	// Check to see if any Jumps are exact matches
