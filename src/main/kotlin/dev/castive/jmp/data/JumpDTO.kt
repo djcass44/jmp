@@ -1,10 +1,10 @@
 package dev.castive.jmp.data
 
 import dev.castive.jmp.data.dto.AliasDTO
-import dev.castive.jmp.entity.Group
 import dev.castive.jmp.entity.Jump
-import dev.castive.jmp.entity.Meta
-import dev.castive.jmp.entity.User
+import dev.dcas.jmp.security.shim.entity.Group
+import dev.dcas.jmp.security.shim.entity.Meta
+import dev.dcas.jmp.security.shim.entity.User
 
 data class JumpDTO(
 	val id: Int,

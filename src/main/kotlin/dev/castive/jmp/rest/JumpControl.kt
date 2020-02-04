@@ -23,8 +23,9 @@ import dev.castive.jmp.data.dto.DoJumpDTO
 import dev.castive.jmp.data.dto.EditJumpDTO
 import dev.castive.jmp.entity.Alias
 import dev.castive.jmp.entity.Jump
-import dev.castive.jmp.entity.Meta
-import dev.castive.jmp.repo.*
+import dev.castive.jmp.repo.AliasRepo
+import dev.castive.jmp.repo.JumpRepo
+import dev.castive.jmp.repo.JumpRepoCustom
 import dev.castive.jmp.service.MetadataService
 import dev.castive.jmp.service.OwnerService
 import dev.castive.jmp.util.assertUser
@@ -32,6 +33,9 @@ import dev.castive.jmp.util.broadcast
 import dev.castive.jmp.util.user
 import dev.castive.log2.logi
 import dev.castive.log2.logv
+import dev.dcas.jmp.security.shim.entity.Meta
+import dev.dcas.jmp.security.shim.repo.GroupRepo
+import dev.dcas.jmp.security.shim.repo.MetaRepo
 import dev.dcas.util.extend.decodeBase64Url
 import dev.dcas.util.spring.responses.BadRequestResponse
 import dev.dcas.util.spring.responses.ConflictResponse

@@ -16,6 +16,7 @@
 
 package dev.castive.jmp.config
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
@@ -24,9 +25,12 @@ import org.springframework.web.client.RestTemplate
 
 @Configuration
 class ClientConfig {
+
+	@ConditionalOnMissingBean(value = [RestTemplate::class])
 	@Bean
 	fun restTemplate(): RestTemplate = RestTemplate()
 
+	@ConditionalOnMissingBean(value = [PasswordEncoder::class])
 	@Bean
 	fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 }

@@ -17,9 +17,10 @@
 package dev.castive.jmp.repo
 
 import dev.castive.jmp.entity.Jump
-import dev.castive.jmp.entity.User
 import dev.castive.jmp.service.SimilarityService
 import dev.castive.log2.logv
+import dev.dcas.jmp.security.shim.entity.User
+import dev.dcas.jmp.security.shim.repo.GroupRepo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional

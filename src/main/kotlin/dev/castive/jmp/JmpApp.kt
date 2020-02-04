@@ -16,6 +16,7 @@
 
 package dev.castive.jmp
 
+import dev.dcas.jmp.security.shim.EnableSecurityDataShim
 import dev.dcas.jmp.spring.security.aop.EnableJwt
 import dev.dcas.jmp.spring.security.aop.EnableOAuth2
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -24,6 +25,7 @@ import org.springframework.boot.runApplication
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.scheduling.annotation.EnableScheduling
 
+@EnableSecurityDataShim
 @EnableOAuth2
 @EnableJwt
 @EnableCaching

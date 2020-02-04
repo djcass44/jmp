@@ -20,13 +20,7 @@ import com.google.common.util.concurrent.RateLimiter
 import dev.castive.jmp.api.Responses
 import dev.castive.jmp.data.BasicAuth
 import dev.castive.jmp.data.FSA
-import dev.castive.jmp.entity.Group
-import dev.castive.jmp.entity.Meta
 import dev.castive.jmp.entity.Role
-import dev.castive.jmp.entity.User
-import dev.castive.jmp.repo.GroupRepo
-import dev.castive.jmp.repo.MetaRepo
-import dev.castive.jmp.repo.UserRepo
 import dev.castive.jmp.security.SecurityConstants
 import dev.castive.jmp.tasks.GroupsTask
 import dev.castive.jmp.util.assertUser
@@ -35,6 +29,12 @@ import dev.castive.jmp.util.user
 import dev.castive.log2.loga
 import dev.castive.log2.logi
 import dev.castive.log2.logw
+import dev.dcas.jmp.security.shim.entity.Group
+import dev.dcas.jmp.security.shim.entity.Meta
+import dev.dcas.jmp.security.shim.entity.User
+import dev.dcas.jmp.security.shim.repo.GroupRepo
+import dev.dcas.jmp.security.shim.repo.MetaRepo
+import dev.dcas.jmp.security.shim.repo.UserRepo
 import dev.dcas.util.spring.responses.BadRequestResponse
 import dev.dcas.util.spring.responses.ForbiddenResponse
 import dev.dcas.util.spring.responses.NotFoundResponse
@@ -46,7 +46,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.web.bind.annotation.*
-import java.util.*
+import java.util.UUID
 
 @RestController
 @RequestMapping("/v2/user")

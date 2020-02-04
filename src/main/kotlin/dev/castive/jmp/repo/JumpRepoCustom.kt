@@ -17,7 +17,7 @@
 package dev.castive.jmp.repo
 
 import dev.castive.jmp.entity.Jump
-import dev.castive.jmp.entity.User
+import dev.dcas.jmp.security.shim.entity.User
 
 interface JumpRepoCustom {
 	fun findAllByUser(user: User?): List<Jump>

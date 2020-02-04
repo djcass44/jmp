@@ -16,9 +16,9 @@
 
 package dev.castive.jmp.repo
 
-import dev.castive.jmp.entity.Group
 import dev.castive.jmp.entity.Jump
-import dev.castive.jmp.entity.User
+import dev.dcas.jmp.security.shim.entity.Group
+import dev.dcas.jmp.security.shim.entity.User
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query

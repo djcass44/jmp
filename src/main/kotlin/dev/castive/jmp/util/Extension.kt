@@ -2,9 +2,9 @@ package dev.castive.jmp.util
 
 import dev.castive.jmp.component.SocketHandler
 import dev.castive.jmp.data.FSA
-import dev.castive.jmp.entity.User
 import dev.castive.log2.loge
 import dev.castive.log2.logv
+import dev.dcas.jmp.security.shim.entity.User
 import dev.dcas.jmp.spring.security.model.UserPrincipal
 import dev.dcas.util.extend.json
 import dev.dcas.util.spring.responses.UnauthorizedResponse

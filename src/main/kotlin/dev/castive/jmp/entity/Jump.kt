@@ -16,6 +16,9 @@
 
 package dev.castive.jmp.entity
 
+import dev.dcas.jmp.security.shim.entity.Group
+import dev.dcas.jmp.security.shim.entity.Meta
+import dev.dcas.jmp.security.shim.entity.User
 import javax.persistence.*
 
 @Entity
@@ -39,9 +42,9 @@ data class Jump(
 	var usage: Int = 0
 ) {
 	companion object {
-		const val TYPE_GLOBAL = 0
-		const val TYPE_PERSONAL = 1
-		const val TYPE_GROUP = 2
+		const val TYPE_GLOBAL: Int = 0
+		const val TYPE_PERSONAL: Int = 1
+		const val TYPE_GROUP: Int = 2
 
 		fun getType(jump: Jump): Int = when {
 			jump.isPublic() -> TYPE_GLOBAL

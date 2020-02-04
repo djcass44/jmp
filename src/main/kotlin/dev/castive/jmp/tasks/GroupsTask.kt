@@ -16,12 +16,12 @@
 
 package dev.castive.jmp.tasks
 
-import dev.castive.jmp.entity.Group
-import dev.castive.jmp.repo.GroupRepo
-import dev.castive.jmp.repo.UserRepo
 import dev.castive.log2.loga
 import dev.castive.log2.logv
 import dev.castive.log2.logw
+import dev.dcas.jmp.security.shim.entity.Group
+import dev.dcas.jmp.security.shim.repo.GroupRepo
+import dev.dcas.jmp.security.shim.repo.UserRepo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
