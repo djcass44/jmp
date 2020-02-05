@@ -111,3 +111,5 @@ jmp.properties
 initialAdminPassword
 /Dockerfile
 .drone.yml
+.drone2.yml
+/jmp

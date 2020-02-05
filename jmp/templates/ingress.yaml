@@ -1,0 +1,55 @@
+{{- if .Values.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: {{ .Values.name.api }}
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "true"
+    ingress.kubernetes.io/custom-response-headers: "server:"
+    {{ if .Values.ingress.hsts }}
+    ingress.kubernetes.io/frame-deny: "true"
+    ingress.kubernetes.io/hsts-max-age: "31536000"
+    ingress.kubernetes.io/hsts-include-subdomains: "true"
+    ingress.kubernetes.io/hsts-preload: "true"
+    ingress.kubernetes.io/referrer-policy: "no-referrer"
+    ingress.kubernetes.io/browser-xss-filter: "true"
+    ingress.kubernetes.io/content-type-nosniff: "true"
+    {{ end }}
+spec:
+  rules:
+  - host: {{ .Values.ingress.host }}
+    http:
+      paths:
+        - path: /api
+          backend:
+            serviceName: {{ .Values.name.api }}
+            servicePort: {{ .Values.env.SERVER_PORT }}
+{{- end }}
+---
+{{- if .Values.netsec.enabled -}}
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: {{ .Values.name.ui }}
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "true"
+    ingress.kubernetes.io/custom-response-headers: "server:"
+    {{ if .Values.ingress.hsts }}
+    ingress.kubernetes.io/frame-deny: "true"
+    ingress.kubernetes.io/hsts-max-age: "31536000"
+    ingress.kubernetes.io/hsts-include-subdomains: "true"
+    ingress.kubernetes.io/hsts-preload: "true"
+    ingress.kubernetes.io/referrer-policy: "no-referrer"
+    ingress.kubernetes.io/browser-xss-filter: "true"
+    ingress.kubernetes.io/content-type-nosniff: "true"
+    {{ end }}
+spec:
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: {{ $.Values.name.ui }}
+              servicePort: 8080
+{{- end }}

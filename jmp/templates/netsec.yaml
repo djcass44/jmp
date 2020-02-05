@@ -1,0 +1,56 @@
+{{- if .Values.netsec.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Values.name.api }}
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ .Values.name.api }}
+  ingress:
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            {{- range $key, $val := .Values.netsec.namespace }}
+            {{ $key }}: {{ $val }}
+            {{- end}}
+      - podSelector:
+          matchLabels:
+            {{- range $key, $val := .Values.netsec.source }}
+            {{ $key }}: {{ $val }}
+            {{- end}}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.env.SERVER_PORT }}
+  egress:
+    - {}
+  policyTypes:
+    - Egress
+    - Ingress
+{{- end }}
+---
+{{- if .Values.netsec.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Values.name.ui }}
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ .Values.name.ui }}
+  ingress:
+  - from:
+      - namespaceSelector:
+          matchLabels:
+            {{- range $key, $val := .Values.netsec.namespace }}
+            {{ $key }}: {{ $val }}
+            {{- end}}
+      - podSelector:
+          matchLabels:
+            {{- range $key, $val := .Values.netsec.source }}
+            {{ $key }}: {{ $val }}
+            {{- end}}
+    ports:
+    - protocol: TCP
+      port: 8080
+{{- end }}

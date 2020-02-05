@@ -1,0 +1,69 @@
+name:
+  api: jmp-api
+  ui: jmp-ui
+
+replicas:
+  api: 1
+  ui: 2
+
+resources:
+  requests:
+    memory: 150Mi
+    cpu: 100m
+  limits:
+    memory: 350Mi
+    cpu: 200m
+
+
+# arbitrary environment variables to inject to the API pod
+# this can be extended
+env:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://jmp-db:5432/jmp
+  SPRING_DATASOURCE_PASSWORD: password
+  SERVER_PORT: 7000
+  JMP_SECURITY_BASE_URL: https://jmp.castive.dev
+  SECURITY_JWT_SECRETKEY: password
+  SECURITY_OAUTH2_GITHUB_CALLBACKURL: https://jmp.castive.dev/callback
+  SECURITY_OAUTH2_GITHUB_CLIENTID: 1234
+  SECURITY_OAUTH2_GITHUB_CLIENTSECRET: 12345
+
+# custom branding for UI
+brand:
+  name: JMP
+  msg: ""
+  noun: Jump
+  key: jmp
+
+images:
+  api:
+    repository: djcass44/jmp"
+    tag: springboot
+    pullPolicy: Always
+    imagePullSecrets: []
+  ui:
+    repository: djcass44/jmp-ui"
+    tag: springboot
+    pullPolicy: Always
+    imagePullSecrets: []
+
+ingress:
+  enabled: true
+  host: jmp.castive.dev
+  # enforce HTTPS using HSTS (recommended)
+  hsts: false
+
+
+# network policy
+netsec:
+  enabled: false
+  # label to allow traffic from
+  source:
+    app: traefik
+  namespace:
+    dev.dcas.netsec/name: kube-system
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
