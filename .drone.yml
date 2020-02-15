@@ -20,16 +20,9 @@ helm_deploy: &helm_deploy
     from_secret: client_key_data
 
 steps:
-  # RUN GRADLE TESTS
-  - name: test
-    image: harbor.v2.dcas.dev/library/gradle:jdk13
-    commands:
-      - gradle test
     # BUILD DOCKER IMAGE
   - name: docker
     image: plugins/docker
-    depends_on:
-      - test
     settings:
       repo: djcass44/jmp
       tags:
