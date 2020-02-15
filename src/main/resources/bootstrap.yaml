@@ -7,4 +7,4 @@ spring:
     config:
       enabled: false
       fail-fast: true
-      uri: http://dcas-cloud-config:8888
+      uri: http://dcas-cloud-config.production.svc.cluster.local:8888

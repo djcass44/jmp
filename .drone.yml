@@ -75,7 +75,7 @@ steps:
         - env.SPRING_CLOUD_CONFIG_ENABLED=true
     when:
       branch:
-        include: master
+        - master
 trigger:
   when:
     event: push
