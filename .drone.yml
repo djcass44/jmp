@@ -48,6 +48,9 @@ steps:
     # DEPLOY TO DEV
   - name: deploy_development
     image: harbor.v2.dcas.dev/djcass44/drone-helm3
+    depends_on:
+      - helm_lint
+      - docker
     settings:
       <<: *helm_deploy
       namespace: development
@@ -60,10 +63,13 @@ steps:
         - env.SPRING_CLOUD_CONFIG_ENABLED=true
     when:
       branch:
-        excluse: master
+        exclude: master
     # DEPLOY TO PROD
   - name: deploy_production
     image: harbor.v2.dcas.dev/djcass44/drone-helm3
+    depends_on:
+      - helm_lint
+      - docker
     settings:
       <<: *helm_deploy
       namespace: production
