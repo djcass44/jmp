@@ -47,36 +47,36 @@ steps:
       chart: ./jmp
     # DEPLOY TO DEV
   - name: deploy_development
-      image: harbor.v2.dcas.dev/djcass44/drone-helm3
-      settings:
-        <<: *helm_deploy
-        namespace: development
-        values:
-          - ingress.host=jmp-dev.v2.dcas.dev
-          - ingress.hsts="true"
-          - netsec.enabled="true"
-          - images.api.tag=${DRONE_COMMIT_SHA}
-          - env.SPRING_PROFILES_ACTIVE=development
-          - env.SPRING_CLOUD_CONFIG_ENABLED=true
-      when:
-        branch:
-          excluse: master
+    image: harbor.v2.dcas.dev/djcass44/drone-helm3
+    settings:
+      <<: *helm_deploy
+      namespace: development
+      values:
+        - ingress.host=jmp-dev.v2.dcas.dev
+        - ingress.hsts="true"
+        - netsec.enabled="true"
+        - images.api.tag=${DRONE_COMMIT_SHA}
+        - env.SPRING_PROFILES_ACTIVE=development
+        - env.SPRING_CLOUD_CONFIG_ENABLED=true
+    when:
+      branch:
+        excluse: master
     # DEPLOY TO PROD
   - name: deploy_production
-      image: harbor.v2.dcas.dev/djcass44/drone-helm3
-      settings:
-        <<: *helm_deploy
-        namespace: production
-        values:
-          - ingress.host=jmp.v2.dcas.dev
-          - ingress.hsts="true"
-          - netsec.enabled="true"
-          - images.api.tag=${DRONE_COMMIT_SHA}
-          - env.SPRING_PROFILES_ACTIVE=production
-          - env.SPRING_CLOUD_CONFIG_ENABLED=true
-      when:
-        branch:
-          include: master
+    image: harbor.v2.dcas.dev/djcass44/drone-helm3
+    settings:
+      <<: *helm_deploy
+      namespace: production
+      values:
+        - ingress.host=jmp.v2.dcas.dev
+        - ingress.hsts="true"
+        - netsec.enabled="true"
+        - images.api.tag=${DRONE_COMMIT_SHA}
+        - env.SPRING_PROFILES_ACTIVE=production
+        - env.SPRING_CLOUD_CONFIG_ENABLED=true
+    when:
+      branch:
+        include: master
 trigger:
   when:
     event: push
