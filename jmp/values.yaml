@@ -28,12 +28,12 @@ brand:
 
 images:
   api:
-    repository: harbor.v2.dcas.dev/djcass44/jmp
+    repository: djcass44/jmp
     tag: springboot
     pullPolicy: Always
     imagePullSecrets: []
   ui:
-    repository: harbor.v2.dcas.dev/djcass44/jmp-ui
+    repository: djcass44/jmp-ui
     tag: springboot
     pullPolicy: Always
     imagePullSecrets: []

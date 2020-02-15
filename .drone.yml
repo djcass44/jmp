@@ -5,7 +5,6 @@ name: default
 helm_deploy: &helm_deploy
   mode: upgrade
   release: jmp
-  debug: true
   chart: ./jmp
   wait_for_upgrade: true
   atomic: true
@@ -27,7 +26,7 @@ steps:
       repo: djcass44/jmp
       tags:
         - ${DRONE_BRANCH/\//-}
-        - ${DRONE_COMMIT_SHA}
+#        - ${DRONE_COMMIT_SHA}
       username:
         from_secret: DOCKER_USERNAME
       password:
@@ -51,7 +50,7 @@ steps:
         - ingress.host=jmp-dev.v2.dcas.dev
         - ingress.hsts="true"
         - netsec.enabled="true"
-        - images.api.tag=${DRONE_COMMIT_SHA}
+        - images.api.tag=${DRONE_BRANCH}
         - env.SPRING_PROFILES_ACTIVE=development
         - env.SPRING_CLOUD_CONFIG_ENABLED=true
     when:
@@ -70,7 +69,7 @@ steps:
         - ingress.host=jmp.v2.dcas.dev
         - ingress.hsts="true"
         - netsec.enabled="true"
-        - images.api.tag=${DRONE_COMMIT_SHA}
+        - images.api.tag=${DRONE_BRANCH}
         - env.SPRING_PROFILES_ACTIVE=production
         - env.SPRING_CLOUD_CONFIG_ENABLED=true
     when:

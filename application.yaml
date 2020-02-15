@@ -66,12 +66,6 @@ security:
   token:
     age-limit: 6
     age-tick: 10000
-  oauth2:
-    - name: github
-      enabled: true
-      apiUrl: https://api.github.com
-      callbackUrl: http://localhost:3000/callback
-      scope: "read:user"
 
 logging:
   level:
