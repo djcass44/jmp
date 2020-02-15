@@ -2,7 +2,7 @@ kind: pipeline
 type: kubernetes
 name: default
 
-helm_deploy: &helm_deploy:
+helm_deploy: &helm_deploy
   mode: upgrade
   release: jmp
   debug: true
