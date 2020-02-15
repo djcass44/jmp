@@ -44,9 +44,10 @@ configurations {
 }
 
 repositories {
-	maven(url = "https://jitpack.io")
+	maven(url = "https://mvn.v2.dcas.dev")
 	mavenCentral()
-	jcenter()
+	maven(url = "https://jitpack.io")
+	//jcenter()
 //    mavenLocal()
 }
 

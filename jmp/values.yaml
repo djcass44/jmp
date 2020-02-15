@@ -16,16 +16,8 @@ resources:
 
 
 # arbitrary environment variables to inject to the API pod
-# this can be extended
 env:
-  SPRING_DATASOURCE_URL: jdbc:postgresql://jmp-db:5432/jmp
-  SPRING_DATASOURCE_PASSWORD: password
-  SERVER_PORT: 7000
-  JMP_SECURITY_BASE_URL: https://jmp.castive.dev
-  SECURITY_JWT_SECRETKEY: password
-  SECURITY_OAUTH2_GITHUB_CALLBACKURL: https://jmp.castive.dev/callback
-  SECURITY_OAUTH2_GITHUB_CLIENTID: 1234
-  SECURITY_OAUTH2_GITHUB_CLIENTSECRET: 12345
+  SPRING_PROFILES_ACTIVE: local
 
 # custom branding for UI
 brand:
@@ -36,12 +28,12 @@ brand:
 
 images:
   api:
-    repository: djcass44/jmp"
+    repository: harbor.v2.dcas.dev/djcass44/jmp
     tag: springboot
     pullPolicy: Always
     imagePullSecrets: []
   ui:
-    repository: djcass44/jmp-ui"
+    repository: harbor.v2.dcas.dev/djcass44/jmp-ui
     tag: springboot
     pullPolicy: Always
     imagePullSecrets: []
@@ -52,6 +44,8 @@ ingress:
   # enforce HTTPS using HSTS (recommended)
   hsts: false
 
+service:
+  port: 7000
 
 # network policy
 netsec:
@@ -60,7 +54,7 @@ netsec:
   source:
     app: traefik
   namespace:
-    dev.dcas.netsec/name: kube-system
+    dev.dcas.netsec/name: default
 
 nodeSelector: {}
 

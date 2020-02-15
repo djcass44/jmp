@@ -23,7 +23,7 @@ spec:
         - path: /api
           backend:
             serviceName: {{ .Values.name.api }}
-            servicePort: {{ .Values.env.SERVER_PORT }}
+            servicePort: {{ .Values.service.port }}
 {{- end }}
 ---
 {{- if .Values.netsec.enabled -}}

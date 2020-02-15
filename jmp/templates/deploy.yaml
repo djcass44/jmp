@@ -31,22 +31,23 @@ spec:
       - name: tmp
         emptyDir: {}
       containers:
-      - env:
-        {{- range $key, $value := .Values.env }}
-        - name: {{ $key }}
-          value:  {{ $value | quote }}
-        {{- end }}
+      - name: {{ .Values.name.api }}
+        env:
+          {{- range $key, $value := .Values.env }}
+          - name: {{ $key }}
+            value:  {{ $value | quote }}
+          {{- end }}
         image: "{{ .Values.images.api.repository }}:{{ .Values.images.api.tag }}"
         imagePullPolicy: {{ .Values.images.api.pullPolicy }}
-        name: {{ .Values.name.api }}
         ports:
-        - containerPort: {{ .Values.env.SERVER_PORT }}
-          name: http
+          - name: http
+            containerPort: {{ .Values.service.port }}
+            protocol: TCP
         volumeMounts:
-        - mountPath: /tmp
-          name: tmp
+          - mountPath: /tmp
+            name: tmp
         resources:
-          {{ toYaml .Values.resources | indent 12 }}
+          {{ toYaml .Values.resources | nindent 12 }}
         readinessProbe:
           httpGet:
             path: /api/ping
@@ -111,7 +112,7 @@ spec:
         runAsGroup: 101
       volumes:
       - name: tmp
-        emptyDir: {}  
+        emptyDir: {}
       containers:
       - image: "{{ .Values.images.ui.repository }}:{{ .Values.images.ui.tag }}"
         imagePullPolicy: {{ .Values.images.ui.pullPolicy }}
