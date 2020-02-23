@@ -1,5 +1,5 @@
 /*
- *    Copyright 2019 Django Cass
+ *    Copyright 2020 Django Cass
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,10 +14,26 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.api
+package dev.castive.jmp
 
-import java.util.UUID
+import io.restassured.RestAssured
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.web.server.LocalServerPort
 
-object App {
-	val id = UUID.randomUUID().toString()
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class BaseSpringBootTest {
+	@LocalServerPort
+	private var port = 0
+
+	@BeforeEach
+	internal fun setUp() {
+		RestAssured.port = port
+	}
+
+	@AfterEach
+	internal fun tearDown() {
+		RestAssured.reset()
+	}
 }

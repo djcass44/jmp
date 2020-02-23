@@ -16,7 +16,6 @@
 
 package dev.castive.jmp.component
 
-import dev.castive.jmp.api.App
 import dev.castive.jmp.data.FSA
 import dev.castive.jmp.util.send
 import dev.castive.log2.loge
@@ -32,12 +31,16 @@ import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
 import org.springframework.web.socket.handler.TextWebSocketHandler
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 @Component
 class SocketHandler: TextWebSocketHandler() {
 	companion object {
-		val sessions = ConcurrentHashMap<String, WebSocketSession>()
+		// random string that uniquely identifies this app instance
+		val appId: String = UUID.randomUUID().toString()
+
+		val sessions: ConcurrentHashMap<String, WebSocketSession> = ConcurrentHashMap()
 
 		/**
 		 * Send a socket message to a session with a specific id
@@ -96,7 +99,7 @@ class SocketHandler: TextWebSocketHandler() {
 		sessions[session.id] = session
 		"Established websocket connection with ${session.id}".logv(javaClass)
 		// send init message
-		session.send(FSA(FSA.INIT_APP, App.id))
+		session.send(FSA(FSA.INIT_APP, appId))
 	}
 
 	override fun afterConnectionClosed(session: WebSocketSession, status: CloseStatus) {

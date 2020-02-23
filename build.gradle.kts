@@ -92,11 +92,9 @@ dependencies {
 	implementation("io.springfox:springfox-swagger2:2.9.2")
 	implementation("io.springfox:springfox-swagger-ui:2.9.2")
 
-	// Crypto providers
-	implementation("com.amazonaws:aws-java-sdk-ssm:1.11.708")
-
 	// JDBC drivers
 	runtimeOnly("org.postgresql:postgresql:42.2.9") // tested (django)
+	runtimeOnly("com.h2database:h2:1.4.200")
 
 	testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
 	testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
@@ -104,7 +102,16 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 	}
+	testImplementation("org.springframework.security:spring-security-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test")
+
+	// rest assured
+	val restAssuredVersion = "4.2.0"
+	testImplementation("io.rest-assured:json-path:$restAssuredVersion")
+	testImplementation("io.rest-assured:xml-path:$restAssuredVersion")
+	testImplementation("io.rest-assured:rest-assured:$restAssuredVersion")
+	testImplementation("io.rest-assured:kotlin-extensions:$restAssuredVersion")
+	testImplementation("io.rest-assured:spring-mock-mvc:$restAssuredVersion")
 
 	testImplementation("org.hamcrest:hamcrest:2.2")
 	testImplementation("org.mockito:mockito-core:3.2.4")

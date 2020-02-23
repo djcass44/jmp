@@ -78,4 +78,5 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, info, beans
+        include: "*"
+#        include: health, info, beans

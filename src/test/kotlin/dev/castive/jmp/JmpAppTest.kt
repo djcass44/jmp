@@ -1,5 +1,5 @@
 /*
- *    Copyright [2019 Django Cass
+ *    Copyright 2020 Django Cass
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,17 +14,16 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.crypto
+package dev.castive.jmp
 
 import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
+import org.springframework.boot.test.context.SpringBootTest
 
-class KeyProviderTest {
+@SpringBootTest
+class JmpAppTest {
+
 	@Test
-	fun `ensure correct length of string`() {
-		for(i in 0 until 1000) {
-			val crypt = KeyProvider().getEncryptionKey()
-			assertEquals(44, crypt.length)
-		}
+	fun contextLoads() {
+		// checks that the spring context can be initialised
 	}
 }
