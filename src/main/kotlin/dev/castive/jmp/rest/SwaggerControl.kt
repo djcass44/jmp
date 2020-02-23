@@ -24,7 +24,7 @@ import javax.servlet.http.HttpServletResponse
 @RestController
 class SwaggerControl {
 
-	@Value("\${server.servlet.context-path}")
+	@Value("\${server.servlet.context-path:}")
 	private val contextPath = ""
 
 	@GetMapping

@@ -23,7 +23,8 @@ import dev.dcas.jmp.security.shim.entity.Group
 import dev.dcas.jmp.security.shim.repo.GroupRepo
 import dev.dcas.jmp.security.shim.repo.UserRepo
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.boot.context.event.ApplicationReadyEvent
+import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.transaction.Transactional
@@ -38,10 +39,14 @@ class GroupsTask @Autowired constructor(
 	// use an atomic value to reduce weird async behaviour
 	private val running = AtomicBoolean(false)
 
-	@Scheduled(fixedDelay = 60 * 1000)
+	@EventListener
+	fun appReady(event: ApplicationReadyEvent) {
+		run()
+	}
+
 	fun run() {
 		if(running.get()) {
-			"Unable to action ${javaClass.simpleName} as there is already one running".loga(javaClass)
+			"Unable to action [${javaClass.simpleName}] as there is already one running".loga(javaClass)
 			return
 		}
 		running.set(true)

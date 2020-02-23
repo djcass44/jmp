@@ -33,10 +33,10 @@ class MetadataHealthIndicator @Autowired constructor(
 	private val restTemplate: RestTemplate
 ): HealthIndicator {
 
-	@Value("\${jmp.metadata.icon.url}")
+	@Value("\${jmp.metadata.icon.url:}")
 	private lateinit var iconUrl: String
 
-	@Value("\${jmp.metadata.icon.enabled}")
+	@Value("\${jmp.metadata.icon.enabled:true}")
 	private val allowImage: Boolean = true
 
 	override fun health(): Health {

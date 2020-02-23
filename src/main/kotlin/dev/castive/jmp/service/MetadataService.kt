@@ -23,6 +23,7 @@ import dev.castive.jmp.util.broadcast
 import dev.castive.log2.loge
 import dev.castive.log2.logi
 import dev.castive.log2.logv
+import dev.dcas.util.extend.isESNullOrBlank
 import dev.dcas.util.extend.safe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -38,13 +39,13 @@ import java.net.URI
 class MetadataService @Autowired constructor(
 	private val jumpRepo: JumpRepo
 ) {
-	@Value("\${jmp.metadata.title.enabled}")
+	@Value("\${jmp.metadata.title.enabled:true}")
 	private val allowTitle: Boolean = true
 
-	@Value("\${jmp.metadata.icon.enabled}")
+	@Value("\${jmp.metadata.icon.enabled:false}")
 	private val allowImage: Boolean = true
 
-	@Value("\${jmp.metadata.icon.url}")
+	@Value("\${jmp.metadata.icon.url:}")
 	private lateinit var iconUrl: String
 
 	fun getTitle(address: String): Job = GlobalScope.launch(Dispatchers.IO) {
@@ -82,6 +83,10 @@ class MetadataService @Autowired constructor(
 	fun getImage(address: String): String? {
 		if(!allowImage) {
 			"Refusing to scrape image metadata: egress is disabled".logv(MetadataService::class.java)
+			return null
+		}
+		if(!this::iconUrl.isInitialized || iconUrl.isESNullOrBlank()) {
+			"Cannot scrape image metadata: blank or null url set".logv(MetadataService::class.java)
 			return null
 		}
 		val destUrl = "$iconUrl/icon?site=${address.safe()}"
