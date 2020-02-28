@@ -66,7 +66,7 @@ steps:
       <<: *helm_deploy
       namespace: production
       values:
-        - ingress.host=jmp.v2.dcas.dev
+        - ingress.host=jmp.castive.dev
         - ingress.hsts="true"
         - netsec.enabled="true"
         - images.api.tag=${DRONE_BRANCH}

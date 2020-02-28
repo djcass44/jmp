@@ -26,6 +26,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import javax.annotation.PostConstruct
 
 @CacheConfig(cacheNames = ["providers"])
 @RestController
@@ -35,8 +36,13 @@ class ProviderControl @Autowired constructor(
 	private val providers: List<AbstractOAuth2Provider>
 ) {
 
-	private val internalProviders = arrayListOf(SecurityConstants.sourceLocal, SecurityConstants.sourceLdap).apply {
-		addAll(providers.map { "oauth2/${it.name}" })
+	private val internalProviders = arrayListOf(SecurityConstants.sourceLocal, SecurityConstants.sourceLdap)
+
+	@PostConstruct
+	fun init() {
+		internalProviders.apply {
+			addAll(providers.map { "oauth2/${it.name}" })
+		}
 	}
 
 	@Cacheable
