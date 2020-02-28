@@ -134,10 +134,14 @@ class GroupControl @Autowired constructor(
 			groupRepo.findByIdOrNull(g)?.let {
 				// check if user is admin
 				if((user.isAdmin() || it.containsUser(user)) && !it.name.startsWith("_")) {
-					it.users.remove(newUser)
-					"${user.username} removed ${newUser.username} from group: ${it.name}".logi(javaClass)
+					// removeIf to ensure that object.equals doesn't get in the way
+					"${user.username} removed ${newUser.username} from group: ${it.name}, result: ${it.users.removeIf { (id) ->
+						id == newUser.id
+					}}".logi(javaClass)
 					groupRepo.save(it)
 				}
+				else
+					"Cannot remove from group: ${it.name}: [${user.isAdmin()}, ${it.containsUser(user)}]".logi(javaClass)
 			} ?: "[rm] Failed to find group with id: $g".loge(javaClass)
 		}
 	}
