@@ -51,7 +51,7 @@ jmp:
       enabled: true
     icon:
       enabled: true
-      url: https://icon.dcas.dev
+      url: https://icon-dev.v2.dcas.dev
   security:
     allowCors: true
     baseUrl: http://localhost:7000

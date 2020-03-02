@@ -17,11 +17,13 @@
 package dev.castive.jmp.tasks
 
 import dev.castive.log2.loga
+import dev.castive.log2.loge
 import dev.castive.log2.logv
 import dev.castive.log2.logw
 import dev.dcas.jmp.security.shim.entity.Group
 import dev.dcas.jmp.security.shim.repo.GroupRepo
 import dev.dcas.jmp.security.shim.repo.UserRepo
+import dev.dcas.jmp.spring.security.util.Events
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
@@ -41,6 +43,12 @@ class GroupsTask @Autowired constructor(
 
 	@EventListener
 	fun appReady(event: ApplicationReadyEvent) {
+		Events.addListener(object : Events.Listener {
+			// attempt to run a refresh when a user has been created
+			override fun onUserCreated(source: String, username: String?) {
+				run()
+			}
+		})
 		run()
 	}
 
@@ -52,11 +60,15 @@ class GroupsTask @Autowired constructor(
 		running.set(true)
 		"Starting ${javaClass.name} at ${System.currentTimeMillis()}".logv(javaClass)
 		"Scanned group relations in ${measureTimeMillis {
-			groupRepo.findAll().forEach {
-				when {
-					it.public -> addUsersToPublicGroups(it)
-					it.defaultFor != null -> addUsersToDefaultGroup(it)
+			kotlin.runCatching {
+				groupRepo.findAll().forEach {
+					when {
+						it.public -> addUsersToPublicGroups(it)
+						it.defaultFor != null -> addUsersToDefaultGroup(it)
+					}
 				}
+			}.onFailure {
+				"Failed to execute task ${javaClass.name}".loge(javaClass, it)
 			}
 		}} ms".logv(javaClass)
 		running.set(false)
