@@ -16,9 +16,10 @@
 
 package dev.castive.jmp.rest
 
+import dev.castive.log2.logd
 import dev.dcas.jmp.security.shim.repo.UserRepo
 import dev.dcas.jmp.spring.security.SecurityConstants
-import dev.dcas.jmp.spring.security.oauth2.impl.AbstractOAuth2Provider
+import dev.dcas.jmp.spring.security.props.SecurityProps
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cache.annotation.CacheConfig
 import org.springframework.cache.annotation.Cacheable
@@ -33,15 +34,16 @@ import javax.annotation.PostConstruct
 @RequestMapping("/v2/providers")
 class ProviderControl @Autowired constructor(
 	private val userRepo: UserRepo,
-	private val providers: List<AbstractOAuth2Provider>
-) {
+	private val oauth2Config: SecurityProps
+	) {
 
 	private val internalProviders = arrayListOf(SecurityConstants.sourceLocal, SecurityConstants.sourceLdap)
 
 	@PostConstruct
 	fun init() {
+		"Located ${oauth2Config.oauth2.size} providers".logd(javaClass)
 		internalProviders.apply {
-			addAll(providers.map { "oauth2/${it.name}" })
+			addAll(oauth2Config.oauth2.map { "oauth2/${it.name}" })
 		}
 	}
 
