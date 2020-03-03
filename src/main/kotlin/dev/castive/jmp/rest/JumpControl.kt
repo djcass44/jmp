@@ -31,6 +31,7 @@ import dev.castive.jmp.service.OwnerService
 import dev.castive.jmp.util.assertUser
 import dev.castive.jmp.util.broadcast
 import dev.castive.jmp.util.user
+import dev.castive.log2.loge
 import dev.castive.log2.logi
 import dev.castive.log2.logv
 import dev.dcas.jmp.security.shim.entity.Meta
@@ -81,11 +82,8 @@ class JumpControl @Autowired constructor(
 
 	@GetMapping("/{target}")
 	fun jumpTo(@PathVariable("target") encodedTarget: String, @RequestParam(required = false) id: Int?): DoJumpDTO {
-		val target = encodedTarget.decodeBase64Url()
 		val user = SecurityContextHolder.getContext().user()
-		if(target.isBlank() && id == null) {
-			throw BadRequestResponse("Empty or null target: $target, id: $id")
-		}
+		val target = getValidTarget(encodedTarget, id)
 		val jumps = if(id != null) {
 			"Got request for specific jump: $id".logi(javaClass)
 			jumpRepo.findAllById(listOf(id))
@@ -208,5 +206,22 @@ class JumpControl @Autowired constructor(
 		FSA(FSA.EVENT_UPDATE_JUMP, null).broadcast()
 
 		return ResponseEntity.noContent().build<Nothing>()
+	}
+
+	/**
+	 * Performs any required validation on an incoming jump request
+	 */
+	internal fun getValidTarget(encodedTarget: String, id: Int? = null): String {
+		// decode the target query and trim any whitespace from the start and end
+		val target = kotlin.runCatching {
+			// this can throw if we're not given base64 data
+			encodedTarget.decodeBase64Url().trim()
+		}.onFailure {
+			"Failed to parse base64 data: '$encodedTarget' (size: ${encodedTarget.length})".loge(javaClass)
+		}.getOrNull()
+		if(target.isNullOrBlank() && id == null) {
+			throw BadRequestResponse("Empty or null target: $target, id: $id")
+		}
+		return target ?: ""
 	}
 }
