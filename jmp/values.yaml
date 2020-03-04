@@ -1,0 +1,63 @@
+name:
+  api: jmp-api
+  ui: jmp-ui
+
+replicas:
+  api: 1
+  ui: 2
+
+resources:
+  requests:
+    memory: 500Mi
+    cpu: 500m
+  limits:
+    memory: 1000Mi
+    cpu: 750m
+
+
+# arbitrary environment variables to inject to the API pod
+env:
+  SPRING_PROFILES_ACTIVE: local
+
+# custom branding for UI
+brand:
+  name: JMP
+  msg: ""
+  noun: Jump
+  key: jmp
+
+images:
+  api:
+    repository: djcass44/jmp
+    tag: springboot
+    pullPolicy: Always
+    imagePullSecrets: []
+  ui:
+    repository: djcass44/jmp-ui
+    tag: springboot
+    pullPolicy: Always
+    imagePullSecrets: []
+
+ingress:
+  enabled: true
+  host: jmp.castive.dev
+  # enforce HTTPS using HSTS (recommended)
+  hsts: false
+
+service:
+  port: 7000
+
+# network policy
+netsec:
+  enabled: false
+  # label to allow traffic from
+  source:
+    app: traefik
+  namespace:
+    dev.dcas.netsec/name: default
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

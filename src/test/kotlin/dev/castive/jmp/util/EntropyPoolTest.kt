@@ -16,6 +16,7 @@
 
 package dev.castive.jmp.util
 
+import dev.castive.jmp.util.checks.EntropyHealthIndicator
 import dev.castive.log2.Log
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
@@ -23,7 +24,7 @@ import org.junit.jupiter.api.Test
 class EntropyPoolTest {
     @Test
     fun getLocalPool() {
-        val pool = SystemUtil.getEntropyPool()
+        val pool = EntropyHealthIndicator().getEntropyPool()
         Log.d(javaClass, "Result: $pool")
         assertNotNull(pool)
         assert(pool > 0)

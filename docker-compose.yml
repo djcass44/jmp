@@ -3,15 +3,17 @@ version: '3'
 services:
   jmp:
     build: .
-    image: jmp
-    command: ["java", "-jar", "jmp.jar", "--enable-dev"]
+    image: jmp/api
     ports:
-      - "7000:7000"
-      - "7001:7001"
+      - 7000:7000
+  psql:
+    image: postgres:12.1-alpine
+    ports:
+    - 5432:5432
     volumes:
-      - ./data:/data
+    - db:/var/lib/psql
     environment:
-      - DRIVER_URL=jdbc:sqlite:/data/jmp.db
-      - DRIVER_CLASS=org.sqlite.JDBC
-      - ENV_LOG_REQUEST_DIRECTORY="/data/logs"
-      - BASE_URL=http://localhost:3000
+      - POSTGRES_DB=jmp
+      - POSTGRES_PASSWORD=password
+volumes:
+  db:

@@ -1,22 +1,80 @@
 kind: pipeline
+type: kubernetes
 name: default
 
+helm_deploy: &helm_deploy
+  mode: upgrade
+  release: jmp
+  chart: ./jmp
+  wait_for_upgrade: true
+  atomic: true
+  cleanup_failed_upgrade: true
+  reuse_values: true
+  kube_api_server: https://kubernetes.default
+  kube_certificate:
+    from_secret: kube_certificate
+  client_certificate_data:
+    from_secret: client_certificate_data
+  client_key_data:
+    from_secret: client_key_data
+
 steps:
-  - name: test
-    image: gradle:5.5.1-jdk12
-    commands:
-      - gradle test
+    # BUILD DOCKER IMAGE
   - name: docker
     image: plugins/docker
     settings:
       repo: djcass44/jmp
       tags:
-        - latest
-        - ${DRONE_BRANCH}
+        - ${DRONE_BRANCH/\//-}
+#        - ${DRONE_COMMIT_SHA}
       username:
         from_secret: DOCKER_USERNAME
       password:
         from_secret: DOCKER_PASSWORD
+    # LINT HELM CHART
+  - name: helm_lint
+    image: harbor.v2.dcas.dev/djcass44/drone-helm3
+    settings:
+      mode: lint
+      chart: ./jmp
+    # DEPLOY TO DEV
+  - name: deploy_development
+    image: harbor.v2.dcas.dev/djcass44/drone-helm3
+    depends_on:
+      - helm_lint
+      - docker
+    settings:
+      <<: *helm_deploy
+      namespace: development
+      values:
+        - ingress.host=jmp-dev.v2.dcas.dev
+        - ingress.hsts="true"
+        - netsec.enabled="true"
+        - images.api.tag=${DRONE_BRANCH}
+        - env.SPRING_PROFILES_ACTIVE=development
+        - env.SPRING_CLOUD_CONFIG_ENABLED=true
+    when:
+      branch:
+        exclude: master
+    # DEPLOY TO PROD
+  - name: deploy_production
+    image: harbor.v2.dcas.dev/djcass44/drone-helm3
+    depends_on:
+      - helm_lint
+      - docker
+    settings:
+      <<: *helm_deploy
+      namespace: production
+      values:
+        - ingress.host=jmp.castive.dev
+        - ingress.hsts="true"
+        - netsec.enabled="true"
+        - images.api.tag=${DRONE_BRANCH}
+        - env.SPRING_PROFILES_ACTIVE=production
+        - env.SPRING_CLOUD_CONFIG_ENABLED=true
+    when:
+      branch:
+        - master
 trigger:
   when:
     event: push

@@ -1,0 +1,71 @@
+spring:
+  application:
+    name: jmp
+  profiles:
+    active: testing
+  datasource:
+    url: jdbc:h2:mem:jmp;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+      naming:
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    generate-ddl: true
+  jackson:
+    default-property-inclusion: non_null
+    deserialization:
+      fail-on-unknown-properties: false
+  ldap:
+    enabled: false
+
+server:
+  port: 7000
+  servlet:
+    context-path: /api
+
+jmp:
+  similarity:
+    threshold: 0.7
+  metadata:
+    title:
+      enabled: true
+    icon:
+      enabled: true
+      url: https://icon.dcas.dev
+  security:
+    allowCors: true
+    baseUrl: http://localhost:7000
+
+security:
+  allowCors: true
+  jwt:
+    secretKey: "password"
+    requestLimit: 3600000
+    refreshLimit: 86400000
+    leeway: 3600000
+  token:
+    age-limit: 6
+    age-tick: 10000
+
+logging:
+  level:
+    dev.castive.jmp: trace
+    dev.dcas: trace
+management:
+  endpoint:
+    health:
+      show-details: when_authorized
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+#        include: health, info, beans
