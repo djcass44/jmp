@@ -19,9 +19,9 @@ helm_deploy: &helm_deploy
     from_secret: client_key_data
 
 steps:
-    # BUILD DOCKER IMAGE
-  - name: docker
-    image: plugins/docker
+    # BUILD OCI IMAGE
+  - name: build_image
+    image: banzaicloud/drone-kaniko
     settings:
       repo: djcass44/jmp
       tags:
