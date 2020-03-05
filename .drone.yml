@@ -23,10 +23,12 @@ steps:
   - name: publish
     image: banzaicloud/drone-kaniko
     settings:
-      repo: djcass44/jmp
+      registry: harbor.v2.dcas.dev
+      repo: dcas.dev/jmp
+      cache: true
       tags:
-        - ${DRONE_BRANCH/\//-}
-#        - ${DRONE_COMMIT_SHA}
+        - latest
+        - ${DRONE_COMMIT_SHA}
       username:
         from_secret: DOCKER_USERNAME
       password:
