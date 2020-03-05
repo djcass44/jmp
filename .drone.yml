@@ -24,7 +24,9 @@ steps:
     image: banzaicloud/drone-kaniko
     settings:
       repo: djcass44/jmp
-      tags: ${DRONE_BRANCH/\//-}
+      tags:
+        - ${DRONE_BRANCH/\//-}
+#        - ${DRONE_COMMIT_SHA}
       username:
         from_secret: DOCKER_USERNAME
       password:
@@ -40,7 +42,7 @@ steps:
     image: harbor.v2.dcas.dev/djcass44/drone-helm3
     depends_on:
       - helm_lint
-      - docker
+      - publish
     settings:
       <<: *helm_deploy
       namespace: development
@@ -59,7 +61,7 @@ steps:
     image: harbor.v2.dcas.dev/djcass44/drone-helm3
     depends_on:
       - helm_lint
-      - docker
+      - publish
     settings:
       <<: *helm_deploy
       namespace: production
