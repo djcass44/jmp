@@ -20,13 +20,11 @@ helm_deploy: &helm_deploy
 
 steps:
     # BUILD OCI IMAGE
-  - name: build_image
+  - name: publish
     image: banzaicloud/drone-kaniko
     settings:
       repo: djcass44/jmp
-      tags:
-        - ${DRONE_BRANCH/\//-}
-#        - ${DRONE_COMMIT_SHA}
+      tags: ${DRONE_BRANCH/\//-}
       username:
         from_secret: DOCKER_USERNAME
       password:
