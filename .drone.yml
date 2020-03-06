@@ -52,7 +52,7 @@ steps:
         - ingress.host=jmp-dev.v2.dcas.dev
         - ingress.hsts="true"
         - netsec.enabled="true"
-        - images.api.tag=${DRONE_BRANCH/\//-}
+        - images.api.tag=${DRONE_COMMIT_SHA}
         - env.SPRING_PROFILES_ACTIVE=development
         - env.SPRING_CLOUD_CONFIG_ENABLED=true
     when:
@@ -71,7 +71,7 @@ steps:
         - ingress.host=jmp.castive.dev
         - ingress.hsts="true"
         - netsec.enabled="true"
-        - images.api.tag=${DRONE_BRANCH/\//-}
+        - images.api.tag=${DRONE_COMMIT_SHA}
         - env.SPRING_PROFILES_ACTIVE=production
         - env.SPRING_CLOUD_CONFIG_ENABLED=true
     when:
