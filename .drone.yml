@@ -21,7 +21,8 @@ helm_deploy: &helm_deploy
 steps:
     # BUILD OCI IMAGE
   - name: publish
-    image: harbor.v2.dcas.dev/library/drone-kaniko:latest
+    image: harbor.v2.dcas.dev/library/drone-kaniko
+    pull: always
     settings:
       registry: harbor.v2.dcas.dev
       repo: dcas.dev/jmp
