@@ -54,11 +54,12 @@ class MetadataHealthIndicator @Autowired constructor(
 		"Got response from $iconUrl: ${httpCheck?.statusCodeValue}".logv(javaClass)
 		if(httpCheck == null || httpCheck.statusCode != HttpStatus.OK) {
 			"Got non-OK response from $iconUrl, ${httpCheck?.statusCodeValue ?: -1}".loge(javaClass)
-			return Health.down().withDetail("Status Code", httpCheck?.statusCodeValue ?: -1).build()
+			// return 200 anyway so that our app isn't killed
+			return Health.unknown().withDetail("Status Code", httpCheck?.statusCodeValue ?: -1).build()
 		}
 		if(!httpCheck.hasBody()) {
 			"No body in response from $iconUrl".loge(javaClass)
-			Health.down().withDetail("Reason", "No body returned").build()
+			Health.unknown().withDetail("Reason", "No body returned").build()
 		}
 		// consider a 200 good enough
 		return Health.up().build()

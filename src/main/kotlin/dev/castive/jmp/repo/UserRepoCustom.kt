@@ -1,5 +1,5 @@
 /*
- *    Copyright 2019 Django Cass
+ *    Copyright 2020 Django Cass
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,13 +14,10 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp
+package dev.castive.jmp.repo
 
-object Version {
-    private const val MAJOR = "0"
-    private const val MINOR = "6"
-    private const val PATCH = "0"
-    private const val BUILD = "137"
+import dev.dcas.jmp.security.shim.entity.User
 
-    fun getVersion() = "$MAJOR.$MINOR.$PATCH-build.$BUILD"
+interface UserRepoCustom {
+	fun searchByTerm(term: String, exact: Boolean = true): List<User>
 }
