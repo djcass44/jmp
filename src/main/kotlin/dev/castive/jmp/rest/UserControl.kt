@@ -21,6 +21,7 @@ import dev.castive.jmp.api.Responses
 import dev.castive.jmp.data.BasicAuth
 import dev.castive.jmp.data.FSA
 import dev.castive.jmp.entity.Role
+import dev.castive.jmp.repo.UserRepoCustom
 import dev.castive.jmp.security.SecurityConstants
 import dev.castive.jmp.tasks.GroupsTask
 import dev.castive.jmp.util.assertUser
@@ -38,7 +39,11 @@ import dev.dcas.jmp.security.shim.repo.UserRepo
 import dev.dcas.util.spring.responses.BadRequestResponse
 import dev.dcas.util.spring.responses.ForbiddenResponse
 import dev.dcas.util.spring.responses.NotFoundResponse
+import dev.dcas.util.spring.toPage
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -52,6 +57,7 @@ import java.util.UUID
 @RequestMapping("/v2/user")
 class UserControl @Autowired constructor(
 	private val userRepo: UserRepo,
+	private val userRepoCustom: UserRepoCustom,
 	private val groupRepo: GroupRepo,
 	private val metaRepo: MetaRepo,
 	private val groupTask: GroupsTask,
@@ -61,8 +67,14 @@ class UserControl @Autowired constructor(
 
 	@PreAuthorize("hasRole('USER')")
 	@GetMapping
-	fun getUsers(): List<User> {
-		return userRepo.findAll().toList()
+	fun getUsers(
+		@RequestParam("size", defaultValue = "20") size: Int = 20,
+		@RequestParam("page", defaultValue = "0") page: Int = 0,
+		@RequestParam("query", defaultValue = "") query: String = ""): Page<User> {
+		return userRepoCustom.searchByTerm(query, false).sortedWith(
+			// sort by username, then display name
+			compareBy({ it.username }, { it.displayName })
+		).toPage(PageRequest.of(page, size))
 	}
 
 	@PreAuthorize("hasRole('USER')")

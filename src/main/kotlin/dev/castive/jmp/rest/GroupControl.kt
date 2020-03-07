@@ -20,6 +20,7 @@ import dev.castive.jmp.api.Responses
 import dev.castive.jmp.data.FSA
 import dev.castive.jmp.data.dto.CreateGroupDTO
 import dev.castive.jmp.data.dto.EditGroupUsersDTO
+import dev.castive.jmp.repo.GroupRepoCustom
 import dev.castive.jmp.security.SecurityConstants
 import dev.castive.jmp.tasks.GroupsTask
 import dev.castive.jmp.util.assertUser
@@ -33,7 +34,10 @@ import dev.dcas.jmp.security.shim.repo.UserRepo
 import dev.dcas.util.extend.isESNullOrBlank
 import dev.dcas.util.spring.responses.ForbiddenResponse
 import dev.dcas.util.spring.responses.NotFoundResponse
+import dev.dcas.util.spring.toPage
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.context.SecurityContextHolder
@@ -46,13 +50,22 @@ import javax.transaction.Transactional
 @RequestMapping("/v2_1/group")
 class GroupControl @Autowired constructor(
 	private val groupRepo: GroupRepo,
+	private val groupRepoCustom: GroupRepoCustom,
 	private val userRepo: UserRepo,
 	private val groupTask: GroupsTask
 ) {
 
 	@PreAuthorize("hasRole('USER')")
 	@GetMapping
-	fun getGroups(): List<Group> = groupRepo.findAllByUsersIsContaining(SecurityContextHolder.getContext().assertUser())
+	fun getGroups(
+		@RequestParam("size", defaultValue = "20") size: Int = 20,
+		@RequestParam("page", defaultValue = "0") page: Int = 0,
+		@RequestParam("query", defaultValue = "") query: String = ""): Page<Group> {
+			return groupRepoCustom.searchByTerm(SecurityContextHolder.getContext().assertUser(), query, false).sortedWith(
+				// sort by name, then creation
+				compareBy({ it.public }, { it.defaultFor }, { it.name })
+			).toPage(PageRequest.of(page, size))
+		}
 
 	@PreAuthorize("hasRole('USER')")
 	@PutMapping
