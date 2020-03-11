@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  dev.dcas.jmp.security.shim.SecurityDataShimAutoConfiguration,\
+  dev.dcas.jmp.spring.security.SecurityAutoConfiguration

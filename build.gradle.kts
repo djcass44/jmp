@@ -48,7 +48,7 @@ repositories {
 	mavenCentral()
 	maven(url = "https://jitpack.io")
 	//jcenter()
-//    mavenLocal()
+    mavenLocal()
 }
 
 val junitVersion: String by project
@@ -78,9 +78,9 @@ dependencies {
 
 	implementation("com.github.djcass44:log2:4.1")
 	implementation("com.github.djcass44:castive-utilities:v5.RC3")
-	implementation("com.github.djcass44:jmp-security-utils:0.1.RC5")
-//	implementation("dev.dcas.jmp.security:core:0.1-SNAPSHOT")
-//	implementation("dev.dcas.jmp.security:shim:0.1-SNAPSHOT")
+//	implementation("com.github.djcass44:jmp-security-utils:0.1.RC5")
+	implementation("dev.dcas.jmp.security:core:0.2-SNAPSHOT")
+	implementation("dev.dcas.jmp.security:shim:0.2-SNAPSHOT")
 
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.2")
 	implementation("info.debatty:java-string-similarity:1.2.1")
