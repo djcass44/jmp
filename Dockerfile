@@ -1,5 +1,5 @@
 # STAGE 1 - BUILD
-FROM harbor.v2.dcas.dev/library/gradle:jdk13 as GRADLE_CACHE
+FROM harbor.v2.dcas.dev/library/gradle:jdk13
 LABEL maintainer="Django Cass <django@dcas.dev>"
 
 WORKDIR /app
@@ -18,7 +18,7 @@ ENV USER=jmp
 RUN addgroup -S ${USER} && adduser -S ${USER} -G ${USER}
 
 WORKDIR /app
-COPY --from=GRADLE_CACHE /app/build/libs/jmp.jar .
+COPY --from=0 /app/build/libs/jmp.jar .
 
 EXPOSE 7000
 

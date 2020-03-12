@@ -18,7 +18,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
-	id("org.springframework.boot") version "2.2.4.RELEASE"
+	id("org.springframework.boot") version "2.2.5.RELEASE"
 	id("io.spring.dependency-management") version "1.0.9.RELEASE"
 	id("com.github.ben-manes.versions") version "0.27.0"
 	kotlin("jvm") version "1.3.70"
@@ -52,12 +52,12 @@ repositories {
 }
 
 val junitVersion: String by project
-extra["springCloudVersion"] = "Hoxton.SR1"
+extra["springCloudVersion"] = "Hoxton.SR2"
 
 dependencies {
 	implementation(kotlin("stdlib-jdk8"))
+	implementation(kotlin("reflect"))
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2")
-	implementation("org.jetbrains.kotlin:kotlin-reflect")
 
 	implementation("com.sun.activation:javax.activation:1.2.0")
 
@@ -77,10 +77,10 @@ dependencies {
 	implementation("org.springframework.cloud:spring-cloud-starter-config")
 
 	implementation("com.github.djcass44:log2:4.1")
-	implementation("com.github.djcass44:castive-utilities:v5.RC3")
-	implementation("com.github.djcass44:jmp-security-utils:0.1.RC5")
-//	implementation("dev.dcas.jmp.security:core:0.1-SNAPSHOT")
-//	implementation("dev.dcas.jmp.security:shim:0.1-SNAPSHOT")
+	implementation("com.github.djcass44:castive-utilities:v6.RC3")
+	implementation("com.github.djcass44:jmp-security-utils:0.1.RC8")
+//	implementation("dev.dcas.jmp.security:core:0.2-SNAPSHOT")
+//	implementation("dev.dcas.jmp.security:shim:0.2-SNAPSHOT")
 
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.2")
 	implementation("info.debatty:java-string-similarity:1.2.1")
