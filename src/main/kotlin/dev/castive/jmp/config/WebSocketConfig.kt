@@ -17,7 +17,7 @@
 package dev.castive.jmp.config
 
 import dev.castive.jmp.component.SocketHandler
-import dev.castive.jmp.prop.SecurityProps
+import dev.castive.jmp.prop.AppSecurityProps
 import dev.castive.log2.loga
 import dev.castive.log2.logi
 import org.springframework.beans.factory.annotation.Autowired
@@ -29,18 +29,18 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @Configuration
 @EnableWebSocket
 class WebSocketConfig @Autowired constructor(
-	private val securityConfig: SecurityProps
+	private val appSecurityConfig: AppSecurityProps
 ): WebSocketConfigurer {
 
 	override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
 		registry.addHandler(SocketHandler(), "/ws2").apply {
-			if(securityConfig.allowCors) {
+			if(appSecurityConfig.allowCors) {
 				"Enabling CORS requests for WebSocket resources".loga(javaClass)
 				setAllowedOrigins("*")
 			}
 			else {
-				"Using baseUrl: ${securityConfig.baseUrl}".logi(javaClass)
-				setAllowedOrigins(securityConfig.baseUrl)
+				"Using baseUrl: ${appSecurityConfig.baseUrl}".logi(javaClass)
+				setAllowedOrigins(appSecurityConfig.baseUrl)
 			}
 		}
 	}
