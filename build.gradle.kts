@@ -78,9 +78,9 @@ dependencies {
 
 	implementation("com.github.djcass44:log2:4.1")
 	implementation("com.github.djcass44:castive-utilities:v6.RC3")
-	implementation("com.github.djcass44:jmp-security-utils:0.1.RC9")
-//	implementation("dev.dcas.jmp.security:core:0.2-SNAPSHOT")
-//	implementation("dev.dcas.jmp.security:shim:0.2-SNAPSHOT")
+	implementation("com.github.djcass44:jmp-security-utils:0.1.RC10")
+//	implementation("dev.dcas.jmp.security:core:0.3-SNAPSHOT")
+//	implementation("dev.dcas.jmp.security:shim:0.3-SNAPSHOT")
 
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.2")
 	implementation("info.debatty:java-string-similarity:1.2.1")
@@ -96,7 +96,7 @@ dependencies {
 
 	// JDBC drivers
 	runtimeOnly("org.postgresql:postgresql:42.2.9") // tested (django)
-	runtimeOnly("com.h2database:h2:1.4.200")
+	runtimeOnly("com.h2database:h2:1.4.+")
 
 	testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
 	testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
