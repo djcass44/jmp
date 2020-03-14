@@ -78,7 +78,7 @@ dependencies {
 
 	implementation("com.github.djcass44:log2:4.1")
 	implementation("com.github.djcass44:castive-utilities:v6.RC3")
-	implementation("com.github.djcass44:jmp-security-utils:0.1.RC10")
+	implementation("com.github.djcass44:jmp-security-utils:0.1.RC11")
 //	implementation("dev.dcas.jmp.security:core:0.3-SNAPSHOT")
 //	implementation("dev.dcas.jmp.security:shim:0.3-SNAPSHOT")
 
