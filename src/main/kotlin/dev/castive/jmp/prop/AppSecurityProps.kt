@@ -17,11 +17,11 @@
 package dev.castive.jmp.prop
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.stereotype.Component
+import org.springframework.boot.context.properties.ConstructorBinding
 
-@Component
+@ConstructorBinding
 @ConfigurationProperties(prefix = "jmp.security")
-class SecurityProps {
-	var allowCors: Boolean = false
-	var baseUrl: String = "http://localhost:7000"
-}
+data class AppSecurityProps(
+	val allowCors: Boolean = false,
+	val baseUrl: String = "http://localhost:7000"
+)
