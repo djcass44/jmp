@@ -43,7 +43,7 @@ class GroupsTask @Autowired constructor(
 
 	@EventListener
 	fun appReady(event: ApplicationReadyEvent) {
-		Events.addListener(object : Events.Listener {
+		Events.emitter.addListener(object : Events.Listener {
 			// attempt to run a refresh when a user has been created
 			override fun onUserCreated(source: String, username: String?) {
 				run()
