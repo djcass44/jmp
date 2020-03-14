@@ -2,6 +2,8 @@
 FROM harbor.v2.dcas.dev/library/base/gradle
 LABEL maintainer="Django Cass <django@dcas.dev>"
 
+USER root
+
 WORKDIR /app
 
 # Dry run for caching
