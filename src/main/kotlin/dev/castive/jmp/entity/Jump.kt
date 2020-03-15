@@ -60,4 +60,14 @@ data class Jump(
 		}
 	}
 	fun isPublic(): Boolean = owner == null && ownerGroup == null
+
+	/**
+	 * Check whether the Jump ID matches [other]
+	 * Otherwise fallback to the superclass implementation
+	 */
+	override fun equals(other: Any?): Boolean {
+		if(other is Jump)
+			return other.id == id
+		return super.equals(other)
+	}
 }

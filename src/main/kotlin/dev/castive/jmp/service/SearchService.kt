@@ -16,18 +16,25 @@
 
 package dev.castive.jmp.service
 
+import dev.castive.jmp.entity.Alias
+import dev.castive.jmp.entity.Jump
+import dev.castive.jmp.repo.JumpRepo
 import dev.castive.log2.logd
 import dev.castive.log2.loge
 import dev.castive.log2.logi
 import dev.castive.log2.logw
 import org.hibernate.search.jpa.Search
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.util.concurrent.Future
 import javax.annotation.PostConstruct
 import javax.persistence.EntityManagerFactory
 
 @Service
-class SearchService(entityManagerFactory: EntityManagerFactory) {
+class SearchService(
+	entityManagerFactory: EntityManagerFactory,
+	private val jumpRepo: JumpRepo
+) {
 	private val fullTextEntityManager = Search.getFullTextEntityManager(entityManagerFactory.createEntityManager())
 	private var index: Future<*>? = null
 
@@ -38,14 +45,47 @@ class SearchService(entityManagerFactory: EntityManagerFactory) {
 		"Starting Lucene index builder asynchronously...".logi(javaClass)
 	}
 
-	fun <T> search(entityType: Class<T>, term: String): List<T> {
+	private fun searchAliases(term: String): List<Jump> {
 		if(index == null || !index!!.isDone) {
-			"Cannot perform search as indices haven't been built".logw(javaClass)
+			"[Alias] Cannot perform search as indices haven't been built".logw(javaClass)
 			return emptyList()
 		}
 		val queryBuilder = fullTextEntityManager.searchFactory
 			.buildQueryBuilder()
-			.forEntity(entityType)
+			.forEntity(Alias::class.java)
+			.get()
+		val query = queryBuilder
+			.bool()
+			.should(queryBuilder
+				.keyword()
+				.wildcard()
+				.onField("name")
+				.matching("*$term*")
+				.createQuery()
+			)
+			.createQuery()
+		val jpaQuery = fullTextEntityManager.createFullTextQuery(query, Alias::class.java)
+		val results = mutableSetOf<Jump>()
+		jpaQuery.resultList.forEach {
+			kotlin.runCatching {
+				// convert the result back into our entity
+				jumpRepo.findByIdOrNull((it as Alias).parent)?.let(results::add)
+			}.onFailure {
+				"[Alias] Failed to load Jump from Alias, searchTerm: $term".loge(javaClass, it)
+			}
+		}
+		"[Alias] Executed full-text-search for '${term}': returned ${results.size} aliases".logd(javaClass)
+		return results.toList()
+	}
+
+	fun search(term: String): List<Jump> {
+		if(index == null || !index!!.isDone) {
+			"[Jump] Cannot perform search as indices haven't been built".logw(javaClass)
+			return emptyList()
+		}
+		val queryBuilder = fullTextEntityManager.searchFactory
+			.buildQueryBuilder()
+			.forEntity(Jump::class.java)
 			.get()
 		val query = queryBuilder
 			.bool()
@@ -57,17 +97,19 @@ class SearchService(entityManagerFactory: EntityManagerFactory) {
 				.createQuery()
 			)
 			.createQuery()
-		val jpaQuery = fullTextEntityManager.createFullTextQuery(query, entityType)
-		val results = arrayListOf<T>()
+		val jpaQuery = fullTextEntityManager.createFullTextQuery(query, Jump::class.java)
+		val results = mutableSetOf<Jump>()
 		jpaQuery.resultList.forEach {
 			kotlin.runCatching {
 				// convert the result back into our entity
-				results.add(it as T)
+				results.add(it as Jump)
 			}.onFailure {
-				"Failed to cast JpaQuery object to ${entityType.name}: searchTerm: $term".loge(javaClass)
+				"[Jump] Failed to cast JpaQuery object to ${Jump::class.java.name}: searchTerm: $term".loge(javaClass, it)
 			}
 		}
-		"Executed FTS for '${term}': returned ${results.size} items".logd(javaClass)
-		return results
+		"[Jump] Executed full-text-search for '${term}': returned ${results.size} items".logd(javaClass)
+		results.addAll(searchAliases(term))
+		"[Jump] Total results for '${term}': ${results.size}".logd(javaClass)
+		return results.toList()
 	}
 }
