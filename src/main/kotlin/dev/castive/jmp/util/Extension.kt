@@ -2,6 +2,7 @@ package dev.castive.jmp.util
 
 import dev.castive.jmp.component.SocketHandler
 import dev.castive.jmp.data.FSA
+import dev.castive.jmp.entity.Jump
 import dev.castive.log2.loge
 import dev.castive.log2.logv
 import dev.dcas.jmp.security.shim.entity.User
@@ -34,3 +35,16 @@ fun SecurityContext.user(): User? = kotlin.runCatching {
 }.getOrNull()
 
 fun SecurityContext.assertUser(): User = user() ?: throw UnauthorizedResponse()
+
+/**
+ * Check whether a Jump is visible to a specific user
+ */
+fun Jump.isVisibleTo(user: User?): Boolean {
+	// public jumps can be seen by anyone
+	if(ownerGroup == null && owner == null)
+		return true
+	// we need a user to check personal/grouped jumps
+	if(user == null)
+		return false
+	return owner?.id == user.id || ownerGroup?.containsUser(user) ?: false
+}

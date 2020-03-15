@@ -19,16 +19,22 @@ package dev.castive.jmp.entity
 import dev.dcas.jmp.security.shim.entity.Group
 import dev.dcas.jmp.security.shim.entity.Meta
 import dev.dcas.jmp.security.shim.entity.User
+import org.hibernate.search.annotations.Field
+import org.hibernate.search.annotations.Indexed
 import javax.persistence.*
 
 @Entity
+@Indexed
 @Table(name = "Jumps")
 data class Jump(
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	val id: Int,
+	@Field
 	var name: String,
+	@Field
 	var location: String,
+	@Field
 	var title: String? = null,
 	@OneToMany
 	val alias: MutableSet<Alias> = mutableSetOf(),
