@@ -137,25 +137,25 @@ class JumpControl @Autowired constructor(
 			0,
 			add.name,
 			add.location,
-			null,
+			// get additional metadata
+			metadata.updateTitle(add.location),
 			mutableSetOf(),
 			if(add.personal == Jump.TYPE_PERSONAL) user else null,
 			group,
-			metadata.getImage(add.location),
+			null,
 			metaRepo.save(Meta.fromUser(user))
 		))
 		aliasRepo.saveAll(add.alias.map {
 			Alias(0, it.name, created.id)
 		})
-		// get additional metadata
-		metadata.getTitle(created.location)
+		metadata.warmIconService(add.location)
 		FSA(FSA.EVENT_UPDATE_JUMP, null).broadcast()
 		return created
 	}
 
 	@PreAuthorize("hasRole('USER')")
 	@PatchMapping
-	fun updateJump(@RequestBody update: EditJumpDTO): ResponseEntity<*> {
+	fun updateJump(@RequestBody update: EditJumpDTO): JumpDTO {
 		val user = SecurityContextHolder.getContext().assertUser()
 		val existing = jumpRepo.findByIdOrNull(update.id) ?: throw NotFoundResponse(Responses.NOT_FOUND_JUMP)
 		// check if user is allowed to modify the jump
@@ -185,15 +185,16 @@ class JumpControl @Autowired constructor(
 			!updated.contains(it)
 		})
 		// save changes to jump
+		"Updating Jump: ${existing.id} caused by ${user.username}".logv(javaClass)
 		val jump = jumpRepo.save(existing.apply {
 			name = update.name
 			location = update.location
-			image = metadata.getImage(update.location)
+			// update metadata
+			title = metadata.updateTitle(update.location)
 		})
-		// update metadata
-		metadata.getTitle(jump.location)
+		metadata.warmIconService(jump.location)
 		FSA(FSA.EVENT_UPDATE_JUMP, null).broadcast()
-		return ResponseEntity.ok(jump.id)
+		return ownerService.getDTO(jump)
 	}
 
 	@PreAuthorize("hasRole('USER')")
@@ -204,7 +205,7 @@ class JumpControl @Autowired constructor(
 		// check if jump is global and user is admin
 		if(jump.isPublic() && !user.isAdmin())
 			throw ForbiddenResponse()
-		if(jump.owner != null && jump.owner != user)
+		if(jump.owner != null && jump.owner.id != user.id)
 			throw ForbiddenResponse()
 		// check that the user is part of the group owning the jump
 		if(jump.ownerGroup != null) {
