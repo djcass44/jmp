@@ -98,11 +98,13 @@ class SearchService(
 			)
 			.createQuery()
 		val jpaQuery = fullTextEntityManager.createFullTextQuery(query, Jump::class.java)
-		val results = mutableSetOf<Jump>()
+		// ensure there are no duplicates by mapping the id
+		val results = hashMapOf<Int, Jump>()
 		jpaQuery.resultList.forEach {
 			kotlin.runCatching {
 				// convert the result back into our entity
-				results.add(it as Jump)
+				val j = it as Jump
+				results[j.id] = j
 			}.onFailure {
 				"[Jump] Failed to cast JpaQuery object to ${Jump::class.java.name}: searchTerm: $term".loge(javaClass, it)
 			}
@@ -110,12 +112,10 @@ class SearchService(
 		"[Jump] Executed full-text-search for '$term': returned ${results.size} items".logd(javaClass)
 		val aliases = searchAliases(term)
 		aliases.forEach {
-			if(!results.contains(it))
-				results.add(it)
-			else
-				"[Jump] Skipping duplicate result for term '$term': ${it.name}".logd(javaClass)
+			if(!results.containsKey(it.id))
+				results[it.id] = it
 		}
 		"[Jump] Total results for '$term': ${results.size}".logd(javaClass)
-		return results.toList()
+		return results.values.toList()
 	}
 }
