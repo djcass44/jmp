@@ -18,14 +18,18 @@ package dev.castive.jmp.entity
 
 import dev.castive.jmp.data.dto.AliasDTO
 import dev.castive.log2.logv
+import org.hibernate.search.annotations.Field
+import org.hibernate.search.annotations.Indexed
 import javax.persistence.*
 
+@Indexed
 @Entity
 @Table(name = "Aliases")
 data class Alias(
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	val id: Int,
+	@Field
 	var name: String,
 	val parent: Int
 ) {
@@ -36,4 +40,14 @@ data class Alias(
 	}
 
 	fun asDTO(): AliasDTO = AliasDTO(id, name)
+
+	/**
+	 * Check whether the Alias ID matches [other]
+	 * Otherwise fallback to the superclass implementation
+	 */
+	override fun equals(other: Any?): Boolean {
+		if(other is Alias)
+			return other.id == id
+		return super.equals(other)
+	}
 }

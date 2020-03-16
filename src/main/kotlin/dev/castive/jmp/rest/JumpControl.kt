@@ -28,8 +28,10 @@ import dev.castive.jmp.repo.JumpRepo
 import dev.castive.jmp.repo.JumpRepoCustom
 import dev.castive.jmp.service.MetadataService
 import dev.castive.jmp.service.OwnerService
+import dev.castive.jmp.service.SearchService
 import dev.castive.jmp.util.assertUser
 import dev.castive.jmp.util.broadcast
+import dev.castive.jmp.util.isVisibleTo
 import dev.castive.jmp.util.user
 import dev.castive.log2.loge
 import dev.castive.log2.logi
@@ -65,19 +67,31 @@ class JumpControl @Autowired constructor(
 	private val groupRepo: GroupRepo,
 	private val metaRepo: MetaRepo,
 	private val aliasRepo: AliasRepo,
-	private val ownerService: OwnerService
+	private val ownerService: OwnerService,
+	private val searchService: SearchService
 ) {
 	@GetMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
 	fun getAll(
 		@RequestParam("size", defaultValue = "20") size: Int = 20,
 		@RequestParam("page", defaultValue = "0") page: Int = 0,
 		@RequestParam("query", defaultValue = "") query: String = ""): Page<JumpDTO> {
-		return jumpRepoCustom.searchByTerm(SecurityContextHolder.getContext().user(), query, exact = false).map {
+		val user = SecurityContextHolder.getContext().user()
+		val results = searchService.search(query).filter {
+			// filter jumps to only those we're authorised to see
+			it.isVisibleTo(user)
+		}.map {
+			// convert the jump to the DTO object
 			ownerService.getDTO(it)
 		}.sortedWith(
 			// sort by usage first, then name
 			compareBy({ -it.usage }, { it.name })
-		).toPage(PageRequest.of(page, size))
+		)
+		return kotlin.runCatching {
+			// attempt to page the data based on the users request params
+			results.toPage(PageRequest.of(page, size))
+		}.onFailure {
+			"Failed to create page from results: [page: $page, size: $size]: $it".loge(javaClass)
+		}.getOrDefault(results.toPage(PageRequest.of(0, size)))
 	}
 
 	@GetMapping("/{target}")
@@ -205,7 +219,7 @@ class JumpControl @Autowired constructor(
 		jumpRepo.delete(jump)
 		FSA(FSA.EVENT_UPDATE_JUMP, null).broadcast()
 
-		return ResponseEntity.noContent().build<Nothing>()
+		return ResponseEntity.noContent().build()
 	}
 
 	/**

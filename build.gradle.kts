@@ -57,7 +57,8 @@ extra["springCloudVersion"] = "Hoxton.SR2"
 dependencies {
 	implementation(kotlin("stdlib-jdk8"))
 	implementation(kotlin("reflect"))
-	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2")
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.+")
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.+")
 
 	implementation("com.sun.activation:javax.activation:1.2.0")
 
@@ -84,6 +85,7 @@ dependencies {
 
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.2")
 	implementation("info.debatty:java-string-similarity:1.2.1")
+	implementation("org.hibernate:hibernate-search-orm:5.11.5.Final")
 	implementation("org.jsoup:jsoup:1.12.1")
 	implementation("com.google.guava:guava:28.2-jre")
 
