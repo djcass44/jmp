@@ -107,9 +107,15 @@ class SearchService(
 				"[Jump] Failed to cast JpaQuery object to ${Jump::class.java.name}: searchTerm: $term".loge(javaClass, it)
 			}
 		}
-		"[Jump] Executed full-text-search for '${term}': returned ${results.size} items".logd(javaClass)
-		results.addAll(searchAliases(term))
-		"[Jump] Total results for '${term}': ${results.size}".logd(javaClass)
+		"[Jump] Executed full-text-search for '$term': returned ${results.size} items".logd(javaClass)
+		val aliases = searchAliases(term)
+		aliases.forEach {
+			if(!results.contains(it))
+				results.add(it)
+			else
+				"[Jump] Skipping duplicate result for term '$term': ${it.name}".logd(javaClass)
+		}
+		"[Jump] Total results for '$term': ${results.size}".logd(javaClass)
 		return results.toList()
 	}
 }

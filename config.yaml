@@ -17,6 +17,10 @@ spring:
         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
     properties:
       hibernate:
+        search:
+          default:
+            directory_provider: filesystem
+            indexBase: /tmp
         format_sql: true
         jdbc:
           lob:

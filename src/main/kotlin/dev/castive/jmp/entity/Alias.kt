@@ -47,7 +47,7 @@ data class Alias(
 	 */
 	override fun equals(other: Any?): Boolean {
 		if(other is Alias)
-			return other.id == id
+			return other.id == id && other.name == name
 		return super.equals(other)
 	}
 }

@@ -67,7 +67,7 @@ data class Jump(
 	 */
 	override fun equals(other: Any?): Boolean {
 		if(other is Jump)
-			return other.id == id
+			return other.id == id && other.name == name
 		return super.equals(other)
 	}
 }
