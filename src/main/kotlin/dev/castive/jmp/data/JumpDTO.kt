@@ -19,14 +19,14 @@ data class JumpDTO(
 	val public: Boolean,
 	val alias: List<AliasDTO>
 ) {
-	constructor(jump: Jump, owner: User?, ownerGroup: Group?, alias: List<AliasDTO>): this(
+	constructor(jump: Jump, imageUrl: String, owner: User?, ownerGroup: Group?, alias: List<AliasDTO>): this(
 		jump.id,
 		jump.name,
 		jump.location,
 		jump.title,
 		owner,
 		ownerGroup,
-		jump.image,
+		imageUrl,
 		jump.meta, jump.usage,
 		jump.isPublic(),
 		alias

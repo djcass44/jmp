@@ -34,11 +34,6 @@ interface JumpRepo: JpaRepository<Jump, Int> {
 
 	@Modifying
 	@Transactional
-	@Query("UPDATE Jump SET image = :icon WHERE location = :address")
-	fun updateIconWithAddress(address: String, icon: String)
-
-	@Modifying
-	@Transactional
 	@Query("UPDATE Jump SET title = :title WHERE location = :address")
 	fun updateTitleWithAddress(address: String, title: String)
 }

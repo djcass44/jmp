@@ -1,5 +1,5 @@
 /*
- *    Copyright 2019 Django Cass
+ *    Copyright 2020 Django Cass
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,13 +14,22 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp
+package dev.castive.jmp.prop
 
-object Version {
-    private const val MAJOR = "0"
-    private const val MINOR = "6"
-    private const val PATCH = "0"
-    private const val BUILD = "249"
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
 
-    fun getVersion() = "$MAJOR.$MINOR.$PATCH-build.$BUILD"
+@ConstructorBinding
+@ConfigurationProperties(prefix = "jmp.metadata")
+data class AppMetadataProps(
+	val title: TitleProps,
+	val icon: IconProps
+) {
+	data class TitleProps(
+		val enabled: Boolean = true
+	)
+	data class IconProps(
+		val enabled: Boolean = true,
+		val url: String
+	)
 }

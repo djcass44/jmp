@@ -42,6 +42,7 @@ data class Jump(
 	val owner: User? = null,
 	@ManyToOne
 	val ownerGroup: Group? = null,
+	@Deprecated("Dynamically generated using Jump::location")
 	var image: String? = null,
 	@OneToOne
 	val meta: Meta,
