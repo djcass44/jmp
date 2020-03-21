@@ -70,6 +70,9 @@ dependencies {
 
 	implementation("com.sun.activation:javax.activation:1.2.0")
 
+
+	// required because of https://github.com/gradle/gradle/issues/10248
+	implementation("org.codehaus.groovy:groovy:3.0.2")
 	// spring boot
 	implementation("org.springframework.boot:spring-boot-starter")
 	implementation(boot("starter-data-jpa"))
