@@ -151,9 +151,10 @@ val props: List<String> = listOf(
 )
 
 springBoot {
-	buildInfo() {
+	buildInfo {
 		properties {
 			// add some additional props
+			additional = mutableMapOf()
 			props.forEach {
 				additional[it] = System.getProperty(it, "")
 			}
