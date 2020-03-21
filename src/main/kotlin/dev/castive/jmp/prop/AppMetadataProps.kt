@@ -22,14 +22,14 @@ import org.springframework.boot.context.properties.ConstructorBinding
 @ConstructorBinding
 @ConfigurationProperties(prefix = "jmp.metadata")
 data class AppMetadataProps(
-	val title: TitleProps,
-	val icon: IconProps
+	val title: TitleProps = TitleProps(),
+	val icon: IconProps = IconProps()
 ) {
 	data class TitleProps(
 		val enabled: Boolean = true
 	)
 	data class IconProps(
 		val enabled: Boolean = true,
-		val url: String
+		val url: String = ""
 	)
 }

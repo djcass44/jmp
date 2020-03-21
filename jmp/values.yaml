@@ -34,10 +34,11 @@ images:
     imagePullSecrets:
       - name: v2-dcas.dev
   ui:
-    repository: djcass44/jmp-ui
-    tag: springboot
+    repository: harbor.v2.dcas.dev/dcas.dev/jmp-ui
+    tag: master
     pullPolicy: Always
-    imagePullSecrets: []
+    imagePullSecrets:
+      - name: v2-dcas.dev
 
 ingress:
   enabled: true
