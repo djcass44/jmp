@@ -72,6 +72,7 @@ steps:
     depends_on:
       - helm_lint
       - publish
+      - deploy_development
     settings:
       <<: *helm_deploy
       namespace: production

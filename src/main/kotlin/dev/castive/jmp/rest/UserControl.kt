@@ -24,9 +24,7 @@ import dev.castive.jmp.entity.Role
 import dev.castive.jmp.repo.UserRepoCustom
 import dev.castive.jmp.security.SecurityConstants
 import dev.castive.jmp.tasks.GroupsTask
-import dev.castive.jmp.util.assertUser
 import dev.castive.jmp.util.broadcast
-import dev.castive.jmp.util.user
 import dev.castive.log2.loga
 import dev.castive.log2.logi
 import dev.castive.log2.logw
@@ -36,6 +34,8 @@ import dev.dcas.jmp.security.shim.entity.User
 import dev.dcas.jmp.security.shim.repo.GroupRepo
 import dev.dcas.jmp.security.shim.repo.MetaRepo
 import dev.dcas.jmp.security.shim.repo.UserRepo
+import dev.dcas.jmp.security.shim.util.assertUser
+import dev.dcas.jmp.security.shim.util.user
 import dev.dcas.util.spring.responses.BadRequestResponse
 import dev.dcas.util.spring.responses.ForbiddenResponse
 import dev.dcas.util.spring.responses.NotFoundResponse
@@ -43,7 +43,6 @@ import dev.dcas.util.spring.toPage
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

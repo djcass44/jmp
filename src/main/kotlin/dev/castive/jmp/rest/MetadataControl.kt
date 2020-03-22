@@ -19,7 +19,7 @@ package dev.castive.jmp.rest
 import dev.castive.jmp.prop.AppMetadataProps
 import dev.castive.jmp.repo.JumpRepo
 import dev.castive.jmp.util.isVisibleTo
-import dev.castive.jmp.util.user
+import dev.dcas.jmp.security.shim.util.user
 import dev.dcas.util.extend.safe
 import dev.dcas.util.spring.responses.NotFoundResponse
 import org.springframework.data.repository.findByIdOrNull

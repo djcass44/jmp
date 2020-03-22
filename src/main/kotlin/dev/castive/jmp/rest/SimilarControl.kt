@@ -18,7 +18,7 @@ package dev.castive.jmp.rest
 
 import dev.castive.jmp.repo.JumpRepoCustom
 import dev.castive.jmp.service.SimilarityService
-import dev.castive.jmp.util.user
+import dev.dcas.jmp.security.shim.util.user
 import dev.dcas.util.extend.asArrayList
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.context.SecurityContextHolder
