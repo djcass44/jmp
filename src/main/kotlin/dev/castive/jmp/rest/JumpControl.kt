@@ -79,9 +79,13 @@ class JumpControl @Autowired constructor(
 		val results = searchService.search(query).filter {
 			// filter jumps to only those we're authorised to see
 			it.isVisibleTo(user)
-		}.map {
+		}.mapNotNull { j ->
 			// convert the jump to the DTO object
-			ownerService.getDTO(it)
+			kotlin.runCatching {
+				ownerService.getDTO(j)
+			}.onFailure {
+				"Failed to convert Jump into DTO: ${j.name}".loge(javaClass, it)
+			}.getOrNull()
 		}.sortedWith(
 			// sort by usage first, then name
 			compareBy({ -it.usage }, { it.name })
