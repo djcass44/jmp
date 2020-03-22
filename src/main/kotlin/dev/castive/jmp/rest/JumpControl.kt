@@ -18,9 +18,9 @@ package dev.castive.jmp.rest
 
 import dev.castive.jmp.api.Responses
 import dev.castive.jmp.data.FSA
-import dev.castive.jmp.data.JumpDTO
 import dev.castive.jmp.data.dto.DoJumpDTO
 import dev.castive.jmp.data.dto.EditJumpDTO
+import dev.castive.jmp.data.dto.JumpDTO
 import dev.castive.jmp.entity.Alias
 import dev.castive.jmp.entity.Jump
 import dev.castive.jmp.repo.AliasRepo

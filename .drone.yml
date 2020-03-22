@@ -55,9 +55,6 @@ steps:
         - images.api.tag=${DRONE_COMMIT_SHA}
         - env.SPRING_PROFILES_ACTIVE=development
         - env.SPRING_CLOUD_CONFIG_ENABLED=true
-    when:
-      branch:
-        exclude: master
     # DEPLOY TO PROD
   - name: deploy_production
     image: harbor.v2.dcas.dev/djcass44/drone-helm3

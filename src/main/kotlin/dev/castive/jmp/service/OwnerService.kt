@@ -1,6 +1,6 @@
 package dev.castive.jmp.service
 
-import dev.castive.jmp.data.JumpDTO
+import dev.castive.jmp.data.dto.JumpDTO
 import dev.castive.jmp.entity.Jump
 import dev.castive.jmp.prop.AppMetadataProps
 import dev.castive.jmp.repo.AliasRepo
@@ -14,11 +14,12 @@ class OwnerService @Autowired constructor(
 	private val metadataProps: AppMetadataProps
 ) {
 
-	fun getDTO(jump: Jump): JumpDTO = JumpDTO(
-		jump,
-		"${metadataProps.icon.url}/icon?site=${jump.location.safe()}",
-		jump.owner,
-		jump.ownerGroup,
-		aliasRepo.findAllByParent(jump.id).map { it.asDTO() }
-	)
+	fun getDTO(jump: Jump): JumpDTO =
+		JumpDTO(
+			jump,
+			"${metadataProps.icon.url}/icon?site=${jump.location.safe()}",
+			jump.owner,
+			jump.ownerGroup,
+			aliasRepo.findAllByParent(jump.id).map { it.asDTO() }
+		)
 }

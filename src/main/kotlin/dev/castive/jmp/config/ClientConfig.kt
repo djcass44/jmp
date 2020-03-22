@@ -22,7 +22,6 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.web.client.RestTemplate
-import java.security.MessageDigest
 import java.security.SecureRandom
 
 @Configuration
@@ -35,7 +34,4 @@ class ClientConfig {
 	@ConditionalOnMissingBean(value = [PasswordEncoder::class])
 	@Bean
 	fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder(BCryptPasswordEncoder.BCryptVersion.`$2A`, SecureRandom())
-
-	@Bean
-	fun sessionEncoder(): MessageDigest = MessageDigest.getInstance("SHA3-384")
 }

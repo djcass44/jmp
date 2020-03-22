@@ -1,6 +1,5 @@
-package dev.castive.jmp.data
+package dev.castive.jmp.data.dto
 
-import dev.castive.jmp.data.dto.AliasDTO
 import dev.castive.jmp.entity.Jump
 import dev.dcas.jmp.security.shim.entity.Group
 import dev.dcas.jmp.security.shim.entity.Meta

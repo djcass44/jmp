@@ -53,12 +53,6 @@ data class Jump(
 		const val TYPE_PERSONAL: Int = 1
 		const val TYPE_GROUP: Int = 2
 
-		fun getType(jump: Jump): Int = when {
-			jump.isPublic() -> TYPE_GLOBAL
-			jump.owner != null -> TYPE_PERSONAL
-			jump.ownerGroup != null -> TYPE_GROUP
-			else -> TYPE_GLOBAL
-		}
 	}
 	fun isPublic(): Boolean = owner == null && ownerGroup == null
 

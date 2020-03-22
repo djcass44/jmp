@@ -43,6 +43,9 @@ fun Jump.isVisibleTo(user: User?): Boolean {
 	// public jumps can be seen by anyone
 	if(ownerGroup == null && owner == null)
 		return true
+	// any user can see jumps in public groups
+	if(ownerGroup?.public == true)
+		return true
 	// we need a user to check personal/grouped jumps
 	if(user == null)
 		return false

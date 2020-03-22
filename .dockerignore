@@ -113,3 +113,4 @@ initialAdminPassword
 .drone.yml
 .drone2.yml
 /jmp
+gradlew*

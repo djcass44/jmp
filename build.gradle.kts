@@ -56,7 +56,7 @@ repositories {
 }
 
 val junitVersion: String by project
-extra["springCloudVersion"] = "Hoxton.SR2"
+extra["springCloudVersion"] = "Hoxton.SR3"
 
 dependencies {
 	implementation(kotlin("stdlib-jdk8"))
@@ -94,7 +94,7 @@ dependencies {
 //	implementation("dev.dcas.jmp.security:core:0.3-SNAPSHOT")
 //	implementation("dev.dcas.jmp.security:shim:0.3-SNAPSHOT")
 
-	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.2")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.+")
 	implementation("info.debatty:java-string-similarity:1.2.1")
 	implementation("org.hibernate:hibernate-search-orm:5.11.5.Final")
 	implementation("com.google.guava:guava:28.2-jre")
@@ -107,7 +107,7 @@ dependencies {
 	implementation("io.springfox:springfox-swagger-ui:2.9.2")
 
 	// JDBC drivers
-	runtimeOnly("org.postgresql:postgresql:42.2.9") // tested (django)
+	runtimeOnly("org.postgresql:postgresql:42.2.11") // tested (django)
 	runtimeOnly("com.h2database:h2:1.4.+")
 
 	testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
@@ -120,7 +120,7 @@ dependencies {
 	testImplementation("org.jetbrains.kotlin:kotlin-test")
 
 	// rest assured
-	val restAssuredVersion = "4.2.0"
+	val restAssuredVersion = "4.3.0"
 	testImplementation("io.rest-assured:json-path:$restAssuredVersion")
 	testImplementation("io.rest-assured:xml-path:$restAssuredVersion")
 	testImplementation("io.rest-assured:rest-assured:$restAssuredVersion")
@@ -169,7 +169,7 @@ springBoot {
 
 tasks {
 	wrapper {
-		gradleVersion = "6.1"
+		gradleVersion = "6.3-rc-4"
 		distributionType = Wrapper.DistributionType.ALL
 	}
 	withType<KotlinCompile>().all {
