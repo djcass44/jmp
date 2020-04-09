@@ -32,6 +32,8 @@ interface JumpRepo: JpaRepository<Jump, Int> {
 	fun findAllByOwnerIsNullAndOwnerGroupIsNull(): List<Jump>
 	fun findAllByOwner(owner: User): List<Jump>
 
+	@Modifying
+	@Transactional
 	@Query("UPDATE Jump j SET j.usage = j.usage + 1 WHERE j.id = :id")
 	fun incrementUsage(id: Int)
 
