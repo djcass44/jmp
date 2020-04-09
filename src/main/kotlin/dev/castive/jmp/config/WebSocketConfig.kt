@@ -20,7 +20,6 @@ import dev.castive.jmp.component.SocketHandler
 import dev.castive.jmp.prop.AppSecurityProps
 import dev.castive.log2.loga
 import dev.castive.log2.logi
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.socket.config.annotation.EnableWebSocket
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer
@@ -28,7 +27,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 
 @Configuration
 @EnableWebSocket
-class WebSocketConfig @Autowired constructor(
+class WebSocketConfig(
 	private val appSecurityConfig: AppSecurityProps
 ): WebSocketConfigurer {
 

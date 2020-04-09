@@ -2,8 +2,7 @@
 version: '3'
 services:
   jmp:
-    build: .
-    image: jmp/api
+    image: djcass44/jmp
     ports:
       - 7000:7000
   psql:

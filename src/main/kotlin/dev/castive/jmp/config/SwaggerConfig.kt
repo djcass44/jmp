@@ -16,7 +16,7 @@
 
 package dev.castive.jmp.config
 
-import dev.castive.jmp.security.SecurityConstants
+import dev.dcas.jmp.spring.security.SecurityConstants
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry

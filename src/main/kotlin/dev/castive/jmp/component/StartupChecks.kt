@@ -17,7 +17,6 @@
 package dev.castive.jmp.component
 
 import dev.castive.jmp.entity.Role
-import dev.castive.jmp.security.SecurityConstants
 import dev.castive.log2.loga
 import dev.castive.log2.logf
 import dev.castive.log2.logi
@@ -28,6 +27,7 @@ import dev.dcas.jmp.security.shim.entity.User
 import dev.dcas.jmp.security.shim.repo.GroupRepo
 import dev.dcas.jmp.security.shim.repo.MetaRepo
 import dev.dcas.jmp.security.shim.repo.UserRepo
+import dev.dcas.jmp.spring.security.SecurityConstants
 import dev.dcas.util.extend.randomString
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value

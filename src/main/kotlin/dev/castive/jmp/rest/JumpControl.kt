@@ -16,7 +16,6 @@
 
 package dev.castive.jmp.rest
 
-import dev.castive.jmp.api.Responses
 import dev.castive.jmp.data.FSA
 import dev.castive.jmp.data.dto.DoJumpDTO
 import dev.castive.jmp.data.dto.EditJumpDTO
@@ -29,6 +28,7 @@ import dev.castive.jmp.repo.JumpRepoCustom
 import dev.castive.jmp.service.MetadataService
 import dev.castive.jmp.service.OwnerService
 import dev.castive.jmp.service.SearchService
+import dev.castive.jmp.util.Responses
 import dev.castive.jmp.util.broadcast
 import dev.castive.jmp.util.isVisibleTo
 import dev.castive.log2.loge
@@ -113,8 +113,9 @@ class JumpControl @Autowired constructor(
 			val found = jumps.size == 1
 			return@run if(found) {
 				// increment the usage counter
-				jumpRepo.save(jumps[0].apply { usage++ })
-				true to jumps[0].location
+				val (jump) = jumps
+				jumpRepo.incrementUsage(jump.id)
+				true to jump.location
 			}
 			else
 				false to "/similar?query=$target"

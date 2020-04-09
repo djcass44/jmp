@@ -16,13 +16,12 @@
 
 package dev.castive.jmp.rest
 
-import dev.castive.jmp.api.Responses
 import dev.castive.jmp.data.FSA
 import dev.castive.jmp.data.dto.CreateGroupDTO
 import dev.castive.jmp.data.dto.EditGroupUsersDTO
 import dev.castive.jmp.repo.GroupRepoCustom
-import dev.castive.jmp.security.SecurityConstants
 import dev.castive.jmp.tasks.GroupsTask
+import dev.castive.jmp.util.Responses
 import dev.castive.jmp.util.broadcast
 import dev.castive.log2.loga
 import dev.castive.log2.loge
@@ -31,6 +30,7 @@ import dev.dcas.jmp.security.shim.entity.Group
 import dev.dcas.jmp.security.shim.repo.GroupRepo
 import dev.dcas.jmp.security.shim.repo.UserRepo
 import dev.dcas.jmp.security.shim.util.assertUser
+import dev.dcas.jmp.spring.security.SecurityConstants
 import dev.dcas.util.extend.isESNullOrBlank
 import dev.dcas.util.spring.responses.ForbiddenResponse
 import dev.dcas.util.spring.responses.NotFoundResponse

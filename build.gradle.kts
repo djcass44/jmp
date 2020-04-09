@@ -25,10 +25,10 @@ plugins {
 	id("io.spring.dependency-management") version "1.0.9.RELEASE"
 	id("com.github.ben-manes.versions") version "0.27.0"
 	id("dev.dcas.gradle-util") version "0.1"
-	kotlin("jvm") version "1.3.70"
-	kotlin("plugin.spring") version "1.3.70"
-	kotlin("plugin.jpa") version "1.3.70"
-	kotlin("kapt") version "1.3.70"
+	kotlin("jvm") version "1.3.71"
+	kotlin("plugin.spring") version "1.3.71"
+	kotlin("plugin.jpa") version "1.3.71"
+	kotlin("kapt") version "1.3.71"
 }
 
 group = "dev.castive"
@@ -169,7 +169,7 @@ springBoot {
 
 tasks {
 	wrapper {
-		gradleVersion = "6.3-rc-4"
+		gradleVersion = "6.3"
 		distributionType = Wrapper.DistributionType.ALL
 	}
 	withType<KotlinCompile>().all {

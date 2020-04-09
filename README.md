@@ -3,7 +3,7 @@
 JMP is a utility used for quickly navigating to select websites/addresses.
 
 It is made up of 2 main components; the UI and API. 
-For setting up the UI and more info, see the UI [README](https://github.com/djcass44/jmp-react/blob/develop/README.md)
+For setting up the UI and more info, see the UI [README](https://github.com/djcass44/jmp-react/blob/develop/README.md).
 
 ## Setting up the API
 
@@ -16,8 +16,7 @@ JMP can be installed in 2 different ways.
 1. **Using docker** (recommended)
 
 ```bash
-docker build -t jmp/api .
-docker run -v "./data:/data" -p 7000:7000 jmp/api 
+docker run -p 7000:7000 djcass44/jmp
 ```
 
 There is also a docker-compose utility script you can use
@@ -35,19 +34,6 @@ This is done via running the Jar file manually.
 java -jar build/libs/jmp.jar
 ```
 
-## Setup information
-
-See [SETUP.md](SETUP.md) for more in-depth application configuration
-
-## Application information
-
-**Launch configuration**
-
-`--enable-cors`: this will accept ALL incoming CORS requests. This is only for development purposes and MUST NOT be used in production.
-
-`--enable-dev`: enabled certain development features AND --enable-cors. **This must not be used for production.**
-
-*Note: the application will not start if CORS is enabled and the BASE_URL is HTTPS*
 
 ## Browser setup
 

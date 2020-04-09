@@ -1,5 +1,5 @@
 /*
- *    Copyright 2019 Django Cass
+ *    Copyright 2020 Django Cass
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,12 +14,12 @@
  *    limitations under the License.
  */
 
-package dev.castive.jmp.security
+package dev.castive.jmp.util
 
-object SecurityConstants {
-	const val sourceHeader = "X-Auth-Source"
-	const val authHeader = "Authorization"
-	const val sourceLocal = "local"
-	const val sourceLdap = "ldap"
-	const val sourceOAuth2 = "oauth2"
+object Responses {
+	const val GENERIC_RATE_LIMITED: String = "You're doing too much!"
+
+	const val NOT_FOUND_USER: String = "That user could not be found."
+	const val NOT_FOUND_GROUP: String = "That group could not be found."
+	const val NOT_FOUND_JUMP: String = "That jump could not be found."
 }

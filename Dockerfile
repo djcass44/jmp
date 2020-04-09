@@ -1,5 +1,5 @@
 # STAGE 1 - BUILD
-FROM harbor.v2.dcas.dev/library/base/gradle
+FROM castive/gradle
 LABEL maintainer="Django Cass <django@dcas.dev>"
 
 USER root
@@ -12,7 +12,7 @@ COPY . .
 RUN gradle build -x test
 
 # STAGE 2 - RUN
-FROM harbor.v2.dcas.dev/library/base/tomcat-native:master
+FROM castive/tomcat-native
 LABEL maintainer="Django Cass <django@dcas.dev>"
 
 WORKDIR /app
