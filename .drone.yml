@@ -13,10 +13,6 @@ helm_deploy: &helm_deploy
   kube_api_server: https://kubernetes.default
   kube_certificate:
     from_secret: kube_certificate
-  client_certificate_data:
-    from_secret: client_certificate_data
-  client_key_data:
-    from_secret: client_key_data
 
 steps:
   - name: test
@@ -56,6 +52,8 @@ steps:
       - publish
     settings:
       <<: *helm_deploy
+      kube_token:
+        from_secret: KUBE_TOKEN_DEV
       namespace: development
       values:
         - ingress.host=jmp-dev.v2.dcas.dev
@@ -75,6 +73,8 @@ steps:
       - deploy_development
     settings:
       <<: *helm_deploy
+      kube_token:
+        from_secret: KUBE_TOKEN_PROD
       namespace: production
       values:
         - ingress.host=jmp.castive.dev
