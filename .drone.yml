@@ -10,9 +10,6 @@ helm_deploy: &helm_deploy
   atomic: true
   cleanup_failed_upgrade: true
   reuse_values: true
-  kube_api_server: https://kubernetes.default
-  kube_certificate:
-    from_secret: kube_certificate
 
 steps:
   - name: test
@@ -28,6 +25,7 @@ steps:
     pull: always
     depends_on:
       - test
+      - helm_lint
     settings:
       registry: harbor.v2.dcas.dev
       repo: dcas.dev/jmp
@@ -46,14 +44,12 @@ steps:
       chart: ./jmp
     # DEPLOY TO DEV
   - name: deploy_development
-    image: harbor.v2.dcas.dev/djcass44/drone-helm3
+    image: harbor.v2.dcas.dev/infra/drone-helm3:development
     depends_on:
       - helm_lint
       - publish
     settings:
       <<: *helm_deploy
-      kube_token:
-        from_secret: KUBE_TOKEN_DEV
       namespace: development
       values:
         - ingress.host=jmp-dev.v2.dcas.dev
@@ -66,15 +62,13 @@ steps:
         - env.SPRING_CLOUD_CONFIG_ENABLED=true
     # DEPLOY TO PROD
   - name: deploy_production
-    image: harbor.v2.dcas.dev/djcass44/drone-helm3
+    image: harbor.v2.dcas.dev/infra/drone-helm3:production
     depends_on:
       - helm_lint
       - publish
       - deploy_development
     settings:
       <<: *helm_deploy
-      kube_token:
-        from_secret: KUBE_TOKEN_PROD
       namespace: production
       values:
         - ingress.host=jmp.castive.dev
