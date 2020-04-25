@@ -28,11 +28,12 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @Configuration
 @EnableWebSocket
 class WebSocketConfig(
-	private val appSecurityConfig: AppSecurityProps
+	private val appSecurityConfig: AppSecurityProps,
+	private val socketHandler: SocketHandler
 ): WebSocketConfigurer {
 
 	override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
-		registry.addHandler(SocketHandler(), "/ws2").apply {
+		registry.addHandler(socketHandler, "/ws2").apply {
 			if(appSecurityConfig.allowCors) {
 				"Enabling CORS requests for WebSocket resources".loga(javaClass)
 				setAllowedOrigins("*")

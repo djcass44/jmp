@@ -20,13 +20,12 @@ import dev.castive.jmp.repo.JumpRepoCustom
 import dev.castive.jmp.service.SimilarityService
 import dev.dcas.jmp.security.shim.util.user
 import dev.dcas.util.extend.asArrayList
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/v2/similar")
-class SimilarControl @Autowired constructor(
+class SimilarControl(
 	private val jumpRepoCustom: JumpRepoCustom,
 	private val similar: SimilarityService
 ) {

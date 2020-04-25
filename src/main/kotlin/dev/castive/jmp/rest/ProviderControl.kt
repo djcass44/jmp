@@ -20,7 +20,6 @@ import dev.castive.log2.logd
 import dev.dcas.jmp.security.shim.repo.UserRepo
 import dev.dcas.jmp.spring.security.SecurityConstants
 import dev.dcas.jmp.spring.security.props.SecurityProps
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cache.annotation.CacheConfig
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.security.access.prepost.PreAuthorize
@@ -32,7 +31,7 @@ import javax.annotation.PostConstruct
 @CacheConfig(cacheNames = ["providers"])
 @RestController
 @RequestMapping("/v2/providers")
-class ProviderControl @Autowired constructor(
+class ProviderControl(
 	private val userRepo: UserRepo,
 	private val oauth2Config: SecurityProps
 	) {

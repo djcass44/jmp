@@ -16,6 +16,7 @@
 
 package dev.castive.jmp.rest
 
+import dev.castive.jmp.component.SocketHandler
 import dev.castive.jmp.data.FSA
 import dev.castive.jmp.data.dto.DoJumpDTO
 import dev.castive.jmp.data.dto.EditJumpDTO
@@ -29,7 +30,6 @@ import dev.castive.jmp.service.MetadataService
 import dev.castive.jmp.service.OwnerService
 import dev.castive.jmp.service.SearchService
 import dev.castive.jmp.util.Responses
-import dev.castive.jmp.util.broadcast
 import dev.castive.jmp.util.isVisibleTo
 import dev.castive.log2.loge
 import dev.castive.log2.logi
@@ -68,7 +68,8 @@ class JumpControl @Autowired constructor(
 	private val metaRepo: MetaRepo,
 	private val aliasRepo: AliasRepo,
 	private val ownerService: OwnerService,
-	private val searchService: SearchService
+	private val searchService: SearchService,
+	private val socketHandler: SocketHandler
 ) {
 	@GetMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
 	fun getAll(
@@ -153,8 +154,8 @@ class JumpControl @Autowired constructor(
 		aliasRepo.saveAll(add.alias.map {
 			Alias(0, it.name, created.id)
 		})
+		socketHandler.broadcast(FSA(FSA.EVENT_UPDATE_JUMP, null))
 		metadata.warmIconService(add.location)
-		FSA(FSA.EVENT_UPDATE_JUMP, null).broadcast()
 		return created
 	}
 
@@ -198,7 +199,7 @@ class JumpControl @Autowired constructor(
 			title = metadata.updateTitle(update.location)
 		})
 		metadata.warmIconService(jump.location)
-		FSA(FSA.EVENT_UPDATE_JUMP, null).broadcast()
+		socketHandler.broadcast(FSA(FSA.EVENT_UPDATE_JUMP, null))
 		return ownerService.getDTO(jump)
 	}
 
@@ -223,7 +224,7 @@ class JumpControl @Autowired constructor(
 		// delete aliases
 		aliasRepo.deleteAllByParent(jump.id)
 		jumpRepo.delete(jump)
-		FSA(FSA.EVENT_UPDATE_JUMP, null).broadcast()
+		socketHandler.broadcast(FSA(FSA.EVENT_UPDATE_JUMP, null))
 
 		return ResponseEntity.noContent().build()
 	}

@@ -16,6 +16,7 @@
 
 package dev.castive.jmp.component
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import dev.castive.jmp.data.FSA
 import dev.castive.jmp.util.send
 import dev.castive.log2.loge
@@ -35,32 +36,41 @@ import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 @Component
-class SocketHandler: TextWebSocketHandler() {
-	companion object {
-		// random string that uniquely identifies this app instance
-		val appId: String = UUID.randomUUID().toString()
+class SocketHandler(
+	private val objectMapper: ObjectMapper
+): TextWebSocketHandler() {
+	// random string that uniquely identifies this app instance
+	val appId: String = UUID.randomUUID().toString()
 
-		val sessions: ConcurrentHashMap<String, WebSocketSession> = ConcurrentHashMap()
+	val sessions: ConcurrentHashMap<String, WebSocketSession> = ConcurrentHashMap()
 
-		/**
-		 * Send a socket message to a session with a specific id
-		 */
-		fun sendTo(id: String, data: FSA) {
-			sessions.forEach { (t: String, u: WebSocketSession) ->
-				if(t == id) {
-					u.send(data)
-					return
-				}
+	/**
+	 * Send a socket message to a session with a specific id
+	 */
+	fun sendTo(id: String, data: FSA) {
+		sessions.forEach { (t: String, u: WebSocketSession) ->
+			if(t == id) {
+				sendTo(data, u)
+				return
 			}
 		}
+	}
 
-		/**
-		 * Send a socket message to all connected sessions
-		 */
-		fun broadcast(data: FSA) {
-			sessions.forEach { (_: String, u: WebSocketSession) ->
-				u.send(data)
+	fun sendTo(data: FSA, session: WebSocketSession) {
+		if(session.isOpen) {
+			synchronized(session) {
+				session.sendMessage(TextMessage(objectMapper.writeValueAsString(data)))
 			}
+		}
+	}
+
+	/**
+	 * Send a socket message to all connected sessions
+	 */
+	fun broadcast(data: FSA) {
+		"Broadcasting socket message: ${data.type} to ${sessions.size} listeners".logv(javaClass)
+		sessions.values.forEach {
+			sendTo(data, it)
 		}
 	}
 

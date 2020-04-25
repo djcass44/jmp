@@ -17,13 +17,13 @@
 package dev.castive.jmp.rest
 
 import com.google.common.util.concurrent.RateLimiter
+import dev.castive.jmp.component.SocketHandler
 import dev.castive.jmp.data.BasicAuth
 import dev.castive.jmp.data.FSA
 import dev.castive.jmp.entity.Role
 import dev.castive.jmp.repo.UserRepoCustom
 import dev.castive.jmp.tasks.GroupsTask
 import dev.castive.jmp.util.Responses
-import dev.castive.jmp.util.broadcast
 import dev.castive.log2.loga
 import dev.castive.log2.logi
 import dev.castive.log2.logw
@@ -60,7 +60,8 @@ class UserControl @Autowired constructor(
 	private val groupRepo: GroupRepo,
 	private val metaRepo: MetaRepo,
 	private val groupTask: GroupsTask,
-	private val passwordEncoder: PasswordEncoder
+	private val passwordEncoder: PasswordEncoder,
+	private val socketHandler: SocketHandler
 ) {
 	private val limiter = RateLimiter.create(5.0)
 
@@ -101,7 +102,7 @@ class UserControl @Autowired constructor(
 			"Created user ${created.username} with id: ${created.id}".logi(javaClass)
 			// ask the groupstask cron to update public/default relations
 			groupTask.run()
-			FSA(FSA.EVENT_UPDATE_USER, null).broadcast()
+			socketHandler.broadcast(FSA(FSA.EVENT_UPDATE_USER, null))
 			return ResponseEntity(created.username, HttpStatus.CREATED)
 		}
 		else
@@ -124,7 +125,7 @@ class UserControl @Autowired constructor(
 			targetUser.addRole(Role.ROLE_ADMIN)
 		else
 			targetUser.roles.remove(Role.ROLE_ADMIN)
-		FSA(FSA.EVENT_UPDATE_USER, null).broadcast()
+		socketHandler.broadcast(FSA(FSA.EVENT_UPDATE_USER, null))
 		userRepo.save(targetUser)
 	}
 
@@ -137,7 +138,7 @@ class UserControl @Autowired constructor(
 		}.onFailure {
 			throw BadRequestResponse()
 		}
-		FSA(FSA.EVENT_UPDATE_USER, null).broadcast()
+		socketHandler.broadcast(FSA(FSA.EVENT_UPDATE_USER, null))
 		return true
 	}
 

@@ -16,11 +16,11 @@
 
 package dev.castive.jmp.service
 
+import dev.castive.jmp.component.SocketHandler
 import dev.castive.jmp.data.FSA
 import dev.castive.jmp.data.FaviconPayload
 import dev.castive.jmp.prop.AppMetadataProps
 import dev.castive.jmp.repo.JumpRepo
-import dev.castive.jmp.util.broadcast
 import dev.castive.log2.logd
 import dev.castive.log2.loge
 import dev.castive.log2.logi
@@ -42,7 +42,8 @@ import java.net.URI
 @Service
 class MetadataService(
 	private val jumpRepo: JumpRepo,
-	private val metadataProps: AppMetadataProps
+	private val metadataProps: AppMetadataProps,
+	private val socketHandler: SocketHandler
 ) {
 	private val tagTitle = "<title>"
 
@@ -107,7 +108,7 @@ class MetadataService(
 			if (it.title == null || it.title != title) {
 				"Updating title for ${it.name}, was: ${it.title}, now: $title".logv(MetadataService::class.java)
 			}
-			FSA(FSA.EVENT_UPDATE_TITLE, FaviconPayload(it.id, title)).broadcast()
+			socketHandler.broadcast(FSA(FSA.EVENT_UPDATE_TITLE, FaviconPayload(it.id, title)))
 		}
 		return title
 	}

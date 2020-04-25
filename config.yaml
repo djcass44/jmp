@@ -61,6 +61,7 @@ jmp:
     baseUrl: http://localhost:7000
 
 security:
+  hashSessions: true
   allowCors: true
   jwt:
     secretKey: "password"

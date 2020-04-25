@@ -16,13 +16,13 @@
 
 package dev.castive.jmp.rest
 
+import dev.castive.jmp.component.SocketHandler
 import dev.castive.jmp.data.FSA
 import dev.castive.jmp.data.dto.CreateGroupDTO
 import dev.castive.jmp.data.dto.EditGroupUsersDTO
 import dev.castive.jmp.repo.GroupRepoCustom
 import dev.castive.jmp.tasks.GroupsTask
 import dev.castive.jmp.util.Responses
-import dev.castive.jmp.util.broadcast
 import dev.castive.log2.loga
 import dev.castive.log2.loge
 import dev.castive.log2.logi
@@ -52,7 +52,8 @@ class GroupControl @Autowired constructor(
 	private val groupRepo: GroupRepo,
 	private val groupRepoCustom: GroupRepoCustom,
 	private val userRepo: UserRepo,
-	private val groupTask: GroupsTask
+	private val groupTask: GroupsTask,
+	private val socketHandler: SocketHandler
 ) {
 
 	@PreAuthorize("hasRole('USER')")
@@ -84,7 +85,7 @@ class GroupControl @Autowired constructor(
 			mutableSetOf(user)
 		))
 		"Group created: ${created.name} by ${user.username}".logi(javaClass)
-		FSA(FSA.EVENT_UPDATE_GROUP, null).broadcast()
+		socketHandler.broadcast(FSA(FSA.EVENT_UPDATE_GROUP, null))
 		return created
 	}
 
@@ -108,7 +109,7 @@ class GroupControl @Autowired constructor(
 		"Group ${existing.id} modified by ${user.username}".logi(javaClass)
 		// ask the groupstask cron to update public/default relations
 		groupTask.run()
-		FSA(FSA.EVENT_UPDATE_GROUP, null).broadcast()
+		socketHandler.broadcast(FSA(FSA.EVENT_UPDATE_GROUP, null))
 		return groupRepo.save(existing)
 	}
 
@@ -122,7 +123,7 @@ class GroupControl @Autowired constructor(
 			throw ForbiddenResponse()
 		"Group ${existing.name} removed by ${user.username}".logi(javaClass)
 		groupRepo.delete(existing)
-		FSA(FSA.EVENT_UPDATE_GROUP, null).broadcast()
+		socketHandler.broadcast(FSA(FSA.EVENT_UPDATE_GROUP, null))
 	}
 
 	@PreAuthorize("hasRole('USER')")

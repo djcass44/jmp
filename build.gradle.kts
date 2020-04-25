@@ -21,14 +21,14 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
-	id("org.springframework.boot") version "2.2.5.RELEASE"
+	id("org.springframework.boot") version "2.2.6.RELEASE"
 	id("io.spring.dependency-management") version "1.0.9.RELEASE"
 	id("com.github.ben-manes.versions") version "0.27.0"
 	id("dev.dcas.gradle-util") version "0.1"
-	kotlin("jvm") version "1.3.71"
-	kotlin("plugin.spring") version "1.3.71"
-	kotlin("plugin.jpa") version "1.3.71"
-	kotlin("kapt") version "1.3.71"
+	kotlin("jvm") version "1.3.72"
+	kotlin("plugin.spring") version "1.3.72"
+	kotlin("plugin.jpa") version "1.3.72"
+	kotlin("kapt") version "1.3.72"
 }
 
 group = "dev.castive"
@@ -90,9 +90,9 @@ dependencies {
 
 	implementation("com.github.djcass44:log2:4.1")
 	implementation("com.github.djcass44:castive-utilities:v6.RC3")
-	implementation("com.github.djcass44:jmp-security-utils:0.1")
-//	implementation("dev.dcas.jmp.security:core:0.3-SNAPSHOT")
-//	implementation("dev.dcas.jmp.security:shim:0.3-SNAPSHOT")
+	implementation("com.github.djcass44:jmp-security-utils:0.1.2-beta.4")
+//	implementation("dev.dcas.jmp.security:core:0.1.2-SNAPSHOT")
+//	implementation("dev.dcas.jmp.security:shim:0.1.2-SNAPSHOT")
 
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.+")
 	implementation("info.debatty:java-string-similarity:1.2.1")

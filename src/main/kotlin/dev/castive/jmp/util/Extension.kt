@@ -1,6 +1,5 @@
 package dev.castive.jmp.util
 
-import dev.castive.jmp.component.SocketHandler
 import dev.castive.jmp.data.FSA
 import dev.castive.jmp.entity.Jump
 import dev.castive.log2.logv
@@ -19,7 +18,6 @@ fun WebSocketSession.send(data: FSA) {
 	else
 		"Unable to send message to closed socket: $id".logv(javaClass)
 }
-fun FSA.broadcast(): Unit = SocketHandler.broadcast(this)
 
 /**
  * Check whether a Jump is visible to a specific user
