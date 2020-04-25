@@ -16,7 +16,9 @@
 
 package dev.castive.jmp.service
 
-import dev.castive.jmp.TestUtils
+import com.fasterxml.jackson.databind.ObjectMapper
+import dev.castive.jmp.TestUtils.loadFixture
+import dev.castive.jmp.component.SocketHandler
 import dev.castive.jmp.prop.AppMetadataProps
 import dev.castive.jmp.repo.JumpRepo
 import io.ktor.client.HttpClient
@@ -39,16 +41,16 @@ class MetadataServiceTest {
 		engine {
 			addHandler { request ->
 				when(request.url.host) {
-					"a.com" -> respond(TestUtils.loadFixture("nginx_404.html"))
-					"b.com" -> respond(TestUtils.loadFixture("kotlinlang_org.html"))
-					"c.com" -> respond(TestUtils.loadFixture("nginx_404_notitle.html"))
-					else -> respond(TestUtils.loadFixture("nginx_404.html"))
+					"a.com" -> respond(loadFixture("nginx_404.html"))
+					"b.com" -> respond(loadFixture("kotlinlang_org.html"))
+					"c.com" -> respond(loadFixture("nginx_404_notitle.html"))
+					else -> respond(loadFixture("nginx_404.html"))
 				}
 			}
 		}
 	}
 
-	private val metadataService = Mockito.spy(MetadataService(jumpRepo, metadataProps))
+	private val metadataService = Mockito.spy(MetadataService(jumpRepo, metadataProps, SocketHandler(ObjectMapper())))
 
 	@BeforeEach
 	internal fun setUp() {

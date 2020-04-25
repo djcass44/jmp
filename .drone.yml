@@ -21,7 +21,7 @@ steps:
         - master
     # BUILD OCI IMAGE
   - name: publish
-    image: harbor.v2.dcas.dev/library/drone-kaniko
+    image: harbor.v2.dcas.dev/infra/drone-kaniko:dcas-dev
     pull: always
     depends_on:
       - test
@@ -34,8 +34,6 @@ steps:
         - latest
         - ${DRONE_BRANCH/\//-}
         - ${DRONE_COMMIT_SHA}
-      authjson_docker:
-        from_secret: DOCKER_AUTH
     # LINT HELM CHART
   - name: helm_lint
     image: harbor.v2.dcas.dev/djcass44/drone-helm3
