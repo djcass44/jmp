@@ -1,0 +1,6 @@
+ingress:
+  hsts: true
+netsec:
+  enabled: true
+env:
+  SPRING_CLOUD_CONFIG_ENABLED: true

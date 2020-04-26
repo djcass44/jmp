@@ -1,10 +1,6 @@
-name:
-  api: jmp-api
-  ui: jmp-ui
+name: jmp-api
 
-replicas:
-  api: 1
-  ui: 2
+replicas: 1
 
 resources:
   requests:
@@ -19,26 +15,12 @@ resources:
 env:
   SPRING_PROFILES_ACTIVE: local
 
-# custom branding for UI
-brand:
-  name: JMP
-  msg: ""
-  noun: Jump
-  key: jmp
-
 images:
-  api:
-    repository: harbor.v2.dcas.dev/dcas.dev/jmp
-    tag: master
-    pullPolicy: Always
-    imagePullSecrets:
-      - name: v2-dcas.dev
-  ui:
-    repository: harbor.v2.dcas.dev/dcas.dev/jmp-ui
-    tag: master
-    pullPolicy: Always
-    imagePullSecrets:
-      - name: v2-dcas.dev
+  repository: harbor.v2.dcas.dev/dcas.dev/jmp
+  tag: master
+  pullPolicy: Always
+  imagePullSecrets:
+    - name: v2-dcas.dev
 
 ingress:
   enabled: true
