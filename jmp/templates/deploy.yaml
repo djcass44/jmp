@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.name.api }}
+  name: {{ .Values.name }}
   labels:
     app.kubernetes.io/name: {{ .Chart.Name }}
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
@@ -9,36 +9,37 @@ metadata:
     app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
     app.kubernetes.io/component: api
 spec:
-  replicas: {{ .Values.replicas.api }}
+  replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
-      app: {{ .Values.name.api }}
+      app: {{ .Values.name }}
   template:
     metadata:
       labels:
-        app: {{ .Values.name.api }}
+        app: {{ .Values.name }}
     spec:
       automountServiceAccountToken: false
-    {{- with .Values.images.api.imagePullSecrets }}
+    {{- with .Values.images.imagePullSecrets }}
       imagePullSecrets:
       {{- toYaml . | nindent 8 }}
     {{- end }}
       securityContext:
-        fsGroup: 100
-        runAsUser: 100
-        runAsGroup: 101
+        runAsNonRoot: true
+        fsGroup: 1001
+        runAsUser: 1001
+        runAsGroup: 1001
       volumes:
       - name: tmp
         emptyDir: {}
       containers:
-      - name: {{ .Values.name.api }}
+      - name: {{ .Values.name }}
         env:
           {{- range $key, $value := .Values.env }}
           - name: {{ $key }}
             value:  {{ $value | quote }}
           {{- end }}
-        image: "{{ .Values.images.api.repository }}:{{ .Values.images.api.tag }}"
-        imagePullPolicy: {{ .Values.images.api.pullPolicy }}
+        image: "{{ .Values.images.repository }}:{{ .Values.images.tag }}"
+        imagePullPolicy: {{ .Values.images.pullPolicy }}
         ports:
           - name: http
             containerPort: {{ .Values.service.port }}
@@ -50,7 +51,7 @@ spec:
           {{ toYaml .Values.resources | nindent 12 }}
         readinessProbe:
           httpGet:
-            path: /api/ping
+            path: /api/actuator/health/ping
             port: http
           initialDelaySeconds: 5
           periodSeconds: 5
@@ -61,105 +62,6 @@ spec:
             drop:
               - all
           readOnlyRootFilesystem: true
-          allowPrivilegeEscalation: false
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      restartPolicy: Always
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: {{ .Values.name.ui }}
-  labels:
-    app.kubernetes.io/name: {{ .Chart.Name }}
-    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-    app.kubernetes.io/component: ui
-spec:
-  replicas: {{ .Values.replicas.ui }}
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 2
-      maxUnavailable: 50%
-  selector:
-    matchLabels:
-      app: {{ .Values.name.ui }}
-  template:
-    metadata:
-      labels:
-        app: {{ .Values.name.ui }}
-    spec:
-      automountServiceAccountToken: false
-    {{- with .Values.images.ui.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
-      securityContext:
-        fsGroup: 100
-        runAsUser: 101
-        runAsGroup: 101
-      volumes:
-      - name: tmp
-        emptyDir: {}
-      containers:
-      - image: "{{ .Values.images.ui.repository }}:{{ .Values.images.ui.tag }}"
-        imagePullPolicy: {{ .Values.images.ui.pullPolicy }}
-        name: {{ .Values.name.ui }}
-        env:
-          - name: JMP_API_URL
-            value: {{ index .Values.ingress.host }}
-          - name: JMP_API_SECURE
-            value: "true"
-          {{- with .Values.brand }}
-          - name: JMP_BRAND_NAME
-            value: {{ .name }}
-          - name: JMP_BRAND_MSG
-            value: {{ .msg }}
-          - name: JMP_BRAND_NOUN
-            value: {{ .noun }}
-          - name: JMP_BRAND_KEY
-            value: {{ .key }}
-          {{- end }}
-        ports:
-        - containerPort: 8080
-          name: http
-        volumeMounts:
-        - name: tmp
-          mountPath: /var/tmp/nginx
-        resources:
-          requests:
-            memory: 8Mi
-            cpu: 10m
-          limits:
-            memory: 16Mi
-            cpu: 50m
-        livenessProbe:
-          httpGet:
-            path: /probe
-            port: http
-          initialDelaySeconds: 3
-          periodSeconds: 3
-        readinessProbe:
-          httpGet:
-            path: /probe
-            port: http
-          initialDelaySeconds: 5
-          periodSeconds: 5
-        securityContext:
-          runAsNonRoot: true
-          privileged: false
           allowPrivilegeEscalation: false
       {{- with .Values.nodeSelector }}
       nodeSelector:
