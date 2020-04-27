@@ -28,7 +28,8 @@ data class GetUserDTO(
 	val displayName: String,
 	val avatarUrl: String? = null,
 	val roles: List<GrantedAuthority>,
-	val meta: Meta
+	val meta: Meta,
+	val source: String
 ) {
 	fun isAdmin(): Boolean = roles.contains(Role.ROLE_ADMIN)
 
@@ -38,6 +39,7 @@ data class GetUserDTO(
 		if(requester.source == user.source) user.displayName else user.username,
 		if(requester.source == user.source) user.avatarUrl else null,
 		user.roles,
-		user.meta
+		user.meta,
+		user.source
 	)
 }
