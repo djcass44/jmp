@@ -19,7 +19,6 @@ package dev.castive.jmp.util.checks
 import dev.castive.log2.loge
 import dev.castive.log2.logi
 import dev.castive.log2.logv
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.actuate.health.Health
 import org.springframework.boot.actuate.health.HealthIndicator
@@ -29,7 +28,7 @@ import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.getForEntity
 
 @Component
-class MetadataHealthIndicator @Autowired constructor(
+class MetadataHealthIndicator(
 	private val restTemplate: RestTemplate
 ): HealthIndicator {
 
@@ -48,9 +47,12 @@ class MetadataHealthIndicator @Autowired constructor(
 			"Unable to perform icon loader health check due to egress policy".logi(javaClass)
 			return Health.unknown().withDetail("Reason", "Egress policy").build()
 		}
-		"Running health check @ $iconUrl/actuator/health".logv(javaClass)
+
+		"Running health check @ $iconUrl/ping".logv(javaClass)
 		// do a standard http health check
-		val httpCheck = kotlin.runCatching { restTemplate.getForEntity<String>("$iconUrl/actuator/health") }.getOrNull()
+		val httpCheck = kotlin.runCatching {
+			restTemplate.getForEntity<String>("$iconUrl/ping")
+		}.getOrNull()
 		"Got response from $iconUrl: ${httpCheck?.statusCodeValue}".logv(javaClass)
 		if(httpCheck == null || httpCheck.statusCode != HttpStatus.OK) {
 			"Got non-OK response from $iconUrl, ${httpCheck?.statusCodeValue ?: -1}".loge(javaClass)
