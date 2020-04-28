@@ -29,9 +29,9 @@ data class GetUserDTO(
 	val avatarUrl: String? = null,
 	val roles: List<GrantedAuthority>,
 	val meta: Meta,
-	val source: String
+	val source: String,
+	val admin: Boolean = roles.contains(Role.ROLE_ADMIN)
 ) {
-	fun isAdmin(): Boolean = roles.contains(Role.ROLE_ADMIN)
 
 	constructor(user: User, requester: User): this(
 		user.id,
