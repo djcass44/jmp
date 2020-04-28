@@ -39,8 +39,6 @@ java.apply {
 	targetCompatibility = JavaVersion.VERSION_11
 }
 
-ant.importBuild("version.xml")
-
 configurations {
 	compileOnly {
 		extendsFrom(configurations.annotationProcessor.get())
