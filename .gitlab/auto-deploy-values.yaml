@@ -41,11 +41,11 @@ postgresql:
   enabled: false
 resources:
   requests:
-    memory: 25Mi
-    cpu: 10m
+    memory: 350Mi
+    cpu: 350m
   limits:
-    memory: 50Mi
-    cpu: 50m
+    memory: 750Mi
+    cpu: 500m
 networkPolicy:
   enabled: true
   spec:
