@@ -1,0 +1,62 @@
+deploymentApiVersion: apps/v1
+podAnnotations:
+  k8s-app: jmp-api
+security:
+  podContext:
+    fsGroup: 1001
+    runAsUser: 1001
+    runAsGroup: 1001
+  containerContext:
+    runAsNonRoot: true
+    privileged: false
+    capabilities:
+      drop:
+        - all
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+service:
+  externalPort: 8080
+  internalPort: 8080
+ingress:
+  path: '/api'
+  annotations:
+    kubernetes.io/ingress.provider: "nginx"
+    kubernetes.io/ingress.class: "gitlab-nginx"
+  tls:
+    enabled: true
+    secretName: prod-dcas-dev
+livenessProbe:
+  path: "/api/actuator/health"
+  initialDelaySeconds: 120
+readinessProbe:
+  path: "/api/actuator/health/ping"
+volumes:
+  - name: tmp
+    mountPath: /tmp
+    config:
+      emptyDir: {}
+env:
+  SPRING_CLOUD_CONFIG_ENABLED: true
+postgresql:
+  enabled: false
+resources:
+  requests:
+    memory: 25Mi
+    cpu: 10m
+  limits:
+    memory: 50Mi
+    cpu: 50m
+networkPolicy:
+  enabled: true
+  spec:
+    podSelector:
+      matchLabels:
+        k8s-app: jmp-api
+    ingress:
+      - from:
+          - podSelector:
+              matchLabels:
+                app: nginx-ingress
+          - namespaceSelector:
+              matchLabels:
+                k8s-name: gitlab
