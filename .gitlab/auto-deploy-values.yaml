@@ -15,8 +15,8 @@ security:
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
 service:
-  externalPort: 8080
-  internalPort: 8080
+  externalPort: 7000
+  internalPort: 7000
 ingress:
   path: '/api'
   annotations:
