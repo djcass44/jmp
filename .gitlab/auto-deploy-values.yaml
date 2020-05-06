@@ -24,7 +24,7 @@ ingress:
     kubernetes.io/ingress.class: "gitlab-nginx"
   tls:
     enabled: true
-    secretName: prod-dcas-dev
+    secretName: prod-castive-dev
 livenessProbe:
   path: "/api/actuator/health"
   initialDelaySeconds: 120
