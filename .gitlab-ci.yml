@@ -9,6 +9,7 @@ variables:
   POSTGRES_ENABLED: 'false'
   POSTGRES_VERSION: '12.2'
   HELM_UPGRADE_EXTRA_ARGS: "--atomic"
+  KANIKO_CACHE: 'true'
 
 include:
   - template: Auto-DevOps.gitlab-ci.yml
