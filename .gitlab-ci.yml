@@ -1,0 +1,19 @@
+variables:
+  AUTO_DEVOPS_CHART: harbor-library/auto-deploy-app
+  AUTO_DEVOPS_CHART_REPOSITORY: https://harbor.v2.dcas.dev/chartrepo/library
+  AUTO_DEVOPS_CHART_REPOSITORY_NAME: harbor-library
+  AUTO_DEVOPS_POSTGRES_CHANNEL: '2'
+  CODE_QUALITY_DISABLED: 'true'
+  PERFORMANCE_DISABLED: 'true'
+  TEST_DISABLED: 'true'
+  POSTGRES_ENABLED: 'false'
+  POSTGRES_VERSION: '12.2'
+  HELM_UPGRADE_EXTRA_ARGS: "--atomic"
+
+include:
+  - template: Auto-DevOps.gitlab-ci.yml
+  - remote: 'https://gitlab.dcas.dev/open-source/gitlab-ci-templates/-/raw/master/test/Test.gitlab-ci.yml'
+  - remote: 'https://gitlab.dcas.dev/open-source/gitlab-ci-templates/-/raw/master/codequality/Eslint-Quality.gitlab-ci.yml' # requires EE
+  - remote: 'https://gitlab.dcas.dev/open-source/gitlab-ci-templates/-/raw/master/performance/Browser-Performance-Testing.gitlab-ci.yml'
+  - remote: 'https://gitlab.dcas.dev/open-source/gitlab-ci-templates/-/raw/master/build/Kaniko-Build.gitlab-ci.yml'
+  - remote: 'https://gitlab.dcas.dev/open-source/gitlab-ci-templates/-/raw/master/deploy/Deploy.gitlab-ci.yml'
