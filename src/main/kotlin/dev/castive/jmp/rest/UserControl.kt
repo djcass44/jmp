@@ -26,6 +26,7 @@ import dev.castive.jmp.repo.UserRepoCustom
 import dev.castive.jmp.tasks.GroupsTask
 import dev.castive.jmp.util.Responses
 import dev.castive.log2.loga
+import dev.castive.log2.loge
 import dev.castive.log2.logi
 import dev.castive.log2.logw
 import dev.dcas.jmp.security.shim.entity.Group
@@ -38,6 +39,7 @@ import dev.dcas.jmp.security.shim.util.assertUser
 import dev.dcas.jmp.security.shim.util.user
 import dev.dcas.jmp.spring.security.SecurityConstants
 import dev.dcas.util.spring.responses.BadRequestResponse
+import dev.dcas.util.spring.responses.ConflictResponse
 import dev.dcas.util.spring.responses.ForbiddenResponse
 import dev.dcas.util.spring.responses.NotFoundResponse
 import dev.dcas.util.spring.toPage
@@ -90,6 +92,11 @@ class UserControl(
 		if(limiter.tryAcquire()) {
 			val id = UUID.randomUUID()
 			val meta = metaRepo.save(Meta.fromUser(id))
+			// block the creation of duplicate users
+			if(!userRepo.existsByUsername(basicAuth.username)) {
+				"Failed to create user with username: ${basicAuth.username} (already exists)".loge(javaClass)
+				throw ConflictResponse()
+			}
 			val created = userRepo.save(
 				User(
 					id,
