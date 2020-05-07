@@ -93,7 +93,7 @@ class UserControl(
 			val id = UUID.randomUUID()
 			val meta = metaRepo.save(Meta.fromUser(id))
 			// block the creation of duplicate users
-			if(!userRepo.existsByUsername(basicAuth.username)) {
+			if(userRepo.existsByUsername(basicAuth.username)) {
 				"Failed to create user with username: ${basicAuth.username} (already exists)".loge(javaClass)
 				throw ConflictResponse()
 			}
