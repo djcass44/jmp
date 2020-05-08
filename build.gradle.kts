@@ -88,9 +88,9 @@ dependencies {
 
 	implementation("com.github.djcass44:log2:4.1")
 	implementation("com.github.djcass44:castive-utilities:v6.RC3")
-	implementation("com.github.djcass44:jmp-security-utils:0.1.2-beta.4")
-//	implementation("dev.dcas.jmp.security:core:0.1.2-SNAPSHOT")
-//	implementation("dev.dcas.jmp.security:shim:0.1.2-SNAPSHOT")
+	implementation("com.github.djcass44:jmp-security-utils:0.1.3-beta.1")
+//	implementation("dev.dcas.jmp.security:core:0.1.3-SNAPSHOT")
+//	implementation("dev.dcas.jmp.security:shim:0.1.3-SNAPSHOT")
 
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.+")
 	implementation("info.debatty:java-string-similarity:1.2.1")
