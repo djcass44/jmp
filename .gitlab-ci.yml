@@ -9,6 +9,8 @@ variables:
   POSTGRES_VERSION: '12.2'
   HELM_UPGRADE_EXTRA_ARGS: "--atomic"
   KANIKO_CACHE: 'true'
+  STAGING_ENABLED: 'true'
+  ROLLOUT_RESOURCE_TYPE: 'deployment'
 
 stages:
   - build
