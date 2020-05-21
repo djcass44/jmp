@@ -28,8 +28,4 @@ stages:
   - cleanup
 
 include:
-  - remote: 'https://gitlab.dcas.dev/open-source/gitlab-ci-templates/-/raw/master/test/AutoTest.gitlab-ci.yml'
-  - remote: 'https://gitlab.dcas.dev/open-source/gitlab-ci-templates/-/raw/master/codequality/Eslint-Quality.gitlab-ci.yml' # requires EE
-  - remote: 'https://gitlab.dcas.dev/open-source/gitlab-ci-templates/-/raw/master/performance/Browser-Performance-Testing.gitlab-ci.yml'
-  - remote: 'https://gitlab.dcas.dev/open-source/gitlab-ci-templates/-/raw/master/build/Kaniko-Build.gitlab-ci.yml'
-  - remote: 'https://gitlab.dcas.dev/open-source/gitlab-ci-templates/-/raw/master/deploy/Deploy.gitlab-ci.yml'
+  - remote: 'https://gitlab.dcas.dev/open-source/gitlab-ci-templates/-/raw/master/auto/Auto-JVM.gitlab-ci.yml'
