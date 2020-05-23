@@ -77,7 +77,7 @@ class JumpControl @Autowired constructor(
 		@RequestParam("page", defaultValue = "0") page: Int = 0,
 		@RequestParam("query", defaultValue = "") query: String = ""): Page<JumpDTO> {
 		val user = SecurityContextHolder.getContext().user()
-		val results = searchService.search(query).filter {
+		val results = searchService.search(query.toLowerCase().trim()).filter {
 			// filter jumps to only those we're authorised to see
 			it.isVisibleTo(user)
 		}.mapNotNull { j ->

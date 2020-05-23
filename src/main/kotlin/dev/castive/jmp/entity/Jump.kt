@@ -21,6 +21,7 @@ import dev.dcas.jmp.security.shim.entity.Meta
 import dev.dcas.jmp.security.shim.entity.User
 import org.hibernate.search.annotations.Field
 import org.hibernate.search.annotations.Indexed
+import org.hibernate.search.annotations.IndexedEmbedded
 import javax.persistence.*
 
 @Entity
@@ -37,6 +38,7 @@ data class Jump(
 	@Field
 	var title: String? = null,
 	@OneToMany
+	@IndexedEmbedded
 	val alias: MutableSet<Alias> = mutableSetOf(),
 	@ManyToOne
 	val owner: User? = null,

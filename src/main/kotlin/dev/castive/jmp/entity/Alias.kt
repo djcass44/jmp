@@ -19,10 +19,8 @@ package dev.castive.jmp.entity
 import dev.castive.jmp.data.dto.AliasDTO
 import dev.castive.log2.logv
 import org.hibernate.search.annotations.Field
-import org.hibernate.search.annotations.Indexed
 import javax.persistence.*
 
-@Indexed
 @Entity
 @Table(name = "Aliases")
 data class Alias(

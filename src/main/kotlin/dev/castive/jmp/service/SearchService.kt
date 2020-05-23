@@ -16,15 +16,14 @@
 
 package dev.castive.jmp.service
 
-import dev.castive.jmp.entity.Alias
 import dev.castive.jmp.entity.Jump
-import dev.castive.jmp.repo.JumpRepo
 import dev.castive.log2.logd
 import dev.castive.log2.loge
 import dev.castive.log2.logi
 import dev.castive.log2.logw
+import org.apache.lucene.search.Query
 import org.hibernate.search.jpa.Search
-import org.springframework.data.repository.findByIdOrNull
+import org.hibernate.search.query.dsl.QueryBuilder
 import org.springframework.stereotype.Service
 import java.util.concurrent.Future
 import javax.annotation.PostConstruct
@@ -32,11 +31,15 @@ import javax.persistence.EntityManagerFactory
 
 @Service
 class SearchService(
-	entityManagerFactory: EntityManagerFactory,
-	private val jumpRepo: JumpRepo
+	entityManagerFactory: EntityManagerFactory
 ) {
 	private val fullTextEntityManager = Search.getFullTextEntityManager(entityManagerFactory.createEntityManager())
 	private var index: Future<*>? = null
+
+	private val queryBuilder: QueryBuilder = fullTextEntityManager.searchFactory
+		.buildQueryBuilder()
+		.forEntity(Jump::class.java)
+		.get()
 
 	@PostConstruct
 	fun init() {
@@ -45,77 +48,41 @@ class SearchService(
 		"Starting Lucene index builder asynchronously...".logi(javaClass)
 	}
 
-	private fun searchAliases(term: String): List<Jump> {
-		if(index == null || !index!!.isDone) {
-			"[Alias] Cannot perform search as indices haven't been built".logw(javaClass)
-			return emptyList()
-		}
-		val queryBuilder = fullTextEntityManager.searchFactory
-			.buildQueryBuilder()
-			.forEntity(Alias::class.java)
-			.get()
-		val query = queryBuilder
-			.bool()
-			.should(queryBuilder
-				.keyword()
-				.wildcard()
-				.onField("name")
-				.matching("*$term*")
-				.createQuery()
-			)
+	/**
+	 * Generates a query with wildcarding.
+	 * This query is useful for a basic gimme-everything search
+	 */
+	private fun wildcardQuery(term: String): Query = queryBuilder
+		.bool()
+		.should(queryBuilder
+			.keyword()
+			.wildcard()
+			.onFields("name", "location", "title", "alias.name")
+			.matching("*$term*")
 			.createQuery()
-		val jpaQuery = fullTextEntityManager.createFullTextQuery(query, Alias::class.java)
-		val results = mutableSetOf<Jump>()
-		jpaQuery.resultList.forEach {
-			kotlin.runCatching {
-				// convert the result back into our entity
-				jumpRepo.findByIdOrNull((it as Alias).parent)?.let(results::add)
-			}.onFailure {
-				"[Alias] Failed to load Jump from Alias, searchTerm: $term".loge(javaClass, it)
-			}
-		}
-		"[Alias] Executed full-text-search for '${term}': returned ${results.size} aliases".logd(javaClass)
-		return results.toList()
-	}
+		)
+		.createQuery()
 
-	fun search(term: String): List<Jump> {
+	fun search(term: String, query: Query = wildcardQuery(term)): List<Jump> {
 		if(index == null || !index!!.isDone) {
 			"[Jump] Cannot perform search as indices haven't been built".logw(javaClass)
 			return emptyList()
 		}
-		val queryBuilder = fullTextEntityManager.searchFactory
-			.buildQueryBuilder()
-			.forEntity(Jump::class.java)
-			.get()
-		val query = queryBuilder
-			.bool()
-			.should(queryBuilder
-				.keyword()
-				.wildcard()
-				.onFields("name", "location", "title")
-				.matching("*$term*")
-				.createQuery()
-			)
-			.createQuery()
 		val jpaQuery = fullTextEntityManager.createFullTextQuery(query, Jump::class.java)
 		// ensure there are no duplicates by mapping the id
 		val results = hashMapOf<Int, Jump>()
+		if(jpaQuery.resultSize == 0 || jpaQuery.resultList == null)
+			return emptyList() // catch npe before the ::forEach hits it
 		jpaQuery.resultList.forEach {
 			kotlin.runCatching {
 				// convert the result back into our entity
 				val j = it as Jump
 				results[j.id] = j
 			}.onFailure {
-				"[Jump] Failed to cast JpaQuery object to ${Jump::class.java.name}: searchTerm: $term".loge(javaClass, it)
+				"Failed to cast JpaQuery object to ${Jump::class.java.name}: searchTerm: $term".loge(javaClass, it)
 			}
 		}
-		"[Jump] Executed full-text-search for '$term': returned ${results.size} items".logd(javaClass)
-		val aliases = searchAliases(term)
-		aliases.forEach {
-			if(!results.containsKey(it.id))
-				results[it.id] = it
-		}
-		"[Jump] Total results for '$term': ${results.size}".logd(javaClass)
+		"Executed full-text-search for '$term': returned ${results.size} items".logd(javaClass)
 		return results.values.toList()
 	}
 }
