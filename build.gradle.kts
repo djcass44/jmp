@@ -21,9 +21,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
-	id("org.springframework.boot") version "2.2.6.RELEASE"
+	id("org.springframework.boot") version "2.3.0.RELEASE"
 	id("io.spring.dependency-management") version "1.0.9.RELEASE"
-	id("com.github.ben-manes.versions") version "0.27.0"
+	id("com.github.ben-manes.versions") version "0.28.0"
 	id("dev.dcas.gradle-util") version "0.1"
 	kotlin("jvm") version "1.3.72"
 	kotlin("plugin.spring") version "1.3.72"
@@ -46,7 +46,7 @@ configurations {
 }
 
 repositories {
-	maven(url = "https://mvn.v2.dcas.dev")
+	maven(url = "https://prism.dcas.dev/maven")
 	mavenCentral()
 	maven(url = "https://jitpack.io")
 	//jcenter()
@@ -54,7 +54,7 @@ repositories {
 }
 
 val junitVersion: String by project
-extra["springCloudVersion"] = "Hoxton.SR3"
+extra["springCloudVersion"] = "Hoxton.SR4"
 
 dependencies {
 	implementation(kotlin("stdlib-jdk8"))
@@ -68,11 +68,7 @@ dependencies {
 
 	implementation("com.sun.activation:javax.activation:1.2.0")
 
-
-	// required because of https://github.com/gradle/gradle/issues/10248
-	implementation("org.codehaus.groovy:groovy:3.0.2")
 	// spring boot
-	implementation("org.springframework.boot:spring-boot-starter")
 	implementation(boot("starter-data-jpa"))
 	implementation(boot("starter-data-ldap"))
 	implementation(boot("starter-web"))
@@ -95,7 +91,7 @@ dependencies {
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.+")
 	implementation("info.debatty:java-string-similarity:1.2.1")
 	implementation("org.hibernate:hibernate-search-orm:5.11.5.Final")
-	implementation("com.google.guava:guava:28.2-jre")
+	implementation("com.google.guava:guava:29.0-jre")
 
 	// ldap
 	implementation("com.unboundid:unboundid-ldapsdk:4.0.14")
@@ -167,7 +163,7 @@ springBoot {
 
 tasks {
 	wrapper {
-		gradleVersion = "6.3"
+		gradleVersion = "6.5"
 		distributionType = Wrapper.DistributionType.ALL
 	}
 	withType<KotlinCompile>().all {

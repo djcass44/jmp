@@ -17,10 +17,7 @@
 package dev.castive.jmp.service
 
 import dev.castive.jmp.entity.Jump
-import dev.castive.log2.logd
-import dev.castive.log2.loge
-import dev.castive.log2.logi
-import dev.castive.log2.logw
+import dev.castive.log2.*
 import org.apache.lucene.search.Query
 import org.hibernate.search.jpa.Search
 import org.hibernate.search.query.dsl.QueryBuilder
@@ -71,8 +68,10 @@ class SearchService(
 		val jpaQuery = fullTextEntityManager.createFullTextQuery(query, Jump::class.java)
 		// ensure there are no duplicates by mapping the id
 		val results = hashMapOf<Int, Jump>()
-		if(jpaQuery.resultSize == 0 || jpaQuery.resultList == null)
+		if(jpaQuery.resultSize == 0 || jpaQuery.resultList == null) {
+			"Got no results or resultset was null".logv(javaClass)
 			return emptyList() // catch npe before the ::forEach hits it
+		}
 		jpaQuery.resultList.forEach {
 			kotlin.runCatching {
 				// convert the result back into our entity
