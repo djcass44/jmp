@@ -114,7 +114,7 @@ dependencies {
 	testImplementation("org.jetbrains.kotlin:kotlin-test")
 
 	// rest assured
-	val restAssuredVersion = "4.3.0"
+	val restAssuredVersion = "4.2.0"
 	testImplementation("io.rest-assured:json-path:$restAssuredVersion")
 	testImplementation("io.rest-assured:xml-path:$restAssuredVersion")
 	testImplementation("io.rest-assured:rest-assured:$restAssuredVersion")
