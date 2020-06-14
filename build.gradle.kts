@@ -175,6 +175,7 @@ tasks {
 	}
 	withType<Test> {
 		useJUnitPlatform()
+		finalizedBy(jacocoTestReport)
 	}
 	withType<BootJar> {
 		archiveFileName.set("${archiveBaseName.get()}.${archiveExtension.get()}")
