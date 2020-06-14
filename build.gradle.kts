@@ -29,6 +29,7 @@ plugins {
 	kotlin("plugin.spring") version "1.3.72"
 	kotlin("plugin.jpa") version "1.3.72"
 	kotlin("kapt") version "1.3.72"
+	jacoco
 }
 
 group = "dev.castive"
@@ -177,5 +178,13 @@ tasks {
 	}
 	withType<BootJar> {
 		archiveFileName.set("${archiveBaseName.get()}.${archiveExtension.get()}")
+	}
+	jacocoTestReport {
+		reports {
+			// generate csv for gitlab parsing
+			xml.isEnabled = false
+			csv.isEnabled = true
+			html.isEnabled = false
+		}
 	}
 }
