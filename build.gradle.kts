@@ -21,7 +21,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
-	id("org.springframework.boot") version "2.3.0.RELEASE"
+	id("org.springframework.boot") version "2.3.1.RELEASE"
 	id("io.spring.dependency-management") version "1.0.9.RELEASE"
 	id("com.github.ben-manes.versions") version "0.28.0"
 	id("dev.dcas.gradle-util") version "0.1"
@@ -55,13 +55,13 @@ repositories {
 }
 
 val junitVersion: String by project
-extra["springCloudVersion"] = "Hoxton.SR4"
+extra["springCloudVersion"] = "Hoxton.SR5"
 
 dependencies {
 	implementation(kotlin("stdlib-jdk8"))
 	implementation(kotlin("reflect"))
 	implementation(kotlinx("coroutines-core:1.3.5"))
-	implementation(kotlinx("coroutines-jdk8:1.3.5"))
+	implementation(kotlinx("coroutines-jdk8:1.3.7"))
 
 	val ktorVersion = "1.3.+"
 	implementation("io.ktor:ktor-client-apache:$ktorVersion")
@@ -98,12 +98,14 @@ dependencies {
 	implementation("com.unboundid:unboundid-ldapsdk:4.0.14")
 
 	// swagger
-	implementation("io.springfox:springfox-swagger2:2.9.2")
-	implementation("io.springfox:springfox-swagger-ui:2.9.2")
+	implementation("io.springfox:springfox-swagger2:2.10.0")
+	implementation("io.springfox:springfox-swagger-ui:2.10.0")
 
 	// JDBC drivers
-	runtimeOnly("org.postgresql:postgresql:42.2.11") // tested (django)
+	runtimeOnly("org.postgresql:postgresql:42.2.14") // tested (django)
 	runtimeOnly("com.h2database:h2:1.4.+")
+
+	implementation("io.sentry:sentry-spring:1.7.30")
 
 	testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
 	testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
@@ -123,7 +125,7 @@ dependencies {
 	testImplementation("io.rest-assured:spring-mock-mvc:$restAssuredVersion")
 
 	testImplementation("org.hamcrest:hamcrest:2.2")
-	testImplementation("org.mockito:mockito-core:3.2.4")
+	testImplementation("org.mockito:mockito-core:3.3.3")
 	testImplementation("com.github.stefanbirkner:system-rules:1.19.0")
 	implementation(kotlin("script-runtime"))
 }
