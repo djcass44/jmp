@@ -98,8 +98,8 @@ dependencies {
 	implementation("com.unboundid:unboundid-ldapsdk:4.0.14")
 
 	// swagger
-	implementation("io.springfox:springfox-swagger2:2.10.0")
-	implementation("io.springfox:springfox-swagger-ui:2.10.0")
+	implementation("io.springfox:springfox-swagger2:2.9.2")
+	implementation("io.springfox:springfox-swagger-ui:2.9.2")
 
 	// JDBC drivers
 	runtimeOnly("org.postgresql:postgresql:42.2.14") // tested (django)
