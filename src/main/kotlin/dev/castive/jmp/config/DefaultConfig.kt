@@ -17,6 +17,7 @@
 package dev.castive.jmp.config
 
 import io.sentry.spring.SentryExceptionResolver
+import io.sentry.spring.SentryServletContextInitializer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.servlet.HandlerExceptionResolver
@@ -26,4 +27,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver
 class DefaultConfig {
 	@Bean
 	fun sentryExceptionResolver(): HandlerExceptionResolver = SentryExceptionResolver()
+
+	@Bean
+	fun sentryServletContextInitializer(): SentryServletContextInitializer = SentryServletContextInitializer()
 }
