@@ -1,12 +1,9 @@
 variables:
-  CODE_QUALITY_DISABLED: 'true'
   PERFORMANCE_DISABLED: 'true'
-  POSTGRES_ENABLED: 'false'
-  POSTGRES_VERSION: '12.2'
-  HELM_UPGRADE_EXTRA_ARGS: "--atomic"
-  KANIKO_CACHE: 'true'
   STAGING_ENABLED: 'true'
   ROLLOUT_RESOURCE_TYPE: 'deployment'
+  CODE_QUALITY_NARK: 'true'
+  NARK_URL: 'production-38-auto-deploy.go-nark-38-production.svc.cluster.local:8080'
 
 include:
   - remote: 'https://gitlab.dcas.dev/open-source/gitlab-ci-templates/-/raw/master/auto/Auto-JVM.gitlab-ci.yml'
