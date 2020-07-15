@@ -45,7 +45,6 @@ import dev.dcas.util.spring.responses.ConflictResponse
 import dev.dcas.util.spring.responses.ForbiddenResponse
 import dev.dcas.util.spring.responses.NotFoundResponse
 import dev.dcas.util.spring.toPage
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
@@ -54,13 +53,13 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
-import java.util.UUID
+import java.util.*
 import javax.transaction.Transactional
 
 @Transactional
 @RestController
 @RequestMapping("/v2/jump")
-class JumpControl @Autowired constructor(
+class JumpControl(
 	private val metadata: MetadataService,
 	private val jumpRepo: JumpRepo,
 	private val jumpRepoCustom: JumpRepoCustom,

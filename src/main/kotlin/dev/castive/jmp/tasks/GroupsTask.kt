@@ -24,7 +24,6 @@ import dev.dcas.jmp.security.shim.entity.Group
 import dev.dcas.jmp.security.shim.repo.GroupRepo
 import dev.dcas.jmp.security.shim.repo.UserRepo
 import dev.dcas.jmp.spring.security.util.Events
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
@@ -34,7 +33,7 @@ import kotlin.system.measureTimeMillis
 
 @Transactional
 @Component
-class GroupsTask @Autowired constructor(
+class GroupsTask(
 	private val groupRepo: GroupRepo,
 	private val userRepo: UserRepo
 ) {

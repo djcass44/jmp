@@ -34,7 +34,7 @@ import javax.annotation.PostConstruct
 class ProviderControl(
 	private val userRepo: UserRepo,
 	private val oauth2Config: SecurityProps
-	) {
+) {
 
 	private val internalProviders = arrayListOf(SecurityConstants.sourceLocal, SecurityConstants.sourceLdap)
 

@@ -35,20 +35,20 @@ import dev.dcas.util.extend.isESNullOrBlank
 import dev.dcas.util.spring.responses.ForbiddenResponse
 import dev.dcas.util.spring.responses.NotFoundResponse
 import dev.dcas.util.spring.toPage
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
-import java.util.UUID
+import java.util.*
 import javax.transaction.Transactional
 
+@PreAuthorize("hasRole('USER')")
 @Transactional
 @RestController
 @RequestMapping("/v2_1/group")
-class GroupControl @Autowired constructor(
+class GroupControl(
 	private val groupRepo: GroupRepo,
 	private val groupRepoCustom: GroupRepoCustom,
 	private val userRepo: UserRepo,
@@ -56,7 +56,6 @@ class GroupControl @Autowired constructor(
 	private val socketHandler: SocketHandler
 ) {
 
-	@PreAuthorize("hasRole('USER')")
 	@GetMapping
 	fun getGroups(
 		@RequestParam("size", defaultValue = "20") size: Int = 20,
@@ -68,7 +67,6 @@ class GroupControl @Autowired constructor(
 			).toPage(PageRequest.of(page, size))
 		}
 
-	@PreAuthorize("hasRole('USER')")
 	@PutMapping
 	fun createGroup(@RequestBody group: CreateGroupDTO): Group {
 		val user = SecurityContextHolder.getContext().assertUser()
@@ -89,7 +87,6 @@ class GroupControl @Autowired constructor(
 		return created
 	}
 
-	@PreAuthorize("hasRole('USER')")
 	@PatchMapping
 	fun updateGroup(@RequestBody group: Group): Group {
 		val user = SecurityContextHolder.getContext().assertUser()
@@ -113,7 +110,6 @@ class GroupControl @Autowired constructor(
 		return groupRepo.save(existing)
 	}
 
-	@PreAuthorize("hasRole('USER')")
 	@DeleteMapping("/{id}")
 	fun deleteGroup(@PathVariable(value = "id", required = true) id: UUID) {
 		val user = SecurityContextHolder.getContext().assertUser()
@@ -126,7 +122,6 @@ class GroupControl @Autowired constructor(
 		socketHandler.broadcast(FSA(FSA.EVENT_UPDATE_GROUP, null))
 	}
 
-	@PreAuthorize("hasRole('USER')")
 	@PatchMapping("/mod")
 	fun modifyUsers(@RequestBody mods: EditGroupUsersDTO, @RequestParam uid: UUID) {
 		val user = SecurityContextHolder.getContext().assertUser()
