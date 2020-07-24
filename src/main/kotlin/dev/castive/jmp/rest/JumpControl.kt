@@ -23,7 +23,9 @@ import dev.castive.jmp.data.dto.EditJumpDTO
 import dev.castive.jmp.data.dto.JumpDTO
 import dev.castive.jmp.entity.Alias
 import dev.castive.jmp.entity.Jump
+import dev.castive.jmp.entity.JumpEvent
 import dev.castive.jmp.repo.AliasRepo
+import dev.castive.jmp.repo.JumpEventRepo
 import dev.castive.jmp.repo.JumpRepo
 import dev.castive.jmp.repo.JumpRepoCustom
 import dev.castive.jmp.service.MetadataService
@@ -53,7 +55,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
-import java.util.*
+import java.util.UUID
 import javax.transaction.Transactional
 
 @Transactional
@@ -68,7 +70,8 @@ class JumpControl(
 	private val aliasRepo: AliasRepo,
 	private val ownerService: OwnerService,
 	private val searchService: SearchService,
-	private val socketHandler: SocketHandler
+	private val socketHandler: SocketHandler,
+	private val jumpEventRepo: JumpEventRepo
 ) {
 	@GetMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
 	fun getAll(
@@ -119,6 +122,16 @@ class JumpControl(
 			}
 			else
 				false to "/similar?query=$target"
+		}
+		// record the event against the user
+		if (user != null && res.first) {
+			val jumpId = jumps.first().id
+			"Recording jump event for ${user.id}::${jumpId}".logv(javaClass)
+			jumpEventRepo.save(JumpEvent(
+				UUID.randomUUID(),
+				user.id,
+				jumpId
+			))
 		}
 		return DoJumpDTO(res.first, res.second)
 	}

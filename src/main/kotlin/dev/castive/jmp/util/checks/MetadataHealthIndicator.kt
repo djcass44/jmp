@@ -16,10 +16,10 @@
 
 package dev.castive.jmp.util.checks
 
+import dev.castive.jmp.prop.AppMetadataProps
 import dev.castive.log2.loge
 import dev.castive.log2.logi
 import dev.castive.log2.logv
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.actuate.health.Health
 import org.springframework.boot.actuate.health.HealthIndicator
 import org.springframework.http.HttpStatus
@@ -29,21 +29,17 @@ import org.springframework.web.client.getForEntity
 
 @Component
 class MetadataHealthIndicator(
-	private val restTemplate: RestTemplate
+	private val restTemplate: RestTemplate,
+	private val appMetadataProps: AppMetadataProps
 ): HealthIndicator {
 
-	@Value("\${jmp.metadata.icon.url:}")
-	private lateinit var iconUrl: String
-
-	@Value("\${jmp.metadata.icon.enabled:true}")
-	private val allowImage: Boolean = true
-
 	override fun health(): Health {
-		if(!this::iconUrl.isInitialized || iconUrl.isBlank()) {
+		val iconUrl = appMetadataProps.icon.url
+		if(iconUrl.isBlank()) {
 			"Icon loader doesn't appear to be configured".logi(javaClass)
 			return Health.unknown().withDetail("Reason", "Not configured").build()
 		}
-		if(!allowImage) {
+		if(!appMetadataProps.icon.enabled) {
 			"Unable to perform icon loader health check due to egress policy".logi(javaClass)
 			return Health.unknown().withDetail("Reason", "Egress policy").build()
 		}

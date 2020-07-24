@@ -159,7 +159,7 @@ springBoot {
 				additional[it] = System.getProperty(it, "")
 			}
 			// only set in CI build
-			additional["git.commit"] = System.getenv("DRONE_COMMIT_SHA") ?: ""
+			additional["git.commit"] = System.getenv("CI_COMMIT_SHA") ?: ""
 		}
 	}
 }

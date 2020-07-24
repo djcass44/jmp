@@ -41,7 +41,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
-import java.util.*
+import java.util.UUID
 import javax.transaction.Transactional
 
 @PreAuthorize("hasRole('USER')")
@@ -60,12 +60,13 @@ class GroupControl(
 	fun getGroups(
 		@RequestParam("size", defaultValue = "20") size: Int = 20,
 		@RequestParam("page", defaultValue = "0") page: Int = 0,
-		@RequestParam("query", defaultValue = "") query: String = ""): Page<Group> {
-			return groupRepoCustom.searchByTerm(SecurityContextHolder.getContext().assertUser(), query, false).sortedWith(
-				// sort by name, then creation
-				compareBy({ it.public }, { it.defaultFor }, { it.name })
-			).toPage(PageRequest.of(page, size))
-		}
+		@RequestParam("query", defaultValue = "") query: String = ""
+	): Page<Group> {
+		return groupRepoCustom.searchByTerm(SecurityContextHolder.getContext().assertUser(), query, false).sortedWith(
+			// sort by name, then creation
+			compareBy({ it.public }, { it.defaultFor }, { it.name })
+		).toPage(PageRequest.of(page, size))
+	}
 
 	@PutMapping
 	fun createGroup(@RequestBody group: CreateGroupDTO): Group {
