@@ -1,6 +1,7 @@
 deploymentApiVersion: apps/v1
 podAnnotations:
   k8s-app: jmp-api
+  linkerd.io/inject: enabled
 security:
   podContext:
     fsGroup: 1001
