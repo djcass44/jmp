@@ -71,6 +71,21 @@ security:
   token:
     age-limit: 6
     age-tick: 10000
+  oauth2:
+    - name: gitlab
+      enabled: true
+      apiUrl: https://gitlab.dcas.dev
+      callbackUrl: http://localhost:3000/callback
+      scope: read_user
+      clientId: 77e2f27bded0415299d11b47f7065f62f8d04615a9edcfd9d4fc057c4d797094
+      clientSecret: 4d090cd544e1c2662ed062e8ca9e04414459c90f91983ef37e62fec7531f6370
+    - name: github
+      enabled: true
+      apiUrl: https://api.github.com
+      callbackUrl: http://localhost:3000/callback
+      scope: "read:user"
+      clientId: f11465bac586ea303513
+      clientSecret: afc9cea0ed34cbd839331b27eaedd31a11fa47a3
 
 logging:
   level:
