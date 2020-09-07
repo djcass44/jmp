@@ -63,7 +63,7 @@ dependencies {
 	implementation(kotlinx("coroutines-core:1.3.5"))
 	implementation(kotlinx("coroutines-jdk8:1.3.7"))
 
-	val ktorVersion = "1.3.+"
+	val ktorVersion = "1.4.0"
 	implementation("io.ktor:ktor-client-apache:$ktorVersion")
 	testImplementation("io.ktor:ktor-client-mock-jvm:$ktorVersion")
 
