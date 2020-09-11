@@ -1,18 +1,14 @@
 ---
 version: '3'
 services:
-  jmp:
-    image: djcass44/jmp
-    ports:
-      - 7000:7000
   psql:
-    image: postgres:12.1-alpine
+    image: bitnami/postgresql:12.4.0-debian-10-r23
     ports:
     - 5432:5432
     volumes:
-    - db:/var/lib/psql
+    - db:/bitnami/postgresql
     environment:
-      - POSTGRES_DB=jmp
+      - POSTGRES_DATABASE=jmp
       - POSTGRES_PASSWORD=password
 volumes:
   db:

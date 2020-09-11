@@ -21,14 +21,14 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
-	id("org.springframework.boot") version "2.3.1.RELEASE"
-	id("io.spring.dependency-management") version "1.0.9.RELEASE"
-	id("com.github.ben-manes.versions") version "0.28.0"
+	id("org.springframework.boot") version "2.3.3.RELEASE"
+	id("io.spring.dependency-management") version "1.0.10.RELEASE"
+	id("com.github.ben-manes.versions") version "0.31.0"
 	id("dev.dcas.gradle-util") version "0.1"
-	kotlin("jvm") version "1.3.72"
-	kotlin("plugin.spring") version "1.3.72"
-	kotlin("plugin.jpa") version "1.3.72"
-	kotlin("kapt") version "1.3.72"
+	kotlin("jvm") version "1.4.10"
+	kotlin("plugin.spring") version "1.4.10"
+	kotlin("plugin.jpa") version "1.4.10"
+	kotlin("kapt") version "1.4.10"
 	jacoco
 }
 
@@ -55,13 +55,13 @@ repositories {
 }
 
 val junitVersion: String by project
-extra["springCloudVersion"] = "Hoxton.SR5"
+extra["springCloudVersion"] = "Hoxton.SR8"
 
 dependencies {
 	implementation(kotlin("stdlib-jdk8"))
 	implementation(kotlin("reflect"))
-	implementation(kotlinx("coroutines-core:1.3.5"))
-	implementation(kotlinx("coroutines-jdk8:1.3.7"))
+	implementation(kotlinx("coroutines-core:1.3.9"))
+	implementation(kotlinx("coroutines-jdk8:1.3.9"))
 
 	val ktorVersion = "1.4.0"
 	implementation("io.ktor:ktor-client-apache:$ktorVersion")
@@ -89,7 +89,7 @@ dependencies {
 //	implementation("dev.dcas.jmp.security:core:0.1.3-SNAPSHOT")
 //	implementation("dev.dcas.jmp.security:shim:0.1.3-SNAPSHOT")
 
-	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.+")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.11.2")
 	implementation("info.debatty:java-string-similarity:1.2.1")
 	implementation("org.hibernate:hibernate-search-orm:5.11.5.Final")
 	implementation("com.google.guava:guava:29.0-jre")
@@ -102,7 +102,7 @@ dependencies {
 	implementation("io.springfox:springfox-swagger-ui:2.9.2")
 
 	// JDBC drivers
-	runtimeOnly("org.postgresql:postgresql:42.2.14") // tested (django)
+	runtimeOnly("org.postgresql:postgresql:42.2.16") // tested (django)
 	runtimeOnly("com.h2database:h2:1.4.+")
 
 	implementation("io.sentry:sentry-spring:1.7.30")
@@ -125,7 +125,7 @@ dependencies {
 	testImplementation("io.rest-assured:spring-mock-mvc:$restAssuredVersion")
 
 	testImplementation("org.hamcrest:hamcrest:2.2")
-	testImplementation("org.mockito:mockito-core:3.3.3")
+	testImplementation("org.mockito:mockito-core:3.5.10")
 	testImplementation("com.github.stefanbirkner:system-rules:1.19.0")
 	implementation(kotlin("script-runtime"))
 }
@@ -166,7 +166,7 @@ springBoot {
 
 tasks {
 	wrapper {
-		gradleVersion = "6.5.1"
+		gradleVersion = "6.6.1"
 		distributionType = Wrapper.DistributionType.ALL
 	}
 	withType<KotlinCompile>().all {
