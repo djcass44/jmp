@@ -1,6 +1,7 @@
 variables:
   PERFORMANCE_DISABLED: 'true'
   STAGING_ENABLED: 'true'
+  AUTO_RELEASE_DISABLED: 'false'
 
 include:
   - remote: 'https://gitlab.dcas.dev/open-source/gitlab-ci-templates/-/raw/master/auto/Auto-JVM.gitlab-ci.yml'
