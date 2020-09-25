@@ -22,4 +22,8 @@ import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository
-interface JumpEventRepo: JpaRepository<JumpEvent, UUID>
+interface JumpEventRepo: JpaRepository<JumpEvent, UUID> {
+	fun findAllByUserId(userId: UUID): List<JumpEvent>
+
+	fun countAllByJumpIdAndUserId(jumpId: Int, userId: UUID): Long
+}
