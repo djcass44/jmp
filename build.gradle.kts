@@ -33,7 +33,7 @@ plugins {
 }
 
 group = "dev.castive"
-version = "0.6.3"
+version = "0.6.4"
 
 java.apply {
 	sourceCompatibility = JavaVersion.VERSION_11
