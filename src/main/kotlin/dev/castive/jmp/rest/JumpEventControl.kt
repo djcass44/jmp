@@ -62,6 +62,6 @@ class JumpEventControl(
 			jumpRepo.findByIdOrNull(it.first.jumpId)?.let { j ->
 				ownerService.getDTO(j)
 			}
-		}.toPage(PageRequest.of(0, count))
+		}.toPage(PageRequest.of(0, count.coerceAtLeast(1)))
 	}
 }
