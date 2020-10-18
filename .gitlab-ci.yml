@@ -12,5 +12,5 @@ mirror-master:
     MIRROR_TARGET_REGISTRY: "harbor.v2.dcas.dev"
 
 include:
-  - remote: 'https://gitlab.com/av1o/gitlab-ci-templates/-/raw/master/auto/Auto-JVM.gitlab-ci.yml'
+  - remote: 'https://gitlab.com/av1o/gitlab-ci-templates/-/raw/master/auto/Auto-Gradle.gitlab-ci.yml'
   - remote: "https://gitlab.com/av1o/gitlab-ci-templates/-/raw/master/misc/OCI-Mirror.gitlab-ci.yml"
