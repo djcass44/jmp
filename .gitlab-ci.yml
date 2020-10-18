@@ -5,6 +5,8 @@ variables:
 
 mirror-master:
   extends: .mirror-image
+  needs:
+    - "build gradle"
   variables:
     MIRROR_SOURCE_IMAGE: "jmp/jmp:master"
     MIRROR_TARGET_IMAGE: "dcas.dev/jmp:master"
