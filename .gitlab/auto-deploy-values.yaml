@@ -30,7 +30,7 @@ livenessProbe:
   path: "/api/actuator/health"
   initialDelaySeconds: 120
 readinessProbe:
-  path: "/api/actuator/health/ping"
+  path: "/api/actuator/health"
 volumes:
   - name: tmp
     mountPath: /tmp
