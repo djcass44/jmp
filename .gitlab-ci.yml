@@ -1,18 +1,6 @@
 variables:
   PERFORMANCE_DISABLED: 'true'
-  STAGING_ENABLED: 'true'
   AUTO_RELEASE_DISABLED: 'false'
-
-mirror-master:
-  extends: .mirror-image
-  needs:
-    - "build gradle"
-  variables:
-    MIRROR_SOURCE_IMAGE: "jmp/jmp:master"
-    MIRROR_TARGET_IMAGE: "dcas.dev/jmp:master"
-    MIRROR_SOURCE_REGISTRY: "registry.dcas.dev"
-    MIRROR_TARGET_REGISTRY: "harbor.v2.dcas.dev"
 
 include:
   - remote: 'https://gitlab.com/av1o/gitlab-ci-templates/-/raw/master/auto/Auto-Gradle.gitlab-ci.yml'
-  - remote: "https://gitlab.com/av1o/gitlab-ci-templates/-/raw/master/misc/OCI-Mirror.gitlab-ci.yml"
