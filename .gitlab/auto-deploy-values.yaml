@@ -36,8 +36,14 @@ volumes:
     mountPath: /tmp
     config:
       emptyDir: {}
+  - name: config
+    mountPath: /config
+    config:
+      configMap:
+        name: jmp-spring
+        defaultMode: 0420
 env:
-  SPRING_CLOUD_CONFIG_ENABLED: true
+  SPRING_CONFIG_LOCATION: "file:/config/application.yaml"
 postgresql:
   enabled: false
 resources:
