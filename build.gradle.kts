@@ -21,15 +21,14 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
-	id("org.springframework.boot") version "2.3.3.RELEASE"
+	id("org.springframework.boot") version "2.4.1"
 	id("io.spring.dependency-management") version "1.0.10.RELEASE"
 	id("com.github.ben-manes.versions") version "0.31.0"
 	id("dev.dcas.gradle-util") version "0.1"
-	kotlin("jvm") version "1.4.10"
-	kotlin("plugin.spring") version "1.4.10"
-	kotlin("plugin.jpa") version "1.4.10"
-	kotlin("kapt") version "1.4.10"
-	jacoco
+	kotlin("jvm") version "1.4.21"
+	kotlin("plugin.spring") version "1.4.21"
+	kotlin("plugin.jpa") version "1.4.21"
+	kotlin("kapt") version "1.4.21"
 }
 
 group = "dev.castive"
@@ -55,13 +54,13 @@ repositories {
 }
 
 val junitVersion: String by project
-extra["springCloudVersion"] = "Hoxton.SR8"
+extra["springCloudVersion"] = "2020.0.0"
 
 dependencies {
 	implementation(kotlin("stdlib-jdk8"))
 	implementation(kotlin("reflect"))
-	implementation(kotlinx("coroutines-core:1.3.9"))
-	implementation(kotlinx("coroutines-jdk8:1.3.9"))
+	implementation(kotlinx("coroutines-core:1.4.2"))
+	implementation(kotlinx("coroutines-jdk8:1.4.2"))
 
 	val ktorVersion = "1.4.0"
 	implementation("io.ktor:ktor-client-apache:$ktorVersion")
@@ -91,7 +90,7 @@ dependencies {
 
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.11.2")
 	implementation("info.debatty:java-string-similarity:1.2.1")
-	implementation("org.hibernate:hibernate-search-orm:5.11.5.Final")
+	implementation("org.hibernate:hibernate-search-orm:5.11.7.Final")
 	implementation("com.google.guava:guava:29.0-jre")
 
 	// ldap
@@ -166,7 +165,7 @@ springBoot {
 
 tasks {
 	wrapper {
-		gradleVersion = "6.6.1"
+		gradleVersion = "6.7.1"
 		distributionType = Wrapper.DistributionType.ALL
 	}
 	withType<KotlinCompile>().all {
@@ -177,17 +176,8 @@ tasks {
 	}
 	withType<Test> {
 		useJUnitPlatform()
-		finalizedBy(jacocoTestReport)
 	}
 	withType<BootJar> {
 		archiveFileName.set("${archiveBaseName.get()}.${archiveExtension.get()}")
-	}
-	jacocoTestReport {
-		reports {
-			// generate csv for gitlab parsing
-			xml.isEnabled = false
-			csv.isEnabled = true
-			html.isEnabled = false
-		}
 	}
 }
